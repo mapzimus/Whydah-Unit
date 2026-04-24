@@ -1,0 +1,7 @@
+# Whitelist approach — ignore everything by default, then unignore what should be public
+*
+
+# Files to publish on GitHub Pages
+!index.html
+!README.md
+!.gitignore

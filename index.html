@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whydah PBL Unit — Dashboard</title>
+<style>
+:root {
+  --bg: #f9f6ee;
+  --card-bg: #ffffff;
+  --text: #222;
+  --muted: #6b6358;
+  --accent: #1e3a5f;
+  --accent-light: #3a5f84;
+  --sepia: #8a6f4e;
+  --salem: #7a3b1e;
+  --border: #d8d1c1;
+  --green: #2e7d32;
+  --yellow: #c77700;
+  --red: #b71c1c;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+}
+h1, h2, h3, h4 { font-family: Georgia, 'Times New Roman', serif; color: var(--accent); margin-top: 0; }
+h1 { font-size: 1.6em; margin-bottom: 0.1em; }
+h2 { font-size: 1.5em; border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.5em; }
+h3 { font-size: 1.2em; color: var(--accent-light); margin-top: 1.2em; }
+h4 { font-size: 1em; color: var(--sepia); margin-top: 1em; margin-bottom: 0.3em; }
+a { color: var(--accent); }
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 240px; background: #2c1810; color: #e8e2d5; padding: 1.5em 1em; position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; }
+.sidebar h1 { color: #e8d5a8; font-size: 1.3em; margin: 0 0 0.3em 0; }
+.sidebar .subtitle { color: #a89985; font-size: 0.85em; margin-bottom: 1.5em; font-style: italic; }
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sidebar a { display: block; padding: 0.45em 0.7em; color: #d4c9b3; text-decoration: none; border-radius: 3px; font-size: 0.92em; transition: background 0.15s; }
+.sidebar a:hover { background: #3d2616; color: #fff; }
+.sidebar a.active { background: #5a3a1e; color: #fff; font-weight: 600; }
+.sidebar .badge-new { display: inline-block; font-size: 0.65em; background: #c77700; color: #fff; padding: 0.05em 0.4em; border-radius: 3px; margin-left: 0.3em; vertical-align: middle; font-weight: 700; }
+.sidebar .footer { margin-top: 2em; padding-top: 1em; border-top: 1px solid #4a3224; font-size: 0.8em; color: #8a7e6e; }
+.content { flex: 1; padding: 2em 3em; max-width: 1100px; }
+section { margin-bottom: 2.5em; }
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1em 1.2em; margin-bottom: 0.8em; box-shadow: var(--shadow); }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8em; }
+.tier { display: inline-block; font-size: 0.75em; font-weight: 600; padding: 0.15em 0.5em; border-radius: 3px; vertical-align: middle; margin-left: 0.4em; }
+.tier-green { background: #e8f5e9; color: var(--green); }
+.tier-yellow { background: #fff4e0; color: var(--yellow); }
+.tier-red { background: #ffebee; color: var(--red); }
+.timeline { position: relative; padding-left: 2em; border-left: 3px solid var(--sepia); }
+.timeline-event { position: relative; margin-bottom: 1.2em; padding-left: 0.5em; }
+.timeline-event::before { content: ''; position: absolute; left: -2.4em; top: 0.4em; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.timeline-date { font-weight: 700; color: var(--sepia); font-family: Georgia, serif; font-size: 1em; }
+.timeline-title { font-weight: 600; color: var(--accent); margin: 0.1em 0 0.2em 0; }
+.timeline-desc { color: var(--text); font-size: 0.93em; }
+.era-header { font-family: Georgia, serif; color: var(--sepia); font-variant: small-caps; letter-spacing: 0.05em; font-size: 1em; margin: 1.5em 0 0.8em 0; padding-left: 0.5em; }
+.person-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1em 1.2em; box-shadow: var(--shadow); }
+.person-card .name { font-family: Georgia, serif; font-weight: 700; font-size: 1.1em; color: var(--accent); }
+.person-card .role { color: var(--sepia); font-style: italic; font-size: 0.9em; margin-bottom: 0.5em; }
+.person-card ul { margin: 0.4em 0 0.6em 0; padding-left: 1.2em; font-size: 0.92em; }
+.person-card li { margin-bottom: 0.15em; }
+.person-card .perspective-use { font-size: 0.85em; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 0.5em; margin-top: 0.5em; font-style: italic; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
+.factor-box { background: var(--card-bg); border-left: 4px solid var(--accent); padding: 0.7em 0.9em; margin-bottom: 0.6em; border-radius: 3px; box-shadow: var(--shadow); }
+.factor-box.pull { border-left-color: var(--sepia); }
+.factor-box .factor-title { font-weight: 600; color: var(--accent); display: block; margin-bottom: 0.2em; }
+.factor-box.pull .factor-title { color: var(--sepia); }
+.factor-box .factor-desc { font-size: 0.9em; color: var(--text); }
+.factor-box .numbers { background: #fff8e5; padding: 0.3em 0.5em; border-radius: 3px; margin-top: 0.4em; font-size: 0.88em; display: inline-block; font-weight: 600; color: #8a5a00; }
+.critique { background: #fff4e0; border-left: 4px solid var(--yellow); padding: 0.8em 1em; border-radius: 3px; margin: 1em 0; font-size: 0.92em; }
+.critique strong { color: var(--yellow); }
+.salem-callout { background: #fdf5f0; border-left: 4px solid var(--salem); padding: 0.8em 1em; border-radius: 3px; margin: 1em 0; }
+.salem-callout h4 { color: var(--salem); margin-top: 0; }
+.tool-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--accent-light); padding: 0.8em 1em; border-radius: 3px; margin-bottom: 0.6em; box-shadow: var(--shadow); }
+.tool-card .tool-name { font-weight: 700; color: var(--accent); font-family: Georgia, serif; }
+.tool-card .tool-meta { color: var(--muted); font-size: 0.85em; font-style: italic; }
+.fleet-table { width: 100%; margin: 1em 0; background: var(--card-bg); box-shadow: var(--shadow); }
+.fleet-table th { background: #2c1810; color: #e8d5a8; text-align: left; padding: 0.6em 0.8em; font-family: Georgia, serif; }
+.fleet-table td { padding: 0.55em 0.8em; border-bottom: 1px solid var(--border); font-size: 0.92em; vertical-align: top; }
+.fleet-table .fate-survived { color: var(--green); font-weight: 600; }
+.fleet-table .fate-lost { color: var(--red); font-weight: 600; }
+.artifact-map { display: grid; grid-template-columns: 1fr 1.3fr; gap: 0.6em 1em; align-items: start; margin: 1em 0; }
+.artifact-map .artifact-name { font-family: Georgia, serif; font-weight: 700; color: var(--accent); padding: 0.4em 0.6em; background: #fff; border-radius: 3px; border: 1px solid var(--border); }
+.artifact-map .artifact-use { padding: 0.4em 0.6em; color: var(--text); font-size: 0.92em; }
+table { border-collapse: collapse; width: 100%; background: var(--card-bg); box-shadow: var(--shadow); margin-bottom: 1em; }
+th, td { text-align: left; padding: 0.55em 0.8em; border-bottom: 1px solid var(--border); font-size: 0.92em; vertical-align: top; }
+th { background: #f0ebe0; color: var(--accent); font-family: Georgia, serif; font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+.status { display: inline-block; font-size: 0.78em; font-weight: 600; padding: 0.15em 0.5em; border-radius: 3px; }
+.status-ready { background: #e8f5e9; color: var(--green); }
+.status-draft { background: #e3f2fd; color: var(--accent); }
+.status-needs { background: #fff4e0; color: var(--yellow); }
+.status-missing { background: #ffebee; color: var(--red); }
+.week-block { background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1em 1.2em; margin-bottom: 1em; box-shadow: var(--shadow); }
+.week-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--sepia); padding-bottom: 0.4em; margin-bottom: 0.7em; flex-wrap: wrap; gap: 0.5em; }
+.week-header h3 { margin: 0; }
+.week-dates { color: var(--muted); font-size: 0.85em; font-family: Georgia, serif; }
+.session-row { display: grid; grid-template-columns: 90px 1fr 140px; gap: 1em; padding: 0.4em 0; border-bottom: 1px dotted var(--border); align-items: center; }
+.session-row:last-child { border-bottom: none; }
+.session-num { font-family: Georgia, serif; font-weight: 700; color: var(--accent); font-size: 0.92em; }
+.session-title { font-weight: 500; font-size: 0.95em; }
+.session-title .session-focus { display: block; color: var(--muted); font-size: 0.85em; font-style: italic; margin-top: 0.15em; }
+.checklist { list-style: none; padding: 0; }
+.checklist li { padding: 0.4em 0 0.4em 2em; position: relative; border-bottom: 1px dotted var(--border); }
+.checklist li::before { content: '☐'; position: absolute; left: 0.5em; color: var(--accent); font-size: 1.1em; }
+.checklist li.done::before { content: '☑'; color: var(--green); }
+.legend-row { display: flex; align-items: center; gap: 0.7em; margin-bottom: 0.5em; font-size: 0.95em; }
+.meta { font-size: 0.85em; color: var(--muted); font-style: italic; }
+.caveat { background: #fff4e0; border: 1px solid #f5d580; border-radius: 4px; padding: 1em 1.2em; margin: 1em 0; font-size: 0.9em; }
+.caveat strong { color: var(--yellow); }
+.new-badge { display: inline-block; font-size: 0.65em; background: #c77700; color: #fff; padding: 0.1em 0.5em; border-radius: 3px; margin-left: 0.5em; vertical-align: middle; font-weight: 700; letter-spacing: 0.05em; }
+@media print {
+  .sidebar { display: none; }
+  .content { padding: 1em; max-width: none; }
+  .card, .week-block, .person-card, table { box-shadow: none; break-inside: avoid; }
+}
+html { scroll-behavior: smooth; }
+</style>
+<style>
+/* ============ MAP + PIRATE THEME OVERLAY ============ */
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=IM+Fell+Display:ital@0;1&display=swap');
+
+body {
+  font-family: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  background:
+    radial-gradient(ellipse 1400px 700px at 50% -100px, rgba(255, 248, 224, 0.6), transparent 70%),
+    repeating-linear-gradient(3deg, rgba(139, 116, 78, 0.02) 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(-2deg, rgba(90, 60, 30, 0.015) 0 1px, transparent 1px 6px),
+    #f1e6ca;
+  color: #2a1d0f;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(120, 80, 40, 0.06), transparent 12%),
+    radial-gradient(circle at 82% 78%, rgba(80, 50, 25, 0.07), transparent 14%),
+    radial-gradient(circle at 60% 12%, rgba(130, 90, 50, 0.04), transparent 10%);
+  z-index: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'IM Fell English SC', 'IM Fell English', Georgia, serif;
+  color: #0f2538;
+  letter-spacing: 0.04em;
+  font-weight: normal;
+}
+
+h2 {
+  font-size: 2em;
+  margin-top: 2em;
+  padding-bottom: 0;
+  border-bottom: none !important;
+  position: relative;
+}
+h2::after {
+  content: '';
+  display: block;
+  height: 18px;
+  margin-top: 0.3em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 18'%3E%3Cpath d='M0,9 Q50,2 100,9 T200,9 T300,9 T400,9' fill='none' stroke='%238b3a1e' stroke-width='1.2' opacity='0.85'/%3E%3Cpath d='M0,14 Q50,7 100,14 T200,14 T300,14 T400,14' fill='none' stroke='%231e4258' stroke-width='0.9' opacity='0.5'/%3E%3Ccircle cx='200' cy='9' r='3' fill='%23c9a55f'/%3E%3Cpath d='M200,2 L203,9 L200,16 L197,9 Z' fill='%238b3a1e'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 400px 18px;
+  background-position: left center;
+}
+
+h3 { color: #8b3a1e; font-size: 1.35em; }
+h4 { color: #1e4258; font-family: 'IM Fell English SC', Georgia, serif; letter-spacing: 0.05em; }
+
+a { color: #8b3a1e; }
+a:hover { color: #5e2811; }
+
+.sidebar {
+  background: linear-gradient(180deg, #0a1a28 0%, #142e44 60%, #1a3a54 100%);
+  color: #e6d9b8;
+  border-right: 4px double #c9a55f;
+  padding: 1.8em 1.1em;
+}
+.sidebar::before {
+  content: '';
+  display: block;
+  width: 70px; height: 70px;
+  margin: 0 auto 0.8em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23c9a55f' stroke-width='1.2'%3E%3Ccircle cx='50' cy='50' r='38'/%3E%3Ccircle cx='50' cy='50' r='30'/%3E%3C/g%3E%3Cg fill='%23c9a55f'%3E%3Cpath d='M50,14 L54,48 L50,50 L46,48 Z'/%3E%3Cpath d='M50,86 L54,52 L50,50 L46,52 Z' opacity='0.5'/%3E%3Cpath d='M14,50 L48,54 L50,50 L48,46 Z' opacity='0.75'/%3E%3Cpath d='M86,50 L52,54 L50,50 L52,46 Z' opacity='0.75'/%3E%3Cpath d='M74,26 L54,46 L50,50 L46,54 Z' opacity='0.5'/%3E%3Cpath d='M26,26 L46,46 L50,50 L54,54 Z' opacity='0.5'/%3E%3Cpath d='M74,74 L54,54 L50,50 L46,46 Z' opacity='0.5'/%3E%3Cpath d='M26,74 L46,54 L50,50 L54,46 Z' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='2.5' fill='%238b3a1e'/%3E%3C/g%3E%3Ctext x='50' y='10' text-anchor='middle' font-family='Georgia' font-size='8' font-weight='bold' fill='%238b3a1e'%3EN%3C/text%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-size: contain;
+  opacity: 0.9;
+}
+.sidebar h1 { color: #d9b56a; font-family: 'IM Fell English SC', Georgia, serif; font-size: 1.25em; text-align: center; }
+.sidebar .subtitle { color: #8fa5bb; font-family: 'IM Fell English', Georgia, serif; text-align: center; border-bottom: 1px solid rgba(201, 165, 95, 0.25); padding-bottom: 0.8em; margin-bottom: 1em; }
+.sidebar a { color: #c4b590; font-family: 'IM Fell English', Georgia, serif; }
+.sidebar a:hover { background: rgba(201, 165, 95, 0.12); color: #fbf4e1; }
+.sidebar a.active { background: rgba(139, 58, 30, 0.4); color: #fbf4e1; border-left: 2px solid #c9a55f; }
+.sidebar .badge-new { background: #8b3a1e; color: #fbf4e1; }
+.sidebar .footer { color: #7a8fa3; font-family: 'IM Fell English', Georgia, serif; border-top: 1px solid rgba(201, 165, 95, 0.3); }
+
+.content { padding: 2.5em 3em 5em; position: relative; z-index: 1; }
+
+.content > section:first-child::before {
+  content: '';
+  display: block;
+  width: 130px; height: 130px;
+  margin: 0 auto 0.5em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%230f2538' stroke-width='1.5'%3E%3Ccircle cx='100' cy='100' r='80'/%3E%3Ccircle cx='100' cy='100' r='70'/%3E%3Ccircle cx='100' cy='100' r='55'/%3E%3Ccircle cx='100' cy='100' r='30'/%3E%3C/g%3E%3Cg fill='%230f2538'%3E%3Cpath d='M100,30 L108,95 L100,100 L92,95 Z'/%3E%3Cpath d='M100,170 L108,105 L100,100 L92,105 Z' fill='%238b3a1e'/%3E%3Cpath d='M30,100 L95,92 L100,100 L95,108 Z'/%3E%3Cpath d='M170,100 L105,92 L100,100 L105,108 Z'/%3E%3C/g%3E%3Cg fill='%23c9a55f' opacity='0.9'%3E%3Cpath d='M149,51 L105,95 L100,100 L95,105 Z'/%3E%3Cpath d='M51,51 L95,95 L100,100 L105,105 Z'/%3E%3Cpath d='M149,149 L105,105 L100,100 L95,95 Z'/%3E%3Cpath d='M51,149 L95,105 L100,100 L105,95 Z'/%3E%3C/g%3E%3Ccircle cx='100' cy='100' r='4' fill='%238b3a1e'/%3E%3Ctext x='100' y='18' text-anchor='middle' font-family='IM Fell English' font-size='14' fill='%238b3a1e' font-weight='bold'%3EN%3C/text%3E%3Ctext x='100' y='192' text-anchor='middle' font-family='IM Fell English' font-size='12' fill='%230f2538'%3ES%3C/text%3E%3Ctext x='14' y='105' text-anchor='middle' font-family='IM Fell English' font-size='12' fill='%230f2538'%3EW%3C/text%3E%3Ctext x='186' y='105' text-anchor='middle' font-family='IM Fell English' font-size='12' fill='%230f2538'%3EE%3C/text%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-size: contain;
+}
+
+section + section::before {
+  content: '';
+  display: block;
+  height: 30px;
+  margin: 2em 0 1em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 30'%3E%3Cpath d='M0,15 Q25,5 50,15 T100,15 T150,15 T200,15 T250,15 T300,15 T350,15 T400,15' fill='none' stroke='%231e4258' stroke-width='1.3' opacity='0.7'/%3E%3Cpath d='M0,22 Q25,12 50,22 T100,22 T150,22 T200,22 T250,22 T300,22 T350,22 T400,22' fill='none' stroke='%231e4258' stroke-width='1' opacity='0.4'/%3E%3Cg fill='%23c9a55f' opacity='0.7'%3E%3Ccircle cx='200' cy='15' r='2'/%3E%3Cpath d='M200,8 L203,15 L200,22 L197,15 Z' fill='%238b3a1e'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat-x; background-size: 400px 30px;
+}
+
+.card, .person-card, .week-block, .factor-box, .tool-card, table {
+  background: #fbf5e0;
+  border: 1px solid #c4b590;
+  box-shadow: 1px 2px 4px rgba(42, 29, 15, 0.14), inset 0 0 18px rgba(201, 165, 95, 0.1);
+  border-radius: 3px;
+}
+
+.factor-box { border-left-width: 4px; border-left-color: #1e4258; }
+.factor-box.pull { border-left-color: #8b3a1e; }
+.factor-box .factor-title { color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; }
+.factor-box.pull .factor-title { color: #8b3a1e; }
+.factor-box .numbers { background: #f4e3a8; color: #5e4200; border: 1px solid #d9ba5c; }
+
+.tool-card { border-left: 4px solid #1e4258; }
+.tool-card .tool-name { color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; font-size: 1.05em; }
+
+.timeline { border-left: 3px solid #8b3a1e; }
+.timeline-event::before { background: #c9a55f; border: 2px solid #f1e6ca; box-shadow: 0 0 0 1.5px #8b3a1e; }
+.timeline-date { color: #8b3a1e; font-family: 'IM Fell English SC', Georgia, serif; font-weight: normal; }
+.timeline-title { color: #0f2538; font-family: 'IM Fell English', Georgia, serif; font-weight: 600; }
+.era-header { color: #8b3a1e; font-family: 'IM Fell English SC', Georgia, serif; letter-spacing: 0.15em; font-size: 1.15em; border-top: 1px dashed #c4b590; padding-top: 0.8em; margin-top: 2em; }
+
+.person-card .name { color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; font-size: 1.15em; }
+.person-card .role { color: #8b3a1e; font-family: 'IM Fell English', Georgia, serif; }
+
+.fleet-table th { background: #0f2538; color: #c9a55f; font-family: 'IM Fell English SC', Georgia, serif; letter-spacing: 0.1em; }
+.fleet-table .fate-survived { color: #3d5a2a; }
+.fleet-table .fate-lost { color: #8b1a0a; }
+
+table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; letter-spacing: 0.08em; border-bottom: 2px solid #c4b590; }
+
+.tier-green, .status-ready { background: #d4e5c8; color: #3d5a2a; }
+.tier-yellow, .status-needs { background: #f1d98c; color: #8b5a00; }
+.tier-red, .status-missing { background: #e8b8b0; color: #8b1a0a; }
+.status-draft { background: #cde1ed; color: #0f2538; }
+
+.critique, .caveat { background: #f6e2b0; border-left: 5px solid #8b5a00; font-family: 'IM Fell English', Georgia, serif; }
+.critique strong, .caveat strong { color: #8b5a00; }
+
+.salem-callout { background: #f6e2d2; border-left: 5px solid #8b3a1e; box-shadow: 1px 2px 5px rgba(90, 35, 15, 0.15), inset 0 0 14px rgba(139, 58, 30, 0.07); padding: 1em 1.3em; border-radius: 3px; margin: 1em 0; }
+.salem-callout h4 { color: #8b3a1e; font-family: 'IM Fell English SC', Georgia, serif; }
+
+.artifact-map .artifact-name { background: #fbf5e0; border: 1px solid #c4b590; font-family: 'IM Fell English SC', Georgia, serif; color: #0f2538; box-shadow: 1px 1px 3px rgba(42, 29, 15, 0.1); }
+
+.week-block { background: #fbf5e0; }
+.week-header h3 { color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; }
+.week-dates { color: #5e4421; font-style: italic; font-family: 'IM Fell English', Georgia, serif; }
+.session-num { color: #8b3a1e; font-family: 'IM Fell English SC', Georgia, serif; }
+.session-title .session-focus { color: #5e4421; font-family: 'IM Fell English', Georgia, serif; }
+
+.new-badge { background: #8b3a1e; color: #fbf5e0; font-family: 'IM Fell English SC', Georgia, serif; letter-spacing: 0.12em; }
+
+.checklist li::before { color: #8b3a1e; }
+.checklist li.done::before { color: #3d5a2a; }
+
+.content::after {
+  content: '';
+  display: block;
+  height: 90px;
+  margin: 3em auto 0;
+  max-width: 600px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 90'%3E%3Cg opacity='0.55' fill='%230f2538'%3E%3Cpath d='M0,78 Q62,72 125,78 T250,78 T375,78 T500,78 L500,90 L0,90 Z' opacity='0.3'/%3E%3Cpath d='M0,83 Q62,77 125,83 T250,83 T375,83 T500,83' fill='none' stroke='%231e4258' stroke-width='0.9'/%3E%3Cpath d='M0,87 Q62,81 125,87 T250,87 T375,87 T500,87' fill='none' stroke='%231e4258' stroke-width='0.6' opacity='0.5'/%3E%3Cpath d='M180,72 Q200,82 250,82 Q300,82 320,72 Q325,70 330,66 L170,66 Q175,70 180,72 Z'/%3E%3Crect x='210' y='18' width='1.8' height='50'/%3E%3Crect x='250' y='10' width='2' height='58'/%3E%3Crect x='290' y='18' width='1.8' height='50'/%3E%3Cpath d='M196,22 L224,22 L218,52 L202,52 Z' opacity='0.7'/%3E%3Cpath d='M236,14 L264,14 L260,60 L240,60 Z' opacity='0.7'/%3E%3Cpath d='M276,22 L304,22 L298,52 L282,52 Z' opacity='0.7'/%3E%3Cpath d='M252,10 L266,13 L252,16 Z' fill='%23111'/%3E%3Ccircle cx='258' cy='13' r='0.8' fill='%23c4b590'/%3E%3C/g%3E%3Ctext x='250' y='45' text-anchor='middle' font-family='IM Fell English SC' font-size='9' fill='%238b3a1e' opacity='0.85' letter-spacing='4'%3EWHYDAH%3C/text%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: contain;
+}
+
+.meta { font-style: italic; color: #5e4421; font-family: 'IM Fell English', Georgia, serif; }
+
+@media print {
+  body { background: white; }
+  body::before { display: none; }
+  .content::after { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar">
+  <h1>The Whydah's World</h1>
+  <div class="subtitle">LEAP4Ed Summer 2026 · Planning Dashboard</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#people">Key People</a></li>
+    <li><a href="#why-piracy">Why Piracy</a></li>
+    <li><a href="#maps-geo">Maps, Geography &amp; Tools<span class="badge-new">NEW</span></a></li>
+    <li><a href="#salem">Salem Connection<span class="badge-new">NEW</span></a></li>
+    <li><a href="#fleet">The Fleet<span class="badge-new">NEW</span></a></li>
+    <li><a href="#artifacts">Artifacts → Sessions<span class="badge-new">NEW</span></a></li>
+    <li><a href="#sessions">16-Session Tracker</a></li>
+    <li><a href="#sources">Primary Sources</a></li>
+    <li><a href="#open">Open Questions</a></li>
+    <li><a href="#confidence">Confidence &amp; Methods</a></li>
+  </ul>
+  <div class="footer">
+    Updated: April 24, 2026<br>
+    v3 · Research passes 1–3 folded in<br>
+    Facilitator: Max Howe
+  </div>
+</nav>
+<main class="content">
+
+<section id="overview">
+<h2>Unit Overview</h2>
+<div class="card">
+<h3 style="margin-top:0;">Driving Question</h3>
+<p style="font-size:1.15em; font-family:Georgia,serif; font-style:italic; color:var(--accent); margin:0.3em 0 1em 0;">
+"Why would a person choose piracy in 1717 — and how would they want you to tell their story?"
+</p>
+
+<h4>Key Student Questions (milestones)</h4>
+<ol style="margin-top:0.3em;">
+<li>How did people use maps and navigation to exercise power in the early 1700s?</li>
+<li>What does the Atlantic trade route tell us about who benefited, and who suffered, from global commerce?</li>
+<li>How does geography shape opportunity, resistance, and survival?</li>
+<li>Whose stories get mapped, and whose get buried?</li>
+</ol>
+
+<h4>Three Threads (curriculum spine)</h4>
+<ol style="margin-top:0.3em;">
+<li><strong>Cartography &amp; Navigation Skills</strong> — the tool students use to investigate the Whydah's world. Cartography is the literal thread of the 300-year story: Cyprian Southack's 1717 map preserved the wreck's location; Barry Clifford used it in 1984 to find her.</li>
+<li><strong>The Whydah's Atlantic World</strong> — the ship's journey as narrative spine</li>
+<li><strong>Social Justice Lens</strong> — whose stories get told, whose are buried; runs across all five weeks</li>
+</ol>
+
+<h4>Framing Principle</h4>
+<p style="margin-top:0.3em;">Hold moral complexity without resolving it. The Whydah's crew were escaping brutal conditions <em>and</em> they stole for a living. A Member of Parliament commissioned the ship as a slaver. The Ship's Articles were democratic <em>and</em> a mutiny. Teach students to understand choices without glorifying or condemning them.</p>
+
+<h4>Final Project — Format Menu</h4>
+<ol style="margin-top:0.3em;">
+<li><strong>Digital Story Map</strong> (Google My Maps) — 8–10 annotated locations in chosen voice</li>
+<li><strong>Narrative Presentation</strong> (Google Slides) — 10–12 chapter-structured slides</li>
+<li><strong>Character Performance</strong> — 3–5 minute monologue or scene, live at Showcase</li>
+<li><strong>Illustrated Narrative Poster</strong> — visual timeline with embedded writing</li>
+<li><strong>Student pitch</strong> — alternative format with approval</li>
+</ol>
+
+<h4>Field Trips</h4>
+<ul>
+<li><strong>Week 2 (Thu 7/16):</strong> Real Pirates Salem Museum — confirmed, curator-led if possible</li>
+<li><strong>Week 4 candidate:</strong> Misery Island / City of Rockland shipwreck via Essex Heritage's Naumkeag — hands-on at low tide (Max to confirm program budget allows 2 trips)</li>
+</ul>
+</div>
+</section>
+
+
+<section id="timeline">
+<h2>Timeline — The Whydah's Story</h2>
+<p class="meta">Study spine. If you can narrate this fluently, you can teach the unit. Each entry carries a confidence tier.</p>
+
+<div class="era-header">Background (pre-Whydah)</div>
+<div class="timeline">
+<div class="timeline-event"><div class="timeline-date">Feb 23, 1689</div><div class="timeline-title">Sam Bellamy born — Hittisleigh, Devonshire, England <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Youngest of six; mother Elizabeth died in childbirth three weeks before his baptism on March 18.</div></div>
+<div class="timeline-event"><div class="timeline-date">1701</div><div class="timeline-title">John Julian born <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Half-Miskito Indian from the Mosquito Coast (modern Nicaragua/Honduras). Later mislabeled as "Cape Cod Indian"; identification revised by Expedition Whydah research.</div></div>
+<div class="timeline-event"><div class="timeline-date">1704</div><div class="timeline-title">French establish fortified trading post at Ouidah <span class="tier tier-green">Solid</span></div><div class="timeline-desc">European slave-trading infrastructure consolidates at what becomes the second-largest Atlantic slave port.</div></div>
+<div class="timeline-event"><div class="timeline-date">1707</div><div class="timeline-title">Scilly Isles disaster <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Royal Navy fleet misjudges longitude, wrecks on the Scilly Isles — over 1,000 dead. Triggers the 1714 Longitude Act and Britain's hunt for a longitude solution. Context for why navigation was genuinely dangerous in the Whydah era.</div></div>
+<div class="timeline-event"><div class="timeline-date">1713–14</div><div class="timeline-title">War of Spanish Succession ends <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Treaties of Utrecht and Rastatt. Royal Navy demobilization and end of privateering contracts leave thousands of sailors unemployed, concentrated in the Caribbean. Single biggest push factor into Golden Age piracy.</div></div>
+<div class="timeline-event"><div class="timeline-date">1714</div><div class="timeline-title">British Longitude Act <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Parliament offers £20,000 for a solution to the longitude problem. Harrison begins work ~1730; his H4 wouldn't prove useful until 1761 — 44 years after the Whydah wrecked.</div></div>
+<div class="timeline-event"><div class="timeline-date">1715</div><div class="timeline-title">Spanish Treasure Fleet wrecks off Florida <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Salvage gold rush draws former privateers, sailors, and opportunists — including Paulsgrave Williams and Sam Bellamy, who partner to try to salvage.</div></div>
+<div class="timeline-event"><div class="timeline-date">~1715</div><div class="timeline-title">Benjamin Hornigold founds the "Flying Gang" at Nassau <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Former privateer organizes pirate hub in the Bahamas after the Spanish Treasure Fleet salvage. Bellamy and Edward "Blackbeard" Teach both sail under him — shared mentorship.</div></div>
+</div>
+
+<div class="era-header">The Whydah's Life (1715–1717)</div>
+<div class="timeline">
+<div class="timeline-event"><div class="timeline-date">1715</div><div class="timeline-title">Whydah commissioned in London <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Built as a slave ship. Commissioned by <strong>Sir Humphrey Morice — Member of Parliament AND London's foremost slave merchant.</strong> 110 ft, 300 tons, three-masted galley, 18 cannons. Named after the West African slave port of Ouidah.</div></div>
+<div class="timeline-event"><div class="timeline-date">Late 1715 / early 1716</div><div class="timeline-title">Bellamy and Williams turn to piracy <span class="tier tier-green">Solid</span></div><div class="timeline-desc">After their Spanish Treasure Fleet salvage failed, the partnership redirects to piracy in the Caribbean. Williams had the capital; Bellamy had navigational skill.</div></div>
+<div class="timeline-event"><div class="timeline-date">1716</div><div class="timeline-title">Whydah sails slaving voyage under Capt. Lawrence Prince <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Ship's bell (recovered 1985) bears "The Whydah Gally 1716." 367 captives loaded in West Africa; 312 survive the Middle Passage to Jamaica.</div></div>
+<div class="timeline-event"><div class="timeline-date">Summer 1716</div><div class="timeline-title">Hornigold deposed — Bellamy elected captain <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Hornigold's crew votes him out of command because he refuses to attack English ships. Bellamy elected captain in his place; Blackbeard also deposed. Live example of pirate democracy in action.</div></div>
+<div class="timeline-event"><div class="timeline-date">Nov 9, 1716</div><div class="timeline-title">John King, age 8–11, joins Bellamy's crew <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Bellamy captures the sloop Bonetta (Jamaica → Antigua). King, a passenger traveling with his mother, demands to join the pirates, threatens suicide if restrained, and threatens his own mother. Bellamy allows him to stay.</div></div>
+<div class="timeline-event"><div class="timeline-date">Feb 28, 1717</div><div class="timeline-title">Bellamy captures the Whydah <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Off the Bahamas in the Windward Passage, after a three-day chase. Source: Boston Vice-Admiralty Court testimony, 1717 (primary). Bellamy arms her with 28 guns, stores 30+ more below as ballast.</div></div>
+<div class="timeline-event"><div class="timeline-date">Feb–Apr 1717</div><div class="timeline-title">Bellamy takes 53+ prizes <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Two months of prize-taking through the Caribbean and up the Atlantic coast. Known for releasing crews and typically avoiding gratuitous killing (though not without violence).</div></div>
+<div class="timeline-event"><div class="timeline-date">April 26, 1717 (day)</div><div class="timeline-title">Bellamy captures the pink Mary Anne of Dublin <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Laden with Madeira wine. The last prize. Seven pirates put aboard as prize crew; she sails with the fleet that evening.</div></div>
+<div class="timeline-event"><div class="timeline-date">April 26, 1717 (night)</div><div class="timeline-title">Nor'easter wrecks the Whydah at Wellfleet <span class="tier tier-green">Solid</span></div><div class="timeline-desc">At Marconi Beach, Wellfleet, Cape Cod. 146 souls aboard; only 2 Whydah crew survive — John Julian (pilot, 16) and Thomas Davis (Welsh carpenter). The Mary Anne also wrecks the same night south of the Whydah; all 10 aboard survive (7 pirate prize crew + 3 original crew). Williams aboard the Marianne survives by accident — he had stopped at Block Island to visit family.</div></div>
+</div>
+
+<div class="era-header">Aftermath (1717–1930s)</div>
+<div class="timeline">
+<div class="timeline-event"><div class="timeline-date">May 1717</div><div class="timeline-title">Cyprian Southack dispatched to salvage <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Massachusetts Governor Samuel Shute sends Cyprian Southack (1662–1745), cartographer and naval militia commander, to recover what can be recovered for the Crown. Southack travels from Boston to Provincetown to Eastham via "Jeremiah's Gutter" — a natural canal through Eastham. Finds the wreck capsized; recovers almost nothing. BUT marks the location on his New England chart.</div></div>
+<div class="timeline-event"><div class="timeline-date">October 18, 1717</div><div class="timeline-title">Whydah survivors tried in Boston <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Vice-Admiralty Court presided by Governor Samuel Shute and <strong>Judge Samuel Sewall — one of the 1692 Salem Witch Trial judges</strong> who had publicly apologized for his role in 1697. 9 total survivors tried; 6 found guilty, 2 acquitted, 1 (Julian) not tried.</div></div>
+<div class="timeline-event"><div class="timeline-date">November 15, 1717</div><div class="timeline-title">Six hanged at Boston Common <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Public execution at the Great Elms. <strong>Cotton Mather — another Salem Witch Trials figure</strong> — ministers to them, walks with them to the gallows, preaches the execution sermon. Published as "Instructions to the Living, from the Condition of the Dead" (1717) — a primary source that exists today.</div></div>
+<div class="timeline-event"><div class="timeline-date">Nov 22, 1718</div><div class="timeline-title">Blackbeard killed at Ocracoke <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Edward Teach, Bellamy's fellow alumnus of Hornigold's Flying Gang, dies in battle against Lt. Robert Maynard's crew off Ocracoke Island, NC — 19 months after Bellamy.</div></div>
+<div class="timeline-event"><div class="timeline-date">1724</div><div class="timeline-title">Captain Charles Johnson publishes <em>A General History of the Pyrates</em> <span class="tier tier-yellow">Mixed reliability</span></div><div class="timeline-desc">Source of most pirate lore. Author identity contested (Colin Woodard favors publisher Nathaniel Mist). Contains valuable material AND significant fabrication. Bellamy's "rob the poor" speech likely invention. Most set speeches likewise.</div></div>
+<div class="timeline-event"><div class="timeline-date">1727</div><div class="timeline-title">Kingdom of Dahomey conquers Ouidah <span class="tier tier-green">Solid</span></div><div class="timeline-desc">West African political upheaval at the port that gave the Whydah her name. Dahomey continues the slave trade for another 135+ years.</div></div>
+<div class="timeline-event"><div class="timeline-date">1733</div><div class="timeline-title">John Julian dies <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Died in slavery after multiple escape attempts. Sold from John Quincy (grandfather of future President John Quincy Adams) to another owner. 32 years old, 16 years after the wreck.</div></div>
+<div class="timeline-event"><div class="timeline-date">1934</div><div class="timeline-title">Elizabeth Reynard publishes <em>The Narrow Land</em> <span class="tier tier-red">Literary, not primary</span></div><div class="timeline-desc">Coins the name "Maria Hallett" for Bellamy's Cape Cod lover. Folklore study, not historical documentation. Students will encounter the name; important to know where it actually came from.</div></div>
+</div>
+
+<div class="era-header">Modern Recovery (1984–present)</div>
+<div class="timeline">
+<div class="timeline-event"><div class="timeline-date">1984</div><div class="timeline-title">Barry Clifford finds the wreck <span class="tier tier-green">Solid</span></div><div class="timeline-desc"><strong>Using Cyprian Southack's 267-year-old map.</strong> Buried under 10–50 ft of sand, 4 m deep in Salem Sound's outer waters. The cartography throughline made visible.</div></div>
+<div class="timeline-event"><div class="timeline-date">1985</div><div class="timeline-title">Ship's bell recovered, identity confirmed <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Inscription "The Whydah Gally 1716" proves the wreck is the Whydah. First fully authenticated Golden Age pirate shipwreck in North America.</div></div>
+<div class="timeline-event"><div class="timeline-date">1986</div><div class="timeline-title">Kenneth Kinkor joins as Project Historian <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Compiles Whydah Sourcebook of 17th–18th-century archival records. Establishes ~25%-Black-crew finding. Serves 27 years until his death in 2013.</div></div>
+<div class="timeline-event"><div class="timeline-date">2006</div><div class="timeline-title">John King's remains identified <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Smithsonian identifies an 11-inch fibula encased in a shoe and silk stocking as belonging to a young boy of King's approximate age. Small silver buckle also attributed to him.</div></div>
+<div class="timeline-event"><div class="timeline-date">Ongoing</div><div class="timeline-title">Excavation continues <span class="tier tier-green">Solid</span></div><div class="timeline-desc">200,000+ artifacts recovered; excavation not complete. Six skeletons in concretions recovered in recent years. Real Pirates Salem houses much of the traveling collection.</div></div>
+</div>
+</section>
+
+
+<section id="people">
+<h2>Key People</h2>
+<p class="meta">Cards sized for quick recall while teaching. Each notes potential student-project perspective use.</p>
+
+<div class="card-grid">
+
+<div class="person-card">
+<div class="name">Sam "Black Sam" Bellamy</div>
+<div class="role">Captain of the Whydah · 1689–1717 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Born Devon, England; mother died in his birth</li>
+<li>Served in Royal Navy as a young sailor</li>
+<li>At Cape Cod by 1715 (the "Maria Hallett" name is 1934 invention)</li>
+<li>Captured 53+ ships in ~1 year; died at 28 in the wreck</li>
+<li>Reputation for releasing captured crews with relatively little violence — real <em>and</em> somewhat mythologized by Johnson 1724</li>
+</ul>
+<div class="perspective-use">Project use: captain POV. Explore leadership, charisma, and the moral complexity of the "gentleman pirate."</div>
+</div>
+
+<div class="person-card">
+<div class="name">John Julian</div>
+<div class="role">Ship's pilot · 1701–1733 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Half-Miskito Indian from the Mosquito Coast (Nicaragua/Honduras)</li>
+<li>Pilot of the Whydah at age <strong>16</strong></li>
+<li>One of only 2 Whydah crew to survive the wreck</li>
+<li>Not tried — sold into slavery to John Quincy (grandfather of President John Quincy Adams)</li>
+<li>Multiple escape attempts; died in slavery 1733</li>
+</ul>
+<div class="perspective-use">Project use: extraordinarily rich POV. Central American–born teen pilot, survivor, then enslaved <em>after</em> the wreck. Centers a voice history tried to bury.</div>
+</div>
+
+<div class="person-card">
+<div class="name">John King — The Boy Pirate</div>
+<div class="role">Age 8–11 · died 1717 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Passenger on merchant sloop Bonetta with his mother (Jamaica → Antigua)</li>
+<li>Bellamy captured the Bonetta Nov 9, 1716; looted her for 15 days</li>
+<li><strong>King demanded to join the pirates</strong>, threatened to kill himself if restrained, threatened his mother</li>
+<li>Died in the Whydah wreck, age at most 11</li>
+<li>Remains identified 2006: 11-inch fibula in a shoe and silk stocking</li>
+</ul>
+<div class="perspective-use">Project use: the middle-school-age hook. A kid their age made this extraordinary choice. His shoe and stocking exist in the collection. Use him to sit students right on top of the DQ.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Paulsgrave Williams</div>
+<div class="role">Bellamy's partner · c.1675 – after 1723 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li><strong>Wealthy Rhode Island silversmith</strong> — class contrast to Bellamy</li>
+<li>Supplied the sloop; Bellamy supplied the nav skill</li>
+<li>Whydah's quartermaster</li>
+<li><strong>Survived the wreck by accident</strong> — stopped at Block Island to visit family while rest of fleet sailed on</li>
+<li>Returned to Rhode Island civilian life; died after 1723</li>
+</ul>
+<div class="perspective-use">Project use: the wealthy-man-chose-piracy angle complicates the "poverty forced them" narrative. Survived by visiting family — luck, not valor.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Thomas Davis</div>
+<div class="role">Welsh carpenter · Whydah survivor <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>The other Whydah crew member to survive the wreck</li>
+<li>Claimed he had been forced into piracy</li>
+<li>Acquitted at the Boston trials and freed</li>
+</ul>
+<div class="perspective-use">Project use: the "forced into piracy" angle. Useful for students exploring coercion vs. choice. Legal strategy mattered: claiming coercion saved his life.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Capt. Lawrence Prince</div>
+<div class="role">Original Whydah captain, slave trader <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Experienced slaver who sailed the Whydah in 1716</li>
+<li>Delivered 312 of 367 captives alive to Jamaica</li>
+<li>Surrendered to Bellamy Feb 28, 1717 after a 3-day chase</li>
+<li>Bellamy let him and his crew go — gave them the Sultana</li>
+</ul>
+<div class="perspective-use">Project use: merchant-captain POV. A student choosing Prince reckons with being a slaver victimized by pirates. Moral complexity in both directions.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Sir Humphrey Morice</div>
+<div class="role">MP · London slave merchant · commissioned the Whydah <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Member of Parliament</li>
+<li>"The foremost London slave merchant of his day"</li>
+<li><strong>Commissioned the Whydah's build in 1715 as a slaver</strong></li>
+<li>Evidence that British slavery was a government-connected enterprise, not a distant private affair</li>
+</ul>
+<div class="perspective-use">Project use: the establishment POV. A student choosing Morice tells the story of the system from its source — the MP in Parliament whose ship sails off and never comes back.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Benjamin Hornigold</div>
+<div class="role">Pirate mentor · founded Flying Gang · d. ~1719 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Former privateer; organized Nassau as a pirate haven ~1715</li>
+<li><strong>Mentored both Bellamy AND Blackbeard</strong> aboard the Marianne</li>
+<li>Deposed summer 1716 — his crew voted him out because he refused to attack English ships</li>
+<li>Took King's pardon 1718, became a pirate-hunter; died at sea ~1719</li>
+</ul>
+<div class="perspective-use">Project use: the mentor who wouldn't go far enough. Good for exploring pirate democracy (the voting-out) and the limits of "principled" piracy.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Edward "Blackbeard" Teach</div>
+<div class="role">Bellamy's fellow Flying-Gang alumnus · c.1680–1718 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Served under Hornigold alongside Bellamy</li>
+<li>Captured La Concorde → renamed Queen Anne's Revenge, 40 guns, 300 crew</li>
+<li>Blockaded Charleston 1718</li>
+<li>Killed at Ocracoke NC, Nov 22, 1718 — 19 months after Bellamy</li>
+<li>Deliberately cultivated terrifying image (fuses in beard)</li>
+</ul>
+<div class="perspective-use">Project use: contemporary contrast. Same mentor as Bellamy; wildly different pirate presentation. Both dead within 20 months. Useful for comparison.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Cyprian Southack</div>
+<div class="role">Cartographer · salvager · 1662–1745 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>"New England's first native chart maker"</li>
+<li>Commander of the Bay Colony's naval militia</li>
+<li>Sent by Gov. Samuel Shute in 1717 to salvage the wreck; recovered almost nothing</li>
+<li><strong>Marked the wreck's location on his New England chart</strong></li>
+<li>That 267-year-old map is how Barry Clifford found the Whydah in 1984</li>
+</ul>
+<div class="perspective-use">Project use: THE cartographer character. A GIS/mapmaker POV at the heart of the story. His 1717 map preserved the site for three centuries.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Barry Clifford</div>
+<div class="role">Underwater explorer · b. 1945 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Discovered the wreck in 1984 using Southack's map</li>
+<li>Recovered the bell in 1985 — first authenticated Golden Age pirate wreck</li>
+<li>Has led the excavation via Expedition Whydah ever since</li>
+<li>Some controversy in archaeology community about salvage vs. academic methods</li>
+</ul>
+<div class="perspective-use">Project use: modern discoverer POV. The excavation process, ethics of salvage, mission of recovering the crew's story.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Kenneth Kinkor</div>
+<div class="role">Project Historian · 1954–2013 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Joined Expedition Whydah 1986; 27 years as Director of Research</li>
+<li>Compiled the <em>Whydah Sourcebook</em></li>
+<li>Established that ~25% of Bellamy's crew was Black</li>
+<li>Co-authored <em>Real Pirates: The Untold Story of the Whydah</em> (with Clifford &amp; Simpson)</li>
+</ul>
+<div class="perspective-use">Project use: historian POV. For students interested in how we know what we know.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Cotton Mather</div>
+<div class="role">Puritan minister · 1663–1728 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Son of Increase Mather, grandson of Richard Mather</li>
+<li>Complicated role in the 1692 Salem Witch Trials — his <em>Wonders of the Invisible World</em> defended the court</li>
+<li>Ministered to the Whydah pirates in Boston jail</li>
+<li>Preached the Nov 15, 1717 execution sermon at Boston Common</li>
+<li>Published "Instructions to the Living, from the Condition of the Dead" (1717) — an existing primary source</li>
+</ul>
+<div class="perspective-use">Project use: Salem-familiar name. Puritan moral framing vs. the democratic pirate crew he was trying to save. Direct tie to Salem kids' prior knowledge.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Judge Samuel Sewall</div>
+<div class="role">Salem Witch Trial judge · Whydah trial judge <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>One of the 1692 Salem Witch Trial judges</li>
+<li>In 1697 published a <strong>public apology</strong> for his role — the only Witch Trial judge to do so (Sewall's apology)</li>
+<li>Presided over the Whydah pirate trials in Boston, October 1717</li>
+<li>20 years between his witch-trial regret and his pirate-trial role</li>
+</ul>
+<div class="perspective-use">Project use: the New England legal establishment running two infamous 1600s/1700s trials. A Salem student's prior knowledge of Sewall (from witch-trial curriculum) plugs directly into this unit.</div>
+</div>
+
+<div class="person-card">
+<div class="name">"Maria Hallett"</div>
+<div class="role">Bellamy's Cape Cod lover <span class="tier tier-red">Name is fiction</span></div>
+<ul>
+<li>A young Cape Cod woman Bellamy was involved with — affair documented</li>
+<li>The name "Maria" comes from Elizabeth Reynard's 1934 novel <em>The Narrow Land</em></li>
+<li>Local folklore calls her the "Witch of Wellfleet"; reportedly bore his child</li>
+<li>We do not know her actual name</li>
+</ul>
+<div class="perspective-use">Project use: the ambiguity is the teaching moment. A student taking her POV wrestles with what's known vs. invented. Good for paired historiography mini-lesson.</div>
+</div>
+
+<div class="person-card">
+<div class="name">Olaudah Equiano</div>
+<div class="role">Captive narrative author · c.1745–1797 <span class="tier tier-green">Solid</span></div>
+<ul>
+<li>Author of <em>The Interesting Narrative of the Life of Olaudah Equiano</em> (1789)</li>
+<li><strong>Captured 1756 — NOT Whydah-era</strong> (his narrative is 40 years after the wreck)</li>
+<li>Used as a Middle Passage voice, not a Whydah voice</li>
+<li>Scholarly debate about African vs. American birth</li>
+</ul>
+<div class="perspective-use">Project use: not a Whydah-era voice, but the closest accessible primary source on the Middle Passage experience. Frame accurately when used in Session 6.</div>
+</div>
+
+</div>
+</section>
+
+
+<section id="why-piracy">
+<h2>Why Piracy — Push/Pull Causal Map</h2>
+<p class="meta">The spine of the Driving Question. Based on Rediker's <em>Villains of All Nations</em> (2004) and corroborating post–Spanish Succession literature. The critique at the bottom is essential — don't teach Rediker as settled.</p>
+
+<div class="two-col">
+<div>
+<h3 style="color:var(--accent);">Push Factors — away from alternatives</h3>
+
+<div class="factor-box">
+<span class="factor-title">End of Queen Anne's War (1713–14)</span>
+<div class="factor-desc">Massive Royal Navy demobilization and end of privateering contracts left thousands of sailors unemployed, many stranded in the Caribbean. Single biggest cause of the Golden Age surge.</div>
+</div>
+
+<div class="factor-box">
+<span class="factor-title">Merchant-ship conditions</span>
+<div class="factor-desc">Rotten food, payment fraud, cramped quarters, untreated disease, crippling accidents, arbitrary abuse from captains.</div>
+<div class="numbers">Slave-ship crew mortality: 21.6% per voyage (1784–90 House of Commons survey — 1-in-4 died)</div>
+</div>
+
+<div class="factor-box">
+<span class="factor-title">Wage suppression</span>
+<div class="factor-desc">Commercial revolution created a surplus of sailor labor; merchants drove wages down.</div>
+<div class="numbers">Royal Navy wages set 1653 — not raised for 144 years (until after the 1797 Spithead Mutiny)</div>
+</div>
+
+<div class="factor-box">
+<span class="factor-title">Impressment</span>
+<div class="factor-desc">Forced naval service was common practice — the Royal Navy seized men off streets and merchant ships. Deserting the navy to join pirates was a direct path.</div>
+</div>
+
+<div class="factor-box">
+<span class="factor-title">Enclosure movement</span>
+<div class="factor-desc">Dispossession of English smallholders pushed rural men toward the sea as one of few remaining options.</div>
+</div>
+</div>
+
+<div>
+<h3 style="color:var(--sepia);">Pull Factors — what piracy offered</h3>
+
+<div class="factor-box pull">
+<span class="factor-title">Democratic governance</span>
+<div class="factor-desc">Pirates elected their captains, voted on matters of moment, and could depose a captain who fell out of favor. Bellamy's crew literally voted Hornigold out in summer 1716. Radical for the era.</div>
+</div>
+
+<div class="factor-box pull">
+<span class="factor-title">Equitable division of booty</span>
+<div class="factor-desc">Articles typically specified shares by rank, with the captain getting only ~1.5–2× an ordinary seaman — versus massive captain-to-crew ratios on merchant and naval ships.</div>
+</div>
+
+<div class="factor-box pull">
+<span class="factor-title">Flatter racial hierarchy</span>
+<div class="factor-desc">Kinkor's research: ~25% of Bellamy's crew was Black. Golden Age pirate crews were often 25–33% Black overall. Formerly enslaved men could hold skilled positions unavailable elsewhere.</div>
+</div>
+
+<div class="factor-box pull">
+<span class="factor-title">Compensation for injury</span>
+<div class="factor-desc">Articles commonly specified set payments for lost limbs or eyes — a form of early workers' compensation, centuries ahead of merchant and naval service.</div>
+</div>
+
+<div class="factor-box pull">
+<span class="factor-title">Loosely defended trade</span>
+<div class="factor-desc">Colonial shipping was rich and poorly protected. Caribbean power vacuum made piracy unusually lucrative and feasible in this window.</div>
+</div>
+</div>
+</div>
+
+<div class="critique">
+<strong>Critique — required for the "don't glorify" principle.</strong>
+Rediker's framing casts pirates as proto-class-conscious resistors. Reviewers push back: <em>"The heroic stature granted these violent villains is somewhat disconcerting, as many pirates consistently engaged in the brutal torture of victims for sadistic purposes."</em> And: <em>"It's not particularly radical history to make real life slaves the pawns of a revisionist white savior fantasy."</em> The push/pull framework is <strong>a real causal explanation</strong>, but the men who chose piracy also chose theft and violence. Teach both halves.
+</div>
+</section>
+
+<section id="maps-geo">
+<h2>Maps, Geography &amp; Tools <span class="new-badge">NEW</span></h2>
+<p class="meta">Your wheelhouse. Weeks 1, 3, and 4 lean on this. What navigators in 1717 actually had, what they couldn't do, and why the triangle trade had the shape it did.</p>
+
+<h3>Navigation instruments — what was on the Whydah</h3>
+
+<div class="tool-card">
+<span class="tool-name">Compass</span> <span class="tool-meta">centuries old by 1717</span>
+<div>Magnetized needle on a pivot. Gave a coarse heading. Standard on all serious sea vessels.</div>
+</div>
+
+<div class="tool-card">
+<span class="tool-name">Backstaff</span> <span class="tool-meta">invented John Davis, 1594</span>
+<div>The standard latitude tool of the 17th–early 18th century. Measured the sun's altitude from its shadow — user didn't look at the sun directly. <strong>This is what the Whydah's 16-year-old pilot John Julian would have used.</strong></div>
+</div>
+
+<div class="tool-card">
+<span class="tool-name">Quadrant</span> <span class="tool-meta">medieval, still used</span>
+<div>Heavy metal plate with a plumb-bob. Measured angle to Polaris at night or sun at noon. More awkward than the backstaff but functional.</div>
+</div>
+
+<div class="tool-card">
+<span class="tool-name">Dead reckoning</span> <span class="tool-meta">method, not instrument</span>
+<div>Estimating current position from last known point using heading + speed + elapsed time. Error accumulated over days. For ocean voyages, it was mostly educated guessing.</div>
+</div>
+
+<h4 style="margin-top:1.5em;">What DIDN'T exist yet in 1717</h4>
+<ul>
+<li><strong>Octant</strong> — 1731, fourteen years too late</li>
+<li><strong>Sextant</strong> — 1759</li>
+<li><strong>Marine chronometer</strong> (Harrison's H4) — proved useful 1761, 44 years too late</li>
+</ul>
+
+<h3>The longitude problem — a 1717 reality check</h3>
+
+<div class="card">
+<p>In 1717, sailors could reliably find their <strong>latitude</strong> (north-south position). They could NOT reliably find their <strong>longitude</strong> (east-west position). The best method available was <strong>dead reckoning</strong>, which accumulated error over days.</p>
+<p><strong>1707 Scilly Isles disaster:</strong> Royal Navy fleet misjudged longitude, wrecked on the Scillies, over 1,000 dead. Triggered the 1714 Longitude Act — Parliament offered £20,000 (millions today) for a solution.</p>
+<p>John Harrison began work on marine chronometers ~1730. His H4 proved itself in 1761, losing only ~5 seconds over an 81-day voyage. <strong>All of this is AFTER the Whydah.</strong></p>
+<p><strong>Teaching implication for Session 13:</strong> the Whydah wreck was, in part, a longitude-problem disaster. A night storm, a lee shore, imprecise east-west position, no way to verify location until daylight. Her pilot — a 16-year-old with a backstaff — was navigating blind.</p>
+</div>
+
+<h3>Mercator projection — why Google Maps still uses it</h3>
+
+<div class="card">
+<p>Invented by Gerard Mercator in 1569 but NOT widely adopted for marine charts until the 18th century. By 1717, Mercator charts were becoming the working standard for ocean navigation.</p>
+<p><strong>The revolutionary property:</strong> rhumb lines (courses of constant compass bearing) appear as <strong>straight lines</strong> on Mercator. On any other projection, a rhumb is a curve.</p>
+<p><strong>Practical effect for a 1717 navigator:</strong> draw a straight line from A to B on a Mercator chart, read the compass bearing off that line, hold that heading across the ocean.</p>
+<p><strong>The modern descendant:</strong> Google Maps uses <strong>Web Mercator</strong>. Same projection Whydah-era sailors relied on — same distortion at high latitudes (why Greenland looks enormous).</p>
+</div>
+
+<h3>Herman Moll's 1719 world map — the mapmaker who knew pirates</h3>
+
+<div class="card">
+<p>Moll was the most important London cartographer of the early 1700s. His 1719 world map was made to illustrate Daniel Defoe's <em>Farther Adventures of Robinson Crusoe.</em></p>
+<p><strong>His social circle included actual pirates and privateers:</strong> William Dampier, Woodes Rogers, and William Hacke, who gave him firsthand information on Caribbean routes and Spanish treasure movements.</p>
+<p>Moll's West Indies map has been described as "a guide to English piracy and privateering." His maps showed <strong>trade winds, compass variations, and "Remarkable Tracts"</strong> of voyages — essentially commercial intelligence.</p>
+<p><strong>Teaching use for Session 3:</strong> the question "who made this map, and why?" has a spectacular answer — a guy who drank with pirates and sold their route data for profit. Maps are arguments, not neutral records.</p>
+</div>
+
+<h3>Atlantic trade winds &amp; gyres — the triangle trade's physics</h3>
+
+<div class="card">
+<p>The triangle trade's shape wasn't a "choice" by merchants — it was forced by physics.</p>
+<ul>
+<li><strong>North Atlantic Gyre</strong> — giant clockwise ocean current system; the Gulf Stream is its northern limb</li>
+<li><strong>Trade winds</strong> (easterlies, south of ~30°N) — carried ships Europe → Africa → Caribbean</li>
+<li><strong>Westerlies</strong> (westerlies, north of ~30°N) — carried ships Caribbean → North America → Europe</li>
+</ul>
+<p><strong>The Whydah's final voyage fits this pattern:</strong> after the Caribbean, Bellamy was heading north up the American coast — riding the Gulf Stream toward the westerlies — when the nor'easter caught him off Cape Cod.</p>
+<p><strong>Teaching move for Session 5:</strong> before students plot the triangle trade on Google My Maps, show them the wind map. The question "why is it shaped like a triangle?" has a physical answer, not just an economic one.</p>
+</div>
+</section>
+
+
+<section id="salem">
+<h2>Salem Connection <span class="new-badge">NEW</span></h2>
+<p class="meta">Your students' city is directly on the map the unit studies. Three distinct Salem-to-Whydah connections: the triangle trade, the Salem Witch Trial figures who ran the Whydah pirate trials, and Misery Island as a potential field trip.</p>
+
+<h3>Salem's own maritime economy</h3>
+<div class="salem-callout">
+<h4>Salem was built on the same trade the Whydah sailed through.</h4>
+<p>From the mid-17th century onward, Salem merchants provisioned West Indies plantations with dried cod, livestock, and lumber; Salem ships returned with sugar, molasses, rum, and coffee. The NPS interprets Salem's waterfront as explicitly dependent on the slave economy.</p>
+<p>Even after Massachusetts abolished slavery in 1783, Salem merchants continued in the slave economy — Joshua Ward's Brig <em>Favorite</em> sailed to Africa in 1786 to buy and sell people.</p>
+<p>The <strong>Ward Family Papers at Peabody Essex Museum</strong> document this directly.</p>
+</div>
+
+<h3>Salem Maritime National Historic Site</h3>
+<div class="card">
+<ul>
+<li><strong>America's first National Historic Site</strong></li>
+<li><strong>Derby Wharf</strong> — built 1762, extended 1806, nearly half a mile long</li>
+<li>Interprets three eras at the same site: <strong>Triangle Trade colonial period</strong> · <strong>Revolutionary privateering</strong> · <strong>post-independence Far East trade</strong></li>
+<li><strong>Hawkes House</strong> was used as a privateer prize warehouse during the Revolution</li>
+<li><strong>Walking distance from Collins MS</strong></li>
+</ul>
+<p class="meta">Potential supplementary visit or alternative field trip. Even without a visit, the site's content maps directly onto Sessions 5, 7, 11.</p>
+</div>
+
+<h3>Peabody Essex Museum</h3>
+<div class="card">
+<ul>
+<li>Major collection of early American maritime art + Asian art from the China trade</li>
+<li>Holds the <strong>Ward Family Papers</strong> and other primary documents on Salem's slave-trade involvement</li>
+<li>Could potentially host a research visit or provide digitized primary sources</li>
+</ul>
+</div>
+
+<h3>The Salem Witch Trial figures who ran the Whydah trials</h3>
+<div class="salem-callout">
+<h4>Your students will already know these names.</h4>
+<p><strong>Cotton Mather</strong> — Puritan minister with complicated role in the 1692 Salem Witch Trials. 25 years later, ministered to the Whydah pirates in Boston, preached their execution sermon, and published "Instructions to the Living, from the Condition of the Dead" (1717) — an existing primary source.</p>
+<p><strong>Judge Samuel Sewall</strong> — One of the 1692 Salem Witch Trial judges. In 1697 published a <strong>public apology</strong> — the only Witch Trial judge to do so. Presided over the Whydah pirate trials in Boston, October 1717.</p>
+<p>The same New England religious and legal establishment that ran the Salem Witch Trials (1692) ran the Whydah pirate trials (1717). For Salem students, this isn't a distant pirate story — it's their town's own figures, 25 years later.</p>
+</div>
+
+<h3>Misery Island — field trip candidate</h3>
+<div class="card">
+<p><strong>Great Misery + Little Misery Islands</strong> — 87-acre nature reserve in Salem Sound, Trustees of Reservations.</p>
+<p>Little Misery holds the wreck of the <strong>City of Rockland</strong> — a 1900-built luxury paddle steamer scuttled and burned there in 1924. Barnacle-encrusted ribs emerge at low tide.</p>
+<p><strong>Essex Heritage operates a landing craft (the Naumkeag)</strong> that runs shipwreck-archaeology programs to the site for hands-on, low-tide examination.</p>
+<p><strong>"Salem for All Ages" has run a "Shipwreck Archaeology at Little Misery Island" program</strong> — proven student field trip.</p>
+<p><strong>Unit fit:</strong> pairs naturally with Session 14 (Finding the Whydah) as Week 4 capstone. Real Pirates Salem gives students the <em>Whydah story</em>; Misery Island gives them the <em>shipwreck-investigation method</em> on local water. Recommendation: if 2 field trips are approved, Misery Island is the capstone.</p>
+</div>
+</section>
+
+<section id="fleet">
+<h2>The Fleet — Bellamy's Four Ships on April 26, 1717 <span class="new-badge">NEW</span></h2>
+<p class="meta">The wreck wasn't a lonely ship in a storm. Bellamy had a fleet of four that night. The storm scattered them; geography and luck decided who lived.</p>
+
+<table class="fleet-table">
+<thead>
+<tr><th>Ship</th><th>Role</th><th>Captain</th><th>Fate</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Whydah</strong></td><td>Flagship, 28+ guns</td><td>Sam Bellamy</td><td class="fate-lost">WRECKED at Wellfleet · 2 survivors of 146 aboard</td></tr>
+<tr><td><strong>Marianne</strong></td><td>10-gun sloop (Hornigold's old ship)</td><td>Paulsgrave Williams</td><td class="fate-survived">Survived · Williams at Block Island visiting family</td></tr>
+<tr><td><strong>Anne Galley</strong></td><td>Captured consort</td><td>Richard Noland (former quartermaster)</td><td class="fate-survived">Separated from fleet; survived</td></tr>
+<tr><td><strong>Mary Anne (pink)</strong><br><span class="meta">of Dublin</span></td><td>Prize captured the same day, April 26 — loaded with Madeira wine</td><td>Bellamy's prize crew of 7</td><td class="fate-lost">Also wrecked April 26, south of Whydah · all 10 aboard survived (shallow wreck)</td></tr>
+</tbody>
+</table>
+
+<p><strong>The "7 additional survivors from a sloop"</strong> often referenced are the Mary Anne's prize crew (7 pirates Bellamy had put aboard that afternoon) plus 3 original crew, of whom all 10 made it ashore when she wrecked in shallower water.</p>
+
+<div class="card">
+<h4>Teaching implication</h4>
+<p>When students encounter the wreck, they can see: a flotilla coordinating in a storm, one ship taking the brunt of the nor'easter, one ship saved by a captain's side errand, one prize captured and lost in the same day. The 16-year-old pilot of the flagship navigating a 110-foot ship with a backstaff in a nighttime nor'easter on a lee shore — with no way to determine longitude. The human and physical geography of that night decided everything.</p>
+</div>
+</section>
+
+<section id="artifacts">
+<h2>Artifacts → Sessions Map <span class="new-badge">NEW</span></h2>
+<p class="meta">200,000+ artifacts recovered to date. Specific objects tie to specific sessions — use them as the physical anchor for abstract ideas.</p>
+
+<div class="artifact-map">
+
+<div class="artifact-name">West African gold dust</div>
+<div class="artifact-use"><strong>Session 5 (Triangle Trade)</strong> — physical evidence of the triangle trade as a real system. The Whydah carried this back from West Africa as part of slave-trade cargo.</div>
+
+<div class="artifact-name">Spanish silver reales ("pieces of eight")</div>
+<div class="artifact-use"><strong>Session 11 (Piracy as Geography)</strong> — evidence of what Bellamy actually took. Thousands of these recovered. Show students the coins and ask why pirates went to the Caribbean specifically.</div>
+
+<div class="artifact-name">Gold ingots and artifacts</div>
+<div class="artifact-use"><strong>Session 5 and 11</strong> — the economic scale of the trade. Ingots weren't personal jewelry; they were capital.</div>
+
+<div class="artifact-name">Firearms, cutlasses, daggers</div>
+<div class="artifact-use"><strong>Session 12 (What Pirates Actually Did)</strong> — the physical reality of piracy as violence. Teach with care; anchor the moral complexity discussion.</div>
+
+<div class="artifact-name">Personal items — buttons, buckles, smoking pipes, pewter plates</div>
+<div class="artifact-use"><strong>Session 15 (Voices of the Whydah)</strong> — everyday objects humanize the crew. These were PEOPLE, not legends. The pipes and plates do more work than any speech.</div>
+
+<div class="artifact-name">The ship's bell (inscribed "The Whydah Gally 1716")</div>
+<div class="artifact-use"><strong>Session 14 (Finding the Whydah)</strong> — the single object that proved the wreck's identity in 1985. Also confirms the 1716 operational date. A teaching story in itself.</div>
+
+<div class="artifact-name">John King's fibula in a shoe and silk stocking</div>
+<div class="artifact-use"><strong>Sessions 15 and 16</strong> — the most emotionally potent single artifact. A child's death made physically present. Center the perspective-taking work around it.</div>
+
+<div class="artifact-name">Silver buckle attributed to John King</div>
+<div class="artifact-use"><strong>Session 16</strong> — a personal effect of the boy pirate. Small, specific, humanizing.</div>
+
+<div class="artifact-name">Six skeletons in concretions</div>
+<div class="artifact-use"><strong>Session 14</strong> — ongoing DNA identification work. The excavation continues; students learn that "history" isn't finished.</div>
+
+<div class="artifact-name">Cannon (multiple)</div>
+<div class="artifact-use"><strong>Session 7 (Life on a Ship)</strong> and <strong>Session 11</strong> — scale and firepower of a period pirate vessel.</div>
+
+</div>
+</section>
+
+
+<section id="sessions">
+<h2>16-Session Tracker</h2>
+<p class="meta">Status pills reflect where each session is right now — <em>Draft</em> (content sketched), <em>Needs</em> (something specific blocks it), <em>Ready</em> (good to go).</p>
+
+<div class="week-block">
+<div class="week-header">
+<h3>Week 1 — Maps &amp; Power</h3>
+<span class="week-dates">July 6–9 · KSQ1: How did people use maps and navigation to exercise power in the early 1700s?</span>
+</div>
+<div class="session-row"><span class="session-num">S1 · Mon</span><span class="session-title">Launching the Voyage<span class="session-focus">Unit hook (John King shoe?), DQ introduction, quick-write</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S2 · Tue</span><span class="session-title">What Is a Map?<span class="session-focus">Cartography fundamentals; Mercator &amp; Web Mercator connection</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S3 · Wed</span><span class="session-title">Reading the 1719 World Map<span class="session-focus">Herman Moll; maps as pirate intelligence</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S4 · Thu</span><span class="session-title">My Maps + Navigation Tools<span class="session-focus">Onboarding; backstaff/compass/longitude problem intro</span></span><span class="status status-draft">Draft</span></div>
+</div>
+
+<div class="week-block">
+<div class="week-header">
+<h3>Week 2 — The Triangle Trade</h3>
+<span class="week-dates">July 13–16 · KSQ2: Who benefited, who suffered from global commerce?</span>
+</div>
+<div class="session-row"><span class="session-num">S5 · Mon</span><span class="session-title">The Atlantic World in 1715<span class="session-focus">Trade winds + gyre; Ouidah origin; Morice MP</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S6 · Tue</span><span class="session-title">The Middle Passage<span class="session-focus">367→312 data; pre-screened Equiano excerpt</span></span><span class="status status-needs">Needs primary sources selected</span></div>
+<div class="session-row"><span class="session-num">S7 · Wed</span><span class="session-title">Life on a Ship in 1717<span class="session-focus">Ship-types jigsaw; mortality &amp; wage numbers</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">Field Trip · Thu</span><span class="session-title">Real Pirates Salem Museum<span class="session-focus">Curator-led, scavenger hunt, perspective scouting</span></span><span class="status status-needs">Confirm logistics</span></div>
+</div>
+
+<div class="week-block">
+<div class="week-header">
+<h3>Week 3 — Piracy as Choice</h3>
+<span class="week-dates">July 20–23 · KSQ3: How does geography shape opportunity, resistance, survival?</span>
+</div>
+<div class="session-row"><span class="session-num">S9 · Mon</span><span class="session-title">Who Chose Piracy?<span class="session-focus">Flying Gang, Hornigold/Bellamy mentorship, push/pull T-chart</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S10 · Tue</span><span class="session-title">The Ship's Articles<span class="session-focus">Roberts' articles as analogue (Whydah's don't survive)</span></span><span class="status status-needs">Reframe session opening</span></div>
+<div class="session-row"><span class="session-num">S11 · Wed</span><span class="session-title">Piracy as Geography<span class="session-focus">Chokepoints, 53+ prizes mapped, navigation tools hands-on</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S12 · Thu</span><span class="session-title">What Pirates Actually Did<span class="session-focus">Primary sources vs. Johnson 1724 myth; moral complexity</span></span><span class="status status-needs">Needs primary sources selected</span></div>
+</div>
+
+<div class="week-block">
+<div class="week-header">
+<h3>Week 4 — The Wreck &amp; Recovery</h3>
+<span class="week-dates">July 27–30 · KSQ3 → KSQ4 (whose stories get buried?)</span>
+</div>
+<div class="session-row"><span class="session-num">S13 · Mon</span><span class="session-title">The Wreck<span class="session-focus">Fleet of four; nor'easter; Punonakanit land acknowledgment</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S14 · Tue</span><span class="session-title">Finding the Whydah (1717→1984)<span class="session-focus">Southack's map → Clifford's discovery; cartography throughline</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">S15 · Wed</span><span class="session-title">Voices of the Whydah<span class="session-focus">Trial testimony, Cotton Mather sermon, artifacts, Salem ties</span></span><span class="status status-needs">Needs primary sources selected</span></div>
+<div class="session-row"><span class="session-num">Field Trip 2? · Thu</span><span class="session-title">Misery Island — City of Rockland wreck<span class="session-focus">Essex Heritage landing craft, hands-on shipwreck archaeology</span></span><span class="status status-needs">Candidate — confirm budget</span></div>
+</div>
+
+<div class="week-block">
+<div class="week-header">
+<h3>Week 5 — Justice, Synthesis &amp; Showcase</h3>
+<span class="week-dates">Aug 3–6</span>
+</div>
+<div class="session-row"><span class="session-num">S17 · Mon</span><span class="session-title">Whose Story Have We Been Telling?<span class="session-focus">Synthesis; draft project opening; teacher conferences</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">Project · Tue</span><span class="session-title">Project Work Day 1<span class="session-focus">Voice + evidence workshop; drop-in stations</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">Project · Wed</span><span class="session-title">Project Work Day 2<span class="session-focus">Peer review; revise; rehearse; Showcase setup</span></span><span class="status status-draft">Draft</span></div>
+<div class="session-row"><span class="session-num">Showcase · Thu</span><span class="session-title">Public Showcase<span class="session-focus">Student presentations; audience TBD; closing circle</span></span><span class="status status-needs">Format + audience TBD</span></div>
+</div>
+</section>
+
+<section id="sources">
+<h2>Primary Source Inventory</h2>
+
+<table>
+<thead>
+<tr><th>Source</th><th>Session(s)</th><th>Status</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>1719 world map (Educator Guide)</td><td>S3</td><td><span class="status status-ready">Ready</span></td><td>In the Real Pirates Salem Educator Guide</td></tr>
+<tr><td>Cargo data (367/312, fleet of 4)</td><td>S5, S6, S13</td><td><span class="status status-ready">Ready</span></td><td>Corroborated across multiple sources</td></tr>
+<tr><td>Olaudah Equiano narrative excerpt</td><td>S6, S17</td><td><span class="status status-needs">Needs age-appropriate selection</span></td><td>Frame clearly: 1756 capture, 40 years after Whydah. Facing History has vetted middle-school excerpts.</td></tr>
+<tr><td>Ship's Articles text (Roberts' as analogue)</td><td>S10</td><td><span class="status status-needs">Reframe + age-adapt</span></td><td>Teach explicitly that Whydah's own articles don't survive; Roberts' 1721 articles (Johnson 1724) are analogue only.</td></tr>
+<tr><td>Boston Vice-Admiralty Court testimony (1717)</td><td>S15</td><td><span class="status status-needs">Need to source</span></td><td>Primary source; check Massachusetts Historical Society, UNH, academic databases. Names of the hanged are already documented.</td></tr>
+<tr><td>Cotton Mather, "Instructions to the Living" (1717)</td><td>S15</td><td><span class="status status-ready">Text accessible</span></td><td>Full text on Michigan Evans Early American Imprint archive. Select excerpts for students.</td></tr>
+<tr><td>Cape Cod eyewitness accounts of wreck</td><td>S13</td><td><span class="status status-needs">Need to source</span></td><td>Cyprian Southack's report to Governor Shute is the most authoritative contemporaneous account.</td></tr>
+<tr><td>Southack's 1717 chart of New England</td><td>S14</td><td><span class="status status-needs">Find reproduction</span></td><td>Boston Rare Maps lists reproductions; Leventhal Map Center may have. Would be a centerpiece visual.</td></tr>
+<tr><td>Moll's 1719 world map</td><td>S3</td><td><span class="status status-ready">Reproductions widely available</span></td><td>Stanford Ruderman collection has high-res scans.</td></tr>
+<tr><td>Artifact images (bell, King's shoe, coins, gold dust)</td><td>S5, S11, S14, S15</td><td><span class="status status-ready">Ready</span></td><td>Expedition Whydah site + Real Pirates Salem materials.</td></tr>
+<tr><td>Ship comparison data (slaver/Navy/merchant/fishing)</td><td>S7</td><td><span class="status status-needs">Compile source packets</span></td><td>Research jigsaw prep. Rediker, Woodard, British Tars blog all usable.</td></tr>
+<tr><td>Pop-culture pirate clips</td><td>S12</td><td><span class="status status-ready">Ready</span></td><td>Pirates of the Caribbean, Black Sails, classic Treasure Island. Short clips only.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="open">
+<h2>Open Questions</h2>
+
+<ul class="checklist">
+<li><strong>Field trips:</strong> Confirm with Rebecca — does the program budget cover 2 field trips, or only 1? If 2, Misery Island works as Week 4 capstone.</li>
+<li><strong>MA Primary Standards:</strong> Verify exact text of W.8.3, W.8.7, SL.8.4 from the 2017 ELA framework PDF; identify the HSS topic code for Atlantic World.</li>
+<li><strong>Final project rubric:</strong> Draft rubric for four format variants keyed to common criteria (evidence, voice, craft).</li>
+<li><strong>Showcase format:</strong> Public event? At the museum? Who's the audience?</li>
+<li><strong>Middle Passage content depth:</strong> Age-appropriate calibration with cohort's prior exposure.</li>
+<li><strong>Primary sources for S6 / S12 / S15:</strong> Pre-select and adapt before July 6 — Equiano, Mather sermon excerpt, trial testimony.</li>
+<li><strong>Session 10 reframe:</strong> Open with "the Whydah's own articles don't survive" — new session opening beat.</li>
+<li><strong>Nature photography enrichment:</strong> Separate planning task — session ideas to pitch Rebecca and Hilary.</li>
+<li><strong>Planning-budget logistics:</strong> Does meeting time count toward 25-hour budget? Payroll reactivation timing?</li>
+<li><strong>Daily reflection journal:</strong> Structure, format, shared or private.</li>
+<li><strong>Salem Maritime NHS visit:</strong> Walking distance; add as bonus session or half-session?</li>
+</ul>
+</section>
+
+<section id="confidence">
+<h2>Confidence &amp; Methods</h2>
+
+<div class="card">
+<h3>Confidence tier legend</h3>
+<div class="legend-row"><span class="tier tier-green">Solid</span> <span>Corroborated across multiple reputable sources or primary-source documented</span></div>
+<div class="legend-row"><span class="tier tier-yellow">Contested</span> <span>Attribution shaky, one source disputes another, or the claim is interpretation rather than fact</span></div>
+<div class="legend-row"><span class="tier tier-red">Mythologized</span> <span>Traceable only to Johnson's 1724 <em>General History of the Pyrates</em> or popular retellings; can't be verified</span></div>
+</div>
+
+<div class="caveat">
+<strong>Methodology note.</strong>
+This dashboard was compiled from three research passes using Wikipedia, museum sites, academic reviews, and secondary summaries. Claude has NOT directly read Rediker's <em>Villains of All Nations</em>, Kinkor's <em>Whydah Sourcebook</em>, or Woodard's <em>Republic of Pirates</em> — claims about their arguments are from reviews and secondary summaries. Anything load-bearing in student-facing materials should be verified against primary texts.
+<br><br>
+The AI knowledge cutoff is May 2025. Anything more recent — new scholarship, current museum exhibits, recent excavation finds — is not reflected.
+<br><br>
+Full source list and detailed tier-by-tier findings are in <code>research-findings.md</code>, <code>research-findings-2.md</code>, and <code>research-findings-3.md</code> in this folder.
+</div>
+
+<div class="card">
+<h3>Key sources by reliability</h3>
+<h4>Most authoritative for Whydah-specific content</h4>
+<ul>
+<li>Kenneth Kinkor, <em>Whydah Sourcebook</em> (archival compilation via Expedition Whydah)</li>
+<li>Clifford, Kinkor &amp; Simpson, <em>Real Pirates: The Untold Story of the Whydah from Slave Ship to Pirate Ship</em> (National Geographic)</li>
+<li>Real Pirates Salem Educator Guide (Max has it)</li>
+<li>Boston Vice-Admiralty Court records (1717)</li>
+<li>Cotton Mather, "Instructions to the Living, from the Condition of the Dead" (1717)</li>
+<li>Cyprian Southack's 1717 report to Governor Shute + his New England chart</li>
+</ul>
+<h4>Scholarly for the broader context</h4>
+<ul>
+<li>Marcus Rediker, <em>Villains of All Nations</em> (2004) — causes of piracy, pirates-as-resistance thesis</li>
+<li>Marcus Rediker, <em>Between the Devil and the Deep Blue Sea</em> (1987) — sailor labor and culture</li>
+<li>Colin Woodard, <em>The Republic of Pirates</em> (2007) — narrative history of the Golden Age</li>
+</ul>
+<h4>Use with explicit framing</h4>
+<ul>
+<li>Captain Charles Johnson, <em>A General History of the Pyrates</em> (1724) — primary as period artifact, <em>unreliable</em> on specifics; contains fabrication and invented speeches</li>
+<li>Elizabeth Reynard, <em>The Narrow Land</em> (1934) — folklore, source of "Maria Hallett" name</li>
+</ul>
+</div>
+</section>
+
+</main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.sidebar a');
+  function updateActive() {
+    let current = '';
+    sections.forEach(s => {
+      const top = s.offsetTop - 80;
+      if (window.scrollY >= top) current = s.id;
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+  }
+  window.addEventListener('scroll', updateActive);
+  updateActive();
+});
+</script>
+</body>
+</html>
