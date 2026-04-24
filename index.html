@@ -128,7 +128,8 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: 'IM Fell English', Georgia, 'Times New Roman', serif;
-  font-size: 16px;
+  font-size: 17.5px;
+  line-height: 1.65;
   background:
     radial-gradient(ellipse 1400px 700px at 50% -100px, rgba(255, 248, 224, 0.6), transparent 70%),
     repeating-linear-gradient(3deg, rgba(139, 116, 78, 0.02) 0 2px, transparent 2px 8px),
@@ -289,10 +290,53 @@ table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC
 
 .meta { font-style: italic; color: #5e4421; font-family: 'IM Fell English', Georgia, serif; }
 
+/* === TAB BEHAVIOR === */
+main > section[id] { display: none; }
+main > section[id].active { display: block; animation: fadeIn 0.2s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Hide the section-to-section wave divider in tab mode (only one section visible) */
+section + section::before { display: none; }
+
+/* Section top ornament when any tab is active */
+main > section[id].active > h2:first-child {
+  padding-top: 0.3em;
+}
+
+/* Make the main content stretch naturally without the full-page compass at top of every tab */
+.content > section:first-child::before {
+  display: none;
+}
+
+/* Overview tab gets a compass centerpiece */
+main > section[id="overview"].active::before {
+  content: '';
+  display: block;
+  width: 120px; height: 120px;
+  margin: 0 auto 1em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%230f2538' stroke-width='1.5'%3E%3Ccircle cx='100' cy='100' r='80'/%3E%3Ccircle cx='100' cy='100' r='70'/%3E%3Ccircle cx='100' cy='100' r='55'/%3E%3Ccircle cx='100' cy='100' r='30'/%3E%3C/g%3E%3Cg fill='%230f2538'%3E%3Cpath d='M100,30 L108,95 L100,100 L92,95 Z'/%3E%3Cpath d='M100,170 L108,105 L100,100 L92,105 Z' fill='%238b3a1e'/%3E%3Cpath d='M30,100 L95,92 L100,100 L95,108 Z'/%3E%3Cpath d='M170,100 L105,92 L100,100 L105,108 Z'/%3E%3C/g%3E%3Cg fill='%23c9a55f' opacity='0.9'%3E%3Cpath d='M149,51 L105,95 L100,100 L95,105 Z'/%3E%3Cpath d='M51,51 L95,95 L100,100 L105,105 Z'/%3E%3Cpath d='M149,149 L105,105 L100,100 L95,95 Z'/%3E%3Cpath d='M51,149 L95,105 L100,100 L105,95 Z'/%3E%3C/g%3E%3Ccircle cx='100' cy='100' r='4' fill='%238b3a1e'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* Sidebar nav items get more breathing room at bigger type */
+.sidebar a { font-size: 1em; padding: 0.55em 0.8em; }
+.sidebar h1 { font-size: 1.4em; }
+
+/* Cards slightly taller at bigger type */
+.card, .person-card, .week-block, .factor-box, .tool-card { padding: 1.1em 1.3em; }
+
+/* Active-tab section border top */
+main > section[id].active {
+  border-top: none;
+}
+
 @media print {
   body { background: white; }
   body::before { display: none; }
   .content::after { display: none; }
+  main > section[id] { display: block !important; }
+  main > section[id].active::before { display: none; }
 }
 </style>
 </head>
@@ -306,10 +350,10 @@ table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC
     <li><a href="#timeline">Timeline</a></li>
     <li><a href="#people">Key People</a></li>
     <li><a href="#why-piracy">Why Piracy</a></li>
-    <li><a href="#maps-geo">Maps, Geography &amp; Tools<span class="badge-new">NEW</span></a></li>
-    <li><a href="#salem">Salem Connection<span class="badge-new">NEW</span></a></li>
-    <li><a href="#fleet">The Fleet<span class="badge-new">NEW</span></a></li>
-    <li><a href="#artifacts">Artifacts → Sessions<span class="badge-new">NEW</span></a></li>
+    <li><a href="#maps-geo">Maps, Geography &amp; Tools</a></li>
+    <li><a href="#salem">Salem Connection</a></li>
+    <li><a href="#fleet">The Fleet</a></li>
+    <li><a href="#artifacts">Artifacts → Sessions</a></li>
     <li><a href="#sessions">16-Session Tracker</a></li>
     <li><a href="#sources">Primary Sources</a></li>
     <li><a href="#open">Open Questions</a></li>
@@ -1043,21 +1087,50 @@ Full source lists and tier-by-tier findings live alongside this file in <code>re
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.sidebar a');
-  function updateActive() {
-    let current = '';
-    sections.forEach(s => {
-      const top = s.offsetTop - 80;
-      if (window.scrollY >= top) current = s.id;
+  const sections = document.querySelectorAll('main > section[id]');
+  const navLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+
+  function showSection(id) {
+    let found = false;
+    sections.forEach(function(s) {
+      const isActive = s.id === id;
+      s.classList.toggle('active', isActive);
+      if (isActive) found = true;
     });
-    navLinks.forEach(link => {
-      link.classList.remove('active');
-      if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    if (!found && sections.length) {
+      sections[0].classList.add('active');
+      id = sections[0].id;
+    }
+    navLinks.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
     });
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
-  window.addEventListener('scroll', updateActive);
-  updateActive();
+
+  navLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const id = this.getAttribute('href').substring(1);
+      showSection(id);
+    });
+  });
+
+  // Initial state — from URL hash or default to overview
+  const initialId = (window.location.hash || '#overview').slice(1);
+  showSection(initialId);
+
+  // Allow keyboard arrow navigation between tabs
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const ids = Array.from(sections).map(function(s) { return s.id; });
+    const currentIdx = ids.indexOf(document.querySelector('main > section.active')?.id || ids[0]);
+    const nextIdx = e.key === 'ArrowRight'
+      ? (currentIdx + 1) % ids.length
+      : (currentIdx - 1 + ids.length) % ids.length;
+    showSection(ids[nextIdx]);
+  });
 });
 </script>
 </body>
