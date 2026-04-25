@@ -241,6 +241,12 @@ main.content > section.active { display: block; }
 }
 /* === END TOPNAV === */
 
+/* === GALLERIES === */
+.map-gallery-item, .pirate-card { margin: 0; background: #fbf5e0; padding: 0.7em; border: 1px solid #c4b590; border-radius: 3px; box-shadow: 1px 2px 4px rgba(42, 29, 15, 0.12); }
+.map-gallery-item img, .pirate-card img { display: block; }
+.map-gallery-item figcaption, .pirate-card figcaption { padding-top: 0.4em; }
+/* === END GALLERIES === */
+
 </style>
 <style>
 /* ============ MAP + PIRATE THEME OVERLAY ============ */
@@ -618,7 +624,8 @@ main > section[id].active {
 
 <h4>Field trips</h4>
 <ul>
-<li><strong>Week 2, Thursday July 16:</strong> Real Pirates Salem. Confirmed. Curator-led if we can swing it through Frank Cutietta.</li>
+<li><strong>Field Trip 1 (Week 2, Thursday July 16):</strong> Two-section rotation. Section A morning at Real Pirates Salem (Whydah scavenger hunt); Section B morning at Salem Maritime NHS (the <em>Friendship</em> replica East Indiaman + Derby Wharf + Custom House). Swap at lunch. Walking distance between sites. Curator-led at Real Pirates if we can swing it through Frank Cutietta.</li>
+<li><strong>Field Trip 2:</strong> TBD - LEAP coordinates this one, out of our hands. Planner notes it pending site/date confirmation.</li>
 </ul>
 </div>
 </section>
@@ -988,6 +995,32 @@ main > section[id].active {
 </div>
 
 </div>
+<h3 class="people-subheading">Other Golden Age figures - visual primary sources from 1724</h3>
+<p class="meta">Captain Charles Johnson's <em>A General History of the Pyrates</em> (London, 1724) printed engravings that fixed the public's mental picture of these pirates. Use them as visual primary sources alongside the documentary record - what's accurate, what's myth, what got embellished for the audience.</p>
+
+<div class="card-grid">
+
+<figure class="pirate-card">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/General_History_of_the_Pyrates_-_Ann_Bonny_and_Mary_Read.jpg/640px-General_History_of_the_Pyrates_-_Ann_Bonny_and_Mary_Read.jpg" alt="1724 Cole engraving of Anne Bonny and Mary Read brandishing weapons." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Anne Bonny &amp; Mary Read</strong> (Cole, 1724). Sailed under Calico Jack Rackham 1720 - three years after the Whydah. Both avoided execution by claiming pregnancy. Useful comparison for the perspective work in S16: how a pirate''s image gets constructed by an outsider with a press to feed.</figcaption>
+</figure>
+
+<figure class="pirate-card">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Majoor_Stede_Bonnet_Gehangen.jpg/600px-Majoor_Stede_Bonnet_Gehangen.jpg" alt="Engraving of Stede Bonnet hanging from the gallows." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Stede Bonnet</strong> - hanged at Charleston, December 1718. Wealthy Barbados landowner who bought a ship and took up piracy. Briefly sailed alongside Blackbeard. Direct counter-example to Bellamy: someone who chose piracy from comfort, not from being trapped at the bottom of the merchant fleet.</figcaption>
+</figure>
+
+<figure class="pirate-card">
+<img src="images/bartholomew-roberts-1724.jpg" alt="1724 engraving of Bartholomew Roberts standing on shore." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Bartholomew Roberts (Black Bart)</strong>. Active 1719-22, right after Bellamy. Took 400+ ships - the most successful pirate of the Golden Age by raw count. His 1721 Articles are the surviving analogue we use to teach the Whydah''s Articles in S10.</figcaption>
+</figure>
+
+<figure class="pirate-card">
+<img src="images/blackbeard-1724.jpg" alt="1724 engraving of Edward Teach (Blackbeard) heavily armed." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Edward "Blackbeard" Teach</strong>. Bellamy''s fellow Hornigold-protege. Killed at Ocracoke NC, November 1718 - 19 months after Bellamy. The cultivated terror image (lit fuses in his beard) starts here. Same mentor as Bellamy, wildly different presentation.</figcaption>
+</figure>
+
+</div>
 </section>
 
 <section id="why-piracy">
@@ -1075,7 +1108,7 @@ Rediker casts pirates as proto-class-conscious resistors. Reviewers push back: <
 </section>
 
 <section id="maps-geo">
-<h2>Maps, geography &amp; tools <span class="new-badge">NEW</span></h2>
+<h2>Maps, geography &amp; tools</h2>
 <p class="meta">This is where we lean hardest on the GIS side. Weeks 1, 3, and 4 all come out of here — what navigators in 1717 actually had, what didn't exist yet, and why the Atlantic trade was shaped the way it was.</p>
 
 <h3>Navigation instruments — what was on the Whydah</h3>
@@ -1173,10 +1206,95 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p><strong>The Whydah's final voyage fits this pattern:</strong> after the Caribbean, Bellamy was heading north up the American coast — riding the Gulf Stream toward the westerlies — when the nor'easter caught him off Cape Cod.</p>
 <p>Session 5 move: before students plot the triangle trade on Google My Maps, we show them the wind map. "Why is it shaped like a triangle?" has a physical answer, not just an economic one.</p>
 </div>
-</section>
+<h3>GIS toolkit - free tools we can pull into class</h3>
+<p class="meta">Beyond MarineTraffic. Each one of these has a teaching use; none of them require a login or a paid account.</p>
+
+<div class="card-grid">
+
+<div class="card">
+<h4><a href="https://earth.nullschool.net/" target="_blank" rel="noopener">earth.nullschool.net</a></h4>
+<p>Live global wind, ocean current, and weather visualization. Click "earth" in the bottom-left corner to switch the layer to <em>Ocean -&gt; Currents</em> and watch the Gulf Stream and the North Atlantic Gyre run in real time. The single best way to make the trade-wind &amp; gyre lecture (Session 5) actually click.</p>
+<p class="meta">Use in: <strong>S5</strong> (the triangle's physics) and <strong>S11</strong> (chokepoint comparison).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.shipmap.org/" target="_blank" rel="noopener">Shipmap.org (Kiln, 2012)</a></h4>
+<p>Animated visualization of one full year of global merchant shipping. Watch container ships, dry bulk, tankers, gas, and vehicles move across the Atlantic. The 2012 data is a snapshot but the patterns are durable.</p>
+<p class="meta">Use in: <strong>S5</strong> alongside the 1717 triangle map. Same ocean, different decade.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://map.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap</a></h4>
+<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful when we want students to see how nautical charts encode depth and hazards differently than road maps.</p>
+<p class="meta">Use in: <strong>S2-S3</strong> (cartographic conventions) and <strong>S13</strong> (the wreck site, with bathymetry).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.davidrumsey.com/" target="_blank" rel="noopener">David Rumsey Historical Map Collection</a></h4>
+<p>Stanford's online archive of 100,000+ historical maps - period charts, atlases, globes. The single best free archive of pre-1900 cartography. Includes Moll, Southack-era charts, period Atlantic and Caribbean maps. Built-in Luna Viewer for zoom + compare.</p>
+<p class="meta">Use in: <strong>S3</strong> (Moll close-read) and any session where students want to find a period map for their capstone.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://collections.leventhalmap.org/" target="_blank" rel="noopener">Leventhal Map &amp; Education Center (BPL)</a></h4>
+<p>Boston Public Library's map collection - especially strong on New England, Cape Cod, and 18th-century coastal charts. Has a Southack Cape Cod chart and a "<em>X Marks the Spot</em>" article tracing the Whydah cartography story directly.</p>
+<p class="meta">Use in: <strong>S14</strong> (Southack -&gt; Clifford story).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://historicalcharts.noaa.gov/" target="_blank" rel="noopener">NOAA Historical Map &amp; Chart Collection</a></h4>
+<p>U.S. government archive of 19th-century coastal charts of the U.S. and territories - direct descendants of the Southack tradition. Free, downloadable, mostly NOAA-hosted PDFs. Useful for showing how NOAA still maintains charts of the same waters Southack was mapping in 1717.</p>
+<p class="meta">Use in: <strong>S2</strong> and <strong>S13</strong>.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy.com</a></h4>
+<p>Live weather + waves + wind, very visual. Pull up the North Atlantic the morning of S13 and ask "what would today have been like for a 1717 ship?" Run a hypothetical: a 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
+<p class="meta">Use in: <strong>S13</strong> (the wreck conditions).</p>
+</div>
+
+</div>
+
+<h3>Period maps gallery</h3>
+<p class="meta">Public-domain originals from Wikimedia Commons and the New York Public Library. The cartographers who made these were the GPS engineers of their era - their lines are how the Whydah found its way (and didn't).</p>
+
+<div class="card-grid">
+
+<figure class="map-gallery-item">
+<a href="https://upload.wikimedia.org/wikipedia/commons/b/bf/A_new_and_correct_map_of_the_whole_world%2C_shewing_ye_situation_of_its_principal_parts._..._according_to_the_newest_and_most_exact_observations_-_by_Herman_Moll%2C_geographer%2C_1719._NYPL1630430.jpg" target="_blank" rel="noopener">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/A_new_and_correct_map_of_the_whole_world%2C_shewing_ye_situation_of_its_principal_parts._..._according_to_the_newest_and_most_exact_observations_-_by_Herman_Moll%2C_geographer%2C_1719._NYPL1630430.jpg/1024px-A_new_and_correct_map_of_the_whole_world%2C_shewing_ye_situation_of_its_principal_parts._..._according_to_the_newest_and_most_exact_observations_-_by_Herman_Moll%2C_geographer%2C_1719._NYPL1630430.jpg" alt="Herman Moll's 1719 New &amp; Correct Map of the Whole World." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Herman Moll, 1719 - <em>New &amp; Correct Map of the Whole World</em>.</strong> The map of the era. Mercator projection. Includes "Remarkable Tracts" of explorer voyages - effectively commercial intelligence Moll bought from his pirate &amp; privateer drinking buddies (Dampier, Rogers, Hacke). Click to view full-resolution at NYPL.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<img src="Whydah-map.jpg" alt="Cyprian Southack's 1717/1734 manuscript chart of Cape Cod, X marking the Whydah wreck site near Wellfleet." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Cyprian Southack, 1717/1734 - Cape Cod chart with the Whydah wreck.</strong> Marked the wreck site with an X near Wellfleet and added the period-spelling annotation. Barry Clifford used this chart in 1984 to find the wreck - 267 years later.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<a href="https://upload.wikimedia.org/wikipedia/commons/4/45/The_harbour_of_Casco_Bay_and_islands_adjacent.jpg" target="_blank" rel="noopener">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/The_harbour_of_Casco_Bay_and_islands_adjacent.jpg/1024px-The_harbour_of_Casco_Bay_and_islands_adjacent.jpg" alt="Cyprian Southack's 1720 chart of Casco Bay, Maine." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Cyprian Southack, 1720 - <em>The Harbour of Casco Bay</em>.</strong> A working harbor chart by the same cartographer-salvager who marked the Whydah wreck. Same hand, different coast. Useful to show what Southack's day job looked like.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Cyprian_Southack_Bay_of_Fundy.png/1024px-Cyprian_Southack_Bay_of_Fundy.png" alt="Cyprian Southack's 1731 Bay of Fundy chart." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Cyprian Southack, 1731 - Bay of Fundy.</strong> Hybrid sailing chart and personal log. Note how Southack annotated everything in his own voice - depth conventions, harbor warnings, and a channel he named after himself. Maps as autobiography.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<img src="images/brookes-slave-ship.jpg" alt="The 1788 Brookes slave-ship diagram." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Brookes diagram, 1788 (British abolition campaign).</strong> Drawn 70 years after the Whydah era but rooted in the same trade. The visual anchor when KSQ 2 reaches what the Whydah was originally built to do.</figcaption>
+</figure>
+
+</div>
+
+
 
 <section id="salem">
-<h2>Salem connection <span class="new-badge">NEW</span></h2>
+<h2>Salem connection</h2>
 <p class="meta">This is Salem's own story, not a distant pirate one. Three direct Salem-to-Whydah links: the triangle trade built our town, the Witch Trial figures ran the pirate trials.</p>
 
 <h3>Salem's own maritime economy</h3>
@@ -1194,9 +1312,9 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <li><strong>Derby Wharf</strong> — built 1762, extended 1806, nearly half a mile long</li>
 <li>Interprets three eras at the same site: <strong>Triangle Trade colonial period</strong> · <strong>Revolutionary privateering</strong> · <strong>post-independence Far East trade</strong></li>
 <li><strong>Hawkes House</strong> was used as a privateer prize warehouse during the Revolution</li>
-<li><strong>Walking distance from Collins MS</strong></li>
+<li><strong>Walking distance from Collins MS - half of our Field Trip 1 rotation (Section A at Real Pirates Salem, Section B here at the Friendship + Derby Wharf, swap mid-day)</strong></li>
 </ul>
-<p class="meta">Potential supplementary visit or alternative field trip. Even without a visit, the site's content maps directly onto Sessions 5, 7, 11.</p>
+<p class="meta">Maps directly onto Sessions 5, 7, 11.</p>
 </div>
 
 <h3>Peabody Essex Museum</h3>
@@ -1233,7 +1351,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </section>
 
 <section id="fleet">
-<h2>The fleet — Bellamy's four ships on April 26, 1717 <span class="new-badge">NEW</span></h2>
+<h2>The fleet — Bellamy's four ships on April 26, 1717</h2>
 <p class="meta">The wreck wasn't one ship alone. Bellamy had four vessels that night, and the storm scattered them. Geography and luck decided who lived.</p>
 
 <figure style="margin: 0 0 1.5em; max-width: 700px;">
@@ -1262,7 +1380,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </section>
 
 <section id="artifacts">
-<h2>Artifacts → sessions <span class="new-badge">NEW</span></h2>
+<h2>Artifacts → sessions</h2>
 <p class="meta">200,000+ objects pulled from the wreck, still being excavated. We're matching specific artifacts to specific sessions so the abstractions have something physical to hang on.</p>
 
 <div class="artifact-map">
@@ -1361,24 +1479,24 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </ul>
 </div>
 
-<h3>Period engravings (1724) <span class="new-badge">NEW</span></h3>
+<h3>Period engravings (1724)</h3>
 <div class="card">
 <p class="meta">From Captain Charles Johnson's <em>A General History of the Pyrates</em> (London, 1724). Public domain. These are seven years after the Whydah but were the printed images that fixed the public's mental picture of the Golden Age. Useful as visual primary sources to compare against the documentary record we now have.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; margin-top: 1em;">
 
 <figure style="margin: 0;">
 <img src="images/pyrates-frontispiece.jpg" alt="1724 frontispiece engraving: Blind Justice with sword and scales above a gallows of seven hanged men; below, a British warship and a pirate ship in close combat." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
-<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Frontispiece. Justice over gallows over naval combat A�� the moral arc the book sells. Useful for S15 (the Boston trials).</figcaption>
+<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Frontispiece. Justice over gallows over naval combat - the moral arc the book sells. Useful for S15 (the Boston trials).</figcaption>
 </figure>
 
 <figure style="margin: 0;">
 <img src="images/bartholomew-roberts-1724.jpg" alt="1724 engraving of Captain Bartholomew Roberts standing on shore with two ships behind him." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
-<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Bartholomew Roberts (Black Bart). Roberts was active 1719A��22 A�� right after Bellamy. Useful for "what came next" in S16.</figcaption>
+<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Bartholomew Roberts (Black Bart). Roberts was active 1719-22 - right after Bellamy. Useful for "what came next" in S16.</figcaption>
 </figure>
 
 <figure style="margin: 0;">
 <img src="images/blackbeard-1724.jpg" alt="1724 engraving of Edward Blackbeard Teach in coat and tricorn, with multiple weapons visible at his belt and chest." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
-<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Blackbeard. Bellamy's fellow Hornigold-protA��gA�� (S8 People). The cultivated terror image that we now mostly recognize as pirate iconography starts here.</figcaption>
+<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Blackbeard. Bellamy's fellow Hornigold-protege (S8 People). The cultivated terror image that we now mostly recognize as pirate iconography starts here.</figcaption>
 </figure>
 
 </div>
@@ -1535,7 +1653,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <div class="unit-plan-decisions">
 <p><strong>DQ:</strong> Why would a person choose piracy in 1717 — and how would they want you to tell their story?</p>
 <p><strong>KSQs:</strong> 1. Maps &amp; power · 2. Atlantic trade · 3. Geography &amp; choice · 4. Whose stories</p>
-<p><strong>Format:</strong> 16 instructional + 1 field trip + 2 project days + Showcase · 2 sections × ~20 students · 90 min/section · No grades · Voyage Journal binders + Capstone (13 formats)</p>
+<p><strong>Format:</strong> 16 instructional + field trips + 2 project days + Showcase · 2 sections × ~20 students · 90 min/section · No grades · Voyage Journal binders + Capstone (13 formats)</p>
 </div>
 
 <h3>Five-Week Calendar</h3>
