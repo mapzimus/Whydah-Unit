@@ -288,7 +288,111 @@ table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC
   background-repeat: no-repeat; background-position: center; background-size: contain;
 }
 
-.meta { font-style: italic; color: #5e4421; font-family: 'IM Fell English', Georgia, serif; }
+.meta {
+  font-style: italic;
+  color: #4a3414;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 1em;
+  position: relative;
+  padding-left: 1.4em;
+}
+.meta::before {
+  content: '❖';
+  position: absolute;
+  left: 0; top: 0;
+  color: #8b3a1e;
+  font-style: normal;
+  font-size: 0.95em;
+}
+
+/* === SIDEBAR GROUPS === */
+.sidebar .nav-group { list-style: none; margin: 0 0 0.4em 0; padding: 0; }
+.sidebar .nav-group-label {
+  display: block;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 0.7em;
+  letter-spacing: 0.22em;
+  color: #8fa5bb;
+  padding: 0.5em 0.7em 0.3em;
+  margin-top: 0.5em;
+  border-top: 1px solid rgba(201, 165, 95, 0.18);
+}
+.sidebar .nav-group:first-child .nav-group-label {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0.2em;
+}
+.sidebar .nav-group ul { padding: 0; margin: 0; list-style: none; }
+.sidebar .nav-group ul li { list-style: none; }
+
+/* === FOCUS STYLES === */
+.sidebar a:focus-visible {
+  outline: 2px solid #c9a55f;
+  outline-offset: 2px;
+  background: rgba(201, 165, 95, 0.12);
+}
+
+/* === FIX YELLOW PILL CONTRAST (WCAG AA) === */
+.tier-yellow, .status-needs { background: #f1d98c; color: #5e3a00; }
+
+/* === PEOPLE SUBHEADINGS === */
+.people-subheading {
+  font-family: 'IM Fell English SC', Georgia, serif;
+  color: #8b3a1e;
+  font-size: 1.1em;
+  letter-spacing: 0.12em;
+  margin: 1.8em 0 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px dashed #c4b590;
+}
+.people-subheading:first-of-type { margin-top: 1em; }
+
+/* === VOYAGE JOURNAL WEEK BLOCKS — distinguish from session tracker === */
+#voyage-journal .week-block { border-left: 4px solid #c9a55f; }
+
+/* === PERSON CARD FOOTER POLISH === */
+.person-card .perspective-use {
+  border-top: 1px solid rgba(139, 58, 30, 0.22);
+  padding-top: 0.55em;
+  margin-top: 0.55em;
+}
+
+/* === INTERACTIVE CHECKLIST === */
+.checklist li { cursor: pointer; user-select: none; transition: background 0.15s; padding-right: 0.4em; }
+.checklist li:hover { background: rgba(201, 165, 95, 0.1); }
+.checklist li.done { color: #6b6358; text-decoration: line-through; text-decoration-color: rgba(139, 58, 30, 0.5); }
+.checklist li.done strong { color: #6b6358; }
+
+/* === MOBILE RESPONSIVE === */
+@media (max-width: 768px) {
+  body { font-size: 16px; }
+  .layout { flex-direction: column; }
+  .sidebar {
+    position: relative; width: 100%; height: auto; max-height: 280px;
+    overflow-y: auto; border-right: none; border-bottom: 4px double #c9a55f;
+    padding: 1em 1em 1.2em;
+  }
+  .sidebar::before { width: 50px; height: 50px; margin-bottom: 0.4em; }
+  .sidebar h1 { font-size: 1.15em; }
+  .sidebar .subtitle { padding-bottom: 0.5em; margin-bottom: 0.5em; font-size: 0.8em; }
+  .sidebar .nav-group { margin-bottom: 0.3em; }
+  .sidebar .nav-group-label { font-size: 0.65em; padding: 0.3em 0.5em 0.15em; }
+  .sidebar a { padding: 0.7em 0.7em; font-size: 0.95em; }
+  .sidebar .footer { display: none; }
+  .content { padding: 1.5em 1em 3em; }
+  .content > section:first-child::before { display: none; }
+  main > section[id="overview"].active::before { width: 80px; height: 80px; margin-bottom: 0.5em; }
+  .card-grid { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  h2 { font-size: 1.5em; }
+  h2::after { background-size: 200px 14px; height: 14px; }
+  .session-row { grid-template-columns: 80px 1fr; row-gap: 0.2em; }
+  .session-row > .status { grid-column: 1 / -1; margin-top: 0.3em; }
+  .week-header { flex-direction: column; align-items: flex-start; }
+  .content::after { background-size: 280px 50px; height: 50px; }
+  .artifact-map { grid-template-columns: 1fr; gap: 0.4em; }
+  table th, table td { font-size: 0.85em; padding: 0.4em 0.5em; }
+}
 
 /* === TAB BEHAVIOR === */
 main > section[id] { display: none; }
@@ -345,21 +449,35 @@ main > section[id].active {
 <nav class="sidebar">
   <h1>The Whydah's World</h1>
   <div class="subtitle">LEAP4Ed Summer 2026 · Planning &amp; teaching dashboard</div>
-  <ul>
-    <li><a href="#overview">Overview</a></li>
-    <li><a href="#voyage-journal">Voyage Journal</a></li>
-    <li><a href="#timeline">Timeline</a></li>
-    <li><a href="#people">Key People</a></li>
-    <li><a href="#why-piracy">Why Piracy</a></li>
-    <li><a href="#maps-geo">Maps, Geography &amp; Tools</a></li>
-    <li><a href="#salem">Salem Connection</a></li>
-    <li><a href="#fleet">The Fleet</a></li>
-    <li><a href="#artifacts">Artifacts → Sessions</a></li>
-    <li><a href="#sessions">16-Session Tracker</a></li>
-    <li><a href="#sources">Primary Sources</a></li>
-    <li><a href="#source-links">Source Links</a></li>
-    <li><a href="#open">Open Questions</a></li>
-    <li><a href="#confidence">Confidence &amp; Methods</a></li>
+  <ul class="sidebar-nav">
+    <li class="nav-group">
+      <span class="nav-group-label">Plan</span>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#voyage-journal">Voyage Journal</a></li>
+        <li><a href="#sessions">16-Session Tracker</a></li>
+        <li><a href="#open">Open Questions</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-group-label">Content</span>
+      <ul>
+        <li><a href="#timeline">Timeline</a></li>
+        <li><a href="#people">Key People</a></li>
+        <li><a href="#fleet">The Fleet</a></li>
+        <li><a href="#artifacts">Artifacts → Sessions</a></li>
+        <li><a href="#why-piracy">Why Piracy</a></li>
+        <li><a href="#maps-geo">Maps &amp; Tools</a></li>
+        <li><a href="#salem">Salem Connection</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-group-label">Reference</span>
+      <ul>
+        <li><a href="#sources">Primary Sources</a></li>
+        <li><a href="#confidence">Confidence &amp; Methods</a></li>
+      </ul>
+    </li>
   </ul>
   <div class="footer">
     Updated: April 24, 2026<br>
@@ -540,6 +658,7 @@ main > section[id].active {
 <h2>Key people</h2>
 <p class="meta">Quick cards for people we need to recall fast while teaching. Each ends with how we might use them as a perspective option for the final project.</p>
 
+<h3 class="people-subheading">The Whydah's people</h3>
 <div class="card-grid">
 
 <div class="person-card">
@@ -617,6 +736,11 @@ main > section[id].active {
 <div class="perspective-use">For the project: merchant-captain POV. A student choosing Prince reckons with being a slaver victimized by pirates. Moral complexity in both directions.</div>
 </div>
 
+</div>
+
+<h3 class="people-subheading">The British establishment that built the ship</h3>
+<div class="card-grid">
+
 <div class="person-card">
 <div class="name">Sir Humphrey Morice</div>
 <div class="role">MP · London slave merchant · commissioned the Whydah <span class="tier tier-green">Solid</span></div>
@@ -628,6 +752,11 @@ main > section[id].active {
 </ul>
 <div class="perspective-use">For the project: the establishment POV. A student choosing Morice tells the story of the system from its source — the MP in Parliament whose ship sails off and never comes back.</div>
 </div>
+
+</div>
+
+<h3 class="people-subheading">The wider pirate world</h3>
+<div class="card-grid">
 
 <div class="person-card">
 <div class="name">Benjamin Hornigold</div>
@@ -653,6 +782,11 @@ main > section[id].active {
 </ul>
 <div class="perspective-use">For the project: contemporary contrast. Same mentor as Bellamy; wildly different pirate presentation. Both dead within 20 months. Useful for comparison.</div>
 </div>
+
+</div>
+
+<h3 class="people-subheading">The investigators (1717 to today)</h3>
+<div class="card-grid">
 
 <div class="person-card">
 <div class="name">Cyprian Southack</div>
@@ -691,6 +825,11 @@ main > section[id].active {
 <div class="perspective-use">For the project: historian POV. For students interested in how we know what we know.</div>
 </div>
 
+</div>
+
+<h3 class="people-subheading">Boston &amp; Salem trial figures</h3>
+<div class="card-grid">
+
 <div class="person-card">
 <div class="name">Cotton Mather</div>
 <div class="role">Puritan minister · 1663–1728 <span class="tier tier-green">Solid</span></div>
@@ -715,6 +854,11 @@ main > section[id].active {
 </ul>
 <div class="perspective-use">For the project: the New England legal establishment running two infamous 1600s/1700s trials. A Salem student's prior knowledge of Sewall (from witch-trial curriculum) plugs directly into this unit.</div>
 </div>
+
+</div>
+
+<h3 class="people-subheading">Other voices we use</h3>
+<div class="card-grid">
 
 <div class="person-card">
 <div class="name">"Maria Hallett"</div>
@@ -1348,7 +1492,10 @@ document.addEventListener('DOMContentLoaded', function() {
       id = sections[0].id;
     }
     navLinks.forEach(function(a) {
-      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      const isActive = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('active', isActive);
+      if (isActive) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
     });
     history.replaceState(null, '', '#' + id);
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1376,6 +1523,38 @@ document.addEventListener('DOMContentLoaded', function() {
       ? (currentIdx + 1) % ids.length
       : (currentIdx - 1 + ids.length) % ids.length;
     showSection(ids[nextIdx]);
+  });
+
+  // Interactive checklist for Open Questions — persisted in localStorage
+  const checklistItems = document.querySelectorAll('.checklist li');
+  const storageKey = 'whydah-checklist-state-v1';
+  let savedState = {};
+  try {
+    savedState = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  } catch (e) { savedState = {}; }
+
+  checklistItems.forEach(function(li, idx) {
+    li.setAttribute('data-idx', idx);
+    li.setAttribute('role', 'button');
+    li.setAttribute('tabindex', '0');
+    li.setAttribute('aria-pressed', 'false');
+    if (savedState[idx]) {
+      li.classList.add('done');
+      li.setAttribute('aria-pressed', 'true');
+    }
+    function toggle() {
+      const isDone = li.classList.toggle('done');
+      li.setAttribute('aria-pressed', isDone ? 'true' : 'false');
+      savedState[idx] = isDone;
+      try { localStorage.setItem(storageKey, JSON.stringify(savedState)); } catch (e) {}
+    }
+    li.addEventListener('click', toggle);
+    li.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
   });
 });
 </script>
