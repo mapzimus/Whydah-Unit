@@ -357,6 +357,45 @@ table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC
   margin-top: 0.55em;
 }
 
+/* === FACILITATOR PASSWORD FORM === */
+.facilitator-pw-form {
+  display: flex;
+  gap: 0.6em;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1em;
+}
+.facilitator-pw-form input {
+  padding: 0.6em 1em;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 1em;
+  border: 1px solid #c4b590;
+  background: #fbf5e0;
+  color: #2a1d0f;
+  border-radius: 3px;
+  min-width: 220px;
+}
+.facilitator-pw-form input:focus {
+  outline: 2px solid #c9a55f;
+  outline-offset: 1px;
+  border-color: #8b3a1e;
+}
+.facilitator-pw-form button {
+  padding: 0.6em 1.4em;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 1em;
+  letter-spacing: 0.08em;
+  background: #0f2538;
+  color: #d9b56a;
+  border: 1px solid #c9a55f;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.facilitator-pw-form button:hover { background: #1a3549; }
+.facilitator-pw-error { color: #8b1a0a; margin-top: 0.6em; font-style: italic; }
+
 /* === INTERACTIVE CHECKLIST === */
 .checklist li { cursor: pointer; user-select: none; transition: background 0.15s; padding-right: 0.4em; }
 .checklist li:hover { background: rgba(201, 165, 95, 0.1); }
@@ -456,7 +495,6 @@ main > section[id].active {
         <li><a href="#overview">Overview</a></li>
         <li><a href="#voyage-journal">Voyage Journal</a></li>
         <li><a href="#sessions">16-Session Tracker</a></li>
-        <li><a href="#open">Open Questions</a></li>
       </ul>
     </li>
     <li class="nav-group">
@@ -476,6 +514,12 @@ main > section[id].active {
       <ul>
         <li><a href="#sources">Primary Sources</a></li>
         <li><a href="#confidence">Confidence &amp; Methods</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-group-label">Private</span>
+      <ul>
+        <li><a href="#facilitator">Facilitator Notes 🔒</a></li>
       </ul>
     </li>
   </ul>
@@ -1020,6 +1064,21 @@ Rediker casts pirates as proto-class-conscious resistors. Reviewers push back: <
 <p>In Session 3, this answers the question "who made this map, and why?" — a guy who drank with pirates and sold their route data for profit. Maps are arguments, not neutral records.</p>
 </div>
 
+<h3>Live world view — global shipping right now</h3>
+<div class="card">
+<p>The whole Atlantic and beyond, live from <a href="https://www.marinetraffic.com/en/ais/home/centerx:0/centery:25/zoom:2" target="_blank" rel="noopener">MarineTraffic.com</a>. Zoom out to see global shipping density. Zoom into chokepoints (Hormuz, Malacca, Red Sea, Panama) to watch traffic queue through.</p>
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 1px solid #c4b590; border-radius: 3px; margin-top: 0.5em; background: #e6d9b8;">
+<iframe
+  src="https://www.marinetraffic.com/en/ais/embed/zoom:2/centery:25/centerx:0/maptype:4/shownames:false/mmsi:0/shipid:0/fleet:/fleet_id:/vtypes:/showmenu:false/remember:false"
+  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+  title="MarineTraffic global live ship tracker"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+</div>
+<p class="meta" style="margin-top: 0.8em;">For Session 11, navigate to: <a href="https://www.marinetraffic.com/en/ais/home/centerx:56/centery:27/zoom:7" target="_blank" rel="noopener">Hormuz</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6" target="_blank" rel="noopener">Malacca</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5" target="_blank" rel="noopener">Red Sea</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8" target="_blank" rel="noopener">Panama</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-12/centery:25/zoom:4" target="_blank" rel="noopener">Bellamy's Atlantic</a></p>
+</div>
+
 <h3>Atlantic trade winds &amp; gyres — the triangle trade's physics</h3>
 
 <div class="card">
@@ -1415,23 +1474,66 @@ Rediker casts pirates as proto-class-conscious resistors. Reviewers push back: <
 
 </section>
 
-<section id="open">
-<h2>Open questions</h2>
-<p class="meta">What's still unresolved. We check these off as we close them.</p>
+<section id="facilitator">
+<h2>Facilitator Notes 🔒</h2>
+
+<div id="facilitator-locked" class="card" style="text-align:center; padding: 2em 1.5em;">
+<h3 style="margin-top:0;">Internal — facilitator only</h3>
+<p class="meta" style="text-align:left; max-width: 540px; margin: 0.6em auto 1em;">This section holds teaching prep notes, open planning questions, and sensitive guidance for facilitating the unit. Enter the password to unlock.</p>
+<form class="facilitator-pw-form" onsubmit="event.preventDefault(); unlockFacilitator();">
+<input type="password" id="facilitator-pw" placeholder="Password" autocomplete="off" autocapitalize="off" spellcheck="false">
+<button type="submit">Unlock</button>
+</form>
+<p id="facilitator-pw-error" class="facilitator-pw-error" style="display:none;">Incorrect password.</p>
+</div>
+
+<div id="facilitator-content" style="display:none;">
+
+<h3>Teaching Note on Race</h3>
+<div class="card">
+<p>This unit deals directly with slavery, a multi-racial pirate crew, and the racial dynamics of the early Atlantic world. Approach guidelines for the facilitator:</p>
+<ul>
+<li><strong>Anchor in named primary evidence,</strong> not generalizations. Kinkor's research, the trial-testified nationalities, John Julian's documented role.</li>
+<li><strong>Hold complexity. Don't resolve to optimism for student comfort.</strong> "Pirate ships were more equal" is true and meaningfully complicated.</li>
+<li><strong>Use scholar-standard language:</strong> "enslaved person" not "slave"; "captives on the Middle Passage"; "Black sailors."</li>
+<li><strong>Don't ask Black or biracial students to speak for any group.</strong> Watch for the impulse and resist it.</li>
+<li><strong>Be ready to say "I don't know" or "let's find that out."</strong> Don't perform expertise.</li>
+<li><strong>Don't make your positionality the topic.</strong> Brief acknowledgment if at all; then move.</li>
+</ul>
+
+<h4>Pre-teach reading list (before Sessions 6, 9, 10, 15)</h4>
+<ul>
+<li><a href="https://www.hup.harvard.edu/catalog.php?isbn=9780674076273" target="_blank" rel="noopener">W. Jeffrey Bolster, <em>Black Jacks: African American Seamen in the Age of Sail</em></a> (Harvard, 1997) — chapters 1–2</li>
+<li><a href="https://www.facinghistory.org/" target="_blank" rel="noopener">Facing History &amp; Ourselves</a> — Middle Passage and Atlantic Slavery teaching unit</li>
+<li><a href="https://www.learningforjustice.org/frameworks/teaching-hard-history/american-slavery" target="_blank" rel="noopener">Learning for Justice — Teaching Hard History: American Slavery</a> (grade 6–12 framework)</li>
+<li><a href="https://nmaahc.si.edu/learn/educators" target="_blank" rel="noopener">Smithsonian NMAAHC educator resources</a></li>
+</ul>
+
+<p><strong>Highest-value pre-teach move:</strong> if possible, have a Black colleague or LEAP staff member read materials for Sessions 6, 9, 10, 15 before you teach them.</p>
+</div>
+
+<h3>Open Questions / Vacation Follow-Up</h3>
+<p class="meta">What's still unresolved. Click any item to mark done — saved in this browser.</p>
 
 <ul class="checklist">
-<li><strong>Field trips:</strong> Confirm with Rebecca whether the program covers two field trips or just one. If two, Misery Island works as the Week 4 capstone.</li>
-<li><strong>MA Primary Standards:</strong> Verify exact text of W.8.3, W.8.7, SL.8.4 from the 2017 ELA framework PDF; identify the HSS topic code for Atlantic World.</li>
-<li><strong>Final project rubric:</strong> Draft rubric for four format variants keyed to common criteria (evidence, voice, craft).</li>
+<li><strong>Field trip:</strong> Confirm Real Pirates Salem date and curator-led status with Rebecca.</li>
+<li><strong>MA Primary Standards:</strong> Verify exact text of W.8.3, W.8.7, SL.8.4, RI.8.1 from the 2017 ELA framework PDF; identify the HSS topic code for Atlantic World.</li>
+<li><strong>Final project rubric:</strong> Draft rubric for the 13 capstone format variants — common criteria keyed to evidence integration, voice authenticity, perspective clarity, craft.</li>
 <li><strong>Showcase format:</strong> Public event? At the museum? Who's the audience?</li>
 <li><strong>Middle Passage content depth:</strong> Age-appropriate calibration with cohort's prior exposure.</li>
 <li><strong>Primary sources for S6 / S12 / S15:</strong> Pre-select and adapt before July 6 — Equiano, Mather sermon excerpt, trial testimony.</li>
 <li><strong>Session 10 reframe:</strong> Open with "the Whydah's own articles don't survive" — new session opening beat.</li>
+<li><strong>Daily reflection journal:</strong> Structure, format, shared or private.</li>
+<li><strong>Voyage Journal physical/digital format:</strong> Decide on student-choice template options.</li>
+<li><strong>Adopted-ship handout (S4):</strong> Prepare what students record about their MarineTraffic ship.</li>
+<li><strong>Chokepoint URL handout (S11):</strong> Pre-positioned MarineTraffic links to Hormuz, Malacca, Red Sea, Panama.</li>
+<li><strong>Teaching prep — race and the Whydah's crew (pre-summer):</strong> Bolster reading, Facing History skim, find a Black colleague to review S6/S9/S10/S15 materials.</li>
+<li><strong>Salem Maritime NHS visit:</strong> Walking distance; add as bonus session or half-session?</li>
 <li><strong>Nature photography enrichment:</strong> Separate planning task — session ideas to pitch Rebecca and Hilary.</li>
 <li><strong>Planning-budget logistics:</strong> Does meeting time count toward 25-hour budget? Payroll reactivation timing?</li>
-<li><strong>Daily reflection journal:</strong> Structure, format, shared or private.</li>
-<li><strong>Salem Maritime NHS visit:</strong> Walking distance; add as bonus session or half-session?</li>
 </ul>
+
+</div>
 </section>
 
 <section id="confidence">
@@ -1530,6 +1632,40 @@ document.addEventListener('DOMContentLoaded', function() {
       : (currentIdx - 1 + ids.length) % ids.length;
     showSection(ids[nextIdx]);
   });
+
+  // Facilitator notes password gate
+  const FACILITATOR_HASH = '92686703422fdf065eabe146cc7bcc369b0f504b22dc40b2511e160639e96363';
+
+  async function sha256Hex(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  window.unlockFacilitator = async function() {
+    const inputEl = document.getElementById('facilitator-pw');
+    const errorEl = document.getElementById('facilitator-pw-error');
+    const lockedEl = document.getElementById('facilitator-locked');
+    const contentEl = document.getElementById('facilitator-content');
+    if (!inputEl || !lockedEl || !contentEl) return;
+    const hash = await sha256Hex(inputEl.value);
+    if (hash === FACILITATOR_HASH) {
+      sessionStorage.setItem('facilitator-unlocked', 'true');
+      lockedEl.style.display = 'none';
+      contentEl.style.display = 'block';
+      if (errorEl) errorEl.style.display = 'none';
+    } else {
+      if (errorEl) errorEl.style.display = 'block';
+      inputEl.select();
+    }
+  };
+
+  // If already unlocked in this session, skip the gate on page load
+  if (sessionStorage.getItem('facilitator-unlocked') === 'true') {
+    const lockedEl = document.getElementById('facilitator-locked');
+    const contentEl = document.getElementById('facilitator-content');
+    if (lockedEl) lockedEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'block';
+  }
 
   // Interactive checklist for Open Questions — persisted in localStorage
   const checklistItems = document.querySelectorAll('.checklist li');
