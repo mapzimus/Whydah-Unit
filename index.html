@@ -357,6 +357,48 @@ table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC
   margin-top: 0.55em;
 }
 
+/* === UNIT PLAN VISUAL === */
+.unit-plan-decisions { background: #fbf5e0; border: 1px solid #c4b590; border-left: 5px solid #c9a55f; border-radius: 3px; padding: 0.9em 1.2em; margin-bottom: 1.5em; box-shadow: 1px 2px 4px rgba(42, 29, 15, 0.12); }
+.unit-plan-decisions p { margin: 0.3em 0; font-size: 0.95em; }
+.unit-plan-decisions strong { color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; }
+
+.unit-calendar { display: grid; grid-template-columns: 100px repeat(4, 1fr); gap: 4px; background: #c4b590; padding: 4px; border-radius: 3px; margin-bottom: 1.5em; box-shadow: 2px 3px 6px rgba(42, 29, 15, 0.15); }
+.unit-calendar-cell { background: #fbf5e0; padding: 0.5em 0.6em; min-height: 80px; display: flex; flex-direction: column; }
+.unit-calendar-week { background: #2c1810; color: #d9b56a; font-family: 'IM Fell English SC', Georgia, serif; font-size: 0.85em; letter-spacing: 0.1em; align-items: center; justify-content: center; text-align: center; }
+.unit-calendar-day { font-family: 'IM Fell English SC', Georgia, serif; font-size: 0.7em; color: #8b3a1e; letter-spacing: 0.08em; margin-bottom: 0.2em; }
+.unit-calendar-title { font-family: 'IM Fell English SC', Georgia, serif; font-size: 0.92em; color: #0f2538; line-height: 1.25; }
+.unit-calendar-cell.field-trip { background: #f6e2d2; }
+.unit-calendar-cell.project { background: #e6d9b8; }
+.unit-calendar-cell.showcase { background: #f4e3a8; }
+.unit-calendar-cell .session-num { font-family: 'IM Fell English', Georgia, serif; color: #c9a55f; font-size: 0.7em; }
+
+.unit-plan-week-section { margin-bottom: 2em; }
+.unit-plan-week-header { font-family: 'IM Fell English SC', Georgia, serif; color: #8b3a1e; font-size: 1.1em; letter-spacing: 0.12em; padding: 0.4em 0.6em; border-left: 4px solid #8b3a1e; background: #f4ead5; margin-bottom: 0.8em; }
+.unit-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 0.8em; }
+
+.session-card { background: #fbf5e0; border: 1px solid #c4b590; border-left: 4px solid #1e4258; border-radius: 3px; padding: 0.9em 1.1em; box-shadow: 1px 2px 4px rgba(42, 29, 15, 0.12); transition: box-shadow 0.15s; }
+.session-card:hover { box-shadow: 2px 3px 7px rgba(42, 29, 15, 0.2); }
+.session-card-header { display: flex; justify-content: space-between; font-family: 'IM Fell English SC', Georgia, serif; color: #8b3a1e; font-size: 0.78em; letter-spacing: 0.1em; margin-bottom: 0.3em; }
+.session-card h4 { margin: 0 0 0.5em; color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; font-size: 1.05em; letter-spacing: 0.04em; }
+.session-card-body { font-size: 0.9em; }
+.session-card .vj-entry { margin: 0.3em 0; color: #2a1d0f; }
+.session-card .reflect-q { margin: 0.4em 0; color: #5e4421; font-style: italic; }
+.session-card .session-detail { margin-top: 0.6em; padding-top: 0.6em; border-top: 1px dashed #c4b590; display: none; }
+.session-card .session-detail p { margin: 0.4em 0; font-size: 0.88em; }
+.session-card .session-detail strong { color: #0f2538; }
+.session-card.expanded .session-detail { display: block; }
+.session-expand { background: none; border: none; color: #8b3a1e; font-family: 'IM Fell English SC', Georgia, serif; font-size: 0.78em; letter-spacing: 0.08em; cursor: pointer; padding: 0; margin-top: 0.4em; }
+.session-expand:hover { color: #5e2811; text-decoration: underline; }
+.session-card.field-trip { background: #f6e2d2; border-left-color: #8b3a1e; }
+.session-card.project-day { background: #e6d9b8; border-left-color: #5e4421; }
+.session-card.showcase { background: #f4e3a8; border-left-color: #c9a55f; }
+
+@media (max-width: 768px) {
+  .unit-calendar { grid-template-columns: 60px repeat(4, 1fr); font-size: 0.8em; }
+  .unit-calendar-cell { min-height: 60px; padding: 0.3em 0.4em; }
+  .unit-calendar-title { font-size: 0.78em; }
+}
+
 /* === FACILITATOR PASSWORD FORM === */
 .facilitator-pw-form {
   display: flex;
@@ -519,6 +561,7 @@ main > section[id].active {
     <li class="nav-group">
       <span class="nav-group-label">Private</span>
       <ul>
+        <li><a href="#unit-plan">Unit Plan 🔒</a></li>
         <li><a href="#facilitator">Facilitator Notes 🔒</a></li>
       </ul>
     </li>
@@ -1503,6 +1546,382 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 </section>
 
+<section id="unit-plan">
+<h2>Unit Plan At a Glance 🔒</h2>
+
+<div id="unit-plan-locked" class="card" style="text-align:center; padding: 2em 1.5em;">
+<h3 style="margin-top:0;">Internal — facilitator only</h3>
+<p class="meta" style="text-align:left; max-width: 540px; margin: 0.6em auto 0.5em;">The full visual unit plan — calendar grid + every session at a glance. Use the Facilitator Notes tab to enter the password; once unlocked there, this view appears here too.</p>
+</div>
+
+<div id="unit-plan-content" style="display:none;">
+
+<div class="unit-plan-decisions">
+<p><strong>DQ:</strong> Why would a person choose piracy in 1717 — and how would they want you to tell their story?</p>
+<p><strong>KSQs:</strong> 1. Maps &amp; power · 2. Atlantic trade · 3. Geography &amp; choice · 4. Whose stories</p>
+<p><strong>Format:</strong> 16 instructional + 1 field trip + 2 project days + Showcase · 2 sections × ~20 students · 90 min/section · No grades · Voyage Journal binders + Capstone (13 formats)</p>
+</div>
+
+<h3>Five-Week Calendar</h3>
+<div class="unit-calendar">
+<div class="unit-calendar-cell unit-calendar-week">Week 1<br>Jul 6–9</div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Mon · S1</div><div class="unit-calendar-title">Launching the Voyage</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Tue · S2</div><div class="unit-calendar-title">What Is a Map?</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Wed · S3</div><div class="unit-calendar-title">Reading the 1719 World Map</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Thu · S4</div><div class="unit-calendar-title">My Maps + Adopt a Ship</div></div>
+
+<div class="unit-calendar-cell unit-calendar-week">Week 2<br>Jul 13–16</div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Mon · S5</div><div class="unit-calendar-title">Atlantic World 1715 + MarineTraffic</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Tue · S6</div><div class="unit-calendar-title">The Middle Passage</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Wed · S7</div><div class="unit-calendar-title">Life on a Ship in 1717</div></div>
+<div class="unit-calendar-cell field-trip"><div class="unit-calendar-day">Thu · TRIP</div><div class="unit-calendar-title">Real Pirates + Salem Maritime (rotation)</div></div>
+
+<div class="unit-calendar-cell unit-calendar-week">Week 3<br>Jul 20–23</div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Mon · S9</div><div class="unit-calendar-title">Who Chose Piracy?</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Tue · S10</div><div class="unit-calendar-title">The Ship's Articles</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Wed · S11</div><div class="unit-calendar-title">Piracy as Geography (Hormuz)</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Thu · S12</div><div class="unit-calendar-title">What Pirates Actually Did</div></div>
+
+<div class="unit-calendar-cell unit-calendar-week">Week 4<br>Jul 27–30</div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Mon · S13</div><div class="unit-calendar-title">The Wreck</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Tue · S14</div><div class="unit-calendar-title">Finding the Whydah (1717→1984)</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Wed · S15</div><div class="unit-calendar-title">Voices of the Whydah</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Thu · S16</div><div class="unit-calendar-title">Choosing Your Perspective</div></div>
+
+<div class="unit-calendar-cell unit-calendar-week">Week 5<br>Aug 3–6</div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Mon · S17</div><div class="unit-calendar-title">Whose Story Have We Been Telling?</div></div>
+<div class="unit-calendar-cell project"><div class="unit-calendar-day">Tue · BUILD</div><div class="unit-calendar-title">Project Work Day 1</div></div>
+<div class="unit-calendar-cell project"><div class="unit-calendar-day">Wed · BUILD</div><div class="unit-calendar-title">Project Work Day 2 (peer review)</div></div>
+<div class="unit-calendar-cell showcase"><div class="unit-calendar-day">Thu · SHOW</div><div class="unit-calendar-title">PUBLIC SHOWCASE</div></div>
+</div>
+
+<h3>Session Cards (click to expand)</h3>
+<p class="meta">Each card shows the session at a glance. Click "Show details" for full activities + academic vocab.</p>
+
+<div class="unit-plan-week-section">
+<div class="unit-plan-week-header">Week 1 — Maps &amp; Power · KSQ1: How do people use maps and navigation to exercise power, in 1717 and today?</div>
+<div class="unit-plan-grid">
+
+<div class="session-card">
+<div class="session-card-header"><span>Mon Jul 6 · S1</span></div>
+<h4>Launching the Voyage</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Quick-write + hand-drawn route from home</p>
+<p class="reflect-q">Reflection: What questions do you already have about the world of the Whydah?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Hook with a powerful artifact image (King's shoe, the bell, or 1719 map). Post the DQ on the wall as a permanent reference. Quick-write: "If you had to leave everything behind and start over at sea, what would your world have to look like?" Pair-share, whole-class circle. Brief Whydah intro — spark only, no spoilers.</p>
+<p><strong>Vocab:</strong> Driving Question · perspective · voyage · primary source</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Tue Jul 7 · S2</span></div>
+<h4>What Is a Map?</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Annotated comparison: modern Salem vs. 1700s New England</p>
+<p class="reflect-q">Reflection: What would a map of your life include that a stranger's map of you would leave out?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Define cartography, projection, scale, symbols. Side-by-side comparison: modern Google Maps Salem vs. a 1700s New England map. Introduce Mercator projection — rhumb lines as straight lines, why Google Maps still uses Web Mercator. Small-group annotation: what's shown, what's missing, whose perspective?</p>
+<p><strong>Vocab:</strong> cartography · projection · legend · rhumb line</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Wed Jul 8 · S3</span></div>
+<h4>Reading the 1719 World Map</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Analysis card on the 1719 Moll world map</p>
+<p class="reflect-q">Reflection: If the 1719 map is an argument, what argument is it making — and who is making it?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Close-read Herman Moll's 1719 world map (or the Real Pirates Salem Educator Guide version). Introduce Moll — London's premier cartographer with a social circle that included pirates and privateers (Dampier, Rogers, Hacke). His maps were partly built from pirate intelligence. Anchor: maps are arguments, not neutral records.</p>
+<p><strong>Vocab:</strong> cartographer · empire · intelligence · argument</p>
+<p><strong>Weekly extended writing prompt:</strong> Describe a place you know well. List three things a map of that place would leave out. Why?</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Thu Jul 9 · S4</span></div>
+<h4>My Maps + Navigation Tools + Adopt a Ship</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> "Routes of My Life" Google My Map + adopted ship's first log</p>
+<p class="reflect-q">Reflection: What does your "Routes of My Life" map say about you — and what does it hide?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Tutorial on Google My Maps. Period navigation tools: compass, backstaff, quadrant, dead reckoning. The longitude problem in 1717 — latitude findable, longitude not. 1707 Scilly Isles disaster → 1714 Longitude Act → Harrison's chronometer 1761 (44 years too late). MarineTraffic introduction — each student picks a ship to track across the unit. Build "Routes of My Life" map.</p>
+<p><strong>Vocab:</strong> layer · annotation · compass · backstaff · latitude · longitude</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="unit-plan-week-section">
+<div class="unit-plan-week-header">Week 2 — The Triangle Trade · KSQ2: What do Atlantic trade routes tell us about who benefits and who suffers, then and now?</div>
+<div class="unit-plan-grid">
+
+<div class="session-card">
+<div class="session-card-header"><span>Mon Jul 13 · S5</span></div>
+<h4>The Atlantic World in 1715 — and Today</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Triangle-trade map + MarineTraffic Atlantic screenshot alongside</p>
+<p class="reflect-q">Reflection: Who benefits when a ship like the Whydah crosses the ocean — then? Now?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Establish 1715 Atlantic world. Trade winds + gyre — physical geography forced the triangle's shape. Plot Whydah's pre-piracy route: London → Ouidah → Jamaica. The ship's name = Ouidah, Benin (2nd largest Atlantic slave port). Sir Humphrey Morice, sitting MP and London's foremost slave merchant, commissioned her. Modern bridge: open MarineTraffic Atlantic alongside the class triangle map. Same routes, 300 years.</p>
+<p><strong>Vocab:</strong> triangle trade · gyre · trade winds · empire</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Tue Jul 14 · S6</span></div>
+<h4>The Middle Passage</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Middle Passage silent-writing reflection</p>
+<p class="reflect-q">Reflection: What does it mean to map a voyage when not everyone on the ship chose to be there?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Read pre-screened, age-appropriate Equiano excerpt (note: 1756 capture, not Whydah-era — Middle Passage voice not Whydah voice). Cargo data: 367 captives → 312 survived. Silent writing time. Add the Middle Passage leg to the class Whydah route map.</p>
+<p><strong>Vocab:</strong> Middle Passage · testimony · dehumanization · survivor</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Wed Jul 15 · S7</span></div>
+<h4>Life on a Ship in 1717</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Ship-types comparison chart</p>
+<p class="reflect-q">Reflection: Which ship would you least want to be on in 1717 — and why?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Research jigsaw on four ship types — slave ship, Royal Navy, merchant, fishing. Build comparison chart: food, pay, discipline, mortality, freedom. Concrete numbers: Royal Navy wages set 1653, not raised 144 years. Slave-ship crew mortality 21.6% per voyage. Modern bridge (5 min): container-ship crew labor today. Bridge to Week 3: "Why wouldn't a sailor run?"</p>
+<p><strong>Vocab:</strong> impressment · flogging · mortality · wage</p>
+<p><strong>Weekly extended writing prompt:</strong> Sailor in 1717: stay on merchant ship, join Royal Navy, or risk joining pirates? Half-page letter explaining your choice.</p>
+</div>
+</div>
+</div>
+
+<div class="session-card field-trip">
+<div class="session-card-header"><span>Thu Jul 16 · FIELD TRIP 1</span></div>
+<h4>Real Pirates Salem + Salem Maritime NHS (rotation)</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Combined log + perspective notes + Friendship sketch</p>
+<p class="reflect-q">Reflection: What did you see today that a book couldn't have shown you?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Structure:</strong> Two sections start at opposite sites. Section A morning at Real Pirates Salem (Whydah scavenger hunt) / Section B morning at Salem Maritime NHS (the Friendship + Derby Wharf + Custom House). Lunch. Sections swap for the afternoon. Each student experiences both.</p>
+<p><strong>At Real Pirates:</strong> structured scavenger hunt, one artifact per KSQ, perspective scouting.</p>
+<p><strong>At Salem Maritime:</strong> walk through the Friendship (replica 1797 East Indiaman), Derby Wharf, Custom House.</p>
+<p><strong>Vocab:</strong> artifact · curator · provenance · East Indiaman · wharf</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="unit-plan-week-section">
+<div class="unit-plan-week-header">Week 3 — Piracy as Choice · KSQ3: How does geography shape choices — from 1717 piracy to chokepoints like Hormuz?</div>
+<div class="unit-plan-grid">
+
+<div class="session-card">
+<div class="session-card-header"><span>Mon Jul 20 · S9</span></div>
+<h4>Who Chose Piracy?</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Push/pull T-chart for one chosen crew member</p>
+<p class="reflect-q">Reflection: Which crew member's story surprised you the most — and why?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Flying Gang at Nassau. Hornigold mentored both Bellamy and Blackbeard. Summer 1716: Bellamy's crew voted Hornigold out — pirate democracy in action. Profile sketches with diversity emphasis: Bellamy (Devon, Navy vet, ship's boy at 13), Williams (wealthy RI silversmith — class contrast), Julian (Miskito, pilot at 16), King (boy pirate, age 11), the hanged six (Brown-Jamaica, Baker & Quintor-Netherlands [Quintor was Black, Dutch-African per Clifford & Kinkor 2007], Hoof-Sweden, Shaun-France, van der Vorst-NY). ~25% Black per Kinkor. Analytical question: Why was a flatter racial hierarchy possible on a pirate ship in 1717 when surrounding world was deeply racist?</p>
+<p><strong>Vocab:</strong> push factor · pull factor · recruit · desert · mentor</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Tue Jul 21 · S10</span></div>
+<h4>The Ship's Articles</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Personal rewrite of the Ship's Articles for a modern classroom</p>
+<p class="reflect-q">Reflection: Would you sign on to a set of articles like these? What would worry you?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Whydah's text doesn't survive, but trial testimony confirms the crew had articles + voting/signing requirement (Rediker 2004). Wounded Heart wax seals recovered from wreck = physical evidence. We use Roberts' 1721 articles (via Johnson 1724) as analogue. Read Roberts' age-adapted; compare to Royal Navy rules. Equal-shares principle was practice, not just text — Black and white sailors got the same share. Small-group rewrite for modern classroom.</p>
+<p><strong>Vocab:</strong> articles · covenant · democratic · mutiny · analogue</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Wed Jul 22 · S11</span></div>
+<h4>Piracy as Geography — Then and Now</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Pirate voyage plan + chokepoint comparison screenshots</p>
+<p class="reflect-q">Reflection: What does where someone chooses to sail tell you about what they're running from — or toward?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> The big modern bridge. Where pirates operated — chokepoints, sea lanes, weak colonial control. Plot Bellamy's 53+ Caribbean captures. Hands-on with period nav tools. Plan a Jamaica-to-Carolinas voyage with 1717 tools. Then MarineTraffic chokepoints today: Hormuz (Iran threats, ~20% of world oil), Malacca, Red Sea / Bab-el-Mandeb (Houthi attacks), Panama (drought). Same geography logic, 300 years apart.</p>
+<p><strong>Vocab:</strong> chokepoint · sea lane · dead reckoning · latitude</p>
+<p><strong>Weekly extended writing prompt:</strong> One push and one pull factor that mattered most for the Whydah's crew? Support with evidence.</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Thu Jul 23 · S12</span></div>
+<h4>What Pirates Actually Did — 1717 and Now</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Primary-vs-pop-culture analysis card + modern piracy paragraph</p>
+<p class="reflect-q">Reflection: Can you tell someone's story honestly without either excusing them or condemning them?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Primary source eyewitness Bellamy capture accounts. The "rob the poor" speech is Johnson 1724, may be invention — teach as mythologized. Build a "typical capture" timeline. Jolly Roger as documented psychological weapon (Wynne 1700). Pop-culture pirate clip comparison. Modern piracy bridge (10 min): Somalia, Gulf of Guinea, Houthi Red Sea attacks. Honest history: pirates significantly disrupted slave trade in 1710s–20s, but trade rebounded — by 1730s had doubled.</p>
+<p><strong>Vocab:</strong> primary source · nuance · myth · accountability · jolly roger</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="unit-plan-week-section">
+<div class="unit-plan-week-header">Week 4 — The Wreck &amp; Recovery · KSQ3 → KSQ4: Whose stories get mapped and whose get buried — across time?</div>
+<div class="unit-plan-grid">
+
+<div class="session-card">
+<div class="session-card-header"><span>Mon Jul 27 · S13</span></div>
+<h4>The Wreck</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Wreck site map + written land acknowledgment</p>
+<p class="reflect-q">Reflection: If the Whydah had not wrecked, would we know any of these people's names?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> April 26, 1717, 12:15 AM: nor'easter catches Bellamy's fleet of four (Whydah, Mary Anne captured same day, Marianne with Williams away at Block Island, Anne Galley). Whydah grounds at Marconi Beach, Wellfleet. 146 souls aboard, 102 bodies recovered, only 2 Whydah survivors (Julian, Davis), 42 unaccounted for. Mary Anne wrecks south, all 10 aboard survive. Cape Cod residents' accounts. Land acknowledgment: Punonakanit Wampanoag territory; their voice absent from 1717 record. Map wreck site on Google Earth, intro bathymetry.</p>
+<p><strong>Vocab:</strong> nor'easter · bathymetry · wreck · fleet · land acknowledgment</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Tue Jul 28 · S14</span></div>
+<h4>Finding the Whydah (1717 → 1984)</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Grid-archaeology dig-square exercise</p>
+<p class="reflect-q">Reflection: Why does evidence matter for the story you tell?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> 1717: Gov. Samuel Shute dispatches Cyprian Southack (1662–1745), cartographer + naval militia commander, to salvage. Recovers little but marks wreck on his New England chart. 1984: Barry Clifford finds the wreck using Southack's 267-year-old map. Grid-based excavation method = direct ancestor of GIS. Students map the recovery grid on Google Earth. The cartography throughline made visible.</p>
+<p><strong>Vocab:</strong> archaeology · grid · provenance · cartographer</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Wed Jul 29 · S15</span></div>
+<h4>Voices of the Whydah</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Artifact analysis card on one Whydah object</p>
+<p class="reflect-q">Reflection: If you could interview one person from the Whydah's story, who would it be — and what would you ask?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Close-read surviving primary sources: Boston Vice-Admiralty Court trial testimony (Oct 1717, Judge Samuel Sewall — Salem Witch Trial judge, strong cohort recognition). Cape Cod eyewitness wreck accounts. Cotton Mather "Instructions to the Living" (1717) — execution sermon, Mather another Salem name. 200,000+ artifacts: West African gold dust, Spanish reales, personal items, the bell, John King's fibula in shoe and stocking (Smithsonian-identified 2006), Wounded Heart wax seals (physical evidence of crew signing Articles). Salem connection: Mather + Sewall ran 1692 Witch Trials, 1717 Whydah trials. Discussion: whose voices missing from record?</p>
+<p><strong>Vocab:</strong> testimony · inference · silence · execution</p>
+<p><strong>Weekly extended writing prompt:</strong> Pick one artifact you'd want to hold. What would it tell you the written record can't?</p>
+</div>
+</div>
+</div>
+
+<div class="session-card">
+<div class="session-card-header"><span>Thu Jul 30 · S16</span></div>
+<h4>Choosing Your Perspective</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Perspective + format pitch + capstone source plan (3–4 Journal entries)</p>
+<p class="reflect-q">Reflection: Why did you choose the perspective you chose?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Introduce full perspective menu (15+ options: Black, Native, multinational crew, Salem-figure, modern). Each student writes one-paragraph justification. Introduce capstone format menu (13 options) with format-specific scaffolds. Students pick format. Partner share — one-minute plan articulation, one sharpening question. Quick check on adopted ships from S4.</p>
+<p><strong>Vocab:</strong> perspective · voice · stance · audience</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="unit-plan-week-section">
+<div class="unit-plan-week-header">Week 5 — Justice, Synthesis &amp; Showcase</div>
+<div class="unit-plan-grid">
+
+<div class="session-card">
+<div class="session-card-header"><span>Mon Aug 3 · S17</span></div>
+<h4>Whose Story Have We Been Telling?</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Capstone opening draft + adopted-ship final note</p>
+<p class="reflect-q">Reflection: Whose story are you working on in your head? Whose story still needs telling?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Whole-class synthesis — across four weeks, whose stories have we heard, whose haven't we? Read short first-person account excerpt as model. Final check on adopted ship from Session 4. Silent writing: capstone opening or storyboard frame, pulling from Voyage Journal. Teacher conferences (5 min/student).</p>
+<p><strong>Vocab:</strong> synthesis · narrative · inference · voice</p>
+</div>
+</div>
+</div>
+
+<div class="session-card project-day">
+<div class="session-card-header"><span>Tue Aug 4 · BUILD 1</span></div>
+<h4>Project Work Day 1</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Build-day reflection + draft progress notes</p>
+<p class="reflect-q">Reflection: What's the hardest part of telling this story?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Independent capstone build time. Mid-morning mini-workshop: "Giving voice to a perspective without putting words in their mouth" — using historical evidence to ground a voice. Drop-in stations: tech help, writing help, performance coaching. End-of-day share-out: one sentence about what you're making.</p>
+<p><strong>Vocab:</strong> draft · evidence · voice</p>
+</div>
+</div>
+</div>
+
+<div class="session-card project-day">
+<div class="session-card-header"><span>Wed Aug 5 · BUILD 2</span></div>
+<h4>Project Work Day 2 (Peer Review + Polish)</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Peer-review notes + revision plan</p>
+<p class="reflect-q">Reflection: What did your partner see in your work that you couldn't see yourself?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Morning: structured peer review in pairs — one specific question, one strengthening suggestion. Afternoon: revise; performance students rehearse; set up Showcase space. Teacher conferences on request.</p>
+<p><strong>Vocab:</strong> revision · feedback · critique</p>
+</div>
+</div>
+</div>
+
+<div class="session-card showcase">
+<div class="session-card-header"><span>Thu Aug 6 · SHOWCASE</span></div>
+<h4>Public Showcase (Collins MS)</h4>
+<div class="session-card-body">
+<p class="vj-entry"><strong>Voyage Journal:</strong> Showcase reflection</p>
+<p class="reflect-q">Reflection: What did you choose to include in your project — and what did you choose to leave out?</p>
+<button class="session-expand">+ Show details</button>
+<div class="session-detail">
+<p><strong>Activities:</strong> Public Showcase — capstones presented; Voyage Journals displayed gallery-walk style. Audience: LEAP staff, families, museum staff, public. Closing circle: one thing each student is proud of, one thing they'd do differently.</p>
+<p><strong>Vocab:</strong> showcase · audience · reflection</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
 <section id="facilitator">
 <h2>Facilitator Notes 🔒</h2>
 
@@ -1690,13 +2109,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  // If already unlocked in this session, skip the gate on page load
-  if (sessionStorage.getItem('facilitator-unlocked') === 'true') {
-    const lockedEl = document.getElementById('facilitator-locked');
-    const contentEl = document.getElementById('facilitator-content');
-    if (lockedEl) lockedEl.style.display = 'none';
-    if (contentEl) contentEl.style.display = 'block';
+  // Reveal both locked sections (Facilitator Notes + Unit Plan) when unlocked
+  function revealLockedSections() {
+    const lockedIds = ['facilitator-locked', 'unit-plan-locked'];
+    const contentIds = ['facilitator-content', 'unit-plan-content'];
+    lockedIds.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    contentIds.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'block';
+    });
   }
+
+  // Patch unlockFacilitator to reveal both
+  const originalUnlock = window.unlockFacilitator;
+  window.unlockFacilitator = async function() {
+    await originalUnlock();
+    if (sessionStorage.getItem('facilitator-unlocked') === 'true') {
+      revealLockedSections();
+    }
+  };
+
+  // If already unlocked in this session, reveal both locked sections on page load
+  if (sessionStorage.getItem('facilitator-unlocked') === 'true') {
+    revealLockedSections();
+  }
+
+  // Session card expand/collapse for Unit Plan
+  document.querySelectorAll('.session-expand').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const card = btn.closest('.session-card');
+      if (!card) return;
+      const isExpanded = card.classList.toggle('expanded');
+      btn.textContent = isExpanded ? '− Hide details' : '+ Show details';
+    });
+  });
 
   // Interactive checklist for Open Questions — persisted in localStorage
   const checklistItems = document.querySelectorAll('.checklist li');
