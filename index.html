@@ -268,6 +268,19 @@ main.content > section.active { display: block; }
 .tool-card.not-yet .tool-img { opacity: 0.55; filter: grayscale(0.4); }
 /* === END TOOL IMAGES === */
 
+/* === HERO STRIP (top of Overview) === */
+.hero-strip { background: linear-gradient(135deg, #fbf5e0 0%, #f0e8cf 100%); border: 1px solid #c4b590; border-left: 5px solid #1e4258; border-radius: 4px; padding: 1.2em 1.4em; margin-bottom: 1.5em; box-shadow: 2px 4px 10px rgba(42, 29, 15, 0.18); }
+.hero-strip h3 { color: #0f2538; font-family: 'IM Fell English SC', Georgia, serif; font-size: 1.3em; letter-spacing: 0.05em; }
+.hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9em; margin-top: 0.8em; }
+.hero-grid figure { margin: 0; }
+.hero-grid figcaption { font-size: 0.82em; color: #5e3a00; font-family: 'IM Fell English', Georgia, serif; padding: 0.4em 0.2em 0; line-height: 1.35; }
+.hero-grid figcaption a { color: #1e4258; font-weight: 600; }
+.hero-jumps { margin-top: 1em; padding-top: 0.6em; border-top: 1px dotted rgba(42, 29, 15, 0.25); font-size: 0.9em; }
+.hero-jumps a { color: #1e4258; font-weight: 600; padding: 0.2em 0.4em; border-radius: 3px; }
+.hero-jumps a:hover { background: rgba(201, 165, 95, 0.18); }
+@media (max-width: 768px) { .hero-grid { grid-template-columns: 1fr; gap: 1em; } .hero-strip { padding: 1em 0.9em; } }
+/* === END HERO STRIP === */
+
 </style>
 <style>
 /* ============ MAP + PIRATE THEME OVERLAY ============ */
@@ -615,6 +628,27 @@ main > section[id].active {
 
 <section id="overview">
 <h2>Overview</h2>
+
+<div class="hero-strip">
+<h3 style="margin-top:0;">Live - the same Atlantic, right now</h3>
+<p class="meta">Two windows on the ocean Bellamy sailed. Live wind on the left, live shipping on the right. Same water, 309 years later.</p>
+<div class="hero-grid">
+<figure>
+<div class="video-embed-wrap" style="padding-bottom: 75%;">
+<iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" title="Live North Atlantic wind - earth.nullschool.net" loading="eager" allowfullscreen referrerpolicy="no-referrer"></iframe>
+</div>
+<figcaption><a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" target="_blank" rel="noopener">earth.nullschool.net</a> - live wind / currents / weather. Click "earth" in the bottom-left corner to switch layer.</figcaption>
+</figure>
+<figure>
+<div class="video-embed-wrap" style="padding-bottom: 75%;">
+<iframe src="https://www.marinetraffic.com/en/ais/embed/zoom:4/centery:38/centerx:-50/maptype:4/shownames:false/mmsi:0/shipid:0/fleet:/fleet_id:/vtypes:/showmenu:false/remember:false" title="Live North Atlantic shipping - MarineTraffic" loading="eager"></iframe>
+</div>
+<figcaption><a href="https://www.marinetraffic.com/en/ais/home/centerx:-50/centery:38/zoom:4" target="_blank" rel="noopener">MarineTraffic</a> - live merchant ships, AIS feed. Pan and zoom to follow individual vessels.</figcaption>
+</figure>
+</div>
+<p class="hero-jumps">More live tools and cartography deep-dive: <a href="#maps-geo">Maps &amp; Tools</a> Aï¿½ <a href="#projections">Projections &amp; Coordinates</a></p>
+</div>
+
 <div class="card">
 <h3 style="margin-top:0;">Driving question</h3>
 <p style="font-size:1.15em; font-family:Georgia,serif; font-style:italic; color:var(--accent); margin:0.3em 0 1em 0;">
@@ -625,7 +659,7 @@ main > section[id].active {
 <ol style="margin-top:0.3em;">
 <li>How do people use maps and navigation to exercise power — in 1717 and today?</li>
 <li>What do Atlantic trade routes tell us about who benefits and who suffers from global commerce, then and now?</li>
-<li>How does geography shape the choices people can make — from 18th-century piracy to modern chokepoints like the Strait of Hormuz?</li>
+<li>How does geography shape the choices people can make — from 18th-century piracy to modern chokepoints like Suez, Malacca, and Panama?</li>
 <li>Whose stories get mapped, and whose get buried — across time?</li>
 </ol>
 
@@ -633,7 +667,7 @@ main > section[id].active {
 <ol style="margin-top:0.3em;">
 <li><strong>Cartography and navigation.</strong> Maps are the tool. We learn to read and make them first. The Whydah story holds together on cartography too: Cyprian Southack's 1717 salvage map is what Barry Clifford used in 1984 to find the wreck.</li>
 <li><strong>The Whydah's Atlantic world.</strong> The ship's journey carries everything else: trade, slavery, piracy, the wreck, the recovery.</li>
-<li><strong>Modern Oceans.</strong> Hormuz, Suez, Bab-el-Mandeb, Panama, container shipping, the Houthi attacks. Same chokepoint logic as 1717, different water. (Hilary's ask, made structural.)</li><li class="thread-cross-cutting"><strong>Running through all three:</strong> a social justice lens - whose stories get told, whose get buried. Not a separate pillar; the constant theme across cartography, the Atlantic world, and modern oceans.</li>
+<li><strong>Modern Oceans.</strong> Suez, Bab-el-Mandeb, Panama, Malacca, container shipping, the Houthi attacks. Same chokepoint logic as 1717, different water. (Hilary's ask, made structural.)</li><li class="thread-cross-cutting"><strong>Running through all three:</strong> a social justice lens - whose stories get told, whose get buried. Not a separate pillar; the constant theme across cartography, the Atlantic world, and modern oceans.</li>
 </ol>
 
 <h4>How we're holding the moral complexity</h4>
@@ -684,7 +718,7 @@ main > section[id].active {
 <div class="week-header"><h3 style="margin:0;">Week 3 — Piracy as Choice</h3><span class="week-dates">July 20–23</span></div>
 <div class="session-row"><span class="session-num">S9 · Mon</span><span class="session-title">Push/pull T-chart for one crew member<span class="session-focus">Pick a crew member (Bellamy, Julian, King, Williams, or one of the hanged six) and map their path</span></span></div>
 <div class="session-row"><span class="session-num">S10 · Tue</span><span class="session-title">Personal rewrite of the Ship's Articles<span class="session-focus">Adapt Roberts' articles (the analogue we teach) for a modern middle-school classroom</span></span></div>
-<div class="session-row"><span class="session-num">S11 · Wed</span><span class="session-title">Pirate voyage plan + chokepoint comparison<span class="session-focus">Hand-drawn Jamaica-to-Carolinas voyage with 1717 tools (wind notation, compass bearings); plus a side-by-side with modern chokepoint screenshots (Hormuz, Malacca, Red Sea) — same geography, 300 years apart</span></span></div>
+<div class="session-row"><span class="session-num">S11 · Wed</span><span class="session-title">Pirate voyage plan + chokepoint comparison<span class="session-focus">Hand-drawn Jamaica-to-Carolinas voyage with 1717 tools (wind notation, compass bearings); plus a side-by-side with modern chokepoint screenshots (Suez, Malacca, Red Sea, Panama) — same geography, 300 years apart</span></span></div>
 <div class="session-row"><span class="session-num">S12 · Thu</span><span class="session-title">Primary sources vs. pop culture<span class="session-focus">Compare eyewitness Bellamy capture accounts to pop-culture pirate clips — three differences, three similarities</span></span></div>
 </div>
 
@@ -1250,7 +1284,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 <h3>Live world view — global shipping right now</h3>
 <div class="card">
-<p>The whole Atlantic and beyond, live from <a href="https://www.marinetraffic.com/en/ais/home/centerx:0/centery:25/zoom:2" target="_blank" rel="noopener">MarineTraffic.com</a>. Zoom out to see global shipping density. Zoom into chokepoints (Hormuz, Malacca, Red Sea, Panama) to watch traffic queue through.</p>
+<p>The whole Atlantic and beyond, live from <a href="https://www.marinetraffic.com/en/ais/home/centerx:0/centery:25/zoom:2" target="_blank" rel="noopener">MarineTraffic.com</a>. Zoom out to see global shipping density. Zoom into chokepoints (Suez, Malacca, Red Sea, Panama) to watch traffic queue through.</p>
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 1px solid #c4b590; border-radius: 3px; margin-top: 0.5em; background: #e6d9b8;">
 <iframe
   src="https://www.marinetraffic.com/en/ais/embed/zoom:2/centery:25/centerx:0/maptype:4/shownames:false/mmsi:0/shipid:0/fleet:/fleet_id:/vtypes:/showmenu:false/remember:false"
@@ -1260,7 +1294,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
   allowfullscreen>
 </iframe>
 </div>
-<p class="meta" style="margin-top: 0.8em;">For Session 11, navigate to: <a href="https://www.marinetraffic.com/en/ais/home/centerx:56/centery:27/zoom:7" target="_blank" rel="noopener">Hormuz</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6" target="_blank" rel="noopener">Malacca</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5" target="_blank" rel="noopener">Red Sea</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8" target="_blank" rel="noopener">Panama</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-12/centery:25/zoom:4" target="_blank" rel="noopener">Bellamy's Atlantic</a></p>
+<p class="meta" style="margin-top: 0.8em;"><strong>Quick jumps:</strong> <a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12" target="_blank" rel="noopener">Salem Harbor</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.04/centery:41.93/zoom:11" target="_blank" rel="noopener">Wellfleet (wreck site)</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6" target="_blank" rel="noopener">Suez</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6" target="_blank" rel="noopener">Malacca</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5" target="_blank" rel="noopener">Red Sea / Bab-el-Mandeb</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8" target="_blank" rel="noopener">Panama</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-12/centery:25/zoom:4" target="_blank" rel="noopener">Bellamy's Atlantic</a></p>
 </div>
 
 <h3>Atlantic trade winds &amp; gyres — the triangle trade's physics</h3>
@@ -1589,7 +1623,9 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p>Our main modern-bridge tool. Free tier shows current positions of commercial ships at sea.</p>
 <ul>
 <li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-12.0/centery:25.0/zoom:4">Bellamy's world — central Atlantic</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:56/centery:27/zoom:7">Strait of Hormuz</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12">Salem Harbor</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.04/centery:41.93/zoom:11">Wellfleet - the wreck site</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6">Suez</a></li>
 <li><a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5">Red Sea / Bab-el-Mandeb</a></li>
 <li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8">Panama Canal</a></li>
 <li><a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6">Strait of Malacca</a></li>
@@ -1802,7 +1838,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <div class="unit-calendar-cell unit-calendar-week">Week 3<br>Jul 20–23</div>
 <div class="unit-calendar-cell"><div class="unit-calendar-day">Mon · S9</div><div class="unit-calendar-title">Who Chose Piracy?</div></div>
 <div class="unit-calendar-cell"><div class="unit-calendar-day">Tue · S10</div><div class="unit-calendar-title">The Ship's Articles</div></div>
-<div class="unit-calendar-cell"><div class="unit-calendar-day">Wed · S11</div><div class="unit-calendar-title">Piracy as Geography (Hormuz)</div></div>
+<div class="unit-calendar-cell"><div class="unit-calendar-day">Wed · S11</div><div class="unit-calendar-title">Piracy as Geography (chokepoints)</div></div>
 <div class="unit-calendar-cell"><div class="unit-calendar-day">Thu · S12</div><div class="unit-calendar-title">What Pirates Actually Did</div></div>
 
 <div class="unit-calendar-cell unit-calendar-week">Week 4<br>Jul 27–30</div>
@@ -1952,7 +1988,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </div>
 
 <div class="unit-plan-week-section">
-<div class="unit-plan-week-header">Week 3 — Piracy as Choice · KSQ3: How does geography shape choices — from 1717 piracy to chokepoints like Hormuz?</div>
+<div class="unit-plan-week-header">Week 3 — Piracy as Choice · KSQ3: How does geography shape choices — from 1717 piracy to modern chokepoints like Suez, Malacca, and Panama?</div>
 <div class="unit-plan-grid">
 
 <div class="session-card">
@@ -1991,7 +2027,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p class="reflect-q">Reflection: What does where someone chooses to sail tell you about what they're running from — or toward?</p>
 <button class="session-expand">+ Show details</button>
 <div class="session-detail">
-<p><strong>Activities:</strong> The big modern bridge. Where pirates operated — chokepoints, sea lanes, weak colonial control. Plot Bellamy's 53+ Caribbean captures. Hands-on with period nav tools. Plan a Jamaica-to-Carolinas voyage with 1717 tools. Then MarineTraffic chokepoints today: Hormuz (Iran threats, ~20% of world oil), Malacca, Red Sea / Bab-el-Mandeb (Houthi attacks), Panama (drought). Same geography logic, 300 years apart.</p>
+<p><strong>Activities:</strong> The big modern bridge. Where pirates operated — chokepoints, sea lanes, weak colonial control. Plot Bellamy's 53+ Caribbean captures. Hands-on with period nav tools. Plan a Jamaica-to-Carolinas voyage with 1717 tools. Then MarineTraffic chokepoints today: Suez (~12% of world trade), Malacca (one-third of global shipping), Red Sea / Bab-el-Mandeb (Houthi attacks), Panama (drought-driven traffic cuts). Same geography logic, 300 years apart.</p>
 <p><strong>Vocab:</strong> chokepoint · sea lane · dead reckoning · latitude</p>
 <p><strong>Weekly extended writing prompt:</strong> One push and one pull factor that mattered most for the Whydah's crew? Support with evidence.</p>
 </div>
@@ -2166,7 +2202,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <dd>The discipline of making and reading maps. From Greek <em>khartes</em> (map) + <em>graphein</em> (to write). Cyprian Southack and Herman Moll were the cartographers most directly relevant to the Whydah story.</dd>
 
 <dt>Chokepoint</dt>
-<dd>A narrow body of water through which a large fraction of global shipping must pass. Hormuz, Suez, Bab-el-Mandeb, Malacca, Panama, Gibraltar. Geographic features that give the country controlling them disproportionate leverage. Pirates concentrated near them in 1717 for the same reason modern state actors target them today.</dd>
+<dd>A narrow body of water through which a large fraction of global shipping must pass. Suez, Bab-el-Mandeb, Malacca, Panama, Gibraltar. Geographic features that give the country controlling them disproportionate leverage. Pirates concentrated near them in 1717 for the same reason modern state actors target them today.</dd>
 
 <dt>Compass</dt>
 <dd>Magnetized needle on a pivot; gives heading relative to magnetic north. Standard navigation instrument by 1717 - centuries old by then.</dd>
