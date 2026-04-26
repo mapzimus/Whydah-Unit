@@ -262,7 +262,9 @@ main.content > section.active { display: block; }
 /* === END VIDEO + GLOSSARY === */
 
 /* === TOOL CARD IMAGES === */
-.tool-card .tool-img { width: 100%; max-width: 140px; height: 110px; object-fit: contain; display: block; margin: 0 auto 0.5em; background: #fbf5e0; border: 1px solid #c4b590; border-radius: 3px; padding: 0.3em; }
+.tool-card .tool-img { width: 100%; height: auto; max-height: 280px; object-fit: contain; display: block; margin: 0 auto 0.7em; background: #fbf5e0; border: 1px solid #c4b590; border-radius: 3px; padding: 0.5em; }
+.tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.8em; margin-bottom: 0.5em; }
+@media (max-width: 768px) { .tool-card .tool-img { max-height: 240px; } .tool-grid { grid-template-columns: 1fr; } }
 .tool-card.not-yet .tool-img { opacity: 0.55; filter: grayscale(0.4); }
 /* === END TOOL IMAGES === */
 
