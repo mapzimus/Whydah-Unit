@@ -13,5 +13,5 @@
 !*.gif
 
 # Subdirectories for assets
-!images/
-!images/**
+!pics/
+!pics/**
