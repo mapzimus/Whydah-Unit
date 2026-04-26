@@ -2391,7 +2391,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (isActive) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
-    history.replaceState(null, ', '#' + id);
+    history.replaceState(null, '', '#' + id);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -2437,7 +2437,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const dts = document.querySelectorAll('.glossary-list dt');
       dts.forEach(function(dt) {
         const dd = dt.nextElementSibling;
-        const text = (dt.textContent + ' ' + (dd ? dd.textContent : ')).toLowerCase();
+        const text = (dt.textContent + ' ' + (dd ? dd.textContent : '')).toLowerCase();
         const match = !q || text.includes(q);
         dt.classList.toggle('hidden', !match);
         if (dd) dd.classList.toggle('hidden', !match);
