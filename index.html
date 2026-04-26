@@ -247,6 +247,20 @@ main.content > section.active { display: block; }
 .map-gallery-item figcaption, .pirate-card figcaption { padding-top: 0.4em; }
 /* === END GALLERIES === */
 
+/* === VIDEO EMBEDS === */
+.video-embed-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 0.6em 0 0.4em; }
+.video-embed-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 1px solid #c4b590; border-radius: 3px; background: #000; }
+
+/* === GLOSSARY === */
+.glossary-list { display: grid; grid-template-columns: 1fr; gap: 0; margin: 0; }
+.glossary-list dt { font-family: 'IM Fell English SC', Georgia, serif; color: #5e3a00; font-size: 1.05em; margin-top: 0.9em; padding-top: 0.6em; border-top: 1px dotted #c4b590; }
+.glossary-list dt:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+.glossary-list dd { margin: 0.3em 0 0.5em 0; padding-left: 0; }
+.glossary-list dd .tier { font-size: 0.75em; }
+#glossary-search:focus { outline: 2px solid #c9a55f; outline-offset: 1px; }
+.glossary-list dt.hidden, .glossary-list dd.hidden { display: none; }
+/* === END VIDEO + GLOSSARY === */
+
 </style>
 <style>
 /* ============ MAP + PIRATE THEME OVERLAY ============ */
@@ -575,6 +589,7 @@ main > section[id].active {
         <li><a href="#people">People &amp; Ships</a></li>
         <li><a href="#why-piracy">Why Piracy</a></li>
         <li><a href="#maps-geo">Maps &amp; Tools</a></li>
+        <li><a href="#projections">Projections &amp; Coordinates</a></li>
         <li><a href="#salem">Salem Connection</a></li>
         <li><a href="#artifacts">Artifacts</a></li>
       </ul>
@@ -583,6 +598,7 @@ main > section[id].active {
       <span class="nav-group-label">Reference</span>
       <ul>
         <li><a href="#source-links">Sources &amp; Bibliography</a></li>
+        <li><a href="#glossary">Glossary</a></li>
         <li><a href="#confidence">Confidence &amp; Methods</a></li>
       </ul>
     </li>
@@ -1317,6 +1333,93 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 </section>
 
+<section id="projections">
+<h2>Projections &amp; coordinates</h2>
+<p class="meta">Where maps and the globe stop agreeing. The cartography spine of the unit needs students to understand <em>why</em> a map is always a translation, never a copy.</p>
+
+<h3>Latitude vs longitude - what they are and why one was easy</h3>
+<p>Latitude lines run east-west; they measure how far north or south you are from the equator. Longitude lines (also called meridians) run north-south; they measure how far east or west you are from a chosen prime meridian (since 1884, that''s Greenwich, England).</p>
+<p><strong>Latitude is geometric.</strong> Anyone with a sextant or backstaff can measure the sun''s noon altitude or the angle to Polaris and read latitude off a table. Sailors had been doing this competently since the 15th century.</p>
+<p><strong>Longitude is a clock problem.</strong> The Earth rotates 360 degrees every 24 hours, so 15 degrees of longitude = 1 hour of time difference. To know your longitude, you need to know two times simultaneously: <em>local time</em> (easy - look at the sun) and <em>the time at a reference port</em> (hard - because your reference clock has to keep accurate time on a rolling, salty, temperature-swinging ship for months).</p>
+<p>This is why the Whydah era was a longitude-blind era. Latitude sailing was standard. Longitude was dead-reckoning approximation that piled up error every day. The fix - a sea-worthy chronometer - did not exist when the Whydah wrecked.</p>
+
+<div class="card">
+<h4>Watch: The longitude problem and Harrison''s clocks</h4>
+<div class="video-embed-wrap">
+<iframe src="https://www.youtube-nocookie.com/embed/zlRxWJ_kGEA" title="The Longitude Problem - Harrison clocks" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<p class="meta">Why this matters for us: the Whydah grounded at Wellfleet on the night of April 26, 1717, in a nor''easter, in the dark, on a lee shore. They could not verify their east-west position. A 16-year-old pilot (John Julian) was navigating with a backstaff. This video is the fastest way for a student to feel <em>why</em> Session 13 frames the wreck partly as a longitude-problem disaster.</p>
+</div>
+
+<h3>Map projections - why no flat map can be right</h3>
+<p>You cannot flatten a sphere onto a plane without distorting <em>something</em>. This is mathematically provable - a theorem called Gauss''s <em>Theorema Egregium</em> (1827). Every world map is a choice about which property to preserve and which to sacrifice. The four main properties are:</p>
+<ul>
+<li><strong>Conformal</strong> - preserves local shapes and angles. Mercator is conformal. Useful for navigation. Sacrifices area badly at high latitudes.</li>
+<li><strong>Equal-area</strong> - preserves relative size of regions. Mollweide, Goode homolosine, Equal Earth. Useful for showing distribution (population, vegetation, voting). Sacrifices shape.</li>
+<li><strong>Equidistant</strong> - preserves distances along certain lines (typically from a single point or along meridians). Useful for measuring travel range from a hub.</li>
+<li><strong>Compromise</strong> - preserves nothing exactly but balances all four properties to be visually reasonable. Robinson and Winkel Tripel are compromise projections used by National Geographic and the AGS.</li>
+</ul>
+
+<div class="card">
+<h4>Watch: Why all world maps are wrong (Vox, Johnny Harris)</h4>
+<div class="video-embed-wrap">
+<iframe src="https://www.youtube-nocookie.com/embed/kIID5FDi2JQ" title="Why all world maps are wrong - Vox" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<p class="meta">Six minutes. Hits the Mercator-vs-Africa moment, the 1973 Gall-Peters controversy, and the trade-offs every projection makes. Show this in S2 or S3 alongside the Moll 1719 close-read.</p>
+</div>
+
+<h3>Tissot''s indicatrix - the visual proof</h3>
+<p>Nicolas Tissot, a French mathematician, proposed a clean test in 1859: place identical circles at regular intervals across the globe, then watch what those circles become on each projection. Where they stay circular, the projection is conformal. Where they grow or shrink, area is being distorted. The picture does the explaining.</p>
+
+<div class="card-grid">
+
+<figure class="map-gallery-item">
+<a href="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mercator_proj.svg" target="_blank" rel="noopener">
+<img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mercator_proj.svg?width=800" alt="Tissot indicatrix circles on a Mercator world map. The circles stay circular but balloon enormously near the poles, exposing how much area is exaggerated at high latitudes." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px; background: white;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Mercator projection.</strong> The circles stay circular (conformal - shape preserved locally) but balloon enormously toward the poles. This is why Greenland, Alaska, and Antarctica look gigantic on a Mercator map. Public domain.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<a href="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mollweide_proj.svg" target="_blank" rel="noopener">
+<img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mollweide_proj.svg?width=800" alt="Tissot indicatrix circles on a Mollweide world map. The circles stay the same area but get squashed into ellipses near the edges, showing shape distortion in exchange for true area." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px; background: white;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Mollweide projection (equal-area).</strong> Circles all keep the same area, but they get squashed into ellipses toward the edges. Greenland is sized correctly relative to Africa - shape is what gets sacrificed.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<a href="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Robinson_proj.svg" target="_blank" rel="noopener">
+<img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Robinson_proj.svg?width=800" alt="Tissot indicatrix circles on a Robinson world map. Modest distortion of both shape and area in exchange for a visually balanced result." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px; background: white;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Robinson projection (compromise).</strong> Splits the difference - moderate shape distortion AND moderate area distortion in exchange for an aesthetically balanced map. National Geographic used this 1988-1998.</figcaption>
+</figure>
+
+</div>
+
+<h3>Try-it-yourself - drag countries across latitudes</h3>
+<div class="card">
+<p><a href="https://www.thetruesize.com/" target="_blank" rel="noopener"><strong>thetruesize.com</strong></a> - drag any country anywhere on a Mercator map and watch it snap to its correct relative size. Drag Greenland down to the equator. Drag the U.S. up over Greenland. The viscerally illustrates the Mercator distortion.</p>
+<p><a href="https://map-projections.net/" target="_blank" rel="noopener"><strong>map-projections.net</strong></a> - browse 250+ projections side-by-side with their Tissot indicatrices and metric tables.</p>
+<p><a href="https://www.jasondavies.com/maps/transition/" target="_blank" rel="noopener"><strong>Jason Davies&apos; map projection transitions</strong></a> - smooth animated morphing between projections, by D3 cartographer Jason Davies.</p>
+</div>
+
+<h3>Why Mercator survived - and why Google Maps still uses it</h3>
+<p>Mercator''s 1569 projection was a navigational tool, not a map for general public consumption. Its decisive property is that <em>any straight line drawn on it is a rhumb line</em> - a course of constant compass bearing. A 1717 navigator could draw a straight line from Cape Cod to the Azores, read the bearing off that line, and just hold that compass heading the entire voyage. Curved courses (great circles) are shorter but require constant heading adjustments most period sailors couldn''t make reliably.</p>
+<p>Google Maps uses <strong>Web Mercator</strong> for the same reason a sailor used Mercator: at every zoom level, the projection is locally conformal, so a square block in Brooklyn looks like a square. The price is that Greenland is unreasonably enormous. For the local-zoom use case, that''s an acceptable trade.</p>
+
+<div class="card">
+<h4>How this maps onto the unit</h4>
+<ul>
+<li><strong>S2 (What is a map?)</strong> - introduce projection as a translation choice. Use thetruesize.com hands-on.</li>
+<li><strong>S3 (Reading the 1719 World Map)</strong> - Moll''s map is on a Mercator. The "Remarkable Tracts" of voyages he draws are rhumb lines.</li>
+<li><strong>S4 (My Maps + Adopt a Ship)</strong> - Google My Maps is Web Mercator. Same projection, 307 years later.</li>
+<li><strong>S11 (Piracy as Geography)</strong> - chokepoints look the way they do partly because of the projection. Show the same chokepoints on Mollweide for contrast.</li>
+<li><strong>S13 (The Wreck)</strong> - the longitude problem made the wreck partly a navigation disaster.</li>
+</ul>
+</div>
+
+</section>
+
 <section id="salem">
 <h2>Salem connection</h2>
 <p class="meta">This is Salem's own story, not a distant pirate one. Two direct Salem-to-Whydah links: the triangle trade built our town, and the Witch Trial figures ran the pirate trials.</p>
@@ -2010,6 +2113,146 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </div>
 </section>
 
+<section id="glossary">
+<h2>Glossary</h2>
+<p class="meta">Quick definitions for the technical terms used across the dashboard. Type in the search box to filter. Bold term = direct first-use anchor in another tab.</p>
+
+<input type="search" id="glossary-search" placeholder="Filter terms..." style="width: 100%; max-width: 420px; padding: 0.6em 0.8em; font-size: 1em; border: 1px solid #c4b590; border-radius: 3px; margin-bottom: 1em; font-family: inherit;">
+
+<dl class="glossary-list">
+
+<dt>Articles (Ship''s Articles)</dt>
+<dd>The written rules and shares-of-loot agreement that pirate crews signed on joining a ship. Bartholomew Roberts'' 1721 Articles survive (via Johnson 1724) and are the analogue we teach. The Whydah''s own Articles do not survive, but trial testimony confirms the crew had them and the Wounded Heart wax seals are physical evidence of the signing ritual.</dd>
+
+<dt>Backstaff</dt>
+<dd>Sun-altitude measuring instrument invented by John Davis in 1594. The standard latitude tool of the 17th and early 18th centuries. The user faced away from the sun and read its shadow on a graduated arc - safer than looking at the sun through earlier instruments.</dd>
+
+<dt>Bathymetry</dt>
+<dd>The measurement of underwater depth and underwater terrain. Modern Google Earth shows seafloor bathymetry; we use it in S13 to read the wreck site.</dd>
+
+<dt>Cartography</dt>
+<dd>The discipline of making and reading maps. From Greek <em>khartes</em> (map) + <em>graphein</em> (to write). Cyprian Southack and Herman Moll were the cartographers most directly relevant to the Whydah story.</dd>
+
+<dt>Chokepoint</dt>
+<dd>A narrow body of water through which a large fraction of global shipping must pass. Hormuz, Suez, Bab-el-Mandeb, Malacca, Panama, Gibraltar. Geographic features that give the country controlling them disproportionate leverage. Pirates concentrated near them in 1717 for the same reason modern state actors target them today.</dd>
+
+<dt>Compass</dt>
+<dd>Magnetized needle on a pivot; gives heading relative to magnetic north. Standard navigation instrument by 1717 - centuries old by then.</dd>
+
+<dt>Conformal projection</dt>
+<dd>A map projection that preserves local shapes and angles but distorts area. Mercator is the most famous conformal projection. Useful for navigation; not useful for showing relative size of countries.</dd>
+
+<dt>Dead reckoning</dt>
+<dd>Estimating current position from a last-known point using heading + speed + elapsed time. The only longitude method available to 1717 sailors. Error accumulated daily.</dd>
+
+<dt>Demobilization</dt>
+<dd>The discharge of military personnel after a war ends. The Royal Navy demobilization after the War of Spanish Succession (1713-14) put thousands of trained sailors out of work, concentrated in the Caribbean - the single biggest push factor into Golden Age piracy.</dd>
+
+<dt>Driving Question (DQ)</dt>
+<dd>The unit''s overarching question that students keep returning to. Ours: "Why would a person choose piracy in 1717 - and how would they want you to tell their story?"</dd>
+
+<dt>Equal-area projection</dt>
+<dd>A map projection that preserves the relative areas of regions but distorts shape. Mollweide, Goode homolosine, Equal Earth. Useful for showing distributions (population, vegetation).</dd>
+
+<dt>Equator</dt>
+<dd>The great circle on Earth equidistant from the North and South Poles. Latitude zero. The reference line for all latitude measurements.</dd>
+
+<dt>Flying Gang</dt>
+<dd>The pirate community organized at Nassau by Benjamin Hornigold ~1715, after the Spanish Treasure Fleet salvage. Sam Bellamy and Edward "Blackbeard" Teach both sailed under Hornigold here.</dd>
+
+<dt>Galley</dt>
+<dd>A type of ship combining sails and oars. The Whydah Gally was a galley-class three-masted slaver, 110 ft, 300 tons.</dd>
+
+<dt>Great circle</dt>
+<dd>The shortest path between two points on a sphere - the line that would result if you sliced the sphere through both points and through its center. Modern airliners fly great circles. Sailors before the chronometer could not reliably follow them.</dd>
+
+<dt>Gyre</dt>
+<dd>A large system of circular ocean currents. The North Atlantic Gyre - clockwise rotation between North America, Europe, Africa, and the Caribbean - physically forced the shape of the triangle trade.</dd>
+
+<dt>Impressment</dt>
+<dd>Forced naval service. The Royal Navy seized men off streets and merchant ships into compulsory military service. Deserting impressed naval service was a direct path into piracy.</dd>
+
+<dt>Latitude</dt>
+<dd>Distance north or south of the equator, measured in degrees (0 at the equator, 90 at the poles). Findable with a sextant or backstaff in 1717.</dd>
+
+<dt>Lee shore</dt>
+<dd>A coastline that is downwind of a sailing vessel - the wind is pushing the ship toward the shore. The most dangerous configuration for a ship in a storm. The Whydah was on a lee shore at Wellfleet on the night of April 26, 1717.</dd>
+
+<dt>Longitude</dt>
+<dd>Distance east or west of the prime meridian (Greenwich since 1884), measured in degrees. Not findable with reasonable accuracy at sea until John Harrison''s H4 chronometer proved itself in 1761 - 44 years after the Whydah wrecked.</dd>
+
+<dt>Mercator projection</dt>
+<dd>Cylindrical conformal map projection introduced by Gerardus Mercator in 1569. Its decisive property: rhumb lines (constant-bearing courses) appear as straight lines, making it ideal for navigation. Distorts area badly at high latitudes. Web Mercator (a variant) is what Google Maps uses.</dd>
+
+<dt>Middle Passage</dt>
+<dd>The forced sea voyage of enslaved Africans across the Atlantic to the Americas. The Whydah carried 367 captives from West Africa; 312 survived to Jamaica.</dd>
+
+<dt>Mutiny</dt>
+<dd>Sailors collectively refusing to obey their captain. In the Royal Navy, a capital offense. On a pirate ship, the foundational moment - most pirate crews were mutineers from naval or merchant service.</dd>
+
+<dt>Nor''easter</dt>
+<dd>A large storm system in the North Atlantic that travels northeastward along the U.S. East Coast, with winds blowing from the northeast. The April 26, 1717 nor''easter wrecked the Whydah at Wellfleet.</dd>
+
+<dt>Pink (ship type)</dt>
+<dd>A small, narrow-stern Dutch sailing ship used for cargo and fishing in the 17th-18th centuries. The Mary Anne, a pink of Dublin loaded with Madeira wine, was the prize Bellamy took on April 26, 1717 - and lost the same night.</dd>
+
+<dt>Primary source</dt>
+<dd>A document, artifact, or testimony created at or near the time of the events being studied. Boston Vice-Admiralty Court testimony (1717), Cotton Mather''s execution sermon (1717), and Cyprian Southack''s 1717 chart are primary sources for the Whydah. Johnson''s <em>General History of the Pyrates</em> (1724) is partially primary as an artifact, but unreliable for specifics.</dd>
+
+<dt>Privateer</dt>
+<dd>A private armed ship licensed by a government to attack enemy shipping in wartime. Legal piracy with paperwork. When the War of Spanish Succession ended in 1713-14, thousands of privateers lost their commissions - many slid into illegal piracy.</dd>
+
+<dt>Projection (map projection)</dt>
+<dd>A mathematical method for representing the curved surface of the Earth on a flat map. Every projection distorts <em>something</em> - shape, area, distance, or direction - because flattening a sphere is mathematically impossible without trade-offs.</dd>
+
+<dt>Prime meridian</dt>
+<dd>The line of longitude defined as zero degrees, used as the reference for all longitude measurements. Standardized at Greenwich, England in 1884.</dd>
+
+<dt>Punonakanit Wampanoag</dt>
+<dd>The Indigenous people whose territory included Wellfleet, Cape Cod - the place the Whydah wrecked. Their voice is absent from the 1717 written record. Land acknowledgment is appropriate when teaching the wreck site.</dd>
+
+<dt>Quadrant</dt>
+<dd>Heavy metal-plate sun-altitude instrument with a plumb-bob. Older than the backstaff, still in use in 1717. More awkward to use at sea but functional.</dd>
+
+<dt>Quartermaster</dt>
+<dd>On a pirate ship, an elected officer second in command, responsible for distributing loot and representing the crew''s interests against the captain. Paulsgrave Williams was the Whydah''s quartermaster.</dd>
+
+<dt>Rhumb line</dt>
+<dd>A course on the Earth''s surface where you hold a constant compass heading the entire way. On a Mercator chart it shows up as a straight line. Not the shortest path between two points (a great circle is) - but the easiest to navigate before precise instruments.</dd>
+
+<dt>Sextant</dt>
+<dd>Precision sun- and star-altitude instrument introduced 1759. The successor to the backstaff and quadrant. Did not exist when the Whydah sailed.</dd>
+
+<dt>Sloop</dt>
+<dd>A small single-masted sailing vessel with a fore-and-aft rig. Common in 17th-18th-century coastal trade. Bellamy''s Marianne (10 guns) and the Bonetta were sloops.</dd>
+
+<dt>Source criticism</dt>
+<dd>Evaluating a historical source for who created it, when, why, and how reliable it is. The whole reason we tier our own claims (<span class="tier tier-green">Solid</span>, <span class="tier tier-yellow">Contested</span>, <span class="tier tier-red">Mythologized</span>) and explicitly flag Johnson 1724 as unreliable.</dd>
+
+<dt>Tissot''s indicatrix</dt>
+<dd>A visualization invented by Nicolas Tissot in 1859. Place identical circles at regular intervals across the globe; project them onto each map. The way the circles deform shows what the projection distorts and where. See the Projections &amp; Coordinates tab for a side-by-side.</dd>
+
+<dt>Trade winds</dt>
+<dd>Steady easterly winds south of about 30 degrees North that blow from Africa toward the Americas. Combined with the westerlies (north of 30 degrees N) that blow from America back toward Europe, they physically force the triangular shape of Atlantic trade.</dd>
+
+<dt>Triangle trade</dt>
+<dd>The 17th-18th century Atlantic trade pattern: European manufactured goods to West Africa, enslaved people from Africa to the Caribbean and Americas, raw materials (sugar, molasses, rum, cotton, tobacco) from the Americas back to Europe. The Whydah was built for this trade and named after Ouidah, a major West African slave port.</dd>
+
+<dt>Vice-Admiralty Court</dt>
+<dd>British colonial maritime court that tried piracy and other sea-related offenses. The Whydah survivors were tried at the Boston Vice-Admiralty Court in October 1717, presided over by Governor Samuel Shute and Judge Samuel Sewall (the apologetic 1692 witch-trial judge).</dd>
+
+<dt>Voyage Journal</dt>
+<dd>The student running portfolio across the unit. One deliverable per session, accumulated in a physical 3-ring binder pre-tabbed by week. The raw material the capstone draws on.</dd>
+
+<dt>Westerlies</dt>
+<dd>Prevailing winds from the west in the mid-latitudes (roughly 30-60 degrees N and S). Carried 18th-century ships from the Americas back to Europe along the northern leg of the triangle trade.</dd>
+
+<dt>Whydah Gally</dt>
+<dd>The slave ship built in London 1715, captured by Sam Bellamy in February 1717 in the Caribbean, wrecked off Wellfleet, Cape Cod on April 26, 1717. 110 ft, 300 tons, three-masted galley, 28+ guns when she wrecked. Discovered by Barry Clifford 1984; bell recovered 1985 confirmed identity.</dd>
+
+</dl>
+</section>
+
 <section id="confidence">
 <h2>Confidence &amp; methods</h2>
 
@@ -2117,6 +2360,22 @@ document.addEventListener('DOMContentLoaded', function() {
       btn.textContent = isExpanded ? '− Hide details' : '+ Show details';
     });
   });
+
+  // Glossary search filter
+  const glossarySearch = document.getElementById('glossary-search');
+  if (glossarySearch) {
+    glossarySearch.addEventListener('input', function() {
+      const q = this.value.toLowerCase().trim();
+      const dts = document.querySelectorAll('.glossary-list dt');
+      dts.forEach(function(dt) {
+        const dd = dt.nextElementSibling;
+        const text = (dt.textContent + ' ' + (dd ? dd.textContent : '')).toLowerCase();
+        const match = !q || text.includes(q);
+        dt.classList.toggle('hidden', !match);
+        if (dd) dd.classList.toggle('hidden', !match);
+      });
+    });
+  }
 
   // Interactive checklist for Open Questions — persisted in localStorage
   const checklistItems = document.querySelectorAll('.checklist li');
