@@ -261,6 +261,11 @@ main.content > section.active { display: block; }
 .glossary-list dt.hidden, .glossary-list dd.hidden { display: none; }
 /* === END VIDEO + GLOSSARY === */
 
+/* === TOOL CARD IMAGES === */
+.tool-card .tool-img { width: 100%; max-width: 140px; height: 110px; object-fit: contain; display: block; margin: 0 auto 0.5em; background: #fbf5e0; border: 1px solid #c4b590; border-radius: 3px; padding: 0.3em; }
+.tool-card.not-yet .tool-img { opacity: 0.55; filter: grayscale(0.4); }
+/* === END TOOL IMAGES === */
+
 </style>
 <style>
 /* ============ MAP + PIRATE THEME OVERLAY ============ */
@@ -955,6 +960,7 @@ main > section[id].active {
 <div class="card-grid">
 
 <div class="person-card">
+<img src="images/cotton-mather.jpg" alt="Cotton Mather, mezzotint by Peter Pelham, 1727." style="width: 100%; max-width: 140px; height: auto; float: right; margin: 0 0 0.5em 0.7em; border: 1px solid #c4b590; border-radius: 3px;" title="Peter Pelham mezzotint, 1727 - the first mezzotint ever made on American soil">
 <div class="name">Cotton Mather</div>
 <div class="role">Puritan minister · 1663–1728 <span class="tier tier-green">Solid</span></div>
 <ul>
@@ -968,6 +974,7 @@ main > section[id].active {
 </div>
 
 <div class="person-card">
+<img src="images/samuel-sewall.jpg" alt="Judge Samuel Sewall, period portrait." style="width: 100%; max-width: 140px; height: auto; float: right; margin: 0 0 0.5em 0.7em; border: 1px solid #c4b590; border-radius: 3px;">
 <div class="name">Judge Samuel Sewall</div>
 <div class="role">Salem Witch Trial judge · Whydah trial judge <span class="tier tier-green">Solid</span></div>
 <ul>
@@ -997,6 +1004,7 @@ main > section[id].active {
 </div>
 
 <div class="person-card">
+<img src="images/equiano.jpg" alt="Olaudah Equiano, frontispiece portrait from his 1789 Interesting Narrative." style="width: 100%; max-width: 140px; height: auto; float: right; margin: 0 0 0.5em 0.7em; border: 1px solid #c4b590; border-radius: 3px;" title="Frontispiece from The Interesting Narrative, 1789">
 <div class="name">Olaudah Equiano</div>
 <div class="role">Captive narrative author · c.1745–1797 <span class="tier tier-green">Solid</span></div>
 <ul>
@@ -1154,16 +1162,19 @@ Rediker reads pirates as people pushing back against unfair work and a brutal ec
 <h3>Navigation instruments — what was on the Whydah</h3>
 
 <div class="tool-card">
+<img src="images/compass.png" alt="Mariner's compass with magnetized needle on a pivot." class="tool-img">
 <span class="tool-name">Compass</span> <span class="tool-meta">centuries old by 1717</span>
 <div>Magnetized needle on a pivot. Gave a coarse heading. Standard on all serious sea vessels.</div>
 </div>
 
 <div class="tool-card">
+<img src="images/backstaff.svg" alt="Diagram of a Davis quadrant (backstaff) showing the arc, vanes, and shadow path." class="tool-img" style="background:white;">
 <span class="tool-name">Backstaff</span> <span class="tool-meta">invented John Davis, 1594</span>
 <div>The standard latitude tool of the 17th–early 18th century. Measured the sun's altitude from its shadow — user didn't look at the sun directly. <strong>This is what the Whydah's 16-year-old pilot John Julian would have used.</strong></div>
 </div>
 
 <div class="tool-card">
+<img src="images/astrolabe.png" alt="Mariner's astrolabe - a related medieval-origin altitude instrument." class="tool-img" style="background:white;">
 <span class="tool-name">Quadrant</span> <span class="tool-meta">medieval, still used</span>
 <div>Heavy metal plate with a plumb-bob. Measured angle to Polaris at night or sun at noon. More awkward than the backstaff but functional.</div>
 </div>
@@ -1173,12 +1184,28 @@ Rediker reads pirates as people pushing back against unfair work and a brutal ec
 <div>Estimating current position from last known point using heading + speed + elapsed time. Error accumulated over days. For ocean voyages, it was mostly educated guessing.</div>
 </div>
 
-<h4 style="margin-top:1.5em;">What DIDN'T exist yet in 1717</h4>
-<ul>
-<li><strong>Octant</strong> — 1731, fourteen years too late</li>
-<li><strong>Sextant</strong> — 1759</li>
-<li><strong>Marine chronometer</strong> (Harrison's H4) — proved useful 1761, 44 years too late</li>
-</ul>
+<h4 style="margin-top:1.5em;">What DIDN't exist yet in 1717</h4>
+<div class="tool-grid">
+
+<div class="tool-card not-yet">
+<img src="images/octant.jpg" alt="Hadley''s octant, c.1790-1810. Royal Ontario Museum." class="tool-img">
+<span class="tool-name">Octant</span> <span class="tool-meta">1731, fourteen years too late</span>
+<div>Hadley''s reflecting octant. A small mirror let you see horizon and sun in the same eyepiece - faster and more accurate than the backstaff.</div>
+</div>
+
+<div class="tool-card not-yet">
+<img src="images/sextant.jpg" alt="Modern sextant." class="tool-img">
+<span class="tool-name">Sextant</span> <span class="tool-meta">1759</span>
+<div>Wider arc than the octant (60 degrees vs 45) so it could measure lunar distances - the workaround for finding longitude before chronometers became affordable.</div>
+</div>
+
+<div class="tool-card not-yet">
+<img src="images/harrison-chronometer.jpg" alt="Harrison''s H5 marine chronometer (the production-ready successor to H4)." class="tool-img">
+<span class="tool-name">Marine chronometer (Harrison''s H4)</span> <span class="tool-meta">proved useful 1761, 44 years too late</span>
+<div>The clock that solved longitude. Lost only ~5 seconds over an 81-day voyage. H5 (pictured) is the production-ready version Harrison built after H4 won the Longitude Prize.</div>
+</div>
+
+</div>
 
 <h3>The longitude problem — a 1717 reality check</h3>
 
