@@ -3,6 +3,7 @@
 
 # Files to publish on GitHub Pages
 !index.html
+!flythrough.html
 !README.md
 !.gitignore
 !*.jpg
