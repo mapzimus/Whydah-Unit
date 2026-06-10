@@ -2025,74 +2025,6 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p><strong>The Whydah's final voyage fits this pattern:</strong> after the Caribbean, Bellamy was heading north up the American coast — riding the Gulf Stream toward the westerlies — when the nor'easter caught him off Cape Cod.</p>
 <p>Open the wind map before you look at the trade triangle. "Why is it shaped like a triangle?" has a physical answer (the trade winds and Gulf Stream), not just an economic one.</p>
 </div>
-<h3>GIS toolkit - free tools we can pull into class</h3>
-<p class="meta">Beyond MarineTraffic. Each one of these has a teaching use; none of them require a login or a paid account.</p>
-
-<div class="salem-callout" style="margin-bottom: 1em;">
-<h4>In-build: our own interactive student maps + Google Earth tour</h4>
-<p>Two planning artifacts in <code>resources/</code> that aren't shipped yet but are locked-in directions for the unit:</p>
-<ul style="margin: 0.4em 0;">
-<li><strong>Leaflet lesson scaffold</strong> (<code>resources/leaflet-middle-school-gis-whydah-lesson.md</code>) — five-activity arc using Leaflet (~42 KB, MIT) + Leaflet-Geoman: orient the Atlantic, plot the Whydah's route, place the wreck (41.891°N, 69.957°W), simulate Clifford's grid-search excavation, synthesize student evidence as a GeoJSON-output capstone. Locked technical decision: <em>Leaflet, not MapLibre/Cesium/Felt.</em> Ready to build; suggested order is Activity 3 first as the self-contained template.</li>
-<li><strong>KML walkthrough</strong> (<code>resources/whydah-walkthrough.kml</code>) — Google Earth tour scaffold with confidence-tier styling (green/yellow/red + blue for modern sites + red triangle for the wreck). <em>Currently empty</em> — has the document header and styles but no placemarks yet. Needs populating from the dashboard's spatial waypoints (London, Ouidah, Jamaica, Nassau, Cape Cod wreck site, Boston, Charlestown gallows, Wellfleet, Salem, West Yarmouth Whydah Pirate Museum, Real Pirates Salem 285 Derby St).</li>
-</ul>
-<p class="meta" style="margin-top: 0.4em;">Both files are referenced here so the working directions don't get lost between sessions. Use <strong>TappyMaps</strong> for US-states-only thematic lessons; use Leaflet for anything that needs continuous-map drawing or world geography. The activity scaffold mirrors the howe2math worksheet pattern: one bank of data + a configurable presentation layer.</p>
-</div>
-
-<div class="card-grid">
-
-<div class="card">
-<h4><a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" target="_blank" rel="noopener">earth.nullschool.net - live wind, currents, weather</a></h4>
-<div class="video-embed-wrap" style="padding-bottom: 70%;">
-<iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" title="earth.nullschool.net - live North Atlantic wind" loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
-</div>
-<p class="meta" style="margin-top: 0.6em;">Live wind over the North Atlantic right now, centered on the same water Bellamy sailed. Click "earth" in the bottom-left to switch layer (try <em>Ocean -&gt; Currents</em> to see the Gulf Stream and the North Atlantic Gyre rolling in real time). The single best way to make the trade-wind &amp; gyre lecture (S5) land. <strong>If the embed shows blank above</strong>, nullschool may be blocking the iframe - just click the heading link to open in a new tab.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S5</strong> (the triangle's physics) and <strong>S11</strong> (chokepoint comparison).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://www.shipmap.org/" target="_blank" rel="noopener">Shipmap.org (Kiln, 2012)</a></h4>
-<p>Animated visualization of one full year of global merchant shipping. Watch container ships, dry bulk, tankers, gas, and vehicles move across the Atlantic. The 2012 data is a snapshot but the patterns are durable.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S5</strong> alongside the 1717 triangle map. Same ocean, different decade.</p>
-</div>
-
-<div class="card">
-<h4><a href="https://map.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap</a></h4>
-<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful for showing students how nautical charts encode depth and hazards differently than road maps.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S2-S3</strong> (cartographic conventions) and <strong>S13</strong> (the wreck site, with bathymetry).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://www.davidrumsey.com/" target="_blank" rel="noopener">David Rumsey Historical Map Collection</a></h4>
-<p>Stanford's online archive of 100,000+ historical maps - period charts, atlases, globes. The single best free archive of pre-1900 cartography. Includes Moll, Southack-era charts, period Atlantic and Caribbean maps. Built-in Luna Viewer for zoom + compare.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S3</strong> (Moll close-read) and any session where students want to find a period map for their final project.</p>
-</div>
-
-<div class="card">
-<h4><a href="https://collections.leventhalmap.org/" target="_blank" rel="noopener">Leventhal Map &amp; Education Center (BPL)</a></h4>
-<p>Boston Public Library's map collection - especially strong on New England, Cape Cod, and 18th-century coastal charts. Has a Southack Cape Cod chart and a "<em>X Marks the Spot</em>" article tracing the Whydah cartography story directly.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S14</strong> (Southack -&gt; Clifford story).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://historicalcharts.noaa.gov/" target="_blank" rel="noopener">NOAA Historical Map &amp; Chart Collection</a></h4>
-<p>U.S. government archive of 19th-century coastal charts of the U.S. and territories - direct descendants of the Southack tradition. Free, downloadable, mostly NOAA-hosted PDFs. Useful for showing how NOAA still maintains charts of the same waters Southack was mapping in 1717.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S2</strong> and <strong>S13</strong>.</p>
-</div>
-
-<div class="card">
-<h4><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy.com</a></h4>
-<p>Live weather + waves + wind, very visual. Pull up the North Atlantic the morning of S13 and ask "what would today have been like for a 1717 ship?" Run a hypothetical: a 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S13</strong> (the wreck conditions).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a></h4>
-<p>The International Maritime Bureau's Piracy Reporting Centre maintains a live map of every piracy and armed-robbery-at-sea incident reported worldwide. Updated continuously. Singapore Straits and the Gulf of Guinea have been the busiest hotspots in 2025; Somali piracy is currently managed by naval presence. The 1717 chokepoints have moved, not gone away.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S11</strong> (chokepoint comparison) and <strong>S12</strong> (modern piracy parallels). Show students that piracy is a current Coast Guard / Navy concern, not just a costume-and-treasure-chest story.</p>
-</div>
-
-</div>
-
 <h3>Period maps gallery</h3>
 <p class="meta">Public-domain originals from Wikimedia Commons and the New York Public Library. The cartographers who made these were the GPS engineers of their era - their lines are how the Whydah found its way (and didn't).</p>
 
@@ -2392,71 +2324,8 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 
 
-<section id="source-links" data-folio="ix">
-<h2>Sources &amp; bibliography</h2>
-<h3>Primary source inventory</h3>
-<p class="meta">What we have, what we need, and where each source plugs into the sessions.</p>
-
-<table>
-<thead>
-<tr><th>Source</th><th>Session(s)</th><th>Status</th><th>Notes</th></tr>
-</thead>
-<tbody>
-<tr><td>1719 world map (Educator Guide)</td><td>S3</td><td><span class="status status-ready">Ready</span></td><td>In the Real Pirates Salem Educator Guide</td></tr>
-<tr><td>Cargo data (367/312, fleet of 4)</td><td>S5, S6, S13</td><td><span class="status status-ready">Ready</span></td><td>Corroborated across multiple sources</td></tr>
-<tr><td>Olaudah Equiano narrative excerpt</td><td>S6, S17</td><td><span class="status status-needs">Needs age-appropriate selection</span></td><td>Frame clearly: 1756 capture, 40 years after Whydah. Facing History has vetted middle-school excerpts.</td></tr>
-<tr><td>Ship's Articles text (Roberts' as analogue)</td><td>S10</td><td><span class="status status-needs">Reframe + age-adapt</span></td><td>Teach explicitly that Whydah's own articles don't survive; Roberts' 1721 articles (Johnson 1724) are analogue only.</td></tr>
-<tr><td>Boston Vice-Admiralty Court testimony (1717) — <em>Trial of Eight Persons</em> (Boston, 1718)</td><td>S15, S13</td><td><span class="status status-ready">Excerpts now in dashboard</span></td><td><strong>Davis (p. 318), Hoof (p. 319), Dunavan, Brown depositions</strong> — see Primary-source spotlight near the wreck section. Persistent ID: <code>name.umdl.umich.edu/N01688.0001.001</code> (Michigan Evans Early American Imprints). Modern academic edition: Baer 2007, vol. 2, pp. 289–319.</td></tr>
-<tr><td>Cotton Mather, "Instructions to the Living" (1717)</td><td>S15</td><td><span class="status status-ready">Text accessible + commercial-motivation note</span></td><td>Full text on Michigan Evans Early American Imprints. Persistent ID: <code>name.umdl.umich.edu/N01600.0001.001</code>. Mather's diary entry of 21 Nov 1717 reveals commercial alongside sermonic motivation. Primary source for what was said about the pirates; filtered for the pirates' own words.</td></tr>
-<tr><td>Cape Cod eyewitness accounts of wreck</td><td>S13</td><td><span class="status status-ready">Sourced</span></td><td>Southack's report to Gov. Shute (MHS holds the letters collection). <strong>Davis and Dunavan depositions</strong> in the <em>Trial of Eight Persons</em> are the eyewitness accounts from inside the wreck and the Mary Anne grounding respectively.</td></tr>
-<tr><td>Southack's 1717 chart of New England</td><td>S14</td><td><span class="status status-ready">Located</span></td><td><strong>Norman B. Leventhal Map &amp; Education Center (Boston Public Library)</strong> has digitized copies. Local file: <code>pics/southack-bay-of-fundy-1731.jpg</code>. 1734 Cape Cod chart reproduced on old-maps.com. Original 1717 manuscript with red X at the Massachusetts State Archives.</td></tr>
-<tr><td>Moll's 1719 world map</td><td>S3</td><td><span class="status status-ready">Reproductions widely available</span></td><td>Stanford Ruderman collection has high-res scans.</td></tr>
-<tr><td>Artifact images (bell, King's shoe, coins, gold dust)</td><td>S5, S11, S14, S15</td><td><span class="status status-ready">Ready</span></td><td>Expedition Whydah site + Real Pirates Salem materials.</td></tr>
-<tr><td>Ehrlich 1989 — Akan gold ornaments catalogue (<em>African Arts</em> 22.4)</td><td>S5, S6, S15, S17</td><td><span class="status status-ready">Ready</span></td><td>Peer-reviewed Africanist art-history article with 18 figures of Whydah-recovered Akan gold. <a href="https://www.jstor.org/stable/3336661" target="_blank" rel="noopener">JSTOR</a>. Documents 79+ Akan-identified ornaments by 1989; demonstrates systematic mutilation for the bullion trade. Keystone source for the African end of the Whydah voyage.</td></tr>
-<tr><td>Ship comparison data (slaver/Navy/merchant/fishing)</td><td>S7</td><td><span class="status status-needs">Compile source packets</span></td><td>Research jigsaw prep. Rediker, Woodard, British Tars blog all usable.</td></tr>
-<tr><td>Pop-culture pirate clips</td><td>S12</td><td><span class="status status-ready">Ready</span></td><td>Pirates of the Caribbean, Black Sails, classic Treasure Island. Short clips only.</td></tr>
-</tbody>
-</table>
-<p class="meta">Every URL we drew on across the three research passes, organized so we can check facts or send students to a vetted source. Tier notes still apply: 🟢 solid, 🟡 contested, 🔴 popular/unverified.</p>
-
-<h3>Modern tools (2026)</h3>
-<div class="card">
-<h4><a href="https://www.marinetraffic.com/">MarineTraffic.com</a> — live ship tracking</h4>
-<p>Our main modern-bridge tool. Free tier shows current positions of commercial ships at sea.</p>
-<ul>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-12.0/centery:25.0/zoom:4">Bellamy's world — central Atlantic</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12">Salem Harbor</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:14">Wellfleet wreck site (41.891N, 69.957W)</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6">Suez</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5">Red Sea / Bab-el-Mandeb</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8">Panama Canal</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6">Strait of Malacca</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:11">Cape Cod / wreck site (zoomed out)</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.9/centery:42.5/zoom:12">Salem Harbor</a></li>
-</ul>
-</div>
-
-<h3>Modern piracy - news, trackers, and organizations</h3>
-<div class="card">
-<p class="meta">Current sources for the modern bridge in S11 and S12. Vetted, ad-light, public-interest. Most are also linked from <a href="http://www.cindyvallar.com/modernresources.html" target="_blank" rel="noopener">Cindy Vallar's running modern-piracy resources page</a>, which is updated through 2026.</p>
-<ul>
-<li><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a> - International Maritime Bureau Piracy Reporting Centre. Live, continuously updated.</li>
-<li><a href="https://www.recaap.org/" target="_blank" rel="noopener">ReCAAP ISC</a> - Asia regional piracy reporting (Singapore Straits is the 2025 hotspot).</li>
-<li><a href="https://eunavfor.eu/" target="_blank" rel="noopener">EUNAVFOR Operation Atalanta</a> - EU naval force off Somalia.</li>
-<li><a href="https://www.shipping.nato.int/" target="_blank" rel="noopener">NATO Shipping Centre</a> - merchant shipping coordination + piracy stats.</li>
-<li><a href="https://www.imo.org/" target="_blank" rel="noopener">IMO (International Maritime Organization)</a> - UN maritime regulatory body.</li>
-<li><a href="https://gcaptain.com/category/piracy/" target="_blank" rel="noopener">gCaptain - piracy section</a> - the best ongoing news source.</li>
-<li><a href="https://news.usni.org/" target="_blank" rel="noopener">USNI News</a> - US Naval Institute, strong coverage of military responses.</li>
-<li><a href="https://cimsec.org/" target="_blank" rel="noopener">Center for International Maritime Security (CIMSEC)</a> - analysis and policy.</li>
-</ul>
-<h4>Recent incidents in modern piracy</h4>
-<ul>
-<li><strong>2024 Ruen rescue (Arabian Sea)</strong> - Indian Navy commandos retook the bulk carrier <em>Ruen</em> from Somali pirates in an airborne raid (March 18, 2024). Concrete modern parallel to Bellamy-era boarding tactics, with helicopters instead of cutlasses.</li>
-<li><strong>2024 Houthi-Somali piracy connection</strong> - Houthi attacks on Red Sea shipping created cover for a Somali piracy resurgence after years of decline.</li>
-<li><strong>2025 Singapore Straits #1 hotspot</strong> - the world's busiest chokepoint became the busiest piracy zone, surpassing the Gulf of Guinea and Somalia.</li>
-<li><strong>2026 Q1 decline</strong> - early 2026 numbers show a sharp drop from 2025 peaks. The pattern is cyclical, not a story of progress.</li>
-</ul>
-</div>
+<section id="source-links" data-folio="ix" data-audience="admin">
+<h2>Sources &amp; Bibliography</h2>
 <h3>Whydah-specific museums and projects</h3>
 <div class="card">
 <ul>
@@ -2465,29 +2334,6 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <li><a href="https://www.pem.org/">Peabody Essex Museum</a> — Ward Family Papers on Salem's slave-trade involvement</li>
 <li><a href="https://www.nps.gov/sama/index.htm">Salem Maritime National Historic Site</a> — walking distance from Collins MS</li>
 </ul>
-</div>
-
-<h3>Period engravings (1724)</h3>
-<div class="card">
-<p class="meta">From "Captain Charles Johnson's" <em>A General History of the Pyrates</em> (London, 1724). Public domain. These are seven years after the Whydah but they set the visual template the public still pictures. Useful as visual primary sources to compare against the documentary record we now have. <strong>Authorship note:</strong> the "Captain Charles Johnson" pseudonym is now identified as Nathaniel Mist, Jacobite editor of the London <em>Weekly Journal</em> (Bialuschewski 2004; Brooks 2015). The book is half history, half embellishment — Mist altered details substantively between the May 1724 first edition and the December 1724 second edition. <strong>Frohock 2015 goes further:</strong> reading the GH whole-cloth as a literary work, Frohock argues it operates as <em>double satire</em> — simultaneously upholding the pirates' critique that society is rigged for the rich AND mocking the pirates as common criminals who can't live up to their own claims. The narrator systematically undercuts the "pirate democrat" framing through inserted satirical episodes (the Stroler, the <em>Royal Pirate</em> play, the proposed Maine kingdom in "abject Slavery under the specious Pretense of Liberty"). Bellamy's "free Prince" Beer-speech traces to a literary trope from St. Augustine's <em>City of God</em> (5th c. CE), not to documented 1717 utterance. Treat the engravings — and every quoted speech — as cultural artifacts of how the public was being told to picture pirates in 1724, not as documentary records.</p>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; margin-top: 1em;">
-
-<figure style="margin: 0;">
-<img loading="lazy" decoding="async" width="1000" height="1410" src="pics/pyrates-frontispiece.jpg" alt="1724 frontispiece engraving: Blind Justice with sword and scales above a gallows of seven hanged men; below, a British warship and a pirate ship in close combat." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
-<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Frontispiece. Justice over gallows over naval combat - the moral arc the book sells. Useful for S15 (the Boston trials).</figcaption>
-</figure>
-
-<figure style="margin: 0;">
-<img loading="lazy" decoding="async" width="1200" height="883" src="pics/bartholomew-roberts-1724.jpg" alt="1724 engraving of Captain Bartholomew Roberts standing on shore with two ships behind him." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
-<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Bartholomew Roberts (Black Bart). Roberts was active 1719-22 - right after Bellamy. Useful for "what came next" in S16.</figcaption>
-</figure>
-
-<figure style="margin: 0;">
-<img loading="lazy" decoding="async" width="1100" height="1863" src="pics/blackbeard-1724.jpg" alt="1724 engraving of Edward Blackbeard Teach in coat and tricorn, with multiple weapons visible at his belt and chest." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
-<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Blackbeard. Bellamy's fellow Hornigold-protege (S8 People). The cultivated terror image that we now mostly recognize as pirate iconography starts here.</figcaption>
-</figure>
-
-</div>
 </div>
 
 <h3>Primary sources (originals for classroom use)</h3>
@@ -2611,24 +2457,6 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </ul>
 </div>
 
-<h3>MA standards (verify exact text)</h3>
-<div class="card">
-<ul>
-<li><a href="https://www.doe.mass.edu/frameworks/current.html">MA DESE — current curriculum frameworks</a></li>
-<li><a href="https://www.doe.mass.edu/frameworks/ela/2017-06.pdf">2017 ELA framework PDF</a> (find W.8.3, W.8.7, SL.8.4, RI.8.1)</li>
-<li><a href="https://www.doe.mass.edu/frameworks/hss/2018-12.pdf">2018 History &amp; Social Science framework PDF</a> (identify the Atlantic World topic code)</li>
-</ul>
-</div>
-
-<h3>Teaching frameworks for sensitive content</h3>
-<div class="card">
-<ul>
-<li>Facing History &amp; Ourselves — Middle Passage teaching guide (search facinghistory.org)</li>
-<li>Learning for Justice — Teaching Hard History: American Slavery (learningforjustice.org)</li>
-<li>Smithsonian NMAAHC — teacher resources on the Middle Passage (nmaahc.si.edu)</li>
-</ul>
-</div>
-
 <h3>Other historical references</h3>
 <div class="card">
 <ul>
@@ -2642,6 +2470,117 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </ul>
 </div>
 
+</section>
+
+<section id="teacher-toolkit" data-folio="xvii" data-audience="admin">
+<h2>Teacher Toolkit</h2>
+<p class="meta">Live maps, GIS apps, and modern-piracy trackers to pull into class &mdash; teacher-facing, kept out of the student tabs.</p>
+<h3>GIS toolkit - free tools we can pull into class</h3>
+<p class="meta">Beyond MarineTraffic. Each one of these has a teaching use; none of them require a login or a paid account.</p>
+
+<div class="salem-callout" style="margin-bottom: 1em;">
+<h4>In-build: our own interactive student maps + Google Earth tour</h4>
+<p>Two planning artifacts in <code>resources/</code> that aren't shipped yet but are locked-in directions for the unit:</p>
+<ul style="margin: 0.4em 0;">
+<li><strong>Leaflet lesson scaffold</strong> (<code>resources/leaflet-middle-school-gis-whydah-lesson.md</code>) — five-activity arc using Leaflet (~42 KB, MIT) + Leaflet-Geoman: orient the Atlantic, plot the Whydah's route, place the wreck (41.891°N, 69.957°W), simulate Clifford's grid-search excavation, synthesize student evidence as a GeoJSON-output capstone. Locked technical decision: <em>Leaflet, not MapLibre/Cesium/Felt.</em> Ready to build; suggested order is Activity 3 first as the self-contained template.</li>
+<li><strong>KML walkthrough</strong> (<code>resources/whydah-walkthrough.kml</code>) — Google Earth tour scaffold with confidence-tier styling (green/yellow/red + blue for modern sites + red triangle for the wreck). <em>Currently empty</em> — has the document header and styles but no placemarks yet. Needs populating from the dashboard's spatial waypoints (London, Ouidah, Jamaica, Nassau, Cape Cod wreck site, Boston, Charlestown gallows, Wellfleet, Salem, West Yarmouth Whydah Pirate Museum, Real Pirates Salem 285 Derby St).</li>
+</ul>
+<p class="meta" style="margin-top: 0.4em;">Both files are referenced here so the working directions don't get lost between sessions. Use <strong>TappyMaps</strong> for US-states-only thematic lessons; use Leaflet for anything that needs continuous-map drawing or world geography. The activity scaffold mirrors the howe2math worksheet pattern: one bank of data + a configurable presentation layer.</p>
+</div>
+
+<div class="card-grid">
+
+<div class="card">
+<h4><a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" target="_blank" rel="noopener">earth.nullschool.net - live wind, currents, weather</a></h4>
+<div class="video-embed-wrap" style="padding-bottom: 70%;">
+<iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" title="earth.nullschool.net - live North Atlantic wind" loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
+</div>
+<p class="meta" style="margin-top: 0.6em;">Live wind over the North Atlantic right now, centered on the same water Bellamy sailed. Click "earth" in the bottom-left to switch layer (try <em>Ocean -&gt; Currents</em> to see the Gulf Stream and the North Atlantic Gyre rolling in real time). The single best way to make the trade-wind &amp; gyre lecture (S5) land. <strong>If the embed shows blank above</strong>, nullschool may be blocking the iframe - just click the heading link to open in a new tab.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S5</strong> (the triangle's physics) and <strong>S11</strong> (chokepoint comparison).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.shipmap.org/" target="_blank" rel="noopener">Shipmap.org (Kiln, 2012)</a></h4>
+<p>Animated visualization of one full year of global merchant shipping. Watch container ships, dry bulk, tankers, gas, and vehicles move across the Atlantic. The 2012 data is a snapshot but the patterns are durable.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S5</strong> alongside the 1717 triangle map. Same ocean, different decade.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://map.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap</a></h4>
+<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful for showing students how nautical charts encode depth and hazards differently than road maps.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S2-S3</strong> (cartographic conventions) and <strong>S13</strong> (the wreck site, with bathymetry).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.davidrumsey.com/" target="_blank" rel="noopener">David Rumsey Historical Map Collection</a></h4>
+<p>Stanford's online archive of 100,000+ historical maps - period charts, atlases, globes. The single best free archive of pre-1900 cartography. Includes Moll, Southack-era charts, period Atlantic and Caribbean maps. Built-in Luna Viewer for zoom + compare.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S3</strong> (Moll close-read) and any session where students want to find a period map for their final project.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://collections.leventhalmap.org/" target="_blank" rel="noopener">Leventhal Map &amp; Education Center (BPL)</a></h4>
+<p>Boston Public Library's map collection - especially strong on New England, Cape Cod, and 18th-century coastal charts. Has a Southack Cape Cod chart and a "<em>X Marks the Spot</em>" article tracing the Whydah cartography story directly.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S14</strong> (Southack -&gt; Clifford story).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://historicalcharts.noaa.gov/" target="_blank" rel="noopener">NOAA Historical Map &amp; Chart Collection</a></h4>
+<p>U.S. government archive of 19th-century coastal charts of the U.S. and territories - direct descendants of the Southack tradition. Free, downloadable, mostly NOAA-hosted PDFs. Useful for showing how NOAA still maintains charts of the same waters Southack was mapping in 1717.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S2</strong> and <strong>S13</strong>.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy.com</a></h4>
+<p>Live weather + waves + wind, very visual. Pull up the North Atlantic the morning of S13 and ask "what would today have been like for a 1717 ship?" Run a hypothetical: a 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S13</strong> (the wreck conditions).</p>
+</div>
+
+<div class="card">
+<h4><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a></h4>
+<p>The International Maritime Bureau's Piracy Reporting Centre maintains a live map of every piracy and armed-robbery-at-sea incident reported worldwide. Updated continuously. Singapore Straits and the Gulf of Guinea have been the busiest hotspots in 2025; Somali piracy is currently managed by naval presence. The 1717 chokepoints have moved, not gone away.</p>
+<p class="meta" data-audience="admin">Use in: <strong>S11</strong> (chokepoint comparison) and <strong>S12</strong> (modern piracy parallels). Show students that piracy is a current Coast Guard / Navy concern, not just a costume-and-treasure-chest story.</p>
+</div>
+
+</div>
+
+<h3>Modern tools (2026)</h3>
+<div class="card">
+<h4><a href="https://www.marinetraffic.com/">MarineTraffic.com</a> — live ship tracking</h4>
+<p>Our main modern-bridge tool. Free tier shows current positions of commercial ships at sea.</p>
+<ul>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-12.0/centery:25.0/zoom:4">Bellamy's world — central Atlantic</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12">Salem Harbor</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:14">Wellfleet wreck site (41.891N, 69.957W)</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6">Suez</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5">Red Sea / Bab-el-Mandeb</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8">Panama Canal</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6">Strait of Malacca</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:11">Cape Cod / wreck site (zoomed out)</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.9/centery:42.5/zoom:12">Salem Harbor</a></li>
+</ul>
+</div>
+
+<h3>Modern piracy - news, trackers, and organizations</h3>
+<div class="card">
+<p class="meta">Current sources for the modern bridge in S11 and S12. Vetted, ad-light, public-interest. Most are also linked from <a href="http://www.cindyvallar.com/modernresources.html" target="_blank" rel="noopener">Cindy Vallar's running modern-piracy resources page</a>, which is updated through 2026.</p>
+<ul>
+<li><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a> - International Maritime Bureau Piracy Reporting Centre. Live, continuously updated.</li>
+<li><a href="https://www.recaap.org/" target="_blank" rel="noopener">ReCAAP ISC</a> - Asia regional piracy reporting (Singapore Straits is the 2025 hotspot).</li>
+<li><a href="https://eunavfor.eu/" target="_blank" rel="noopener">EUNAVFOR Operation Atalanta</a> - EU naval force off Somalia.</li>
+<li><a href="https://www.shipping.nato.int/" target="_blank" rel="noopener">NATO Shipping Centre</a> - merchant shipping coordination + piracy stats.</li>
+<li><a href="https://www.imo.org/" target="_blank" rel="noopener">IMO (International Maritime Organization)</a> - UN maritime regulatory body.</li>
+<li><a href="https://gcaptain.com/category/piracy/" target="_blank" rel="noopener">gCaptain - piracy section</a> - the best ongoing news source.</li>
+<li><a href="https://news.usni.org/" target="_blank" rel="noopener">USNI News</a> - US Naval Institute, strong coverage of military responses.</li>
+<li><a href="https://cimsec.org/" target="_blank" rel="noopener">Center for International Maritime Security (CIMSEC)</a> - analysis and policy.</li>
+</ul>
+<h4>Recent incidents in modern piracy</h4>
+<ul>
+<li><strong>2024 Ruen rescue (Arabian Sea)</strong> - Indian Navy commandos retook the bulk carrier <em>Ruen</em> from Somali pirates in an airborne raid (March 18, 2024). Concrete modern parallel to Bellamy-era boarding tactics, with helicopters instead of cutlasses.</li>
+<li><strong>2024 Houthi-Somali piracy connection</strong> - Houthi attacks on Red Sea shipping created cover for a Somali piracy resurgence after years of decline.</li>
+<li><strong>2025 Singapore Straits #1 hotspot</strong> - the world's busiest chokepoint became the busiest piracy zone, surpassing the Gulf of Guinea and Somalia.</li>
+<li><strong>2026 Q1 decline</strong> - early 2026 numbers show a sharp drop from 2025 peaks. The pattern is cyclical, not a story of progress.</li>
+</ul>
+</div>
 </section>
 
 <section id="unit-plan" data-folio="xiii" data-audience="admin">
@@ -3014,6 +2953,24 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </div>
 
 </div>
+<h3>MA standards (verify exact text)</h3>
+<div class="card">
+<ul>
+<li><a href="https://www.doe.mass.edu/frameworks/current.html">MA DESE — current curriculum frameworks</a></li>
+<li><a href="https://www.doe.mass.edu/frameworks/ela/2017-06.pdf">2017 ELA framework PDF</a> (find W.8.3, W.8.7, SL.8.4, RI.8.1)</li>
+<li><a href="https://www.doe.mass.edu/frameworks/hss/2018-12.pdf">2018 History &amp; Social Science framework PDF</a> (identify the Atlantic World topic code)</li>
+</ul>
+</div>
+
+<h3>Teaching frameworks for sensitive content</h3>
+<div class="card">
+<ul>
+<li>Facing History &amp; Ourselves — Middle Passage teaching guide (search facinghistory.org)</li>
+<li>Learning for Justice — Teaching Hard History: American Slavery (learningforjustice.org)</li>
+<li>Smithsonian NMAAHC — teacher resources on the Middle Passage (nmaahc.si.edu)</li>
+</ul>
+</div>
+
 </section>
 
 <section id="glossary" data-folio="x">
@@ -3271,6 +3228,54 @@ Full source lists and tier-by-tier findings live alongside this file in <code>re
 <li>Rachel Rueckert, <em>If the Tide Turns</em> (Kensington, 2024) — historical fiction novel about Bellamy and the Whydah, with the Hallett character renamed Maria Brown. Useful as a contemporary fiction reference; cite carefully.</li>
 </ul>
 </div>
+<h3>Primary source inventory</h3>
+<p class="meta">What we have, what we need, and where each source plugs into the sessions.</p>
+
+<table>
+<thead>
+<tr><th>Source</th><th>Session(s)</th><th>Status</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>1719 world map (Educator Guide)</td><td>S3</td><td><span class="status status-ready">Ready</span></td><td>In the Real Pirates Salem Educator Guide</td></tr>
+<tr><td>Cargo data (367/312, fleet of 4)</td><td>S5, S6, S13</td><td><span class="status status-ready">Ready</span></td><td>Corroborated across multiple sources</td></tr>
+<tr><td>Olaudah Equiano narrative excerpt</td><td>S6, S17</td><td><span class="status status-needs">Needs age-appropriate selection</span></td><td>Frame clearly: 1756 capture, 40 years after Whydah. Facing History has vetted middle-school excerpts.</td></tr>
+<tr><td>Ship's Articles text (Roberts' as analogue)</td><td>S10</td><td><span class="status status-needs">Reframe + age-adapt</span></td><td>Teach explicitly that Whydah's own articles don't survive; Roberts' 1721 articles (Johnson 1724) are analogue only.</td></tr>
+<tr><td>Boston Vice-Admiralty Court testimony (1717) — <em>Trial of Eight Persons</em> (Boston, 1718)</td><td>S15, S13</td><td><span class="status status-ready">Excerpts now in dashboard</span></td><td><strong>Davis (p. 318), Hoof (p. 319), Dunavan, Brown depositions</strong> — see Primary-source spotlight near the wreck section. Persistent ID: <code>name.umdl.umich.edu/N01688.0001.001</code> (Michigan Evans Early American Imprints). Modern academic edition: Baer 2007, vol. 2, pp. 289–319.</td></tr>
+<tr><td>Cotton Mather, "Instructions to the Living" (1717)</td><td>S15</td><td><span class="status status-ready">Text accessible + commercial-motivation note</span></td><td>Full text on Michigan Evans Early American Imprints. Persistent ID: <code>name.umdl.umich.edu/N01600.0001.001</code>. Mather's diary entry of 21 Nov 1717 reveals commercial alongside sermonic motivation. Primary source for what was said about the pirates; filtered for the pirates' own words.</td></tr>
+<tr><td>Cape Cod eyewitness accounts of wreck</td><td>S13</td><td><span class="status status-ready">Sourced</span></td><td>Southack's report to Gov. Shute (MHS holds the letters collection). <strong>Davis and Dunavan depositions</strong> in the <em>Trial of Eight Persons</em> are the eyewitness accounts from inside the wreck and the Mary Anne grounding respectively.</td></tr>
+<tr><td>Southack's 1717 chart of New England</td><td>S14</td><td><span class="status status-ready">Located</span></td><td><strong>Norman B. Leventhal Map &amp; Education Center (Boston Public Library)</strong> has digitized copies. Local file: <code>pics/southack-bay-of-fundy-1731.jpg</code>. 1734 Cape Cod chart reproduced on old-maps.com. Original 1717 manuscript with red X at the Massachusetts State Archives.</td></tr>
+<tr><td>Moll's 1719 world map</td><td>S3</td><td><span class="status status-ready">Reproductions widely available</span></td><td>Stanford Ruderman collection has high-res scans.</td></tr>
+<tr><td>Artifact images (bell, King's shoe, coins, gold dust)</td><td>S5, S11, S14, S15</td><td><span class="status status-ready">Ready</span></td><td>Expedition Whydah site + Real Pirates Salem materials.</td></tr>
+<tr><td>Ehrlich 1989 — Akan gold ornaments catalogue (<em>African Arts</em> 22.4)</td><td>S5, S6, S15, S17</td><td><span class="status status-ready">Ready</span></td><td>Peer-reviewed Africanist art-history article with 18 figures of Whydah-recovered Akan gold. <a href="https://www.jstor.org/stable/3336661" target="_blank" rel="noopener">JSTOR</a>. Documents 79+ Akan-identified ornaments by 1989; demonstrates systematic mutilation for the bullion trade. Keystone source for the African end of the Whydah voyage.</td></tr>
+<tr><td>Ship comparison data (slaver/Navy/merchant/fishing)</td><td>S7</td><td><span class="status status-needs">Compile source packets</span></td><td>Research jigsaw prep. Rediker, Woodard, British Tars blog all usable.</td></tr>
+<tr><td>Pop-culture pirate clips</td><td>S12</td><td><span class="status status-ready">Ready</span></td><td>Pirates of the Caribbean, Black Sails, classic Treasure Island. Short clips only.</td></tr>
+</tbody>
+</table>
+<p class="meta">Every URL we drew on across the three research passes, organized so we can check facts or send students to a vetted source. Tier notes still apply: 🟢 solid, 🟡 contested, 🔴 popular/unverified.</p>
+
+<h3>Period engravings (1724)</h3>
+<div class="card">
+<p class="meta">From "Captain Charles Johnson's" <em>A General History of the Pyrates</em> (London, 1724). Public domain. These are seven years after the Whydah but they set the visual template the public still pictures. Useful as visual primary sources to compare against the documentary record we now have. <strong>Authorship note:</strong> the "Captain Charles Johnson" pseudonym is now identified as Nathaniel Mist, Jacobite editor of the London <em>Weekly Journal</em> (Bialuschewski 2004; Brooks 2015). The book is half history, half embellishment — Mist altered details substantively between the May 1724 first edition and the December 1724 second edition. <strong>Frohock 2015 goes further:</strong> reading the GH whole-cloth as a literary work, Frohock argues it operates as <em>double satire</em> — simultaneously upholding the pirates' critique that society is rigged for the rich AND mocking the pirates as common criminals who can't live up to their own claims. The narrator systematically undercuts the "pirate democrat" framing through inserted satirical episodes (the Stroler, the <em>Royal Pirate</em> play, the proposed Maine kingdom in "abject Slavery under the specious Pretense of Liberty"). Bellamy's "free Prince" Beer-speech traces to a literary trope from St. Augustine's <em>City of God</em> (5th c. CE), not to documented 1717 utterance. Treat the engravings — and every quoted speech — as cultural artifacts of how the public was being told to picture pirates in 1724, not as documentary records.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; margin-top: 1em;">
+
+<figure style="margin: 0;">
+<img loading="lazy" decoding="async" width="1000" height="1410" src="pics/pyrates-frontispiece.jpg" alt="1724 frontispiece engraving: Blind Justice with sword and scales above a gallows of seven hanged men; below, a British warship and a pirate ship in close combat." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Frontispiece. Justice over gallows over naval combat - the moral arc the book sells. Useful for S15 (the Boston trials).</figcaption>
+</figure>
+
+<figure style="margin: 0;">
+<img loading="lazy" decoding="async" width="1200" height="883" src="pics/bartholomew-roberts-1724.jpg" alt="1724 engraving of Captain Bartholomew Roberts standing on shore with two ships behind him." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Bartholomew Roberts (Black Bart). Roberts was active 1719-22 - right after Bellamy. Useful for "what came next" in S16.</figcaption>
+</figure>
+
+<figure style="margin: 0;">
+<img loading="lazy" decoding="async" width="1100" height="1863" src="pics/blackbeard-1724.jpg" alt="1724 engraving of Edward Blackbeard Teach in coat and tricorn, with multiple weapons visible at his belt and chest." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.8em; margin-top: 0.4em;">Blackbeard. Bellamy's fellow Hornigold-protege (S8 People). The cultivated terror image that we now mostly recognize as pirate iconography starts here.</figcaption>
+</figure>
+
+</div>
+</div>
+
 </section>
 
 </main>
@@ -3281,7 +3286,7 @@ Full source lists and tier-by-tier findings live alongside this file in <code>re
 (function whydahLogbook(){
   var ADMIN_KEY = 'LEAP4ED';
   var STORAGE_KEY = 'whydah-admin-unlocked-v1';
-  var ADMIN_SECTIONS = ['voyage-journal', 'unit-plan', 'confidence'];
+  var ADMIN_SECTIONS = ['voyage-journal', 'unit-plan', 'confidence', 'source-links', 'teacher-toolkit'];
 
   function isAdminSection(id) { return ADMIN_SECTIONS.indexOf(id) !== -1; }
   function getUnlocked() {
