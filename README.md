@@ -1,6 +1,6 @@
-# The Whydah's World — PBL Unit Dashboard
+# Navigating Piracy — PBL Unit Dashboard
 
-A planning and teaching dashboard for a middle-school Project-Based Learning unit on the **Whydah Gally** — an 18th-century slave ship turned pirate ship that wrecked off Cape Cod in 1717.
+A planning and teaching dashboard for **Navigating Piracy**, a middle-school Project-Based Learning unit on the **Whydah Gally** — an 18th-century slave ship turned pirate ship that wrecked off Cape Cod in 1717. Students learn the navigation tools and techniques pirates used to cross the ocean, and navigate the real story of who these people were and the choices they made.
 
 Built for **LEAP4Ed's Summer 2026 middle school program** in Salem, Massachusetts.
 
