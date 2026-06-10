@@ -212,38 +212,50 @@ body { background: #f4ecd6; margin: 0; }
 main.content > section { display: none; }
 main.content > section.active { display: block; }
 
-/* Mobile - wrap pills onto multiple rows, no horizontal scroll */
+/* Hamburger toggle — hidden on desktop, shown in the mobile bar */
+.nav-toggle {
+  display: none; align-items: center; gap: 0.5em;
+  background: none; border: 1px solid rgba(201, 165, 95, 0.4); border-radius: 5px;
+  color: #d9b56a; font-family: 'IM Fell English SC', Georgia, serif; font-size: 0.95em;
+  letter-spacing: 0.08em; padding: 0.35em 0.7em; cursor: pointer;
+}
+.nav-toggle:focus-visible { outline: 2px solid #c9a55f; outline-offset: 2px; }
+.nav-toggle-bars { display: inline-flex; flex-direction: column; gap: 4px; }
+.nav-toggle-bars span { display: block; width: 20px; height: 2px; background: #d9b56a; transition: transform .2s, opacity .2s; }
+.topnav.nav-open .nav-toggle-bars span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.topnav.nav-open .nav-toggle-bars span:nth-child(2) { opacity: 0; }
+.topnav.nav-open .nav-toggle-bars span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Mobile — compact sticky bar + "stowaway" drawer with nav-groups as accordions */
 @media (max-width: 768px) {
-  .topnav { padding: 0.5em 0.7em 0.3em; position: static; }
-  .topnav-header { gap: 0.4em 0.8em; padding-bottom: 0.3em; margin-bottom: 0.4em; }
-  .topnav h1 { font-size: 1em; }
-  .topnav .subtitle { font-size: 0.72em; min-width: 100%; order: 3; }
-  .topnav .topnav-meta { display: none; }
-  .topnav-nav {
-    flex-wrap: wrap;
-    row-gap: 0.25em;
-    column-gap: 0.15em;
-    align-items: flex-start;
-    padding-bottom: 0.2em;
+  .topnav { padding: 0.5em 0.8em; }
+  .topnav-header { gap: 0.3em 0.7em; padding-bottom: 0; margin-bottom: 0; border-bottom: none; align-items: center; }
+  .topnav h1 { font-size: 1.05em; flex: 1; }
+  .topnav .subtitle, .topnav .topnav-meta, .admin-toggle { display: none; }
+  .nav-toggle { display: inline-flex; }
+
+  .topnav-nav { display: none; }
+  .topnav.nav-open .topnav-nav {
+    display: flex; flex-direction: column; gap: 0;
+    position: absolute; left: 0; right: 0; top: 100%;
+    background: #2c1810; border-top: 1px solid rgba(201, 165, 95, 0.25);
+    box-shadow: 0 14px 26px rgba(0,0,0,0.45);
+    max-height: 78vh; overflow-y: auto; padding: 0.3em 0.5em 0.8em; z-index: 200;
   }
-  .topnav-nav .nav-group {
-    padding: 0.1em 0.3em 0.15em 0;
-    border-right: none;
-    flex-wrap: wrap;
-    flex-shrink: 0;
+  .topnav-nav .nav-group { display: block; border: none; border-bottom: 1px solid rgba(201, 165, 95, 0.12); padding: 0; }
+  .topnav-nav .nav-group + .nav-group { border-left: none; padding-left: 0; }
+  .topnav-nav .nav-group-label {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+    cursor: pointer; margin: 0; padding: 0.75em 0.6em; color: #d9b56a; font-size: 0.8em; letter-spacing: 0.12em;
   }
-  .topnav-nav .nav-group + .nav-group { border-left: 1px dotted rgba(201, 165, 95, 0.18); padding-left: 0.5em; }
-  .topnav-nav .nav-group-label { display: none; }
-  .topnav-nav .nav-group ul { flex-wrap: wrap; row-gap: 0.2em; }
-  .topnav-nav a {
-    padding: 0.55em 0.7em;
-    font-size: 0.95em;
-    line-height: 1.2;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    border-radius: 4px;
+  .topnav-nav .nav-group-label::after {
+    content: ''; width: 7px; height: 7px; border: solid #c4b590; border-width: 0 2px 2px 0;
+    transform: rotate(45deg); transition: transform .2s;
   }
+  .topnav-nav .nav-group.open .nav-group-label::after { transform: rotate(-135deg); }
+  .topnav-nav .nav-group ul { display: none; flex-direction: column; gap: 0.1em; padding: 0 0 0.5em; }
+  .topnav-nav .nav-group.open ul { display: flex; }
+  .topnav-nav a { display: block; padding: 0.65em 1em; font-size: 1em; border-radius: 4px; }
   .topnav-nav a.active { background: rgba(139, 58, 30, 0.55); }
   .content { padding: 1em 0.9em 3em; }
 }
@@ -1065,8 +1077,10 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 
 /* ----- LANTERN-RAISE animation on tab switch ----- */
 @keyframes lantern-raise {
-  0% { opacity: 0; transform: translateY(8px); filter: brightness(0.55) blur(2px); }
-  100% { opacity: 1; transform: translateY(0); filter: brightness(1) blur(0); }
+  /* No filter() here: a persistent filter (via fill-mode:both) rasterizes text
+     onto a GPU layer and renders permanently soft on hi-DPI phones. */
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: no-preference) {
   main > section[id].active > h2 { animation: lantern-raise 0.45s 0.05s both ease-out; }
@@ -1116,8 +1130,9 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
     <div class="subtitle">A logbook of pirates, ships, and the seas they sailed &mdash; LEAP4Ed Summer 2026</div>
     <div class="topnav-meta">Folio updated April 25, 2026 &middot; Master: Max Howe</div>
     <button id="admin-toggle" class="admin-toggle" type="button" aria-pressed="false" aria-label="Unlock the captain's cabin">Unlock Crew Quarters</button>
+    <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open the ship's menu"><span class="nav-toggle-bars" aria-hidden="true"><span></span><span></span><span></span></span> Menu</button>
   </div>
-  <ul class="topnav-nav">
+  <ul class="topnav-nav" id="primary-nav">
     <li class="nav-group">
       <span class="nav-group-label">The Voyage</span>
       <ul>
@@ -3414,7 +3429,51 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       const id = this.getAttribute('href').substring(1);
       showSection(id);
+      header.classList.remove('nav-open'); // close the mobile drawer after picking a tab
+      if (navToggle) navToggle.setAttribute('aria-expanded', 'false');
     });
+  });
+
+  // ---- Mobile "stowaway" nav: hamburger drawer + nav-groups as accordions ----
+  const header = document.querySelector('.topnav');
+  const navToggle = document.getElementById('nav-toggle');
+  if (navToggle && header) {
+    navToggle.addEventListener('click', function() {
+      const open = header.classList.toggle('nav-open');
+      navToggle.setAttribute('aria-expanded', String(open));
+      if (open) { // surface the group holding the current tab
+        const activeLink = document.querySelector('.topnav-nav a.active');
+        const grp = activeLink && activeLink.closest('.nav-group');
+        if (grp) { grp.classList.add('open'); setGroupExpanded(grp, true); }
+      }
+    });
+  }
+  // Make each group label an accessible accordion toggle (harmless on desktop)
+  function setGroupExpanded(grp, val) {
+    const label = grp.querySelector('.nav-group-label');
+    if (label) label.setAttribute('aria-expanded', String(val));
+  }
+  document.querySelectorAll('.topnav-nav .nav-group').forEach(function(grp) {
+    const label = grp.querySelector('.nav-group-label');
+    if (!label) return;
+    label.setAttribute('role', 'button');
+    label.setAttribute('tabindex', '0');
+    label.setAttribute('aria-expanded', 'false');
+    function toggleGroup() {
+      const open = grp.classList.toggle('open');
+      setGroupExpanded(grp, open);
+    }
+    label.addEventListener('click', toggleGroup);
+    label.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(); }
+    });
+  });
+  // Close the drawer on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && header.classList.contains('nav-open')) {
+      header.classList.remove('nav-open');
+      if (navToggle) { navToggle.setAttribute('aria-expanded', 'false'); navToggle.focus(); }
+    }
   });
 
   // Initial state — from URL hash or default to overview
