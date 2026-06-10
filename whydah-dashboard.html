@@ -887,13 +887,17 @@ a:hover { color: var(--brass-glow); }
 }
 
 /* timeline / dividers / cargo accents */
-.factor-box.pull .factor-title, .timeline-date, .session-num,
-.tool-card .tool-name, .unit-plan-week-header, .people-subheading,
+.factor-box.pull .factor-title, .session-num,
+.tool-card .tool-name,
 .session-card-header { color: var(--oxblood); }
+/* these sit directly on the dark leather — brass, not oxblood */
+.timeline-date { color: var(--brass); }
+.people-subheading { color: #e8b860; }
+.unit-plan-week-header { color: var(--brass-glow); }
 .timeline { border-left: 3px solid var(--oxblood); }
 .timeline-event::before { background: var(--brass); border: 2px solid var(--page-cream); box-shadow: 0 0 0 2px var(--oxblood); }
-.timeline-title { color: #2a1d0f; }
-.timeline-desc { color: #3a2818; }
+.timeline-title { color: #f5e8c8; }
+.timeline-desc { color: var(--ink-cream); }
 
 table {
   background: var(--page-cream);
@@ -1010,6 +1014,17 @@ section > h3 + .tier, section > h3 + .status {
   box-shadow: inset 0 0 12px rgba(120, 80, 30, 0.15);
 }
 .map-gallery-item figcaption, .pirate-card figcaption { color: var(--ink-warm); }
+
+/* ----- LEGIBILITY: text sitting directly on the dark leather ----- */
+.timeline .tier-green, .glossary-list .tier-green { color: #9ec678; border-color: #9ec678; }
+.timeline .tier-yellow, .glossary-list .tier-yellow { color: #e8c060; border-color: #e8c060; }
+.timeline .tier-red, .glossary-list .tier-red { color: #f09878; border-color: #f09878; }
+.glossary-list dt { color: var(--brass-glow); border-top-color: rgba(212, 168, 71, 0.35); }
+.glossary-list dd { color: var(--ink-cream); }
+.artifact-map .artifact-use { color: var(--ink-cream); }
+.accordion-body > .meta, .accordion-body > p.meta { color: var(--ink-margin); }
+main > section > figure > figcaption.meta,
+.accordion-body > figure > figcaption.meta { color: var(--ink-margin); }
 
 /* ----- DROP CAP ----- */
 main > section.active > .card:first-of-type p:first-of-type::first-letter,
@@ -1235,13 +1250,13 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <p style="margin-top:0.3em;">The Whydah's crew were escaping real brutality <em>and</em> they stole for a living. The Ship's Articles were democratic <em>and</em> they were a mutiny. A Member of Parliament funded the ship as a slaver in the first place. None of these things cancel each other out. Your job is to hold all of them at once — without glorifying piracy and without flattening it into a costume.</p>
 
 <h4>Voyage Journal + final project</h4>
-<p style="margin-top:0.3em;">Students keep a <strong>Voyage Journal</strong> across the whole unit — one deliverable per session, 16+ artifacts accumulated by Week 5 (maps, writing, analysis cards, sketches, character notes). The <strong>final project</strong> is a new piece built from the Journal: students pick a perspective and a format (13 options), and every final project cites at least 3–4 Journal entries as source material.</p>
+<p style="margin-top:0.3em;">You'll keep a <strong>Voyage Journal</strong> across the whole unit — one entry per session, 16+ artifacts by Week 5 (maps, writing, analysis cards, sketches, character notes). Your <strong>final project</strong> is a new piece built from that Journal: you pick a perspective and a format (13 options), and cite at least 3–4 Journal entries as source material.</p>
 <p style="margin-top:0.3em;">See the <a href="#final-project">Final Project</a> tab for the full format menu &mdash; thirteen ways to tell your chosen person's story.</p>
 
 <h4>Field trips</h4>
 <ul>
-<li><strong>Field Trip 1 (Week 2, Thursday July 16):</strong> Two-section rotation. Section A morning at Real Pirates Salem (Whydah scavenger hunt); Section B morning at Salem Maritime NHS (the <em>Friendship</em> replica East Indiaman + Derby Wharf + Custom House). Swap at lunch. Walking distance between sites. Curator-led at Real Pirates if we can swing it through Frank Cutietta.</li>
-<li><strong>Field Trip 2:</strong> TBD</li>
+<li><strong>Field Trip 1 (Week 2, Thursday July 16):</strong> Two-section rotation. Section A morning at Real Pirates Salem (Whydah scavenger hunt); Section B morning at Salem Maritime NHS (the <em>Friendship</em> replica East Indiaman + Derby Wharf + Custom House). Swap at lunch. Walking distance between sites. Curator-led at Real Pirates if scheduling allows.</li>
+<li data-audience="admin"><strong>Field Trip 2:</strong> TBD</li>
 </ul>
 </div>
 
@@ -1268,8 +1283,8 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 
 <section id="timeline" data-folio="ii">
 <h2>Timeline — the Whydah's story</h2>
-<p class="meta">The whole story, start to finish. If we can tell this cold, we can teach it. Tiers mark what we trust, what's disputed, and what's pirate mythology.</p>
-<div style="background: #ede1c5; border-left: 4px solid #6b4f2c; padding: 10px 14px; border-radius: 3px; margin: 0.8em 0;">
+<p class="meta">The whole story, start to finish. Tiers mark what we trust, what's disputed, and what's pirate mythology.</p>
+<div style="background: #ede1c5; color: #2a1d0f; border-left: 4px solid #6b4f2c; padding: 10px 14px; border-radius: 3px; margin: 0.8em 0;">
 <strong>See this on the globe.</strong> The same story, flown out across the Atlantic in a 19-stop 3D tour. <a href="#maps-geo">Open the flythrough &rarr;</a>
 </div>
 
@@ -1314,7 +1329,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <div class="timeline-event"><div class="timeline-date">October 18, 1717</div><div class="timeline-title">Whydah survivors tried in Boston <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Vice-Admiralty Court convenes at the Boston Court House, presided by Governor Samuel Shute and <strong>Judge Samuel Sewall — one of the 1692 Salem Witch Trial judges</strong> who had publicly apologized for his role in 1697. 9 total survivors tried; 6 found guilty, 2 acquitted (Davis and South — both proved forced), 1 (Julian) not tried. <strong>Defense counsel Robert Auchmuty appointed and resigned in protest after his motions were denied</strong> (including a motion to admit Davis's testimony in the Mary Anne pirates' favor); the illiterate pirates then defended themselves. <strong>Trial sequencing:</strong> 18 Oct convened · 22 Oct six convicted · 30 Oct final adjournment · 15 Nov hangings.</div></div>
 <div class="timeline-event"><div class="timeline-date">November 15, 1717</div><div class="timeline-title">Six hanged at Boston Common <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Public execution at the Great Elms. The six: John Brown (Jamaica), Thomas Baker (Netherlands), <strong>Hendrick Quintor (Netherlands by record, Black of Dutch–African descent per Clifford &amp; Kinkor 2007)</strong>, Peter Cornelius Hoof (Sweden), John Shaun (France), Simon van der Vorst (New York). The Boston records list nationality, not ethnicity — the crew was more racially diverse than the paperwork preserves. <strong>Cotton Mather — another Salem Witch Trials figure</strong> — ministered to them, walked with them to the gallows, preached the execution sermon. Published as "Instructions to the Living, from the Condition of the Dead" (1717) — a primary source that survives.</div></div>
 <div class="timeline-event"><div class="timeline-date">Nov 22, 1718</div><div class="timeline-title">Blackbeard killed at Ocracoke <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Edward Teach, Bellamy's fellow alumnus of Hornigold's Flying Gang, dies in battle against Lt. Robert Maynard's crew off Ocracoke Island, NC — 19 months after Bellamy.</div></div>
-<div class="timeline-event"><div class="timeline-date">1724</div><div class="timeline-title">Nathaniel Mist publishes <em>A General History of the Pyrates</em> under the "Captain Charles Johnson" pseudonym <span class="tier tier-yellow">Mixed reliability</span></div><div class="timeline-desc">Source of most pirate lore. Authorship now widely attributed to Nathaniel Mist (Bialuschewski 2004; Brooks 2015), Jacobite editor of London's <em>Weekly Journal</em>. Frohock 2015 reads the book as literary <em>double satire</em>, not chronicle: the GH simultaneously voices the pirates' critique of a rigged society AND mocks the pirates themselves through narrator-inserted satirical episodes. Bellamy's "rob the poor / free Prince" speech traces to a St. Augustine trope, not contemporary record. Treat all quoted speeches as Mist's literary construction.</div></div>
+<div class="timeline-event"><div class="timeline-date">1724</div><div class="timeline-title">Nathaniel Mist publishes <em>A General History of the Pyrates</em> under the "Captain Charles Johnson" pseudonym <span class="tier tier-yellow">Mixed reliability</span></div><div class="timeline-desc">Source of most pirate lore. Historians now think "Captain Charles Johnson" was really Nathaniel Mist, a London newspaper editor. The book is tricky: it admires the pirates and makes fun of them at the same time, and its famous speeches — including Bellamy's "rob the poor" speech — were almost certainly invented. Treat every quoted speech in it as Mist's writing, not a recording.</div></div>
 <div class="timeline-event"><div class="timeline-date">1727</div><div class="timeline-title">Kingdom of Dahomey conquers Ouidah <span class="tier tier-green">Solid</span></div><div class="timeline-desc">West African political upheaval at the port that gave the Whydah her name. Dahomey continues the slave trade for another 135+ years.</div></div>
 <div class="timeline-event"><div class="timeline-date">1733</div><div class="timeline-title">John Julian dies <span class="tier tier-green">Solid</span></div><div class="timeline-desc">Died in slavery after multiple escape attempts. Sold from John Quincy (grandfather of future President John Quincy Adams) to another owner. 32 years old, 16 years after the wreck.</div></div>
 <div class="timeline-event"><div class="timeline-date">1934</div><div class="timeline-title">Elizabeth Reynard publishes <em>The Narrow Land</em> <span class="tier tier-red">Literary, not primary</span></div><div class="timeline-desc">Coins the name "Maria Hallett" for Bellamy's Cape Cod lover. Folklore study, not historical documentation. Students will encounter the name; important to know where it actually came from.</div></div>
@@ -1340,8 +1355,8 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 </section>
 
 <section id="people" data-folio="iii">
-<h2>People &amp; Ships</h2>
-<p class="meta">Quick cards for people we need to recall fast while teaching. Each ends with how we might use them as a perspective option for the final project.</p>
+<h2>People</h2>
+<p class="meta">Quick cards on the people in this story. Each one ends with a note on the kind of final project that person opens up.</p>
 
 <div class="accordion">
 <h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-people-0"><span class="accordion-title">The Whydah's people</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
@@ -1632,7 +1647,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <li>Former privateer; organized Nassau as a pirate haven ~1715</li>
 <li><strong>Mentored both Bellamy AND Blackbeard</strong> aboard the Marianne</li>
 <li>Deposed summer 1716 — his crew voted him out because he refused to attack English ships</li>
-<li>Took King's pardon 1718, became a pirate-hunter; died at sea ~1719</li>
+<li>Took the King's pardon in 1718 and switched sides — hunted his old comrades as a pirate-hunter for the Bahamas governor; died in a shipwreck ~1719</li>
 </ul>
 <div class="perspective-use">Pick Hornigold to see what happens when "principled" piracy hits its limit. He was Bellamy's mentor — and his crew voted him out for refusing to attack British ships. Pirate democracy in action.</div>
 </div>
@@ -1725,7 +1740,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 
 <div class="salem-callout">
 <h4>The other reason the wreck happened on this coast — Hanna's "hostile shore" framing.</h4>
-<p>Mark G. Hanna (<em>Pirate Nests</em>, 2015; <em>Piracy in Colonial North America</em>, 2020) gives a political-economy explanation alongside the navigational one. Through the 1690s and into the early 1700s, ports from Newport to Boston to Charleston quietly tolerated and profited from "their" pirates — fencing prizes, refitting ships, looking the other way. Then the <strong>Treaty of Utrecht (1713)</strong> ended the war, the new Piracy Acts arrived, and royal officials began enforcing them in the colonies. <strong>By April 1717 Bellamy was attacking the very New England coast that, fifteen years earlier, would have welcomed him as a supplier of contraband and silver.</strong> The wreck happened not just because the longitude problem was unsolved, but because the political-economy ground had shifted under his career. The same Cape Cod that had previously been a market was now a hostile shore — and the surviving crew were tried in a Boston that had only just decided pirates were the enemy.</p>
+<p>Mark G. Hanna (<em>Pirate Nests</em>, 2015; <em>Piracy in Colonial North America</em>, 2020) adds a money-and-politics explanation alongside the navigational one. Through the 1690s and into the early 1700s, ports from Newport to Boston to Charleston quietly tolerated and profited from "their" pirates — fencing prizes, refitting ships, looking the other way. Then the <strong>Treaty of Utrecht (1713)</strong> ended the war, the new Piracy Acts arrived, and royal officials began enforcing them in the colonies. <strong>By April 1717 Bellamy was attacking the very New England coast that, fifteen years earlier, would have welcomed him as a supplier of contraband and silver.</strong> The wreck happened not just because the longitude problem was unsolved, but because the towns that once welcomed pirates had turned against them. The same Cape Cod that had previously been a market was now a hostile shore — and the surviving crew were tried in a Boston that had only just decided pirates were the enemy.</p>
 <p class="meta" data-audience="admin" style="margin-top: 0.4em;">Use in S13 (the wreck as multi-causal) and S17 (the moral-complexity capstone). Pair with Anderson 1995's "episodic piracy" framing and Rediker's working-class-counter-society reading — the most academically honest Bellamy narrative holds all three at once: pirate <em>crews</em> were internally democratic and multi-racial, AND their on-shore <em>sponsors</em> were merchant elites, AND once the elite-protection ended Bellamy died on a coast that had turned hostile.</p>
 <p class="meta" style="margin-top: 0.4em;">Hanna's free public essay: "<a href="https://www.neh.gov/humanities/2017/winter/feature/lot-what-known-about-pirates-not-true-and-lot-what-true-not-known" target="_blank" rel="noopener">A Lot of What Is Known About Pirates Is Not True</a>," <em>NEH Humanities</em> Winter 2017.</p>
 </div>
@@ -1744,7 +1759,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <h4>Peter Cornelius Hoof on the treasure (Trials, p. 319)</h4>
 <blockquote style="border-left: 4px solid var(--accent); padding-left: 1em; margin: 0.6em 0; font-family: Georgia, serif; font-style: italic; color: var(--text);">"The money taken in the Whido, which was reported to Amount to 20000 or 30000 Pounds, was counted over in the Cabin, and put up in bags, Fifty pounds to every Man's share, there being 180 Men on Board… Their Money was kept in Chests between Decks without any guard, but none was to take any without the Quarter Masters leave."</blockquote>
 <ul>
-<li><strong>£20,000–30,000 sterling</strong> — Hoof's contemporaneous figure. More grounded than the breathless weight numbers in popular accounts.</li>
+<li><strong>£20,000–30,000 sterling</strong> — Hoof's contemporaneous figure. More grounded than the breathless weight numbers in popular accounts. (You'll see “four and a half tons of treasure” online — that's legend math, not testimony.)</li>
 <li><strong>£50 per man, even share</strong> — primary-source confirmation of Bellamy's flat distribution. The pirate-democracy claim has at least this much documentary support.</li>
 <li><strong>180 men aboard at division vs. 146 at the wreck</strong> — the gap is prize-crew attrition, men placed on captured vessels in the weeks before the storm.</li>
 <li><strong>Treasure stored in chests between decks, unguarded</strong>, but governed by the Quartermaster's authority — not by force.</li>
@@ -1816,7 +1831,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <figcaption class="meta" style="text-align: left; margin-top: 0.7em;">Modern artistic rendering of Bellamy aboard ship, in something like his documented capture of Captain Beer. The four pistols are 1724 lore from Charles Johnson's pirate book — not documented. The rendering captures what historians have described: the captain who attacked rich ships, let the crews go, and ran a multinational, voted-on crew below him.</figcaption>
 </figure>
 
-<p class="meta">The core of the driving question. The push/pull framing comes from historian Marcus Rediker (<em>Villains of All Nations</em>, 2004) and other research on what happened to sailors after the Royal Navy let most of them go in 1714. The critique at the bottom matters — Rediker's argument is strong, but not everyone buys it. We hold it as one read of the evidence, not the only one.</p>
+<p class="meta">The core of the driving question. The push/pull framing comes from historian Marcus Rediker (<em>Villains of All Nations</em>, 2004) and other research on what happened to sailors after the Royal Navy let most of them go in 1714. The critique at the bottom matters — Rediker's argument is strong, but not every historian buys it. Treat it as one reading of the evidence, not the only one.</p>
 
 <div class="salem-callout" style="border-left-color: var(--accent);">
 <h4 style="color: var(--accent); margin-top:0;">Privateer vs. pirate — the line was a piece of paper</h4>
@@ -1884,7 +1899,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 
 <div class="factor-box pull">
 <span class="factor-title">Flatter racial hierarchy</span>
-<div class="factor-desc">Kinkor's research: ~25% of Bellamy's crew was Black. Golden Age pirate crews were often 25–33% Black overall. Formerly enslaved men could hold skilled positions unavailable elsewhere.</div>
+<div class="factor-desc">Kinkor's research: roughly a quarter of Bellamy's crew — up to 50 men — was Black. Golden Age pirate crews were often 25–33% Black overall. Formerly enslaved men could hold skilled positions unavailable elsewhere.</div>
 </div>
 
 <div class="factor-box pull">
@@ -1982,7 +1997,7 @@ Rediker reads pirates as people pushing back against unfair work and a brutal ec
 
 <section id="maps-geo" data-folio="ix">
 <h2>Maps &amp; Flythrough</h2>
-<p class="meta">This is where we lean hardest on the GIS side. Weeks 1, 3, and 4 all come out of here — what navigators in 1717 actually had, what didn't exist yet, and why the Atlantic trade was shaped the way it was.</p>
+<p class="meta">The Whydah's world, on the map — the whole story flown across a 3D globe, live cameras on the wreck coast, the charts that found her, and the winds that shaped the age.</p>
 
 <div class="accordion">
 <h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-maps-0"><span class="accordion-title">The Whydah flythrough - interactive 3D tour</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
@@ -2083,7 +2098,7 @@ Rediker reads pirates as people pushing back against unfair work and a brutal ec
 <li><strong>Boston Harbor</strong> - 25 minutes by water from the Charlestown gallows site.</li>
 </ul>
 
-<p class="meta">Pedagogical use: open Marconi Beach during the Session 13 wreck reconstruction. Students see the actual sandbar where 144 men drowned, in real time. The shore Southack mapped in 1717 is still right there - just 270 years of erosion later.</p>
+<p class="meta">This is the actual stretch of shore where the Whydah ran aground — live, right now. The sandbar where 144 men drowned is in this frame, and the shore Southack mapped in 1717 is still right there — just three centuries of erosion later.</p>
 </div>
 
 </div>
@@ -2096,7 +2111,7 @@ Rediker reads pirates as people pushing back against unfair work and a brutal ec
 <p>Moll was the most important London cartographer of the early 1700s. His 1719 world map was made to illustrate Daniel Defoe's <em>Farther Adventures of Robinson Crusoe.</em></p>
 <p><strong>His social circle included actual pirates and privateers:</strong> William Dampier, Woodes Rogers, and William Hacke, who gave him firsthand information on Caribbean routes and Spanish treasure movements.</p>
 <p>Moll's West Indies map has been described as "a guide to English piracy and privateering." His maps showed <strong>trade winds, compass variations, and "Remarkable Tracts"</strong> of voyages — essentially commercial intelligence.</p>
-<p>In Session 3, this answers the question "who made this map, and why?" — a guy who drank with pirates and sold their route data for profit. Maps are arguments, not neutral records.</p>
+<p>Ask one question of this map: who made it, and why? The answer — a guy who drank with pirates and sold their route data for profit. Maps are arguments, not neutral records.</p>
 </div>
 
 </div>
@@ -2196,7 +2211,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 <section id="projections" data-folio="x">
 <h2>Navigation &amp; Projections</h2>
-<p class="meta">Where maps and the globe stop agreeing. The cartography spine of the unit needs students to understand <em>why</em> a map is always a translation, never a copy.</p>
+<p class="meta">Where maps and the globe stop agreeing. A map is always a translation, never a copy — this tab shows why, and what a 1717 navigator could and couldn't actually know.</p>
 
 <div class="accordion">
 <h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-nav-0"><span class="accordion-title">Latitude vs longitude - what they are and why one was easy</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
@@ -2212,7 +2227,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <div class="video-embed-wrap">
 <iframe src="https://www.youtube-nocookie.com/embed/zlRxWJ_kGEA" title="The Longitude Problem - Harrison clocks" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
-<p class="meta">Why this matters for us: the Whydah grounded at Wellfleet on the night of April 26, 1717, in a nor'easter, in the dark, on a lee shore. They could not verify their east-west position. A 16-year-old pilot (John Julian) was navigating with a backstaff. This video is the fastest way for a student to feel <em>why</em> Session 13 frames the wreck partly as a longitude-problem disaster.</p>
+<p class="meta">Why this matters: the Whydah grounded at Wellfleet on the night of April 26, 1717, in a nor'easter, in the dark, on a lee shore. They could not verify their east-west position. A 16-year-old pilot (John Julian) was navigating with a backstaff. This video is the fastest way to feel <em>why</em> the wreck was partly a navigation disaster — not bad sailing, but missing tools.</p>
 </div>
 
 
@@ -2286,7 +2301,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <div class="video-embed-wrap">
 <iframe src="https://www.youtube-nocookie.com/embed/kIID5FDi2JQ" title="Why all world maps are wrong - Vox" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
-<p class="meta">Six minutes. Hits the Mercator-vs-Africa moment, the 1973 Gall-Peters controversy, and the trade-offs every projection makes. Show this in S2 or S3 alongside the Moll 1719 close-read.</p>
+<p class="meta">Six minutes. Why Mercator maps make Africa look smaller than it really is, the 1973 fight over a "fairer" world map, and the trade-offs every projection makes.</p>
 </div>
 
 </div>
@@ -2340,7 +2355,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p>Mercator's 1569 map was a tool for sailors, not a wall map for classrooms. It wasn't widely adopted for marine charts until the early 18th century &mdash; by 1717 it was becoming the working standard for ocean navigation. Its key feature: <em>any straight line you draw on it is a course you can actually sail by holding one compass heading the whole way</em>. A 1717 navigator could draw a straight line from Cape Cod to the Azores, read the compass direction off that line, and just hold that heading. Shorter routes exist (called "great circles"), but they require you to keep adjusting your compass heading as you go - hard to do without precise instruments.</p>
 <p>Google Maps uses <strong>Web Mercator</strong> for the same reason a sailor did: zoom in on any neighborhood and a square block still looks like a square. The price is that Greenland looks gigantic when you zoom out. For street-level use, that's a fine trade.</p>
 
-<div class="card">
+<div class="card" data-audience="admin">
 <h4>How this maps onto the unit</h4>
 <ul>
 <li><strong>S2 (What is a map?)</strong> - introduce projection as a translation choice. Use thetruesize.com hands-on.</li>
@@ -2397,7 +2412,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <dd>The discharge of military personnel after a war ends. The Royal Navy demobilization after the War of Spanish Succession (1713-14) put thousands of trained sailors out of work, concentrated in the Caribbean - the single biggest push factor into Golden Age piracy.</dd>
 
 <dt>Driving Question (DQ)</dt>
-<dd>The unit's overarching question that students keep returning to. Ours: "Why would a person choose piracy in 1717 - and how would they want you to tell their story?"</dd>
+<dd>The big question you keep returning to all unit: "Why would a person choose piracy in 1717 - and how would they want you to tell their story?"</dd>
 
 <dt>Equal-area projection</dt>
 <dd>A map that keeps sizes accurate (Greenland and Africa are correctly sized relative to each other) but distorts shapes (countries get squished). Mollweide, Goode, and Equal Earth are examples. Good for showing where things are spread out (people, forests, vote counts).</dd>
@@ -2448,7 +2463,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <dd>A small, narrow-stern Dutch sailing ship used for cargo and fishing in the 17th-18th centuries. The Mary Anne, a pink of Dublin loaded with Madeira wine, was the prize Bellamy took on April 26, 1717 - and lost the same night.</dd>
 
 <dt>Primary source</dt>
-<dd>A document, artifact, or testimony created at or near the time of the events being studied. Boston Vice-Admiralty Court testimony (1717), Cotton Mather's execution sermon (1717), and Cyprian Southack's 1717 chart are primary sources for the Whydah. "Captain Charles Johnson's" <em>General History of the Pyrates</em> (1724) — now identified as the work of Nathaniel Mist (Bialuschewski 2004; Brooks 2015) — is partially primary as a 1724 artifact, but unreliable for specifics; the Bellamy "Beer-speech" episode is almost certainly a Mist embellishment following a St. Augustine literary trope (Frohock 2015), and Mist altered the text substantively between his May 1724 first edition and December 1724 second edition. Frohock reads the whole GH as double satire — the "Robin Hood pirate" framing students will encounter in popular sources comes from this 1724 literary work, not from contemporary record.</dd>
+<dd>A document, artifact, or testimony created at or near the time of the events being studied. Boston Vice-Admiralty Court testimony (1717), Cotton Mather's execution sermon (1717), and Cyprian Southack's 1717 chart are primary sources for the Whydah. "Captain Charles Johnson's" <em>General History of the Pyrates</em> (1724) — now identified as the work of Nathaniel Mist (Bialuschewski 2004; Brooks 2015) — is partially primary as a 1724 artifact, but unreliable for specifics; the Bellamy "Beer-speech" episode is almost certainly a Mist embellishment following a St. Augustine literary trope (Frohock 2015), and Mist altered the text substantively between his May 1724 first edition and December 1724 second edition. Frohock reads the whole GH as double satire — the "Robin Hood pirate" framing you'll meet in popular sources comes from this 1724 literary work, not from contemporary record.</dd>
 
 <dt>Privateer</dt>
 <dd>A private armed ship licensed by a government to attack enemy shipping in wartime. Legal piracy with paperwork. When the War of Spanish Succession ended in 1713-14, thousands of privateers lost their commissions - many slid into illegal piracy.</dd>
