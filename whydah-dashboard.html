@@ -522,6 +522,28 @@ table th { background: #e6d9b8; color: #0f2538; font-family: 'IM Fell English SC
 .session-card.project-day { background: #e6d9b8; border-left-color: #5e4421; }
 .session-card.showcase { background: #f4e3a8; border-left-color: #c9a55f; }
 
+/* ===== Reusable accordion (progressive disclosure inside long tabs) ===== */
+.accordion { margin: 0 0 0.6em; }
+.accordion-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8em;
+  width: 100%; text-align: left; cursor: pointer;
+  background: #efe4c6; border: 1px solid #c4b590; border-left: 4px solid var(--accent);
+  border-radius: 3px; padding: 0.6em 0.9em; margin: 0;
+  font-family: 'IM Fell English SC', Georgia, serif; font-size: 1.05em;
+  color: var(--accent); letter-spacing: 0.03em;
+}
+.accordion-header:hover { background: #e8dab6; }
+.accordion-header:focus-visible { outline: 2px solid #c9a55f; outline-offset: 1px; }
+.accordion-title { flex: 1; }
+.accordion-chevron {
+  flex-shrink: 0; width: 8px; height: 8px;
+  border: solid var(--accent); border-width: 0 2px 2px 0;
+  transform: rotate(45deg); transition: transform 0.2s;
+}
+.accordion-header[aria-expanded="true"] .accordion-chevron { transform: rotate(-135deg); }
+.accordion-body { padding: 0.5em 0.2em 0.4em; }
+.accordion-body[hidden] { display: none; }
+
 @media (max-width: 768px) {
   .unit-calendar { grid-template-columns: 60px repeat(4, 1fr); font-size: 0.8em; }
   .unit-calendar-cell { min-height: 60px; padding: 0.3em 0.4em; }
@@ -1083,6 +1105,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
   [data-audience="admin"] { display: revert !important; }
   main > section[id] { display: block !important; }
   main > section[id].active > h2 { animation: none !important; }
+  .accordion-body[hidden] { display: block !important; }
 }
 </style>
 </head>
@@ -3423,6 +3446,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const isExpanded = card.classList.toggle('expanded');
       btn.textContent = isExpanded ? '− Hide details' : '+ Show details';
     });
+  });
+
+  // Reusable accordion (delegated — covers any .accordion-header on the page)
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.accordion-header');
+    if (!btn) return;
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    const body = document.getElementById(btn.getAttribute('aria-controls'));
+    if (body) body.hidden = open; // was open → now hide; was closed → now show
   });
 
   // Glossary search filter
