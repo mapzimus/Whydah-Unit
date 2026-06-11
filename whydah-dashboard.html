@@ -2371,6 +2371,67 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 </div>
 </div>
+<p style="margin-top:1.6em;"><strong>Be the navigator &mdash; hands-on.</strong> The activities below turn the ideas above into things you actually <em>do</em>, the way a 1717 pilot &mdash; or a modern GIS analyst &mdash; would.</p>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-6"><span class="accordion-title">Try it &mdash; find your latitude like a 1717 pilot</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-6" class="accordion-body" hidden>
+<p>Latitude was the <em>findable</em> one. Here's the trick a pilot like 16-year-old John Julian used.</p>
+<p><strong>The North Star shortcut:</strong> the angle from the horizon up to Polaris is (almost exactly) your latitude. Stand in Salem and Polaris sits about <strong>42&deg;</strong> above the horizon &mdash; because Salem is at 42&deg;N.</p>
+<p><strong>Make a simple quadrant (10 min):</strong></p>
+<ol>
+<li>Tape a drinking straw along the flat edge of a protractor.</li>
+<li>Tie a string with a small weight through the protractor's center hole.</li>
+<li>Sight a star (or a far rooftop) through the straw; pinch the string where it crosses the scale.</li>
+<li>Read the angle: <strong>90&deg; minus that reading = the object's height above the horizon.</strong></li>
+</ol>
+<p><strong>At night:</strong> aim at Polaris &mdash; the height you read &asymp; your latitude. Check it against Google Maps.<br>
+<strong>At noon:</strong> measure the sun's height (<em>never look straight at it &mdash; use a backstaff or read a shadow</em>). Latitude = 90&deg; &minus; sun's height + the sun's declination for that date (your teacher has the table).</p>
+<p class="meta"><strong>Why it matters:</strong> there was <em>no</em> equivalent trick for longitude. That's why the Whydah could find how far <em>north</em> they were but not how far <em>west</em> they'd drifted in the dark &mdash; and why she grounded at Wellfleet.</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-7"><span class="accordion-title">Try it &mdash; dead reckoning: plot a course with no GPS</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-7" class="accordion-body" hidden>
+<p><strong>Dead reckoning</strong> = figure out where you are from where you <em>started</em>, plus your <strong>heading</strong>, <strong>speed</strong>, and <strong>time</strong>. (1 <strong>knot</strong> = 1 nautical mile per hour.)</p>
+<p><strong>Worked example:</strong> you leave port steering northeast (045&deg;) at 5 knots. After 6 hours you've sailed 5 &times; 6 = <strong>30 nautical miles</strong> along 045&deg;. Draw that line on the plotting grid &mdash; the far end is your best guess at "you are here."</p>
+<p><strong>Do it:</strong> plot Bellamy's Jamaica&rarr;Carolinas run leg by leg &mdash; each leg has a heading, a speed, and a number of hours. Chain them across the grid.</p>
+<p><strong>Now break it:</strong> a current quietly pushes you 10 miles west and you never notice. Re-mark where you <em>think</em> you are vs. where you <em>really</em> are. That gap is <strong>dead-reckoning error</strong> &mdash; and it grew every day at sea.</p>
+<p class="meta"><strong>Journal it:</strong> this is the S11 voyage-plan entry. The error you just drew, plus no way to fix longitude, plus a night nor'easter = the wreck.</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-8"><span class="accordion-title">Try it &mdash; read &amp; write coordinates</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-8" class="accordion-body" hidden>
+<p>Every place on Earth has an address: <strong>latitude</strong> (how far N/S of the equator) and <strong>longitude</strong> (how far E/W of Greenwich). Order is always <em>lat, then long</em>.</p>
+<p><strong>Warm-up &mdash; say these in plain words, then plot them on the blank lat/long grid:</strong></p>
+<ul>
+<li>The wreck site: <strong>41.891&deg;N, 69.957&deg;W</strong> (off Marconi Beach, Wellfleet)</li>
+<li>Boston Court House (the trial): ~42.359&deg;N, 71.058&deg;W</li>
+<li>Your school &mdash; right-click it in Google Maps to read the coordinates</li>
+</ul>
+<p><strong>GIS note:</strong> computers store these as numbers, with <strong>N and E positive, S and W negative</strong> &mdash; so the wreck is <code>(41.891, -69.957)</code>. That sign flip is how a map app tells west from east.</p>
+<p class="meta"><strong>Why it matters:</strong> every stop on the 3D flythrough is a real coordinate. Turning a place into a pair of numbers is the first move in all of GIS.</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-9"><span class="accordion-title">GIS in action &mdash; how a 1717 map found a 1984 wreck (georeferencing)</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-9" class="accordion-body" hidden>
+<p>This is the GIS heart of the whole unit. In 1717 Cyprian Southack drew an <strong>X</strong> for the wreck on his hand-drawn chart. In 1984 Barry Clifford had to answer: <em>where is that X in real-world coordinates?</em></p>
+<p><strong>Georeferencing</strong> is the answer. You pick a few features you can recognize on <em>both</em> the old map and a modern one &mdash; a point of land, a river mouth, a harbor &mdash; match them up (those are <strong>control points</strong>), and the whole old map stretches into place over the real world. Now the X has a latitude and longitude.</p>
+<p><strong>Do it:</strong> open Southack's 1717 chart (Maps &amp; Flythrough tab) beside Google Earth. Find <strong>3 shore features</strong> that appear on both. Read the modern coordinates of each, then estimate where Southack's X lands today &mdash; you've just georeferenced a 300-year-old map.</p>
+<p><strong>Then the grid:</strong> Clifford searched the seabed in a numbered <strong>grid</strong> of squares. A grid of squares, each holding a value, is exactly how GIS stores a <strong>raster</strong> (like a satellite image). The S14 grid-archaeology activity is you doing the same thing.</p>
+<p class="meta"><strong>Vocab:</strong> georeferencing &middot; control point &middot; raster / grid &middot; layer</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-10"><span class="accordion-title">Try it &mdash; great circle vs. rhumb line</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-10" class="accordion-body" hidden>
+<p>What's the shortest way across an ocean? On a globe it's a <strong>great circle</strong> &mdash; but on a flat Mercator map that shortest path looks like a <em>curve</em>, while a dead-straight line on Mercator (a <strong>rhumb line</strong> &mdash; one constant compass heading) is actually <em>longer</em>.</p>
+<p><strong>See it:</strong> stretch a string between Boston and London on a globe &mdash; it bows up over Greenland. Now draw the straight Boston&ndash;London line on a Mercator world map. Different paths, same two cities. (Or use the <a href="http://www.gcmap.com/" target="_blank" rel="noopener">Great Circle Mapper</a>.)</p>
+<p><strong>The 1717 choice:</strong> Bellamy held <em>rhumb lines</em> &mdash; one steady heading he could actually steer. A great circle means constantly re-adjusting your heading, which needs instruments he didn't have. Modern jets and ships fly great circles because GPS makes the adjusting easy.</p>
+<p class="meta"><strong>Why it matters:</strong> the "best" route depends on your tools. Same ocean, different answer in 1717 and today.</p>
+</div>
+</div>
 </section>
 
 <section id="glossary" data-folio="xi">
@@ -2578,6 +2639,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p><strong>DQ:</strong> Why would a person choose piracy in 1717 — and how would they want you to tell their story?</p>
 <p><strong>KSQs:</strong> 1. Maps &amp; power · 2. Atlantic trade · 3. Geography &amp; choice · 4. Whose stories</p>
 <p><strong>Format:</strong> 16 instructional + field trips + 2 project days + Showcase · 2 sections × ~20 students · 90 min/section · No grades · Voyage Journal binders + Final project (13 formats)</p>
+<p><strong>Nav &amp; GIS skills (KSQ1):</strong> read a map as an argument · use 1717 tools (compass, backstaff, dead reckoning) · find latitude and explain why longitude was unsolved · read &amp; write coordinates · georeference an old map and use a grid (the 1717→1984 wreck story = GIS) · projections and their trade-offs.</p>
 </div>
 
 <h3>Build &amp; Pacing Tracker</h3>
