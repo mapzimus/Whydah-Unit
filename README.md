@@ -8,6 +8,8 @@ Built for **LEAP4Ed's Summer 2026 middle school program** in Salem, Massachusett
 
 Open [index.html](./index.html) or visit the GitHub Pages URL once published.
 
+For a quick overview, [unit-at-a-glance.html](./unit-at-a-glance.html) is a one-page, print-ready summary (driving question, five-week arc, standards, and access) suited to handing out at a meeting.
+
 ## Unit at a glance
 
 - **5 weeks** (July 6 – August 6, 2026), Mon–Thurs
