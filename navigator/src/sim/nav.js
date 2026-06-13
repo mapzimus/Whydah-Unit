@@ -85,11 +85,20 @@ export function createNav(start, scenario) {
     drPos = { lat, lon: drPos.lon };
     drTrack.push({ ...drPos });
   }
+  // Speaking another ship: navigators compare reckonings, and the estimate
+  // steps part of the way back toward the truth.
+  function correctDrTowardTruth(fraction) {
+    drPos = {
+      lat: drPos.lat + (truePos.lat - drPos.lat) * fraction,
+      lon: drPos.lon + (truePos.lon - drPos.lon) * fraction,
+    };
+    drTrack.push({ ...drPos });
+  }
   function setReckonedSpeed(knots) { reckonedSpeed = knots; }
   function setStorm(on) { stormOn = on; }
 
   return {
-    advance, sun, nearNoon, timeLabel, setDrLatitude, setReckonedSpeed, setStorm,
+    advance, sun, nearNoon, timeLabel, setDrLatitude, setReckonedSpeed, correctDrTowardTruth, setStorm,
     _debugSetTrue(lat, lon) { truePos = { lat, lon }; },
     get true() { return { ...truePos }; },
     get dr() { return { ...drPos }; },

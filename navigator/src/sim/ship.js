@@ -57,11 +57,13 @@ export function createShip(scene) {
 
   scene.add(ship);
 
-  const state = { heading: 0, speed: 0, target: 0, rudder: 0, sail: 0 };
+  const state = { heading: 0, speed: 0, target: 0, rudder: 0, sail: 0, wind: 1 };
   const setRudder = (r) => { state.rudder = clamp(r, -1, 1); };
-  const setSail = (lvl) => { state.sail = clamp(lvl, 0, 3); state.target = SAIL_SPEED[state.sail]; };
+  const setSail = (lvl) => { state.sail = clamp(lvl, 0, 3); };
+  const setWindFactor = (f) => { state.wind = clamp(f, 0.2, 1.4); };
 
   function step(dt, t, waveAt) {
+    state.target = SAIL_SPEED[state.sail] * state.wind; // wind scales the target; the easing below glides to it
     const speedFactor = clamp(state.speed / 12, 0, 1) * 0.9 + 0.1;
     state.heading += state.rudder * 0.5 * speedFactor * dt;
     state.speed += clamp(state.target - state.speed, -6 * dt, 5 * dt);
@@ -80,7 +82,7 @@ export function createShip(scene) {
   }
 
   return {
-    group: ship, wheel, setRudder, setSail, step,
+    group: ship, wheel, setRudder, setSail, setWindFactor, step,
     get headingDeg() { return ((state.heading * 180 / Math.PI) % 360 + 360) % 360; },
     get knots() { return state.speed * 0.4; },
     get sail() { return state.sail; },

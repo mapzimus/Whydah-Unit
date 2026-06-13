@@ -15,6 +15,7 @@
     <canvas id="scene"></canvas>
     <div id="clock">—</div>
     <div id="status">—</div>
+    <div id="weather-chip">—</div>
 
     <div id="hud">
       <div><span id="hud-heading">000°</span><span class="hud-sub">heading</span></div>
@@ -59,7 +60,7 @@
           <button id="bs-fix" type="button" disabled>Enter latitude on chart</button>
           <button id="bs-close" type="button">Close (B)</button>
         </div>
-        <div id="bs-tip">Drag the brass arm until it rests on the sun, then Mark. A true fix needs the sun at its noon height.</div>
+        <div id="bs-tip">The sea rolls her. Hold the brass arm on the sun and Mark when the ring fills. A true fix needs the noon sun.</div>
       </div>
     </div>
 
@@ -68,13 +69,14 @@
         <h2>Heave the log — measure your speed</h2>
         <svg id="log-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"></svg>
         <div id="log-readout">Knots counted: <b id="log-count">0.0</b></div>
+        <button id="log-nip" type="button" disabled>NIP!</button>
         <div id="log-result"></div>
         <div id="log-buttons">
           <button id="log-heave" type="button">Heave the log</button>
           <button id="log-enter" type="button" disabled>Enter in reckoning</button>
           <button id="log-close" type="button">Close (L)</button>
         </div>
-        <div id="log-tip">Cast the log astern; when the sandglass empties, the knots that paid out are your speed.</div>
+        <div id="log-tip">Cast the log astern and watch the glass. The instant the last sand falls, cry NIP! — the knots counted are your speed.</div>
       </div>
     </div>
 
@@ -84,10 +86,11 @@
         <svg id="lead-svg" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg"></svg>
         <div id="lead-result"></div>
         <div id="lead-buttons">
-          <button id="lead-heave" type="button">Heave the lead</button>
+          <button id="lead-heave" type="button">Swing the lead (hold)</button>
+          <button id="lead-call" type="button" disabled>By the mark!</button>
           <button id="lead-close" type="button">Close (F)</button>
         </div>
-        <div id="lead-tip">Cast the lead and let it strike bottom; the marks on the line read your depth in fathoms.</div>
+        <div id="lead-tip">Hold the button to swing the lead, and let go at the top. When the line falls slack, the lead has struck — call the mark quick, before she drifts.</div>
       </div>
     </div>
 

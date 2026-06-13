@@ -18,6 +18,8 @@ import { createScene } from "./scene.js";
 import { createVoyage } from "./voyage.js";
 import { createLeaderboard } from "./leaderboard.js";
 import { createAutopilot } from "./autopilot.js";
+import { createWeather } from "./weather.js";
+import { createEvents } from "./events.js";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -70,17 +72,21 @@ const typingInField = (e) =>
     const cameras = createCameras(camera, ship);
     const hud = createHud(ship);
     const nav = createNav(start, scenario);
+    const weather = createWeather();
+    const seaState = () => weather.state.seaState;
     const chartTable = createChartTable(scenario, coastline);
-    const backstaff = createBackstaff(nav);
-    const logline = createLogline(nav, ship);
-    const leadline = createLeadline(nav, coastline, scenario.hazards || []);
+    const backstaff = createBackstaff(nav, seaState);
+    const logline = createLogline(nav, ship, seaState);
+    const leadline = createLeadline(nav, coastline, scenario.hazards || [], seaState);
     const story = createScene();
     const leaderboard = createLeaderboard();
-    const voyage = createVoyage(scenario, nav, story, world, leaderboard);
+    const voyage = createVoyage(scenario, nav, story, world, leaderboard, weather);
     const autopilot = createAutopilot({ ship, nav, voyage, story, leaderboard, helm, cameras });
+    const events = createEvents({ story, voyage, nav, ship, weather });
 
     const clockEl = document.getElementById("clock");
     const statusEl = document.getElementById("status");
+    const weatherEl = document.getElementById("weather-chip");
     const lookoutEl = document.getElementById("lookout");
     const sailStateEl = document.getElementById("hud-sail");
     const sightCue = document.getElementById("sight-cue");
@@ -164,10 +170,17 @@ const typingInField = (e) =>
 
       if (!anyOpen()) {
         const ts = timeScale();
+        const gameHours = (dt * ts * COMPRESSION) / 3600;
+        weather.update(gameHours, dt);
+        const wx = weather.state;
+        ship.setWindFactor(wx.windFactor);
+        world.setWeather(wx);
+
         helm.update();
         ship.step(dt, t, world.wave);
         nav.advance(dt * ts, ship.headingDeg, ship.knots);
-        voyage.update((dt * ts * COMPRESSION) / 3600);
+        voyage.update(gameHours);
+        events.update(gameHours, dt);
 
         const solar = nav.sun();
         // Don't let fast time skate past the noon sight window.
@@ -181,6 +194,7 @@ const typingInField = (e) =>
         if (clockEl) clockEl.textContent =
           `${dateLabel(nav.dayOfYear)} · ${nav.timeLabel()}${ts > 1 ? " · ⏩×6" : ""}`;
         if (sailStateEl) sailStateEl.textContent = SAIL_NAMES[ship.sail];
+        if (weatherEl) weatherEl.textContent = `${wx.emoji} ${wx.label}`;
         if (statusEl) statusEl.textContent =
           `Day ${nav.dayOfYear - 56} · Crew ${voyage.state.crew} · Plunder ${voyage.state.plunder}`;
         if (lookoutEl) {
@@ -206,7 +220,8 @@ const typingInField = (e) =>
 
     window.WHYDAH3D = {
       THREE, scene, camera, ship, world, helm, cameras, nav,
-      chartTable, backstaff, logline, leadline, story, voyage, leaderboard, autopilot, renderer,
+      chartTable, backstaff, logline, leadline, story, voyage, leaderboard, autopilot,
+      weather, events, renderer,
     };
   } catch (err) {
     console.error(err);

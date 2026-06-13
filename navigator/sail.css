@@ -94,6 +94,8 @@ html, body { height: 100%; overflow: hidden; background: #0a2f49;
 .bs-star-glow { fill: rgba(220, 235, 255, 0.35); }
 .bs-plumb { stroke: #caa45a; stroke-width: 2; stroke-dasharray: 2 3; }
 .bs-plumb-bob { fill: #6b4a22; }
+.bs-steady-ring-bg { fill: none; stroke: rgba(58, 38, 20, 0.3); stroke-width: 4; pointer-events: none; }
+.bs-steady-ring { fill: none; stroke-width: 4; stroke-linecap: round; pointer-events: none; }
 
 #speed-cue {
   position: fixed; top: 90px; left: 50%; transform: translateX(-50%); display: none;
@@ -129,6 +131,15 @@ html, body { height: 100%; overflow: hidden; background: #0a2f49;
 .lg-cap { fill: #6b4a22; }
 .lg-sand { fill: #d8a23a; }
 .lg-stream { stroke: #d8a23a; stroke-width: 3; }
+.lg-stream-last { stroke: #f2c14e; stroke-width: 5; }
+.lg-empty-flash { fill: none; stroke: #f2c14e; stroke-width: 5; pointer-events: none; }
+#log-nip {
+  display: block; margin: 6px auto 4px; padding: 12px 40px; border: none; border-radius: 10px;
+  background: #8a2e1c; color: #fff; font: 800 1.3rem Georgia, serif; letter-spacing: 2px; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+#log-nip:disabled { background: #c9b78f; color: #6b5a36; cursor: default; box-shadow: none; }
+#log-nip:not(:disabled):active { transform: scale(0.95); }
 
 /* lead line */
 #leadline-overlay {
@@ -152,6 +163,14 @@ html, body { height: 100%; overflow: hidden; background: #0a2f49;
 .lead-tick { fill: #cfe0ec; font: 11px Georgia, serif; }
 .lead-rope { stroke: #e8dcc0; stroke-width: 2; stroke-dasharray: 3 4; }
 .lead-weight { fill: #2a2a2e; stroke: #11111a; stroke-width: 1; }
+.lead-meter-frame { fill: rgba(14, 48, 71, 0.4); stroke: #0e3047; stroke-width: 1.5; }
+.lead-meter-zone { fill: rgba(46, 111, 78, 0.6); }
+.lead-meter-fill { fill: #f0d877; }
+.lead-mark-tag { stroke: #e8dcc0; stroke-width: 3; }
+.lead-mark-label { fill: #f6ecd2; font: 10px Georgia, serif; }
+#lead-call { background: #b07b1c; color: #fff; }
+#lead-call:disabled { background: #c9b78f; color: #6b5a36; cursor: default; }
+#lead-heave { touch-action: none; user-select: none; -webkit-user-select: none; }
 
 /* story scenes */
 #scene-overlay {
@@ -213,6 +232,12 @@ html, body { height: 100%; overflow: hidden; background: #0a2f49;
 #lookout {
   position: fixed; top: 52px; right: 14px; display: none;
   color: #dff0ff; background: rgba(10, 30, 45, 0.55); padding: 5px 12px; border-radius: 16px;
+  font-size: 0.84rem; pointer-events: none; user-select: none;
+}
+/* weather chip — current weather, pinned under the lookout pill */
+#weather-chip {
+  position: fixed; top: 92px; right: 14px;
+  color: #f6e3b4; background: rgba(72, 48, 8, 0.55); padding: 5px 12px; border-radius: 16px;
   font-size: 0.84rem; pointer-events: none; user-select: none;
 }
 .hud-sail { font-size: 1.05rem !important; font-weight: 700 !important; padding-top: 0.5em; }

@@ -18,7 +18,7 @@ function pointInPoly(p, poly) {
   return inside;
 }
 
-export function createVoyage(scenario, nav, story, world, leaderboard) {
+export function createVoyage(scenario, nav, story, world, leaderboard, weather) {
   const landmarks = scenario.objectives.filter((o) => o.type === "required");
   const final = scenario.objectives.find((o) => o.type === "final");
   const cape = scenario.objectives.find((o) => o.id === "capecod");
@@ -63,6 +63,7 @@ export function createVoyage(scenario, nav, story, world, leaderboard) {
     state.outcome = outcome;
     nav.setStorm(false);
     world.setStorm(false);
+    if (weather) weather.setForced(null);
 
     if (outcome === "arrive") {
       const e = errs();
@@ -105,6 +106,7 @@ export function createVoyage(scenario, nav, story, world, leaderboard) {
       state.stormOn = true;
       nav.setStorm(true);
       world.setStorm(true);
+      if (weather) weather.setForced("gale");
       story.show({
         title: "Cape Cod",
         text: [narration.plunder || "", "The northeast sky splits open — a nor'easter, and the bars of the outer beach under your lee."],

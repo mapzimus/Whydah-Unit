@@ -1,8 +1,9 @@
 // world.js — sea and sky. A gradient sky dome + a sun the navigator's clock drives
 // (day/night), a starfield with Polaris standing due north at altitude = latitude,
 // and a wave plane that follows the ship, colored by height (troughs deep, crests
-// foaming). When the nor'easter wakes: seas swell, the sky goes grey, fog closes in,
-// and rain drives across the deck.
+// foaming). Weather drives the scene continuously through setWeather (seaState +
+// visibility): seas swell, the sky greys, fog closes in, rain at the worst of it.
+// setStorm pins the nor'easter as a locked extreme.
 
 import * as THREE from "three";
 
@@ -22,7 +23,9 @@ export function createWorld(scene) {
   scene.add(sun);
   const hemi = new THREE.HemisphereLight(0xdff0ff, 0x2a4658, 0.7);
   scene.add(hemi);
-  let stormy = false;
+  let gloom = 0; // 0 fair .. 1 filthy; drives every tint below
+  let stormLock = false; // setStorm(true) pins the weather until released
+  const lerp = (a, b, u) => a + (b - a) * u;
 
   // Sky dome: a baked vertical gradient, tinted for day/night via material.color.
   const skyGeo = new THREE.SphereGeometry(3000, 24, 16);
@@ -102,6 +105,7 @@ export function createWorld(scene) {
   const nightColor = new THREE.Color(0x0a1622);
   const stormHorizon = new THREE.Color(0x6d7d88);
   const tmp = new THREE.Color();
+  const dpc = new THREE.Color(), brc = new THREE.Color(); // scratch for the gloom-tinted sea
 
   scene.fog = new THREE.Fog(horizon.clone(), 450, 2700);
   scene.background = horizon.clone();
@@ -116,36 +120,46 @@ export function createWorld(scene) {
     sun.position.copy(sunDir).multiplyScalar(800);
 
     const day = Math.max(0, Math.min(1, (altDeg + 3) / 12));
-    const stormDim = stormy ? 0.45 : 1;
-    sun.intensity = (0.12 + 1.55 * day) * stormDim;
+    sun.intensity = (0.12 + 1.55 * day) * lerp(1, 0.45, gloom);
     sun.color.setRGB(1, 0.82 + 0.18 * day, 0.62 + 0.33 * day);
-    hemi.intensity = (0.22 + 0.55 * day) * (stormy ? 0.7 : 1);
-    if (stormy) {
-      const g = 0.1 + 0.5 * day;
-      skyMat.color.setRGB(g, g * 1.05, g * 1.12);
-    } else {
-      skyMat.color.setRGB(0.05 + 0.95 * day, 0.07 + 0.93 * day, 0.15 + 0.85 * day);
-    }
-    const hzBase = stormy ? stormHorizon : horizon;
-    const hz = nightColor.clone().lerp(hzBase, day);
+    hemi.intensity = (0.22 + 0.55 * day) * lerp(1, 0.7, gloom);
+    const g = 0.1 + 0.5 * day; // the grey the sky sinks toward as gloom rises
+    skyMat.color.setRGB(
+      lerp(0.05 + 0.95 * day, g, gloom),
+      lerp(0.07 + 0.93 * day, g * 1.05, gloom),
+      lerp(0.15 + 0.85 * day, g * 1.12, gloom)
+    );
+    // tmp is free here — setSun finishes before update reuses it; never mutate horizon.
+    tmp.copy(horizon).lerp(stormHorizon, gloom);
+    const hz = nightColor.clone().lerp(tmp, day);
     scene.background.copy(hz);
     scene.fog.color.copy(hz);
-    sunMesh.visible = altDeg > -2 && !stormy;
+    sunMesh.visible = altDeg > -2 && gloom < 0.55;
     sunMesh.material.color.setRGB(1, 0.85 + 0.15 * day, 0.6 + 0.35 * day);
 
     const night = 1 - day;
-    starMat.opacity = stormy ? 0 : night;
-    stars.visible = !stormy && night > 0.02;
-    polaris.material.opacity = stormy ? 0 : night;
-    polaris.visible = !stormy && night > 0.05;
+    starMat.opacity = night * (1 - gloom);
+    stars.visible = starMat.opacity > 0.02;
+    polaris.material.opacity = night * (1 - gloom);
+    polaris.visible = polaris.material.opacity > 0.05;
   }
 
+  function applyWeather(sea, vis) {
+    sea = Math.max(0, Math.min(1, sea));
+    vis = Math.max(0, Math.min(1, vis));
+    AMP = 1 + sea * 0.9; // seaState 1 = the old storm seas (1.9)
+    rain.visible = sea > 0.75;
+    const f = Math.max(0, Math.min(1, (1 - vis) / 0.8)); // vis 1 = open sea, 0.2 = closed in
+    scene.fog.near = lerp(450, 180, f);
+    scene.fog.far = lerp(2700, 900, f);
+    gloom = Math.max(0, Math.min(1, Math.max(sea - 0.5, 1 - vis)));
+  }
+  // The single weather entry point; ignored while the nor'easter lock holds.
+  function setWeather(w) { if (!stormLock) applyWeather(w.seaState, w.visibility); }
+  // voyage.js still calls this; it outranks setWeather until released.
   function setStorm(on) {
-    stormy = on;
-    AMP = on ? 1.9 : 1;
-    rain.visible = on;
-    scene.fog.near = on ? 220 : 450;
-    scene.fog.far = on ? 1200 : 2700;
+    stormLock = on;
+    applyWeather(on ? 1 : 0.1, on ? 0.25 : 1);
   }
 
   let lastT = 0;
@@ -173,9 +187,9 @@ export function createWorld(scene) {
 
     const pos = geo.attributes.position;
     const col = geo.attributes.color;
-    const dp = stormy ? stormDeep : deep;
-    const br = stormy ? stormBright : bright;
-    const foamFrom = stormy ? 4.2 : 2.6;
+    const dp = dpc.copy(deep).lerp(stormDeep, gloom);
+    const br = brc.copy(bright).lerp(stormBright, gloom);
+    const foamFrom = lerp(2.6, 4.2, gloom);
     for (let i = 0; i < pos.count; i++) {
       const h = wave(base[i * 3] + c.x, base[i * 3 + 2] + c.z, t);
       pos.setY(i, h);
@@ -189,5 +203,5 @@ export function createWorld(scene) {
     geo.computeVertexNormals();
   }
 
-  return { ocean, sun, update, setSun, setStars, setStorm, wave };
+  return { ocean, sun, update, setSun, setStars, setStorm, setWeather, wave };
 }
