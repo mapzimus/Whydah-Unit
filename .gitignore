@@ -4,6 +4,7 @@
 # Files to publish on GitHub Pages
 !index.html
 !whydah-dashboard.html
+!day*.html
 !handouts.html
 !flythrough.html
 !unit-at-a-glance.html
