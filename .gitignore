@@ -27,3 +27,7 @@
 # The Navigator game (whole folder is public)
 !navigator/
 !navigator/**
+
+# Black Sam & the Whydah game (whole folder is public)
+!black-sam/
+!black-sam/**
