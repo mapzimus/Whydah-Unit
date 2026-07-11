@@ -5,6 +5,8 @@
 !index.html
 !whydah-dashboard.html
 !day*.html
+!day-config.js
+!CNAME
 !handouts.html
 !flythrough.html
 !unit-at-a-glance.html
