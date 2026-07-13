@@ -127,7 +127,7 @@
   if (!isTouch) document.body.classList.add("hide-touch");
 
   // ---------------------------------------------------------------- persistence
-  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0 } };
+  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } };
   function loadSave() {
     try {
       var raw = localStorage.getItem("firstsail-save-v3");
@@ -145,13 +145,24 @@
     { id: "shot",  icon: "⛓",  name: "Chain Shot",   desc: "Cannonballs can strike double. 25% per level.",      max: 3, cost: [90, 200, 360] },
     { id: "nest",  icon: "🔭", name: "Crow's Nest",  desc: "Longer warnings before waves and lunges.",           max: 3, cost: [80, 180, 320] },
     { id: "helm",  icon: "☸",  name: "Weather Helm", desc: "She answers the wheel faster.",                      max: 2, cost: [110, 260] },
-    { id: "charm", icon: "🧿", name: "Lucky Charm",  desc: "Bad luck sometimes passes you by.",                  max: 2, cost: [70, 160] }
+    { id: "charm", icon: "🧿", name: "Lucky Charm",  desc: "Bad luck sometimes passes you by.",                  max: 2, cost: [70, 160] },
+    { id: "canvas",icon: "⛵", name: "Full Canvas",  desc: "More sail aloft. Each leg passes quicker.",          max: 3, cost: [100, 240, 420] },
+    { id: "guns",  icon: "💣", name: "Long Nines",   desc: "Faster shot, then a twin broadside.",                max: 2, cost: [130, 300] }
   ];
   function upgLvl(id) { return SAVE.upg[id] || 0; }
   function steerSpeed() { return 1.05 + upgLvl("helm") * 0.18; }
   function shotBonus() { return upgLvl("shot") * 0.25; }
   function stormShrug() { return upgLvl("pumps") * 0.25; }
   function warnBonus() { return upgLvl("nest") * 0.4; }
+  function legSpeedMul() { return 1 - upgLvl("canvas") * 0.12; }   // full canvas shortens each leg
+  function ballSpeedMul() { return 1 + (upgLvl("guns") >= 1 ? 0.3 : 0); }
+  function twinShot() { return upgLvl("guns") >= 2; }
+  // fire the player's guns: returns the balls to push (twin broadside at Long Nines II)
+  function playerShot(x, y, vy) {
+    var v = vy * ballSpeedMul();
+    if (twinShot()) return [{ x: x - 9, y: y, vy: v, own: 1 }, { x: x + 9, y: y, vy: v, own: 1 }];
+    return [{ x: x, y: y, vy: v, own: 1 }];
+  }
 
   // ---------------------------------------------------------------- the 40-event pool
   // tag: "record" = from the real Whydah story · "yarn" = a sea story · "" = life at sea
@@ -249,11 +260,12 @@
       seq: [], seqIndex: -1, progress: 0,
       pal: choice(PALETTES), shipX: 0.5,
       preStormScore: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
-      rank: "", serpentBeaten: false, shipsBeaten: 0, battleNum: 0,
+      rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       mods: {}, curBeat: "title", events: []
     };
-    // Build the voyage: events + battles + minis + serpent, shuffled; storm last.
-    var evs = pickEvents(randInt(4, 6));
+    // Build the voyage: events + battles + minis + serpent, shuffled; storm, then
+    // the three-headed grandfather serpent waiting on the far side of it.
+    var evs = pickEvents(randInt(5, 7));
     G.events = evs.map(function (e) { return e.id; });
     var pool = evs.map(function (e) { return { kind: "event", ev: e }; });
     var nBattle = randInt(2, 3), nMini = randInt(2, 3);
@@ -266,6 +278,7 @@
     G.seq = [{ kind: "sail" }];
     for (var p = 0; p < pool.length; p++) { G.seq.push(pool[p]); G.seq.push({ kind: "sail" }); }
     G.seq.push({ kind: "storm" });
+    G.seq.push({ kind: "boss" });
   }
 
   function addScore(n) { G.score += n; if (G.score < 0) G.score = 0; }
@@ -307,7 +320,7 @@
   var seaT = 0, coast = [], gulls = [];
   function seedCoast() {
     coast = [];
-    for (var i = 0; i < 40; i++) coast.push({ y: rand(-H, H), side: chance(0.5) ? 0 : 1, w: rand(30, 90), h: rand(50, 130) });
+    for (var i = 0; i < 40; i++) coast.push({ y: rand(-H, H), side: chance(0.5) ? 0 : 1, w: rand(30, 90), h: rand(50, 130), d: Math.random() });
   }
   function spawnGull() {
     var fromLeft = chance(0.5);
@@ -331,6 +344,49 @@
       ctx.stroke();
     }
     ctx.lineCap = "butt";
+  }
+  // what stands on the shore changes as the voyage runs north
+  function drawCoastDecor(cx, y, o) {
+    var idx = G ? Math.floor(clamp(G.progress, 0, 0.999) * STAGES.length) : 0;
+    var top = y - o.h * 0.55;
+    if (idx <= 1) {                                     // tropics: palms
+      if (o.d < 0.6) drawPalm(cx + (o.d - 0.3) * o.w, top, 0.8 + o.d * 0.5);
+    } else if (idx <= 3) {                              // Carolinas/Virginia: dunes and pines
+      if (o.d < 0.5) drawPine(cx + (o.d - 0.25) * o.w, top, 0.7 + o.d * 0.6);
+      else if (o.d < 0.7) { ctx.fillStyle = "#d8c690"; ctx.beginPath(); ctx.ellipse(cx, top + 6, o.w * 0.5, 8, 0, 0, 7); ctx.fill(); }
+    } else if (idx <= 5) {                              // the Sounds: pine forest, odd cottage
+      if (o.d < 0.55) { drawPine(cx - o.w * 0.2, top, 0.9); drawPine(cx + o.w * 0.25, top + 4, 0.7); }
+      else if (o.d < 0.7) drawCottage(cx, top);
+    } else {                                            // Cape Cod: lighthouses on the rocks
+      if (o.d < 0.35) drawLighthouse(cx, top);
+      else if (o.d < 0.7) drawPine(cx + (o.d - 0.5) * o.w, top, 0.75);
+    }
+  }
+  function drawPalm(x, y, s) {
+    ctx.strokeStyle = "#7a5a34"; ctx.lineWidth = 3 * s;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 5 * s, y - 12 * s, x + 8 * s, y - 24 * s); ctx.stroke();
+    ctx.strokeStyle = "#4e7a3a"; ctx.lineWidth = 2.5 * s;
+    for (var a = 0; a < 5; a++) { var ang = -2.4 + a * 0.55; ctx.beginPath(); ctx.moveTo(x + 8 * s, y - 24 * s); ctx.quadraticCurveTo(x + 8 * s + Math.cos(ang) * 10 * s, y - 24 * s + Math.sin(ang) * 10 * s - 4 * s, x + 8 * s + Math.cos(ang) * 16 * s, y - 24 * s + Math.sin(ang) * 16 * s); ctx.stroke(); }
+  }
+  function drawPine(x, y, s) {
+    ctx.fillStyle = "#2f4d33";
+    ctx.beginPath(); ctx.moveTo(x, y - 26 * s); ctx.lineTo(x + 9 * s, y - 6 * s); ctx.lineTo(x - 9 * s, y - 6 * s); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x, y - 18 * s); ctx.lineTo(x + 12 * s, y + 2 * s); ctx.lineTo(x - 12 * s, y + 2 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#5a3a22"; ctx.fillRect(x - 2 * s, y + 2 * s, 4 * s, 6 * s);
+  }
+  function drawCottage(x, y) {
+    ctx.fillStyle = "#8a7a5e"; ctx.fillRect(x - 9, y - 8, 18, 10);
+    ctx.fillStyle = "#5a3a22"; ctx.beginPath(); ctx.moveTo(x - 11, y - 8); ctx.lineTo(x, y - 17); ctx.lineTo(x + 11, y - 8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#ffd98a"; ctx.fillRect(x - 3, y - 5, 5, 5);
+  }
+  function drawLighthouse(x, y) {
+    ctx.fillStyle = "#e8e2d4";
+    ctx.beginPath(); ctx.moveTo(x - 6, y); ctx.lineTo(x - 4, y - 26); ctx.lineTo(x + 4, y - 26); ctx.lineTo(x + 6, y); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#96341f"; ctx.fillRect(x - 5.4, y - 18, 10.8, 5);
+    ctx.fillStyle = "#ffd24a"; ctx.fillRect(x - 4, y - 31, 8, 5);
+    ctx.fillStyle = "#3a3f45"; ctx.beginPath(); ctx.moveTo(x - 5, y - 31); ctx.lineTo(x, y - 36); ctx.lineTo(x + 5, y - 31); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "rgba(255,210,74," + (0.15 + 0.15 * Math.sin(seaT * 2)) + ")";
+    ctx.beginPath(); ctx.moveTo(x, y - 29); ctx.lineTo(x + 34, y - 40); ctx.lineTo(x + 34, y - 18); ctx.closePath(); ctx.fill();
   }
   function drawSea(pal, scroll, stormy) {
     var skyH = H * 0.2;
@@ -365,6 +421,7 @@
         ctx.beginPath(); ctx.ellipse(cx, yy2, o.w, o.h, 0, 0, 7); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,.15)";
         ctx.beginPath(); ctx.ellipse(cx, yy2 + o.h * 0.6, o.w * 1.05, o.h * 0.25, 0, 0, 7); ctx.fill();
+        drawCoastDecor(cx, yy2, o);
         ctx.globalAlpha = 1;
       }
     }
@@ -405,7 +462,7 @@
     ctx.restore();
   }
   function playerShipOpts(extra) {
-    var lvls = upgLvl("hull") + upgLvl("pumps") + upgLvl("shot") + upgLvl("nest") + upgLvl("helm") + upgLvl("charm");
+    var lvls = 0; for (var u in SAVE.upg) lvls += upgLvl(u);
     var o = { wake: true, flag: "#111", dmg: G ? (G.maxHull - G.hull) : 0 };
     if (lvls >= 3) o.trim = "#e0b25c";
     if (lvls >= 6) o.sail = "#fdf6e0";
@@ -510,6 +567,7 @@
     else if (beat.kind === "battle") setScene(BattleScene());
     else if (beat.kind === "serpent") setScene(SerpentScene());
     else if (beat.kind === "storm") setScene(StormScene());
+    else if (beat.kind === "boss") setScene(BossScene());
     else if (beat.kind === "event") setScene(EventScene(beat.ev));
     else if (beat.kind === "mini") setScene(MiniScene(beat.which));
     else setScene(SailScene());
@@ -554,8 +612,10 @@
 
   // ---------------------------------------------------------------- SAIL leg
   function SailScene() {
-    var legTime = rand(5.5, 8.5), t = 0;
-    var objs = [], spawnT = 0;
+    // longer legs by design (the kids said the voyage flew by) — Full Canvas buys the pace back
+    var legTime = rand(10, 14) * legSpeedMul(), t = 0;
+    var objs = [], balls = [], spawnT = 1.2, sharkT = rand(4, 9);
+    var narrowsAt = chance(0.4) ? rand(0.3, 0.7) * legTime : -1, narrowsDone = false;
     var slow = G.mods.slow ? 0.75 : 1; G.mods.slow = false;
     G.mods.fogNow = !!G.mods.fog; G.mods.fog = false;
     var hazMul = 1 + warnBonus() * 0.22;   // crow's nest: hazards spread out
@@ -567,19 +627,54 @@
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
         if (input.pDown && input.py > H * 0.4) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.2);
         G.shipX = clamp(G.shipX, 0.08, 0.92);
+        var shipPX = G.shipX * W, shipPY = H * 0.82;
+        // guns are live on the open sea now: blast the wreckage out of your way
+        if (consumeFire()) { playerShot(shipPX, shipPY - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(shipPX, shipPY - 18, 2); }
         spawnT -= dt;
         if (spawnT <= 0) {
           spawnT = rand(0.55, 1.15) * hazMul;
           var roll = Math.random(), o;
-          if (roll < 0.42) o = { kind: "hazard", sub: choice(["rock", "ice", "rock", "wood"]), r: rand(16, 26), sp: rand(150, 230) };
-          else if (roll < 0.52) o = { kind: "fin", sub: "fin", r: 15, sp: rand(90, 130), drift: rand(-40, 40) };
+          if (roll < 0.40) o = { kind: "hazard", sub: choice(["rock", "ice", "rock", "wood"]), r: rand(16, 26), sp: rand(150, 230), hp: 1 };
+          else if (roll < 0.50) o = { kind: "fin", sub: "fin", r: 15, sp: rand(90, 130), drift: rand(-40, 40) };
           else o = { kind: "pickup", sub: choice(["coin", "coin", "coin", "wind", "barrel"]), r: 15, sp: rand(150, 230) };
+          if (o.kind === "hazard" && o.sub === "rock") o.hp = 2;
           o.x = rand(0.1, 0.9) * W; o.y = -40; o.a = 0; o.spin = rand(-2, 2);
           objs.push(o);
         }
-        var shipPX = G.shipX * W, shipPY = H * 0.82;
+        // breaching sharks: a fin shadows you, then the whole shark comes out of the water
+        sharkT -= dt;
+        if (sharkT <= 0) {
+          sharkT = rand(6, 11);
+          objs.push({ kind: "shark", phase: "stalk", pt: 1.1 + warnBonus() * 0.3, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
+        }
+        // the narrows: a wall of land with one gap — thread the needle
+        if (narrowsAt > 0 && !narrowsDone && t >= narrowsAt) {
+          narrowsDone = true;
+          objs.push({ kind: "narrows", gap: rand(0.2, 0.8), gapW: clamp(W * 0.22, 90, 170), y: -90, sp: 130, r: 0, warned: false });
+        }
         for (var i = objs.length - 1; i >= 0; i--) {
-          var o = objs[i]; o.y += o.sp * dt; o.a += o.spin * dt;
+          var o = objs[i];
+          if (o.kind === "shark") {
+            if (o.phase === "stalk") {
+              o.y = shipPY + 26; o.x = lerp(o.x, shipPX, 1.5 * dt); o.pt -= dt;
+              if (o.pt <= 0) { o.phase = "leap"; o.vy = -rand(430, 520); o.vx = clamp((shipPX - o.x) * 1.2, -120, 120); splash(o.x, H * 0.9, 12); }
+            } else {
+              o.vy += 620 * dt; o.x += o.vx * dt; o.y += o.vy * dt;
+              if (Math.hypot(o.x - shipPX, o.y - shipPY) < o.r + 16) { splash(o.x, o.y, 10, "#9fb6c9"); damage(1); objs.splice(i, 1); continue; }
+              if (o.y > H + 60 && o.vy > 0) { objs.splice(i, 1); continue; }
+            }
+            continue;
+          }
+          if (o.kind === "narrows") {
+            o.y += o.sp * dt;
+            var gx = o.gap * W, half = o.gapW / 2;
+            if (Math.abs(o.y - shipPY) < 34 && (shipPX < gx - half + 12 || shipPX > gx + half - 12)) {
+              splash(shipPX, shipPY, 12); damage(1); shake(14); objs.splice(i, 1); continue;
+            }
+            if (o.y > H + 120) { addScore(15); SFX.point(); objs.splice(i, 1); }
+            continue;
+          }
+          o.y += o.sp * dt; o.a += o.spin * dt;
           if (o.kind === "fin") o.x += (o.drift || 0) * dt;
           var d = Math.hypot(o.x - shipPX, o.y - shipPY);
           if (d < o.r + 16) {
@@ -592,6 +687,23 @@
           }
           if (o.y > H + 50) { if (o.kind === "hazard") addScore(2); objs.splice(i, 1); }
         }
+        // cannonballs vs hazards and airborne sharks
+        for (var bi = balls.length - 1; bi >= 0; bi--) {
+          var b = balls[bi]; b.y += b.vy * dt;
+          var hit = false;
+          for (var oi = objs.length - 1; oi >= 0; oi--) {
+            var ob = objs[oi];
+            if (ob.kind === "hazard" && Math.hypot(b.x - ob.x, b.y - ob.y) < ob.r + 6) {
+              ob.hp--; splash(b.x, b.y, 6, ob.sub === "ice" ? "#cfe9f2" : "#cdb98a"); SFX.hit(); hit = true;
+              if (ob.hp <= 0) { addScore(5); SFX.point(); splash(ob.x, ob.y, 10); objs.splice(oi, 1); }
+              break;
+            }
+            if (ob.kind === "shark" && ob.phase === "leap" && Math.hypot(b.x - ob.x, b.y - ob.y) < ob.r + 8) {
+              addScore(15); addGold(5); SFX.win(); splash(ob.x, ob.y, 14, "#9fb6c9"); coinBurst(ob.x, ob.y); objs.splice(oi, 1); hit = true; break;
+            }
+          }
+          if (hit || b.y < -30) balls.splice(bi, 1);
+        }
         if (t >= legTime) advance();
       },
       render: function () {
@@ -599,9 +711,11 @@
         for (var i = 0; i < objs.length; i++) {
           var o = objs[i];
           if (o.kind === "fin") { drawFin(o.x, o.y, (o.drift || 1) >= 0 ? 1 : -1); continue; }
+          if (o.kind === "shark") { if (o.phase === "stalk") drawFin(o.x, o.y, 1); else drawShark(o.x, o.y, o.vx >= 0 ? 1 : -1); continue; }
+          if (o.kind === "narrows") { drawNarrows(o); continue; }
           ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
           if (o.kind === "hazard") {
-            if (o.sub === "rock") { ctx.fillStyle = "#5b5750"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.12)"; blob(o.r * 0.6); }
+            if (o.sub === "rock") { ctx.fillStyle = o.hp < 2 ? "#6e6a62" : "#5b5750"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.12)"; blob(o.r * 0.6); }
             else if (o.sub === "ice") { ctx.fillStyle = "#cfe9f2"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.5)"; blob(o.r * 0.5); }
             else { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-o.r, -5, o.r * 2, 10); }
           } else {
@@ -611,18 +725,58 @@
           }
           ctx.restore();
         }
+        for (var b3 = 0; b3 < balls.length; b3++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[b3].x, balls[b3].y, 5, 0, 7); ctx.fill(); }
         drawShip(G.shipX * W, H * 0.82, 1.6, playerShipOpts());
         drawParts();
         drawHUD();
-        if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(stageFor(G.progress) + ". Coins feed the war chest. Dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        for (var n = 0; n < objs.length; n++) if (objs[n].kind === "narrows" && objs[n].y < H * 0.3) text("NARROWS AHEAD — find the gap!", W / 2, H * 0.42, 16, "#ffd24a", "center", "bold");
+        if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(stageFor(G.progress) + ". Coins feed the war chest. Shoot or dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
       }
     };
+  }
+  function drawShark(x, y, dir) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.rotate(-0.35 * dir);
+    ctx.fillStyle = "#4a5c66";
+    ctx.beginPath(); ctx.ellipse(0, 0, 26, 10, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#3a4a54";
+    ctx.beginPath(); ctx.moveTo(-4, -8); ctx.quadraticCurveTo(4, -22, 10, -8); ctx.closePath(); ctx.fill();   // dorsal
+    ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(-38, -9); ctx.lineTo(-34, 4); ctx.closePath(); ctx.fill(); // tail
+    ctx.fillStyle = "#dfe9ee"; ctx.beginPath(); ctx.ellipse(4, 5, 18, 4.5, 0, 0, 7); ctx.fill();               // belly
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(17, -3, 2.2, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(20, 4); ctx.lineTo(24, 6); ctx.moveTo(17, 6); ctx.lineTo(21, 8); ctx.stroke(); // teeth-ish
+    ctx.restore();
+  }
+  function drawNarrows(o) {
+    var gx = o.gap * W, half = o.gapW / 2, hh = 42;
+    ctx.save();
+    [[0, gx - half], [gx + half, W]].forEach(function (side) {
+      var x0 = side[0], x1 = side[1]; if (x1 - x0 < 4) return;
+      ctx.fillStyle = G.pal.land;
+      ctx.beginPath(); ctx.moveTo(x0, o.y - hh);
+      for (var x = x0; x <= x1; x += 26) ctx.lineTo(x, o.y - hh + Math.sin(x * 0.08) * 10);
+      ctx.lineTo(x1, o.y + hh); ctx.lineTo(x0, o.y + hh); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.fillRect(x0, o.y + hh - 8, x1 - x0, 8);   // surf line
+    });
+    ctx.fillStyle = "rgba(223,241,244,.5)";
+    ctx.fillRect(gx - half + 4, o.y + hh - 4, 6, 4); ctx.fillRect(gx + half - 10, o.y + hh - 4, 6, 4);
+    ctx.restore();
   }
   function blob(r) { ctx.beginPath(); ctx.moveTo(r, 0); for (var a = 0; a <= 7; a += 0.7) { var rr = r * (0.8 + 0.2 * Math.sin(a * 3)); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); }
 
   // ---------------------------------------------------------------- EVENT card
   function EventScene(ev) {
     var t = 0, applied = false, picked = -1, resultLine = "";
+    // the steady-hand bar: every plain event is now a timing check. Stop the
+    // marker in the green and good news pays double / bad news is halved.
+    var hasFx = !ev.choice && ev.fx && (ev.fx.s || ev.fx.g || ev.fx.h);
+    var barPos = 0, barDir = 1, barSpd = rand(1.3, 1.7), barDone = !hasFx, steady = false, barT = 0;
+    var appliedFx = ev.fx;
+    function scaleFx(fx, mul) {
+      var out = {};
+      for (var k in fx) { var v = fx[k]; out[k] = v > 0 ? Math.round(v * mul) : (k === "h" ? v : Math.round(v / mul)); }
+      return out;
+    }
     function apply(fx) {
       fx = fx || {};
       if (fx.s) addScore(fx.s);
@@ -652,7 +806,22 @@
       debugChoose: function (i) { if (ev.choice && picked < 0) { picked = i; var c = ev.choice[i]; apply(c.fx); applyMod(c.mod); resultLine = c.r; } },
       update: function (dt) {
         seaT += dt; t += dt; updateGulls(dt);
-        if (!ev.choice && !applied && t > 0.2) { applied = true; apply(ev.fx); applyMod(ev.mod); }
+        if (hasFx && !barDone) {
+          barT += dt;
+          barPos += barDir * barSpd * dt;
+          if (barPos > 1) { barPos = 1; barDir = -1; } if (barPos < 0) { barPos = 0; barDir = 1; }
+          if (t > 0.35 && consumeTap()) {
+            steady = Math.abs(barPos - 0.5) < 0.11;
+            appliedFx = steady ? scaleFx(ev.fx, 2) : ev.fx;
+            barDone = true; applied = true; apply(appliedFx); applyMod(ev.mod);
+            if (steady) SFX.point();
+          } else if (barT > 6) {   // the moment passes
+            appliedFx = ev.fx;
+            barDone = true; applied = true; apply(appliedFx); applyMod(ev.mod);
+          }
+          return;
+        }
+        if (!ev.choice && !applied && t > 0.2) { applied = true; apply(appliedFx); applyMod(ev.mod); }
         if (ev.choice && picked < 0) {
           if (input.leftPressed) this.debugChoose(0);
           else if (input.rightPressed) this.debugChoose(1);
@@ -666,7 +835,8 @@
         drawParts(); drawHUD();
         var w = clamp(W * 0.86, 290, 480);
         var isChoice = !!ev.choice && picked < 0;
-        var h = isChoice ? 236 : 196;
+        var barLive = hasFx && !barDone;
+        var h = isChoice ? 236 : (barLive ? 224 : 196);
         var cy = H * 0.42;
         panel(W / 2, cy, w, h);
         var tagTxt = ev.tag === "record" ? "⚓ FROM THE RECORD" : (ev.tag === "yarn" ? "🌀 SEA YARN" : "LIFE AT SEA");
@@ -680,9 +850,16 @@
             if (uiButton(W / 2 - w / 2 + 20 + i * (bw + 20), by, bw, 44, ev.choice[i].l, { size: 13.5, color: i === 0 ? "#96341f" : "#1f4a5e" })) this.debugChoose(i);
           }
           text("or press ← for the first, → for the second", W / 2, cy + h / 2 - 4, 10.5, "rgba(244,231,201,.55)");
+        } else if (barLive) {
+          var bw2 = w - 80, bx2 = W / 2 - bw2 / 2, by2 = cy + h / 2 - 52;
+          ctx.fillStyle = "rgba(244,231,201,.18)"; roundRect(bx2, by2, bw2, 14, 7); ctx.fill();
+          ctx.fillStyle = "rgba(143,214,160,.45)"; ctx.fillRect(bx2 + bw2 * 0.39, by2, bw2 * 0.22, 14);
+          ctx.fillStyle = "#ffd24a"; ctx.fillRect(bx2 + bw2 * barPos - 3, by2 - 4, 6, 22);
+          text("STEADY HANDS — tap in the green to make the best of it", W / 2, cy + h / 2 - 16, 11.5, "#cdb98a", "center", "bold");
         } else {
           if (picked >= 0 && resultLine) wrapText(resultLine, W / 2, yy + 24, w - 60, 18, 13, "#cdeccf");
-          var line = fxLine(picked >= 0 ? ev.choice[picked].fx : ev.fx);
+          if (hasFx && steady) text("STEADY HANDS! The crew makes the most of it.", W / 2, yy + 24, 12.5, "#8fd6a0", "center", "bold");
+          var line = fxLine(picked >= 0 ? ev.choice[picked].fx : (hasFx ? appliedFx : ev.fx));
           if (line) text(line, W / 2, cy + h / 2 - 34, 15, "#e0b25c", "center", "bold");
           text("tap to sail on", W / 2, cy + h / 2 - 12, 11.5, "rgba(244,231,201,.6)");
         }
@@ -717,7 +894,7 @@
         if (input.pDown && input.py > H * 0.5) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
         G.shipX = clamp(G.shipX, 0.08, 0.92);
         var shipPX = G.shipX * W, shipPY = H * 0.82;
-        if (consumeFire()) { balls.push({ x: shipPX, y: shipPY - 20, vy: -420, own: 1 }); SFX.fire(); smoke(shipPX, shipPY - 18, 3); }
+        if (consumeFire()) { playerShot(shipPX, shipPY - 20, -420).forEach(function (nb) { balls.push(nb); }); SFX.fire(); smoke(shipPX, shipPY - 18, 3); }
         enemy.x += enemy.dir * type.speed * dt;
         if (enemy.x < W * 0.15 || enemy.x > W * 0.85) enemy.dir *= -1;
         enemy.fireT -= dt;
@@ -759,10 +936,10 @@
   function SerpentScene() {
     var phase = "intro", prompt = null;
     var seg = []; for (var i = 0; i < 14; i++) seg.push({ x: W * 0.5, y: -60 - i * 24 });
-    var hp = 5, max = 5, t = 0, state = "weave", stateT = rand(1.5, 2.5), lungeX = 0, headOpen = false, flashT = 0, balls = [];
-    var baseY = H * 0.32, rearTime = 0.9 + warnBonus() * 0.35;
+    var hp = 8, max = 8, t = 0, state = "weave", stateT = rand(1.2, 2.0), lungeX = 0, headOpen = false, flashT = 0, balls = [], spits = [], spitT = rand(2, 3.5);
+    var baseY = H * 0.32, rearTime = 0.65 + warnBonus() * 0.3;
     return {
-      enter: function () { prompt = Prompt("A SEA SERPENT!", "Sailors in 1717 swore these waters hid monsters. This one is a sea story. Dodge the lunge, then fire at its head.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
+      enter: function () { prompt = Prompt("A SEA SERPENT!", "Sailors in 1717 swore these waters hid monsters. This one is a sea story. Dodge the lunge and the spray it spits, then fire at its head.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
       update: function (dt) {
         seaT += dt; t += dt; if (flashT > 0) flashT -= dt;
         if (phase === "intro") { prompt.update(dt); moveHead(dt, W * 0.5, baseY); return; }
@@ -772,31 +949,39 @@
         if (input.pDown && input.py > H * 0.55) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
         G.shipX = clamp(G.shipX, 0.08, 0.92);
         var shipPX = G.shipX * W, shipPY = H * 0.84;
-        if (consumeFire()) { balls.push({ x: shipPX, y: shipPY - 20, vy: -460 }); SFX.fire(); }
+        if (consumeFire()) { playerShot(shipPX, shipPY - 20, -460).forEach(function (nb) { delete nb.own; balls.push(nb); }); SFX.fire(); }
         stateT -= dt;
         if (state === "weave") {
           headOpen = false;
-          moveHead(dt, W * 0.5 + Math.sin(t * 1.6) * W * 0.32, baseY + Math.sin(t * 2) * 20);
+          moveHead(dt, W * 0.5 + Math.sin(t * 2.1) * W * 0.34, baseY + Math.sin(t * 2.4) * 22);
+          spitT -= dt;
+          if (spitT <= 0) { spitT = rand(1.8, 3.2); spits.push({ x: seg[0].x, y: seg[0].y, vx: clamp((shipPX - seg[0].x) * 0.9, -170, 170), vy: 260 }); SFX.bad(); }
           if (stateT <= 0) { state = "rear"; stateT = rearTime; lungeX = shipPX; }
         } else if (state === "rear") {
           headOpen = true;
+          lungeX = lerp(lungeX, shipPX, 1.6 * dt);   // it tracks you while it rears — keep moving
           moveHead(dt, lungeX, baseY - 30);
-          if (stateT <= 0) { state = "lunge"; stateT = 0.45; }
+          if (stateT <= 0) { state = "lunge"; stateT = 0.38; }
         } else if (state === "lunge") {
           moveHead(dt, lungeX, H * 0.7);
           if (Math.hypot(seg[0].x - shipPX, seg[0].y - shipPY) < 46) { damage(2); state = "recover"; stateT = 1.0; }
-          if (stateT <= 0) { state = "recover"; stateT = 0.8; }
+          if (stateT <= 0) { state = chance(0.3) ? "rear" : "recover"; stateT = state === "rear" ? rearTime * 0.8 : 0.8; if (state === "rear") lungeX = shipPX; }
         } else {
           headOpen = false;
           moveHead(dt, W * 0.5, baseY);
-          if (stateT <= 0) { state = "weave"; stateT = rand(1.4, 2.4); }
+          if (stateT <= 0) { state = "weave"; stateT = rand(1.1, 2.0); }
+        }
+        for (var si = spits.length - 1; si >= 0; si--) {
+          var sv = spits[si]; sv.x += sv.vx * dt; sv.y += sv.vy * dt;
+          if (Math.hypot(sv.x - shipPX, sv.y - shipPY) < 18) { spits.splice(si, 1); damage(1); continue; }
+          if (sv.y > H + 30) spits.splice(si, 1);
         }
         for (var i = balls.length - 1; i >= 0; i--) {
           var b = balls[i]; b.y += b.vy * dt;
           if (Math.hypot(b.x - seg[0].x, b.y - seg[0].y) < 30) {
             balls.splice(i, 1); hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
             if (hp <= 0) {
-              phase = "done"; addScore(120); addGold(80); G.serpentBeaten = true; SFX.win();
+              phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win();
               for (var k = 0; k < 30; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.3), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
             }
             continue;
@@ -808,12 +993,13 @@
         drawSea(G.pal, seaT * 50, false);
         if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text("SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
         drawSerpent(seg, headOpen, flashT > 0);
+        for (var s2 = 0; s2 < spits.length; s2++) { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(143,214,160,.4)"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 10, 0, 7); ctx.fill(); }
         for (var i = 0; i < balls.length; i++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[i].x, balls[i].y, 5, 0, 7); ctx.fill(); }
         drawShip(G.shipX * W, H * 0.84, 1.6, playerShipOpts());
         drawParts(); drawHUD();
         if (headOpen && phase === "fight") text("FIRE!", seg[0].x, seg[0].y - 40, 16, "#ffd24a", "center", "bold");
         if (phase === "intro") prompt.render();
-        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text("Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+120 points   +80 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text("Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
     function moveHead(dt, tx, ty) {
@@ -951,29 +1137,49 @@
   // ---------------------------------------------------------------- STORM finale
   function StormScene() {
     var phase = "intro", prompt = null;
-    var t = 0, survive = rand(20, 24) - (G.mods.warned ? 3 : 0), objs = [], spawnT = 0, lightning = 0, waveT = rand(3, 5), bigWave = null;
+    var t = 0, survive = rand(28, 34) - (G.mods.warned ? 4 : 0), objs = [], balls = [], spawnT = 0, lightning = 0, waveT = rand(2.5, 4), bigWave = null;
+    var bolt = null, boltT = rand(3, 5);       // targeted lightning: a marked column, then the strike
+    var gust = null, gustT = rand(5, 8);       // wind gusts that shove the ship sideways
     var warnLen = 1.4 + warnBonus();
     return {
       enter: function () {
         G.preStormScore = G.score;
-        prompt = Prompt("THE NOR'EASTER", "Cape Cod. The same storm that sank the real Whydah on April 26, 1717. Dodge the wreckage. Brace for the great waves. Hold on and make Maine.", function () { phase = "play"; }, "⚓ FROM THE RECORD");
+        prompt = Prompt("THE NOR'EASTER", "Cape Cod. The same storm that sank the real Whydah on April 26, 1717. Dodge the wreckage and the lightning. Brace for the great waves. Fight the wind. Hold on.", function () { phase = "play"; }, "⚓ FROM THE RECORD");
       },
       update: function (dt) {
         seaT += dt;
         if (phase === "intro") { prompt.update(dt); return; }
-        if (phase === "won") { if (consumeTap()) endRun(true, false); return; }
+        if (phase === "won") { if (consumeTap()) advance(); return; }
         t += dt;
-        G.progress = clamp(0.86 + 0.14 * (t / survive), 0, 1);
+        var fury = clamp(t / survive, 0, 1);   // the storm builds as it goes
+        G.progress = clamp(0.86 + 0.12 * fury, 0, 1);
         var sp = steerSpeed() * dt;
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
         if (input.pDown && input.py > H * 0.4) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.06, 0.94), 0.18);
         G.shipX += Math.sin(t * 1.3) * 0.12 * dt;
+        if (gust) { G.shipX += gust.push * dt; gust.t -= dt; if (gust.t <= 0) gust = null; }
         G.shipX = clamp(G.shipX, 0.06, 0.94);
+        var shipPX = G.shipX * W, shipPY = H * 0.84;
+        if (consumeFire()) { playerShot(shipPX, shipPY - 20, -430).forEach(function (nb) { balls.push(nb); }); SFX.fire(); }
         if (lightning > 0) lightning -= dt;
         if (chance(0.006)) { lightning = 0.12; SFX.thunder(); }
+        // targeted strike: the sky marks a column, then the bolt comes down
+        boltT -= dt;
+        if (!bolt && boltT <= 0) { bolt = { x: clamp(shipPX + rand(-W * 0.12, W * 0.12), W * 0.1, W * 0.9), warn: 0.9 + warnBonus() * 0.3, w: 54 }; }
+        if (bolt) {
+          bolt.warn -= dt;
+          if (bolt.warn <= 0) {
+            lightning = 0.16; SFX.thunder(); shake(10);
+            for (var lb = 0; lb < 14; lb++) spawn(bolt.x + rand(-10, 10), rand(0, H * 0.8), { vx: rand(-30, 30), vy: rand(60, 160), g: 0, life: 0.3, r: rand(1, 3), c: "#fff" });
+            if (Math.abs(shipPX - bolt.x) < bolt.w / 2 + 14) damage(1);
+            bolt = null; boltT = rand(3.5, 6) - fury * 1.5;
+          }
+        }
+        // wind gust with a lean-in warning
+        gustT -= dt;
+        if (!gust && gustT <= 0) { gust = { push: chance(0.5) ? 0.35 : -0.35, t: 1.6, warned: 0.8 }; gustT = rand(6, 9); }
         spawnT -= dt;
-        if (spawnT <= 0) { spawnT = rand(0.3, 0.6); objs.push({ x: rand(0.08, 0.92) * W, y: -30, r: rand(15, 24), sp: rand(230, 320), a: 0, spin: rand(-3, 3), sub: choice(["rock", "wood", "wood"]) }); }
-        var shipPX = G.shipX * W, shipPY = H * 0.84;
+        if (spawnT <= 0) { spawnT = rand(0.22, 0.5) * (1 - fury * 0.35); objs.push({ x: rand(0.08, 0.92) * W, y: -30, r: rand(15, 24), sp: rand(240, 330) + fury * 60, a: 0, spin: rand(-3, 3), sub: choice(["rock", "wood", "wood"]), hp: 1 }); }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i]; o.y += o.sp * dt; o.a += o.spin * dt;
           if (Math.hypot(o.x - shipPX, o.y - shipPY) < o.r + 15) {
@@ -984,6 +1190,15 @@
           }
           if (o.y > H + 40) objs.splice(i, 1);
         }
+        for (var bi = balls.length - 1; bi >= 0; bi--) {
+          var b = balls[bi]; b.y += b.vy * dt;
+          var hit = false;
+          for (var oi = objs.length - 1; oi >= 0; oi--) {
+            var ob = objs[oi];
+            if (Math.hypot(b.x - ob.x, b.y - ob.y) < ob.r + 6) { addScore(5); SFX.point(); splash(ob.x, ob.y, 10); objs.splice(oi, 1); hit = true; break; }
+          }
+          if (hit || b.y < -30) balls.splice(bi, 1);
+        }
         waveT -= dt;
         if (!bigWave && waveT <= 0) bigWave = { warn: warnLen, hit: false };
         if (bigWave) {
@@ -992,7 +1207,7 @@
             bigWave.hit = true;
             if (!input.fire) { if (chance(stormShrug())) { shake(8); } else { damage(2); shake(16); } }
             else { addScore(20); shake(8); }
-            bigWave = null; waveT = rand(5, 8);
+            bigWave = null; waveT = rand(4, 6.5);
           }
         }
         if (chance(0.5)) spawn(rand(0, W), rand(H * 0.2, H), { vx: rand(-40, 40), vy: rand(80, 160), g: 0, life: 0.5, r: rand(1, 2.5), c: "rgba(220,235,240,.7)" });
@@ -1002,27 +1217,150 @@
         drawSea(STORM_PAL, seaT * 90, true);
         ctx.strokeStyle = "rgba(200,220,230,.35)"; ctx.lineWidth = 1;
         for (var r = 0; r < 60; r++) { var rx = (r * 173 + (seaT * 900) % W) % W; var ry = (r * 271 + (seaT * 1400) % H) % H; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 6, ry + 16); ctx.stroke(); }
+        if (bolt) {
+          ctx.fillStyle = "rgba(255,240,150," + (0.12 + 0.14 * Math.sin(seaT * 24)) + ")";
+          ctx.fillRect(bolt.x - bolt.w / 2, 0, bolt.w, H);
+          text("⚡", bolt.x, H * 0.2, 26, "#ffd24a", "center", "bold");
+        }
         for (var i = 0; i < objs.length; i++) { var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); if (o.sub === "rock") { ctx.fillStyle = "#4a4740"; blob(o.r); } else { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-o.r, -5, o.r * 2, 10); } ctx.restore(); }
+        for (var b3 = 0; b3 < balls.length; b3++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[b3].x, balls[b3].y, 5, 0, 7); ctx.fill(); }
         drawShip(G.shipX * W, H * 0.84, 1.6, playerShipOpts());
         drawParts(); drawHUD();
         var sw = clamp(W * 0.6, 200, 400), sx = (W - sw) / 2, sy = H - 28;
         text("HOLD ON", W / 2, sy - 10, 13, "#f4e7c9", "center", "bold");
         ctx.fillStyle = "rgba(0,0,0,.5)"; roundRect(sx - 3, sy - 3, sw + 6, 12, 6); ctx.fill();
         ctx.fillStyle = "#e0b25c"; roundRect(sx, sy, sw * clamp(t / survive, 0, 1), 6, 3); ctx.fill();
+        if (gust) text("💨 GUST! Fight the wheel " + (gust.push > 0 ? "←" : "→"), W / 2, H * 0.34, 17, "#bfe0ff", "center", "bold");
         if (bigWave && phase === "play") { ctx.fillStyle = "rgba(150,52,40," + (0.3 + 0.3 * Math.sin(seaT * 20)) + ")"; ctx.fillRect(0, 0, W, H); text("ROGUE WAVE. Hold SPACE or 🔥 to brace!", W / 2, H * 0.5, clamp(W * 0.045, 15, 23), "#ffe1b0", "center", "bold"); }
         if (lightning > 0) { ctx.fillStyle = "rgba(255,255,255," + lightning * 3 + ")"; ctx.fillRect(0, 0, W, H); }
         if (phase === "intro") prompt.render();
-        if (phase === "won") { var w = clamp(W * 0.82, 280, 450); panel(W / 2, H / 2, w, 148); text("YOU MADE PORT!", W / 2, H / 2 - 38, 25, "#8fd6a0", "center", "bold"); wrapText("You beat the storm the real Whydah could not. The score cap is broken.", W / 2, H / 2 - 8, w - 40, 19, 14, "#f4e7c9"); text("tap to see your voyage", W / 2, H / 2 + 52, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "won") { var w = clamp(W * 0.82, 280, 450); panel(W / 2, H / 2, w, 148); text("THE STORM BREAKS!", W / 2, H / 2 - 38, 25, "#8fd6a0", "center", "bold"); wrapText("You beat the storm the real Whydah could not. But something followed you out of it. Something with three heads.", W / 2, H / 2 - 8, w - 40, 19, 14, "#f4e7c9"); text("tap if you dare", W / 2, H / 2 + 52, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
+  }
+
+  // ---------------------------------------------------------------- BOSS: the grandfather serpent
+  // Three heads, one grudge. Only shows itself to crews that beat the storm.
+  function BossScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], spits = [];
+    var heads = [], baseY = H * 0.26;
+    [0.22, 0.5, 0.78].forEach(function (bx, hi) {
+      var seg = []; for (var i = 0; i < 12; i++) seg.push({ x: bx * W, y: -80 - i * 22 });
+      heads.push({ seg: seg, hp: 5, max: 5, alive: true, baseX: bx, state: "weave", stateT: rand(1.2, 2.4) + hi * 0.7, lungeX: 0, open: false, flashT: 0, ph: hi * 2.1, spitT: rand(2.5, 4.5) + hi });
+    });
+    var tripleT = rand(9, 12), triple = null;
+    var rearTime = 0.55 + warnBonus() * 0.25;
+    function aliveHeads() { return heads.filter(function (h) { return h.alive; }); }
+    return {
+      enter: function () { prompt = Prompt("THE GRANDFATHER SERPENT", "The old salts say the first one was a pup. This is what it ran home to. Three heads. One ship. Send it back to the deep.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); heads.forEach(function (h) { moveChain(h, dt, h.baseX * W, baseY); }); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        var sp = steerSpeed() * dt;
+        if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
+        if (input.pDown && input.py > H * 0.55) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
+        G.shipX = clamp(G.shipX, 0.08, 0.92);
+        var shipPX = G.shipX * W, shipPY = H * 0.84;
+        if (consumeFire()) { playerShot(shipPX, shipPY - 20, -460).forEach(function (nb) { balls.push(nb); }); SFX.fire(); }
+        // triple strike: every living head rears at once — find the open water
+        tripleT -= dt;
+        if (!triple && tripleT <= 0 && aliveHeads().length >= 2) {
+          triple = { warn: rearTime + 0.35, fired: false };
+          var lanes = shuffle([0.18, 0.5, 0.82]);
+          aliveHeads().forEach(function (h, i2) { h.state = "rear"; h.stateT = triple.warn; h.lungeX = lanes[i2] * W; h.open = true; });
+          SFX.thunder();
+        }
+        if (triple) {
+          triple.warn -= dt;
+          if (triple.warn <= 0 && !triple.fired) { triple.fired = true; aliveHeads().forEach(function (h) { h.state = "lunge"; h.stateT = 0.4; }); }
+          if (triple.fired && aliveHeads().every(function (h) { return h.state !== "lunge"; })) { triple = null; tripleT = rand(8, 12); }
+        }
+        heads.forEach(function (h) {
+          if (!h.alive) { moveChain(h, dt, h.baseX * W, -140); return; }
+          if (h.flashT > 0) h.flashT -= dt;
+          h.stateT -= dt;
+          if (h.state === "weave") {
+            h.open = false;
+            moveChain(h, dt, h.baseX * W + Math.sin(t * 1.8 + h.ph) * W * 0.14, baseY + Math.sin(t * 2.2 + h.ph) * 20);
+            h.spitT -= dt;
+            if (h.spitT <= 0) { h.spitT = rand(2.2, 4); spits.push({ x: h.seg[0].x, y: h.seg[0].y, vx: clamp((shipPX - h.seg[0].x) * 0.9, -180, 180), vy: 280 }); SFX.bad(); }
+            if (!triple && h.stateT <= 0) { h.state = "rear"; h.stateT = rearTime; h.lungeX = shipPX; h.open = true; }
+          } else if (h.state === "rear") {
+            if (!triple) h.lungeX = lerp(h.lungeX, shipPX, 1.4 * dt);
+            moveChain(h, dt, h.lungeX, baseY - 34);
+            if (h.stateT <= 0) { h.state = "lunge"; h.stateT = 0.36; }
+          } else if (h.state === "lunge") {
+            moveChain(h, dt, h.lungeX, H * 0.72, 9);
+            if (Math.hypot(h.seg[0].x - shipPX, h.seg[0].y - shipPY) < 46) { damage(2); h.state = "recover"; h.stateT = 1.0; h.open = false; }
+            if (h.stateT <= 0) { h.state = "recover"; h.stateT = rand(0.7, 1.1); h.open = false; }
+          } else {
+            moveChain(h, dt, h.baseX * W, baseY);
+            if (h.stateT <= 0) { h.state = "weave"; h.stateT = rand(1.0, 2.0); }
+          }
+        });
+        for (var si = spits.length - 1; si >= 0; si--) {
+          var sv = spits[si]; sv.x += sv.vx * dt; sv.y += sv.vy * dt;
+          if (Math.hypot(sv.x - shipPX, sv.y - shipPY) < 18) { spits.splice(si, 1); damage(1); continue; }
+          if (sv.y > H + 30) spits.splice(si, 1);
+        }
+        for (var bi = balls.length - 1; bi >= 0; bi--) {
+          var b = balls[bi]; b.y += b.vy * dt;
+          var hit = false;
+          for (var hj = 0; hj < heads.length; hj++) {
+            var h2 = heads[hj];
+            if (h2.alive && Math.hypot(b.x - h2.seg[0].x, b.y - h2.seg[0].y) < 30) {
+              hit = true; h2.hp--; h2.flashT = 0.12; SFX.hit(); splash(h2.seg[0].x, h2.seg[0].y, 10, "#8fd6a0");
+              if (h2.hp <= 0) {
+                h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
+                for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
+                if (aliveHeads().length === 0) {
+                  phase = "done"; G.bossBeaten = true; addScore(300); addGold(200); SFX.win();
+                }
+              }
+              break;
+            }
+          }
+          if (hit || b.y < -40) balls.splice(bi, 1);
+        }
+      },
+      render: function () {
+        drawSea(STORM_PAL, seaT * 60, true);
+        if (phase !== "intro") {
+          for (var hb = 0; hb < heads.length; hb++) {
+            var h3 = heads[hb], bw = 90, bx2 = h3.baseX * W - bw / 2;
+            ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx2 - 2, 6, bw + 4, 10, 4); ctx.fill();
+            ctx.fillStyle = h3.alive ? "#2f6b4a" : "#333"; roundRect(bx2, 8, bw * clamp(h3.hp / h3.max, 0, 1), 6, 3); ctx.fill();
+          }
+          text("THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        heads.forEach(function (h) { if (h.alive || h.seg[0].y > -120) drawSerpent(h.seg, h.open, h.flashT > 0); });
+        for (var s2 = 0; s2 < spits.length; s2++) { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); }
+        for (var i = 0; i < balls.length; i++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[i].x, balls[i].y, 5, 0, 7); ctx.fill(); }
+        drawShip(G.shipX * W, H * 0.84, 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        heads.forEach(function (h) { if (h.open && phase === "fight") text("FIRE!", h.seg[0].x, h.seg[0].y - 40, 15, "#ffd24a", "center", "bold"); });
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 140); text("THE DEEP TAKES IT BACK!", W / 2, H / 2 - 28, 21, "#8fd6a0", "center", "bold"); text("+300 points   +200 gold", W / 2, H / 2 + 6, 17, "#e0b25c", "center", "bold"); text("tap to make port", W / 2, H / 2 + 44, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+    function moveChain(h, dt, tx, ty, speed) {
+      var s = speed || 6;
+      h.seg[0].x = lerp(h.seg[0].x, tx, clamp(s * dt, 0, 1));
+      h.seg[0].y = lerp(h.seg[0].y, ty, clamp(s * dt, 0, 1));
+      for (var i = 1; i < h.seg.length; i++) {
+        h.seg[i].x = lerp(h.seg[i].x, h.seg[i - 1].x, clamp(12 * dt, 0, 1));
+        h.seg[i].y = lerp(h.seg[i].y, h.seg[i - 1].y + 15, clamp(12 * dt, 0, 1));
+      }
+    }
   }
 
   // ---------------------------------------------------------------- END / RESULTS / HARBOR
   function endRun(reachedEnd, sunk) {
     if (G.ended) return; G.ended = true;
-    G.won = G.stormCleared;
+    G.won = G.stormCleared && !sunk;
     if (G.won) { G.score += 200 + G.hull * 40; addGold(50); }
-    else { G.capped = true; G.score = Math.min(G.score, G.preStormScore > 0 ? G.preStormScore : G.score); }
+    else if (!G.stormCleared) { G.capped = true; G.score = Math.min(G.score, G.preStormScore > 0 ? G.preStormScore : G.score); }
     G.rank = rankFor(G.score, G.won);
     // bank the gold: full if you reached the storm, half if you sank on the way
     var banked = (sunk && G.preStormScore === 0) ? Math.floor(G.gold / 2) : G.gold;
@@ -1037,10 +1375,11 @@
     setScene(ResultScene(sunk));
   }
   function rankFor(s, won) {
-    if (won) { if (s >= 900) return "Legend of the Whydah"; if (s >= 650) return "Master Mariner"; return "Storm-Beater"; }
-    if (s >= 500) return "Navigator";
-    if (s >= 300) return "Able Seaman";
-    if (s >= 150) return "Deckhand";
+    if (won && G.bossBeaten) return s >= 1600 ? "Legend of the Whydah" : "Serpent-Slayer";
+    if (won) { if (s >= 1300 ) return "Legend of the Whydah"; if (s >= 950) return "Master Mariner"; return "Storm-Beater"; }
+    if (s >= 600) return "Navigator";
+    if (s >= 350) return "Able Seaman";
+    if (s >= 180) return "Deckhand";
     return "Cabin Boy";
   }
   function ResultScene(sunk) {
@@ -1053,9 +1392,11 @@
         drawParts();
         var w = clamp(W * 0.88, 300, 520), h = 330;
         panel(W / 2, H / 2, w, h);
-        var title = G.won ? "⚓ VOYAGE COMPLETE" : (sunk ? "☠ YOUR SHIP WENT DOWN" : "☠ LOST TO THE STORM");
-        text(title, W / 2, H / 2 - h / 2 + 38, 24, G.won ? "#8fd6a0" : "#e08c6a", "center", "bold");
-        if (G.won) wrapText("You made Maine. The real crew never did. The storm took the Whydah at Cape Cod. Remember them.", W / 2, H / 2 - h / 2 + 64, w - 50, 18, 12.5, "#cdeccf");
+        var title = G.won ? "⚓ VOYAGE COMPLETE" : (G.stormCleared ? "☠ TAKEN AT THE HARBOR MOUTH" : (sunk ? "☠ YOUR SHIP WENT DOWN" : "☠ LOST TO THE STORM"));
+        text(title, W / 2, H / 2 - h / 2 + 38, G.stormCleared && !G.won ? 19 : 24, G.won ? "#8fd6a0" : "#e08c6a", "center", "bold");
+        if (G.won && G.bossBeaten) wrapText("You beat the storm AND the grandfather serpent. You made Maine. No crew in any tavern tale did more.", W / 2, H / 2 - h / 2 + 64, w - 50, 18, 12.5, "#cdeccf");
+        else if (G.won) wrapText("You made Maine. The real crew never did. The storm took the Whydah at Cape Cod. Remember them.", W / 2, H / 2 - h / 2 + 64, w - 50, 18, 12.5, "#cdeccf");
+        else if (G.stormCleared) wrapText("You beat the storm the real Whydah could not — and the serpent took her within sight of port. Refit and finish it.", W / 2, H / 2 - h / 2 + 64, w - 50, 18, 12.5, "#e8c1ae");
         else if (!sunk) wrapText("The real Whydah sank right here. April 26, 1717. 146 aboard. Two men survived. Refit your ship and try again.", W / 2, H / 2 - h / 2 + 64, w - 50, 18, 12.5, "#e8c1ae");
         else wrapText("The sea keeps what it takes. Half your gold washes ashore. Refit and sail again.", W / 2, H / 2 - h / 2 + 64, w - 50, 18, 12.5, "#e8c1ae");
         text("Rank:  " + G.rank, W / 2, H / 2 - 26, 19, "#e0b25c", "center", "bold");
@@ -1081,7 +1422,8 @@
         var w = clamp(W * 0.92, 300, 560);
         var rows = UPG.length, rowH = clamp(H * 0.075, 44, 56);
         var h = 120 + rows * rowH;
-        h = Math.min(h, H * 0.78);
+        h = Math.min(h, H * 0.8);
+        rowH = Math.max(30, (h - 110) / rows);   // squeeze the rows so all fit the panel
         var top = clamp(H * 0.08, 10, 60);
         panel(W / 2, top + h / 2, w, h);
         text("⚒  THE HARBOR", W / 2, top + 34, 22, "#e0b25c", "center", "bold");
@@ -1141,6 +1483,7 @@
       start: function () { startRun(); },
       skip: function () { advance(); },
       toStorm: function () { for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "storm") { G.seqIndex = i - 1; advance(); return; } },
+      toBoss: function () { G.stormCleared = true; for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "boss") { G.seqIndex = i - 1; advance(); return; } },
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       newRun: function () { startRun(); },
@@ -1149,7 +1492,7 @@
       gold: function (n) { SAVE.bank += n; persist(); },
       buy: function (id) { var lvl = upgLvl(id); var u = null; for (var i = 0; i < UPG.length; i++) if (UPG[i].id === id) u = UPG[i]; if (!u || lvl >= u.max) return "no"; SAVE.bank -= u.cost[lvl]; SAVE.upg[id] = lvl + 1; persist(); return SAVE.upg[id]; },
       save: function () { return JSON.parse(JSON.stringify(SAVE)); },
-      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0 } }; },
+      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
       toHarbor: function () { setScene(HarborScene(false)); },
       err: function () { return window.__err ? window.__err.slice(0, 6) : []; }
     };
