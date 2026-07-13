@@ -4,17 +4,20 @@ A planning and teaching dashboard for **Navigating Piracy**, a middle-school Pro
 
 Built for **LEAP4Ed's Summer 2026 middle school program** in Salem, Massachusetts.
 
-## View the dashboard
+## The live site
 
-Open [index.html](./index.html) or visit the GitHub Pages URL once published.
+The class site is live at **[whydahstory.com](https://whydahstory.com)** (hosted on GitHub Pages). During the domain move it is also mirrored at **[maxwellhowegis.com/whydah](https://maxwellhowegis.com/whydah)** so the old link keeps working.
 
-For a quick overview, [unit-at-a-glance.html](./unit-at-a-glance.html) is a one-page, print-ready summary (driving question, five-week arc, standards, and access) suited to handing out at a meeting.
+- **[whydah-dashboard.html](./whydah-dashboard.html)** — the main hub: the story, the people, maps and navigation, the wreck, the final project, and a teacher-only Captain's Cabin (password-gated).
+- **Daily student pages** — each class day has its own `dayN.html` missions page, reached from the red TODAY banner on the dashboard. The banner is date-driven (`day-config.js`) and flips itself at midnight Eastern.
+- **Games** — `navigator/` (First Sail, a voyage game) and `black-sam/` (a choose-your-own-adventure). See [navigator/README.md](./navigator/README.md).
+- **[unit-at-a-glance.html](./unit-at-a-glance.html)** — a one-page, print-ready summary (driving question, five-week arc, standards, and access) suited to handing out at a meeting.
 
 ## Unit at a glance
 
 - **5 weeks** (July 6 – August 6, 2026), Mon–Thurs
-- **16 instructional sessions** + museum field trip + project days + public Showcase
-- **Driving question:** *Why would a person choose piracy in 1717 — and how would they want you to tell their story?*
+- **16 instructional sessions** + field trips + project days + a public Showcase
+- **Driving question:** *Why would a person choose piracy in 1717, and how would they want you to tell their story?*
 - **Final project:** flexible format (story map, presentation, performance, poster) from a chosen historical perspective
 
 ## Acknowledgments
