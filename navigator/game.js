@@ -150,7 +150,7 @@
     { id: "guns",  icon: "💣", name: "Long Nines",   desc: "Faster shot, then a twin broadside.",                max: 2, cost: [90, 210] }
   ];
   function upgLvl(id) { return SAVE.upg[id] || 0; }
-  function steerSpeed() { return 1.05 + upgLvl("helm") * 0.18; }
+  function steerSpeed() { return 0.9 + upgLvl("helm") * 0.18; }
   function shotBonus() { return upgLvl("shot") * 0.25; }
   function stormShrug() { return upgLvl("pumps") * 0.25; }
   function warnBonus() { return upgLvl("nest") * 0.4; }
@@ -757,11 +757,13 @@
     // longer legs by design (the kids said the voyage flew by) — Full Canvas buys the pace back
     var legTime = rand(10, 14) * legSpeedMul(), t = 0, ease = narrowEase();
     var shore = G.route === "shore", sea = G.route === "sea";
-    var objs = [], balls = [], spawnT = 1.2, fireGun = gunner();
+    var objs = [], balls = [], spawnT = 1.2, fireGun = gunner(), steerV = 0;
     var sharkT = sea ? rand(4, 8) : (shore ? rand(9, 14) : rand(4, 9));
-    // the narrows must have time to cross the ship line before the leg ends
-    var narrowsLatest = legTime - (H + 220) / 130 - 0.5;
-    var narrowsAt = (!sea && chance(shore ? 0.65 : 0.4) && narrowsLatest > 1) ? rand(1, narrowsLatest) : -1;
+    // Narrows are a Caribbean thing — the island passages of the Windward Passage
+    // and Florida Straits (the first legs). Further north it's open coast, no gaps.
+    var caribbean = Math.floor(clamp(G.progress, 0, 0.999) * STAGES.length) <= 1;
+    var narrowsLatest = legTime - (H + 220) / 105 - 0.5;   // wall crosses the ship line before the leg ends
+    var narrowsAt = (caribbean && narrowsLatest > 1 && chance(0.6)) ? rand(1, narrowsLatest) : -1;
     var narrowsDone = false;
     // never an empty leg: if no narrows rolled, a shark shows up early — and sometimes treasure
     if (narrowsAt < 0) sharkT = Math.min(sharkT, rand(1.5, legTime * 0.4));
@@ -773,9 +775,19 @@
       enter: function () { document.body.classList.add("playing"); if (chance(0.5)) G.pal = choice(PALETTES); if (chance(0.6)) spawnGull(); },
       update: function (dt) {
         seaT += dt; t += dt; updateGulls(dt);
-        var sp = steerSpeed() * slow * dt;
-        if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
-        if (input.pDown && input.py > H * 0.4) G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.2);
+        // eased steering: a quick tap is a small precise nudge (so you can thread
+        // the narrows), holding crosses at full speed, and letting go stops fast
+        // instead of gliding onward into the rocks.
+        var maxV = steerSpeed() * slow;
+        var dir = (input.left ? -1 : 0) + (input.right ? 1 : 0);
+        if (input.pDown && input.py > H * 0.4) {
+          G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.18); steerV = 0;
+        } else {
+          var accel = maxV * 7;
+          if (dir !== 0) steerV += clamp(dir * maxV - steerV, -accel * dt, accel * dt);
+          else steerV += clamp(-steerV, -accel * 2 * dt, accel * 2 * dt);
+          G.shipX += steerV * dt;
+        }
         G.shipX = clamp(G.shipX, steerLo(), steerHi());
         var shipPX = G.shipX * W, shipPY = H * 0.82;
         // guns are live on the open sea: blast the wreckage out of your way (hold to keep firing)
@@ -797,6 +809,9 @@
             var picks = ["coin", "coin", "coin", "wind", "barrel"];
             if (shore) picks.push("dory", "barrel");
             if (sea) picks.push("wind", "coin");
+            // hearts drift by when you're hurt — the more hurt, the likelier one appears
+            if (G.hull < G.maxHull) picks.push("heart");
+            if (G.hull <= 2) picks.push("heart");
             o = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(140, 200) / ease };
           }
           o.x = rand(0.1, 0.9) * W; o.y = -40; o.a = 0; o.spin = rand(-2, 2);
@@ -818,7 +833,7 @@
         // the narrows: a wall of land with one gap — thread the needle
         if (narrowsAt > 0 && !narrowsDone && t >= narrowsAt) {
           narrowsDone = true;
-          objs.push({ kind: "narrows", gap: rand(0.2, 0.8), gapW: clamp(W * 0.22, 90, 170), y: -90, sp: 130, r: 0 });
+          objs.push({ kind: "narrows", gap: rand(0.25, 0.75), gapW: clamp(W * 0.30, 130, 230), y: -90, sp: 105, r: 0 });
         }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i];
@@ -855,6 +870,11 @@
             }
             else if (o.sub === "dory") { addGold(10); addScore(5); SFX.coin(); coinBurst(o.x, o.y); }
             else if (o.sub === "wind") { addScore(8); SFX.good(); t += 0.6; }
+            else if (o.sub === "heart") {
+              if (G.hull < G.maxHull) { repair(1); toast("❤ +1 heart"); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#ff8a7a", shape: "txt", txt: "+1 ♥" }); }
+              else { addScore(15); }   // already full — a little score instead
+              SFX.good(); for (var hb = 0; hb < 8; hb++) spawn(o.x, o.y, { vx: rand(-50, 50), vy: rand(-80, -10), g: 160, life: 0.7, r: 3, c: "#ff8a7a" });
+            }
             else if (o.sub === "barrel") { repair(1); SFX.good(); for (var b2 = 0; b2 < 8; b2++) spawn(o.x, o.y, { vx: rand(-40, 40), vy: rand(-70, -10), g: 160, life: 0.7, r: 3, c: "#8fd6a0" }); }
             objs.splice(i, 1); continue;
           }
@@ -913,6 +933,7 @@
             if (o.sub === "coin") { ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#b98f20"; ctx.font = "14px serif"; ctx.textAlign = "center"; ctx.fillText("$", 0, 5); ctx.textAlign = "left"; }
             else if (o.sub === "wind") { ctx.strokeStyle = "#eafaff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, o.r, 0.6, 5.2); ctx.stroke(); }
             else if (o.sub === "dory") { ctx.fillStyle = "#7a5a34"; ctx.beginPath(); ctx.moveTo(-14, -4); ctx.quadraticCurveTo(0, 10, 14, -4); ctx.lineTo(10, -8); ctx.lineTo(-10, -8); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#4a3520"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(8, -6); ctx.stroke(); }
+            else if (o.sub === "heart") { var hs = o.r * 0.9; ctx.fillStyle = "#e05c5c"; ctx.beginPath(); ctx.moveTo(0, hs * 0.75); ctx.bezierCurveTo(hs, 0, hs * 0.55, -hs, 0, -hs * 0.35); ctx.bezierCurveTo(-hs * 0.55, -hs, -hs, 0, 0, hs * 0.75); ctx.closePath(); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.arc(-hs * 0.3, -hs * 0.28, hs * 0.16, 0, 7); ctx.fill(); }
             else { ctx.fillStyle = "#8a5a34"; ctx.fillRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); ctx.strokeStyle = "#5a3a22"; ctx.lineWidth = 2; ctx.strokeRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); }
           }
           ctx.restore();
@@ -1888,7 +1909,7 @@
   // ---------------------------------------------------------------- debug API (inert unless the page sets __FS_DEBUG)
   if (window.__FS_DEBUG) {
     window.__fsAPI = {
-      state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared } : null; },
+      state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), shipX: +Number(G.shipX || 0).toFixed(3), won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared } : null; },
       start: function () { startRun(); },
       skip: function () { advance(); },
       toStorm: function () { for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "storm") { G.seqIndex = i - 1; advance(); return; } },
