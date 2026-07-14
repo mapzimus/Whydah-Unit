@@ -381,17 +381,29 @@
   var seaT = 0, coast = [], gulls = [];
   function seedCoast() {
     coast = [];
-    for (var i = 0; i < 40; i++) coast.push({ y: rand(-H, H), side: chance(0.5) ? 0 : 1, w: rand(30, 90), h: rand(50, 130), d: Math.random() });
+    // You're coasting north with the mainland to the west — so land sits on the
+    // LEFT (port) side, open ocean to the right. A few small islands stand off
+    // to seaward for variety, clearly surrounded by water.
+    for (var i = 0; i < 40; i++) {
+      var isle = chance(0.15);
+      coast.push({
+        y: rand(-H, H), side: isle ? 1 : 0, isle: isle,
+        w: isle ? rand(16, 28) : rand(34, 92),
+        h: isle ? rand(24, 44) : rand(50, 130),
+        d: Math.random()
+      });
+    }
   }
+  // gulls wheel over the open water to seaward — never over the shore on the left
+  var GULL_LO = 0.30, GULL_HI = 0.80;
   function spawnGull() {
-    var fromLeft = chance(0.5);
-    gulls.push({ x: fromLeft ? -20 : W + 20, y: rand(H * 0.03, H * 0.16), vx: (fromLeft ? 1 : -1) * rand(28, 55), ph: rand(0, 6), s: rand(0.7, 1.15) });
+    gulls.push({ x: rand(GULL_LO, GULL_HI) * W, y: rand(H * 0.05, H * 0.17), vx: (chance(0.5) ? 1 : -1) * rand(20, 40), ph: rand(0, 6), s: rand(0.7, 1.15) });
   }
   function updateGulls(dt) {
-    if (gulls.length < 3 && chance(0.004)) spawnGull();
+    if (gulls.length < 3 && chance(0.006)) spawnGull();
     for (var i = gulls.length - 1; i >= 0; i--) {
       var g = gulls[i]; g.x += g.vx * dt; g.ph += dt * 9; g.y += Math.sin(g.ph * 0.3) * 6 * dt;
-      if (g.x < -40 || g.x > W + 40) gulls.splice(i, 1);
+      if (g.x < GULL_LO * W || g.x > GULL_HI * W) g.vx *= -1;   // wheel back over the water, don't drift onto land
     }
   }
   function drawGulls(pal) {
@@ -474,16 +486,18 @@
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
     var shoreMul = (G && G.route === "shore") ? 1.35 : 1;   // the fork changes what the coast looks like
     for (var c = 0; c < coast.length; c++) {
-      if (G && G.route === "sea" && c % 4 !== 0) continue;  // open water: land is a rumor
       var o = coast[c];
+      if (G && G.route === "sea" && !o.isle && c % 4 !== 0) continue;  // out to sea: land is only a rumor
       o.y += (stormy ? 90 : 55) * 0.016 * (0.6 + (c % 3) * 0.2);
       var yy2 = (o.y % (H + 260)); if (yy2 < -160) yy2 += H + 260;
       if (yy2 > skyH - 40 && yy2 < H + 40) {
-        var cx = o.side === 0 ? -10 + o.w * shoreMul * 0.4 : W + 10 - o.w * shoreMul * 0.4;
+        var ew = o.isle ? o.w : o.w * shoreMul;
+        // mainland hugs the left edge; islands stand off in open water to the right
+        var cx = o.isle ? (W - ew * 1.5 - W * 0.02) : (-10 + ew * 0.4);
         ctx.fillStyle = pal.land; ctx.globalAlpha = 0.85;
-        ctx.beginPath(); ctx.ellipse(cx, yy2, o.w * shoreMul, o.h, 0, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx, yy2, ew, o.h, 0, 0, 7); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,.15)";
-        ctx.beginPath(); ctx.ellipse(cx, yy2 + o.h * 0.6, o.w * shoreMul * 1.05, o.h * 0.25, 0, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx, yy2 + o.h * 0.6, ew * 1.05, o.h * 0.25, 0, 0, 7); ctx.fill();
         drawCoastDecor(cx, yy2, o);
         ctx.globalAlpha = 1;
       }
