@@ -76,6 +76,7 @@
     else if (k === "arrowup" || k === "w") input.up = true;
     else if (k === "arrowdown" || k === "s") input.down = true;
     else if (k === " " || k === "spacebar" || k === "enter") { if (!input.fire) input.firePressed = true; input.fire = true; }
+    else if (k === "escape" || k === "p") { togglePause(); }
     if (["arrowleft", "arrowright", "arrowup", "arrowdown", " ", "spacebar"].indexOf(k) >= 0) e.preventDefault();
   }
   function keyup(e) {
@@ -141,6 +142,16 @@
   }
   function persist() { try { localStorage.setItem("firstsail-save-v3", JSON.stringify(SAVE)); } catch (e) {} }
   loadSave();
+  // seen-count is scanned once and cached; invalidated whenever a new tale is logged
+  var seenCache = null;
+  function invalidateSeenCache() { seenCache = null; }
+  function countSeen() {
+    if (seenCache != null) return seenCache;
+    var n = 0;
+    for (var i = 0; i < EVENTS.length; i++) if (SAVE.seen && SAVE.seen[EVENTS[i].id]) n++;
+    seenCache = n;
+    return n;
+  }
 
   // ---------------------------------------------------------------- upgrades
   var UPG = [
@@ -177,6 +188,99 @@
       if (input.fire && cd <= 0) { cd = fireCooldown(); return true; }
       return false;
     };
+  }
+
+  // ==================================================================
+  // PROJECTILES & FORCES — shared by every combat/hazard scene
+  // ==================================================================
+  // One projectile stepper for every scene: moves balls, resolves player-owned
+  // balls against `targets` ({x,y,r,onHit(ball)} — onHit always consumes the
+  // ball), enemy-owned balls against `ship` ({x,y,r,onHit(ball)}, defaults to
+  // damage(1)), and culls anything off-screen. Replaces six near-identical loops.
+  function stepBalls(balls, dt, targets, ship) {
+    targets = targets || [];
+    for (var bi = balls.length - 1; bi >= 0; bi--) {
+      var b = balls[bi];
+      b.y += b.vy * dt; if (b.vx) b.x += b.vx * dt;
+      var hit = false;
+      if (b.own) {
+        for (var ti = 0; ti < targets.length; ti++) {
+          var tg = targets[ti];
+          if (Math.hypot(b.x - tg.x, b.y - tg.y) < (tg.r != null ? tg.r : 24) + (b.hr != null ? b.hr : 6)) {
+            hit = true; tg.onHit(b); break;
+          }
+        }
+      } else if (ship) {
+        if (Math.hypot(b.x - ship.x, b.y - ship.y) < (ship.r != null ? ship.r : 18)) {
+          hit = true; (ship.onHit || function () { damage(1); })(b);
+        }
+      }
+      if (hit || b.y < -40 || b.y > H + 40) balls.splice(bi, 1);
+    }
+  }
+  // draw balls with an optional per-ball `style` (used by the insane roster —
+  // tennis balls, toast, snowballs, etc.); normal mode is always the plain ball.
+  function drawBalls(balls) {
+    for (var i = 0; i < balls.length; i++) {
+      var b = balls[i], style = b.style || "ball";
+      if (style === "tennis") {
+        ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0.3, 2.2); ctx.stroke();
+      } else if (style === "toast") {
+        ctx.fillStyle = "#d9a45c"; ctx.beginPath(); ctx.moveTo(b.x - 7, b.y + 6); ctx.lineTo(b.x - 7, b.y - 4); ctx.quadraticCurveTo(b.x, b.y - 12, b.x + 7, b.y - 4); ctx.lineTo(b.x + 7, b.y + 6); ctx.closePath(); ctx.fill();
+      } else if (style === "snowball") {
+        ctx.fillStyle = "#f0f6fa"; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill(); ctx.strokeStyle = "#c8d8e0"; ctx.lineWidth = 1; ctx.stroke();
+      } else if (style === "quack") {
+        ctx.strokeStyle = "#ffd24a"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, 7); ctx.stroke();
+      } else if (style === "note") {
+        text("♪", b.x, b.y + 5, 16, "#e0b25c", "center", "bold");
+      } else if (style === "bubble") {
+        ctx.strokeStyle = "rgba(200,235,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.stroke();
+      } else if (style === "venom") {
+        ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill();
+      } else {
+        ctx.fillStyle = b.own ? "#f4e7c9" : "#e08c6a"; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill();
+      }
+    }
+  }
+  // one-shot G.mods flag: read then clear in one call so scenes never forget to reset a mod
+  function consumeMod(name) {
+    var v = G.mods[name];
+    G.mods[name] = false;
+    return v;
+  }
+  // whirlpools: a force field on top of the helm. Inside R, pull grows toward
+  // the center and swirls tangentially; you can out-row it at the rim, not the
+  // core. Small ones drift down-screen like any hazard; the Old Sow is fixed.
+  function applyWhirlpool(dt, wp, shipPX, shipPY) {
+    var dx = wp.x - shipPX, dy = wp.y - shipPY, d = Math.hypot(dx, dy);
+    if (d > wp.R) return false;
+    var pull = wp.k * (1 - d / wp.R);
+    var nx = dx / (d || 1), ny = dy / (d || 1);
+    var tx = -ny, ty = nx;   // tangent for the swirl
+    G.shipX += (nx * pull + tx * pull * 0.7) * dt;
+    G.shipY += (ny * pull + ty * pull * 0.7) * dt / Y_SPAN;
+    G.shipX = clamp(G.shipX, steerLo(), steerHi());
+    G.shipY = clamp(G.shipY, 0, 1);
+    return d < wp.R * 0.22;   // true = you've been sucked into the core
+  }
+  function drawWhirlpool(wp) {
+    ctx.save(); ctx.translate(wp.x, wp.y);
+    for (var ring = 0; ring < 5; ring++) {
+      var rr = wp.R * (1 - ring * 0.18);
+      ctx.strokeStyle = "rgba(20,40,55," + (0.15 + ring * 0.09) + ")";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      for (var a = 0; a <= 26; a++) {
+        var ang = a * 0.5 + seaT * (2.4 - ring * 0.3);
+        var rad = rr * (0.6 + 0.4 * (a / 26));
+        var px = Math.cos(ang) * rad, py = Math.sin(ang) * rad * 0.6;
+        if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(5,10,15,.55)"; ctx.beginPath(); ctx.ellipse(0, 0, wp.R * 0.16, wp.R * 0.1, 0, 0, 7); ctx.fill();
+    ctx.restore();
   }
 
   // ---------------------------------------------------------------- difficulty modes
@@ -683,6 +787,26 @@
   var scene = null;
   function setScene(s) { scene = s; if (s.enter) s.enter(); }
 
+  // ---------------------------------------------------------------- pause
+  // Meta scenes (Title/Log/Harbor/Port/Result) mark themselves noPause:true —
+  // pausing is only meaningful while a voyage is actually underway.
+  var paused = false;
+  function setPause(v) {
+    if (v && scene && scene.noPause) return;
+    paused = !!v;
+  }
+  function togglePause() { setPause(!paused); }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) setPause(true); });
+  function drawPauseOverlay() {
+    ctx.fillStyle = "rgba(5,10,15,.6)"; ctx.fillRect(0, 0, W, H);
+    var w = clamp(W * 0.7, 240, 380), h = 190;
+    panel(W / 2, H / 2, w, h);
+    text("⏸ PAUSED", W / 2, H / 2 - h / 2 + 42, 24, "#e0b25c", "center", "bold");
+    var bw = w - 60, by1 = H / 2 - 10, by2 = H / 2 + 46;
+    if (uiButton(W / 2 - bw / 2, by1, bw, 44, "▶ RESUME", { size: 15 })) setPause(false);
+    if (uiButton(W / 2 - bw / 2, by2, bw, 44, "⚓ QUIT TO TITLE", { size: 14, color: "#1f4a5e" })) { setPause(false); setScene(TitleScene()); }
+  }
+
   function advance() {
     G.seqIndex++;
     if (G.seqIndex >= G.seq.length) { endRun(true, false); return; }
@@ -719,6 +843,7 @@
   function TitleScene() {
     var hint = false;
     return {
+      noPause: true,
       enter: function () {
         document.body.classList.remove("playing"); seedCoast(); if (!G) newGame();
         if (muted && (SAVE.sndHint || 0) < 3) { SAVE.sndHint = (SAVE.sndHint || 0) + 1; persist(); hint = true; }
@@ -739,8 +864,7 @@
           text("tap 🔇 up top for sound", W - 16, 64, 12, "#ffe1b0", "right", "bold");
           ctx.globalAlpha = 1;
         }
-        var seen = 0, tot = EVENTS.length;
-        for (var si = 0; si < EVENTS.length; si++) if (SAVE.seen && SAVE.seen[EVENTS[si].id]) seen++;
+        var seen = countSeen(), tot = EVENTS.length;
         var bw = clamp(W * 0.36, 130, 172), by = H * 0.8;
         // difficulty picker: the kids' tiers. Beating EXTREME opens the multiverse.
         var mw = (bw * 2 + 20 - 18) / 4, my = by - 66;
@@ -766,6 +890,7 @@
   function LogScene() {
     var page = 0, perPage = 8;
     return {
+      noPause: true,
       enter: function () { document.body.classList.remove("playing"); },
       update: function (dt) { seaT += dt; updateGulls(dt); },
       render: function () {
@@ -776,8 +901,7 @@
         h = Math.min(h, H * 0.86);
         var top = clamp(H * 0.05, 8, 40);
         panel(W / 2, top + h / 2, w, h);
-        var seen = 0;
-        for (var c = 0; c < EVENTS.length; c++) if (SAVE.seen && SAVE.seen[EVENTS[c].id]) seen++;
+        var seen = countSeen();
         text("📖  THE TALES LOGBOOK", W / 2, top + 32, 20, "#e0b25c", "center", "bold");
         text(seen + " of " + EVENTS.length + " tales found  ·  page " + (page + 1) + " / " + pages, W / 2, top + 54, 12, "rgba(244,231,201,.75)", "center");
         var innerRowH = (h - 130) / perPage;
@@ -858,8 +982,8 @@
     // never an empty leg: if no narrows rolled, a shark shows up early — and sometimes treasure
     if (narrowsAt < 0) sharkT = Math.min(sharkT, rand(1.5, legTime * 0.4));
     var coinArcAt = chance(0.3) ? rand(2, Math.max(3, legTime - 3)) : -1;
-    var slow = G.mods.slow ? 0.75 : 1; G.mods.slow = false;
-    G.mods.fogNow = !!G.mods.fog; G.mods.fog = false;
+    var slow = consumeMod("slow") ? 0.75 : 1;
+    G.mods.fogNow = !!consumeMod("fog");
     var hazMul = (1 + warnBonus() * 0.22) * (G.firstRun ? 1.25 : 1) * diff().spawn;   // crow's nest spreads hazards; first voyage is gentler; difficulty scales it
     // insane mode: every leg spins the multiverse wheel
     var CHAOS = {
@@ -981,22 +1105,22 @@
           if (o.y > H + 50) { if (o.kind === "hazard") addScore(2); objs.splice(i, 1); }
         }
         // cannonballs vs hazards and airborne sharks
-        for (var bi = balls.length - 1; bi >= 0; bi--) {
-          var b = balls[bi]; b.y += b.vy * dt;
-          var hit = false;
-          for (var oi = objs.length - 1; oi >= 0; oi--) {
-            var ob = objs[oi];
-            if (ob.kind === "hazard" && Math.hypot(b.x - ob.x, b.y - ob.y) < ob.r + 6) {
-              ob.hp--; splash(b.x, b.y, 6, ob.sub === "ice" ? "#cfe9f2" : "#cdb98a"); SFX.hit(); hit = true;
-              if (ob.hp <= 0) { addScore(5); SFX.point(); splash(ob.x, ob.y, 10); objs.splice(oi, 1); }
-              break;
-            }
-            if (ob.kind === "shark" && ob.phase === "leap" && Math.hypot(b.x - ob.x, b.y - ob.y) < ob.r + 8) {
-              addScore(15); addGold(5); SFX.win(); splash(ob.x, ob.y, 14, "#9fb6c9"); coinBurst(ob.x, ob.y); objs.splice(oi, 1); hit = true; break;
-            }
+        var sailTargets = [];
+        for (var oi = 0; oi < objs.length; oi++) {
+          var ob = objs[oi];
+          if (ob.kind === "hazard") {
+            (function (o2) { sailTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function (b) {
+              o2.hp--; splash(b.x, b.y, 6, o2.sub === "ice" ? "#cfe9f2" : "#cdb98a"); SFX.hit();
+              if (o2.hp <= 0) { addScore(5); SFX.point(); splash(o2.x, o2.y, 10); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1); }
+            } }); })(ob);
+          } else if (ob.kind === "shark" && ob.phase === "leap") {
+            (function (o2) { sailTargets.push({ x: o2.x, y: o2.y, r: o2.r + 2, onHit: function (b) {
+              addScore(15); addGold(5); SFX.win(); splash(o2.x, o2.y, 14, "#9fb6c9"); coinBurst(o2.x, o2.y);
+              var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1);
+            } }); })(ob);
           }
-          if (hit || b.y < -30) balls.splice(bi, 1);
         }
+        stepBalls(balls, dt, sailTargets);
         if (t >= legTime) advance();
       },
       render: function () {
@@ -1038,7 +1162,7 @@
           }
           ctx.restore();
         }
-        for (var b3 = 0; b3 < balls.length; b3++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[b3].x, balls[b3].y, 5, 0, 7); ctx.fill(); }
+        drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts());
         drawParts();
         drawHUD();
@@ -1086,7 +1210,7 @@
   function EventScene(ev) {
     var t = 0, applied = false, picked = -1, resultLine = "";
     if (!SAVE.seen) SAVE.seen = {};
-    if (!SAVE.seen[ev.id]) { SAVE.seen[ev.id] = true; persist(); }   // logged in the tales book
+    if (!SAVE.seen[ev.id]) { SAVE.seen[ev.id] = true; persist(); invalidateSeenCache(); }   // logged in the tales book
     // the steady-hand bar: every plain event is now a timing check. Stop the
     // marker in the green and good news pays double / bad news is halved.
     var hasFx = !ev.choice && ev.fx && (ev.fx.s || ev.fx.g || ev.fx.h);
@@ -1248,14 +1372,14 @@
   ];
   function BattleScene() {
     G.battleNum++;
-    var tier = G.battleNum + (G.mods.navyNext ? 1 : 0); G.mods.navyNext = false;
+    var tier = G.battleNum + (consumeMod("navyNext") ? 1 : 0);
     var type = ENEMY_TYPES[clamp(tier - 1, 0, 2)];
     if (tier === 2 && chance(0.35)) type = ENEMY_TYPES[0];
     var phase = "intro";
     var ehp = Math.max(2, Math.round(type.hp * diff().hp));
     var enemy = { x: W * 0.5, y: H * 0.2, hp: ehp, max: ehp, dir: 1, fireT: 1.2 };
-    var fireMod = (G.mods.navyintel ? 0.3 : 0); G.mods.navyintel = false;
-    var dmgBonus = G.mods.drill ? 1 : 0; G.mods.drill = false;
+    var fireMod = consumeMod("navyintel") ? 0.3 : 0;
+    var dmgBonus = consumeMod("drill") ? 1 : 0;
     var balls = [], t = 0, prompt = null, loot = 0, fireGun = gunner();
     return {
       enter: function () { prompt = Prompt(type.name + "!", "She wants your ship at the bottom. Fire when you can. Dodge her shot. Sink her for gold.", function () { phase = "fight"; }); },
@@ -1270,23 +1394,17 @@
         if (enemy.x < W * 0.15 || enemy.x > W * 0.85) enemy.dir *= -1;
         enemy.fireT -= dt;
         if (enemy.fireT <= 0) { enemy.fireT = rand(type.fire[0], type.fire[1]) * diff().fire + fireMod; balls.push({ x: enemy.x, y: enemy.y + 18, vy: 300 + tier * 25, own: 0 }); }
-        for (var i = balls.length - 1; i >= 0; i--) {
-          var b = balls[i]; b.y += b.vy * dt;
-          if (b.own === 1 && Math.hypot(b.x - enemy.x, b.y - enemy.y) < 26) {
-            var doubled = chance(shotBonus());
-            if (doubled) toast("⛓ Chain shot strikes double!");
-            var dmg = 1 + dmgBonus + (doubled ? 1 : 0);
-            enemy.hp -= dmg; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit(); balls.splice(i, 1);
-            if (enemy.hp <= 0) {
-              phase = "done"; loot = randInt(type.gold[0], type.gold[1]); addGold(loot); addScore(type.score); G.shipsBeaten++;
-              SFX.win();
-              for (var k = 0; k < 24; k++) spawn(enemy.x, enemy.y, { vx: rand(-120, 120), vy: rand(-160, 40), g: 260, life: rand(0.6, 1.2), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
-            }
-            continue;
+        stepBalls(balls, dt, [{ x: enemy.x, y: enemy.y, r: 20, onHit: function (b) {
+          var doubled = chance(shotBonus());
+          if (doubled) toast("⛓ Chain shot strikes double!");
+          var dmg = 1 + dmgBonus + (doubled ? 1 : 0);
+          enemy.hp -= dmg; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+          if (enemy.hp <= 0) {
+            phase = "done"; loot = randInt(type.gold[0], type.gold[1]); addGold(loot); addScore(type.score); G.shipsBeaten++;
+            SFX.win();
+            for (var k = 0; k < 24; k++) spawn(enemy.x, enemy.y, { vx: rand(-120, 120), vy: rand(-160, 40), g: 260, life: rand(0.6, 1.2), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
           }
-          if (b.own === 0 && Math.hypot(b.x - shipPX, b.y - shipPY) < 18) { balls.splice(i, 1); damage(1); continue; }
-          if (b.y < -30 || b.y > H + 30) balls.splice(i, 1);
-        }
+        } }], { x: shipPX, y: shipPY, r: 18 });
       },
       render: function () {
         drawSea(G.pal, seaT * 45, false);
@@ -1296,7 +1414,7 @@
           ctx.fillStyle = "#7a1f1f"; roundRect(bx, 8, bw * (enemy.hp / enemy.max), 6, 3); ctx.fill();
         }
         drawShip(enemy.x, enemy.y, 1.7, { rot: Math.PI, flag: type.flag, hull: type.hull, deck: type.deck, sail: type.sail, dmg: enemy.max - enemy.hp });
-        for (var i = 0; i < balls.length; i++) { var b = balls[i]; ctx.fillStyle = b.own ? "#f4e7c9" : "#e08c6a"; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill(); }
+        drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         if (phase === "intro") prompt.render();
@@ -1310,8 +1428,8 @@
   function SquadronScene() {
     var phase = "intro", prompt = null, t = 0, balls = [], loot = 0, fireGun = gunner();
     var count = 3 + (chance(0.5) ? 1 : 0);
-    var fireMod = (G.mods.navyintel ? 0.3 : 0); G.mods.navyintel = false;
-    var dmgBonus = G.mods.drill ? 1 : 0; G.mods.drill = false;
+    var fireMod = consumeMod("navyintel") ? 0.3 : 0;
+    var dmgBonus = consumeMod("drill") ? 1 : 0;
     var ships = [];
     var shp = Math.max(2, Math.round(3 * diff().hp));
     for (var i = 0; i < count; i++) {
@@ -1352,32 +1470,23 @@
           s.fireT -= dt;
           if (s.fireT <= 0) { s.fireT = rand(1.3, 2.1) * diff().fire + fireMod; balls.push({ x: s.x, y: s.y + 18, vy: 320, own: 0 }); }
         });
-        for (var bi = balls.length - 1; bi >= 0; bi--) {
-          var b = balls[bi]; b.y += b.vy * dt;
-          var used = false;
-          if (b.own === 1) {
-            for (var si = 0; si < ships.length; si++) {
-              var s2 = ships[si];
-              if (!s2.alive || !s2.active) continue;
-              if (Math.hypot(b.x - s2.x, b.y - s2.y) < 24) {
-                var doubled = chance(shotBonus());
-                if (doubled) toast("⛓ Chain shot strikes double!");
-                s2.hp -= 1 + dmgBonus + (doubled ? 1 : 0);
-                splash(b.x, b.y, 8, "#e08c6a"); SFX.hit(); used = true;
-                if (s2.hp <= 0) {
-                  s2.alive = false; G.shipsBeaten++;
-                  var g = randInt(15, 25); loot += g; addGold(g); addScore(40); SFX.win();
-                  for (var k = 0; k < 18; k++) spawn(s2.x, s2.y, { vx: rand(-110, 110), vy: rand(-150, 40), g: 260, life: rand(0.5, 1.1), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
-                  if (aliveShips().length === 0) {
-                    phase = "done"; addScore(120); addGold(40); loot += 40; SFX.win();
-                  }
-                }
-                break;
-              }
+        var squadTargets = [];
+        ships.forEach(function (s2) {
+          if (!s2.alive || !s2.active) return;
+          squadTargets.push({ x: s2.x, y: s2.y, r: 18, onHit: function (b) {
+            var doubled = chance(shotBonus());
+            if (doubled) toast("⛓ Chain shot strikes double!");
+            s2.hp -= 1 + dmgBonus + (doubled ? 1 : 0);
+            splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+            if (s2.hp <= 0) {
+              s2.alive = false; G.shipsBeaten++;
+              var g = randInt(15, 25); loot += g; addGold(g); addScore(40); SFX.win();
+              for (var k = 0; k < 18; k++) spawn(s2.x, s2.y, { vx: rand(-110, 110), vy: rand(-150, 40), g: 260, life: rand(0.5, 1.1), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
+              if (aliveShips().length === 0) { phase = "done"; addScore(120); addGold(40); loot += 40; SFX.win(); }
             }
-          } else if (Math.hypot(b.x - shipPX, b.y - shipPY) < 18) { used = true; damage(1); }
-          if (used || b.y < -30 || b.y > H + 30) balls.splice(bi, 1);
-        }
+          } });
+        });
+        stepBalls(balls, dt, squadTargets, { x: shipPX, y: shipPY, r: 18 });
       },
       render: function () {
         drawSea(G.pal, seaT * 45, false);
@@ -1388,7 +1497,7 @@
           ctx.fillStyle = "#7a1f1f"; roundRect(bx, s.y - 42, bw * (s.hp / s.max), 4, 2); ctx.fill();
           drawShip(s.x, s.y, 1.35, { rot: Math.PI, flag: "#c03a2b", hull: "#4a2f2f", deck: "#6a4444", sail: "#e8d3b0", dmg: s.max - s.hp });
         });
-        for (var i = 0; i < balls.length; i++) { var b = balls[i]; ctx.fillStyle = b.own ? "#f4e7c9" : "#e08c6a"; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill(); }
+        drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         if (phase === "fight") text("Pack: " + aliveShips().length + " of " + count, W / 2, H - 14, 12, "#e8c1ae", "center", "bold");
@@ -1413,7 +1522,7 @@
         if (phase === "done") { if (consumeTap()) advance(); return; }
         helm(dt, 1, 0.55);
         var shipPX = G.shipX * W, shipPY = shipYPx();
-        if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -460).forEach(function (nb) { delete nb.own; balls.push(nb); }); SFX.fire(); }
+        if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -460).forEach(function (nb) { balls.push(nb); }); SFX.fire(); }
         stateT -= dt;
         if (state === "weave") {
           headOpen = false;
@@ -1449,25 +1558,20 @@
           if (Math.hypot(sv.x - shipPX, sv.y - shipPY) < 18) { spits.splice(si, 1); damage(1); continue; }
           if (sv.y > H + 30) spits.splice(si, 1);
         }
-        for (var i = balls.length - 1; i >= 0; i--) {
-          var b = balls[i]; b.y += b.vy * dt;
-          if (Math.hypot(b.x - seg[0].x, b.y - seg[0].y) < 30) {
-            balls.splice(i, 1); hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
-            if (hp <= 0) {
-              phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14);
-              for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
-            }
-            continue;
+        stepBalls(balls, dt, [{ x: seg[0].x, y: seg[0].y, r: 24, onHit: function () {
+          hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
+          if (hp <= 0) {
+            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14);
+            for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
           }
-          if (b.y < -30) balls.splice(i, 1);
-        }
+        } }]);
       },
       render: function () {
         drawSea(G.pal, seaT * 50, false);
         if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text("SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
         drawSerpent(seg, headOpen, flashT > 0);
         for (var s2 = 0; s2 < spits.length; s2++) { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(143,214,160,.4)"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 10, 0, 7); ctx.fill(); }
-        for (var i = 0; i < balls.length; i++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[i].x, balls[i].y, 5, 0, 7); ctx.fill(); }
+        drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         if (headOpen && phase === "fight") text("FIRE!", seg[0].x, seg[0].y - 40, 16, "#ffd24a", "center", "bold");
@@ -1611,7 +1715,7 @@
 
   // ---------------------------------------------------------------- STORM finale
   function StormScene() {
-    var phase = "intro", prompt = null;
+    var phase = "intro", prompt = null, chosen = false;
     var t = 0, survive = (rand(28, 34) - (G.mods.warned ? 4 : 0)) * diff().storm, objs = [], balls = [], spawnT = 0, lightning = 0, waveT = rand(2.5, 4), bigWave = null;
     var bolt = null, boltT = rand(3, 5);       // targeted lightning: a marked column, then the strike
     var gust = null, gustT = rand(5, 8);       // wind gusts that shove the ship sideways
@@ -1627,8 +1731,9 @@
         seaT += dt;
         if (phase === "intro") { prompt.update(dt); return; }
         if (phase === "won") {
-          if (input.leftPressed) { endRun(true, false); return; }
-          if (input.rightPressed) { advance(); return; }
+          if (chosen) return;
+          if (input.leftPressed) { chosen = true; endRun(true, false); return; }
+          if (input.rightPressed) { chosen = true; advance(); return; }
           return;
         }
         t += dt;
@@ -1682,16 +1787,15 @@
           }
           if (o.y > H + 40) objs.splice(i, 1);
         }
-        for (var bi = balls.length - 1; bi >= 0; bi--) {
-          var b = balls[bi]; b.y += b.vy * dt;
-          var hit = false;
-          for (var oi = objs.length - 1; oi >= 0; oi--) {
-            var ob = objs[oi];
-            if (ob.sub === "barrel") continue;   // don't blow up the mercy
-            if (Math.hypot(b.x - ob.x, b.y - ob.y) < ob.r + 6) { addScore(5); SFX.point(); splash(ob.x, ob.y, 10); objs.splice(oi, 1); hit = true; break; }
-          }
-          if (hit || b.y < -30) balls.splice(bi, 1);
+        var stormTargets = [];
+        for (var oi = 0; oi < objs.length; oi++) {
+          var ob = objs[oi];
+          if (ob.sub === "barrel") continue;   // don't blow up the mercy
+          (function (o2) { stormTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function () {
+            addScore(5); SFX.point(); splash(o2.x, o2.y, 10); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1);
+          } }); })(ob);
         }
+        stepBalls(balls, dt, stormTargets);
         waveT -= dt;
         if (!bigWave && waveT <= 0) bigWave = { warn: warnLen, hit: false };
         if (bigWave) {
@@ -1716,7 +1820,7 @@
           text("⚡", bolt.x, H * 0.2, 26, "#ffd24a", "center", "bold");
         }
         for (var i = 0; i < objs.length; i++) { var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); if (o.sub === "rock") { ctx.fillStyle = "#4a4740"; blob(o.r); } else if (o.sub === "barrel") { ctx.fillStyle = "#8a5a34"; ctx.fillRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); ctx.strokeStyle = "#8fd6a0"; ctx.lineWidth = 2; ctx.strokeRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); } else { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-o.r, -5, o.r * 2, 10); } ctx.restore(); }
-        for (var b3 = 0; b3 < balls.length; b3++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[b3].x, balls[b3].y, 5, 0, 7); ctx.fill(); }
+        drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         var sw = clamp(W * 0.6, 200, 400), sx = (W - sw) / 2, sy = H - 28;
@@ -1735,8 +1839,8 @@
           text("THE STORM BREAKS!", W / 2, H / 2 - 68, 24, "#8fd6a0", "center", "bold");
           wrapText("You beat the storm the real Whydah could not. The win is yours and the crew patches her up. But something followed you out of the dark. Something with three heads.", W / 2, H / 2 - 40, w - 44, 19, 13.5, "#f4e7c9");
           var bw = (w - 60) / 2, by = H / 2 + 30;
-          if (uiButton(W / 2 - w / 2 + 20, by, bw, 46, "⚓ MAKE FOR PORT", { size: 13.5, color: "#2c5e38" })) { endRun(true, false); return; }
-          if (uiButton(W / 2 + 10, by, bw, 46, "🐍 TURN AND FIGHT", { size: 13.5, color: "#96341f" })) { advance(); return; }
+          if (!chosen && uiButton(W / 2 - w / 2 + 20, by, bw, 46, "⚓ MAKE FOR PORT", { size: 13.5, color: "#2c5e38" })) { chosen = true; endRun(true, false); return; }
+          if (!chosen && uiButton(W / 2 + 10, by, bw, 46, "🐍 TURN AND FIGHT", { size: 13.5, color: "#96341f" })) { chosen = true; advance(); return; }
           text("← port keeps the win  ·  → risks gold for glory", W / 2, H / 2 + 94, 10.5, "rgba(244,231,201,.6)");
         }
       }
@@ -1816,26 +1920,22 @@
           if (Math.hypot(sv.x - shipPX, sv.y - shipPY) < 18) { spits.splice(si, 1); damage(1); continue; }
           if (sv.y > H + 30) spits.splice(si, 1);
         }
-        for (var bi = balls.length - 1; bi >= 0; bi--) {
-          var b = balls[bi]; b.y += b.vy * dt;
-          var hit = false;
-          for (var hj = 0; hj < heads.length; hj++) {
-            var h2 = heads[hj];
-            if (h2.alive && Math.hypot(b.x - h2.seg[0].x, b.y - h2.seg[0].y) < 30) {
-              hit = true; h2.hp--; h2.flashT = 0.12; SFX.hit(); splash(h2.seg[0].x, h2.seg[0].y, 10, "#8fd6a0");
-              if (h2.hp <= 0) {
-                h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
-                for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
-                if (aliveHeads().length === 0) {
-                  phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20);
-                  for (var k3 = 0; k3 < 60; k3++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-220, 220), vy: rand(-260, 80), g: 240, life: rand(0.7, 1.8), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
-                }
+        var headTargets = [];
+        heads.forEach(function (h2) {
+          if (!h2.alive) return;
+          headTargets.push({ x: h2.seg[0].x, y: h2.seg[0].y, r: 24, onHit: function () {
+            h2.hp--; h2.flashT = 0.12; SFX.hit(); splash(h2.seg[0].x, h2.seg[0].y, 10, "#8fd6a0");
+            if (h2.hp <= 0) {
+              h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
+              for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
+              if (aliveHeads().length === 0) {
+                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20);
+                for (var k3 = 0; k3 < 60; k3++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-220, 220), vy: rand(-260, 80), g: 240, life: rand(0.7, 1.8), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
               }
-              break;
             }
-          }
-          if (hit || b.y < -40) balls.splice(bi, 1);
-        }
+          } });
+        });
+        stepBalls(balls, dt, headTargets);
       },
       render: function () {
         drawSea(STORM_PAL, seaT * 60, true);
@@ -1849,7 +1949,7 @@
         }
         heads.forEach(function (h) { if (h.alive || h.seg[0].y < H + 240) drawSerpent(h.seg, h.open, h.flashT > 0); });
         for (var s2 = 0; s2 < spits.length; s2++) { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); }
-        for (var i = 0; i < balls.length; i++) { ctx.fillStyle = "#f4e7c9"; ctx.beginPath(); ctx.arc(balls[i].x, balls[i].y, 5, 0, 7); ctx.fill(); }
+        drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         heads.forEach(function (h) { if (h.open && phase === "fight") text("FIRE!", h.seg[0].x, h.seg[0].y - 40, 15, "#ffd24a", "center", "bold"); });
@@ -1907,6 +2007,7 @@
   function ResultScene(sunk) {
     var t = 0;
     return {
+      noPause: true,
       enter: function () { document.body.classList.remove("playing"); },
       update: function (dt) { seaT += dt; t += dt; updateGulls(dt); },
       render: function () {
@@ -1937,6 +2038,7 @@
   function HarborScene(fromRun) {
     var msg = "";
     return {
+      noPause: true,
       enter: function () { document.body.classList.remove("playing"); },
       update: function (dt) { seaT += dt; updateGulls(dt); },
       render: function () {
@@ -1990,15 +2092,18 @@
   var last = 0;
   function loop(ts) {
     var dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts;
-    updateTimers(dt);
-    if (G && G.iframes > 0) G.iframes -= dt;
-    if (scene && scene.update) scene.update(dt);
-    updateParts(dt);
+    if (!paused) {
+      updateTimers(dt);
+      if (G && G.iframes > 0) G.iframes -= dt;
+      if (scene && scene.update) scene.update(dt);
+      updateParts(dt);
+    }
     ctx.save();
-    if (shakeAmt > 0) { ctx.translate(rand(-shakeAmt, shakeAmt), rand(-shakeAmt, shakeAmt)); shakeAmt = Math.max(0, shakeAmt - dt * 40); }
+    if (!paused && shakeAmt > 0) { ctx.translate(rand(-shakeAmt, shakeAmt), rand(-shakeAmt, shakeAmt)); shakeAmt = Math.max(0, shakeAmt - dt * 40); }
     if (scene && scene.render) scene.render();
-    if (redFlash > 0) { redFlash -= dt; ctx.fillStyle = "rgba(200,40,30," + clamp(redFlash * 2.2, 0, 0.33) + ")"; ctx.fillRect(0, 0, W, H); }
-    drawToasts(dt);
+    if (!paused && redFlash > 0) { redFlash -= dt; ctx.fillStyle = "rgba(200,40,30," + clamp(redFlash * 2.2, 0, 0.33) + ")"; ctx.fillRect(0, 0, W, H); }
+    drawToasts(paused ? 0 : dt);
+    if (paused) drawPauseOverlay();
     ctx.restore();
     input.pPressed = false; input.firePressed = false; input.leftPressed = false; input.rightPressed = false;
     requestAnimationFrame(loop);
@@ -2006,6 +2111,8 @@
 
   var muteBtn = document.getElementById("btn-mute");
   if (muteBtn) muteBtn.addEventListener("click", function () { muted = !muted; muteBtn.textContent = muted ? "🔇" : "🔊"; if (!muted) audio(); });
+  var pauseBtn = document.getElementById("btn-pause");
+  if (pauseBtn) pauseBtn.addEventListener("click", function () { togglePause(); });
 
   // boot
   resize(); seedCoast(); newGame(); setScene(TitleScene());
@@ -2032,6 +2139,8 @@
       save: function () { return JSON.parse(JSON.stringify(SAVE)); },
       wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
       toHarbor: function () { setScene(HarborScene(false)); },
+      pause: function (v) { setPause(v); return paused; },
+      isPaused: function () { return paused; },
       err: function () { return window.__err ? window.__err.slice(0, 6) : []; }
     };
   }
