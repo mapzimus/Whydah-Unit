@@ -381,17 +381,29 @@
   var seaT = 0, coast = [], gulls = [];
   function seedCoast() {
     coast = [];
-    for (var i = 0; i < 40; i++) coast.push({ y: rand(-H, H), side: chance(0.5) ? 0 : 1, w: rand(30, 90), h: rand(50, 130), d: Math.random() });
+    // You're coasting north with the mainland to the west — so land sits on the
+    // LEFT (port) side, open ocean to the right. A few small islands stand off
+    // to seaward for variety, clearly surrounded by water.
+    for (var i = 0; i < 40; i++) {
+      var isle = chance(0.15);
+      coast.push({
+        y: rand(-H, H), side: isle ? 1 : 0, isle: isle,
+        w: isle ? rand(16, 28) : rand(34, 92),
+        h: isle ? rand(24, 44) : rand(50, 130),
+        d: Math.random()
+      });
+    }
   }
+  // gulls wheel over the open water to seaward — never over the shore on the left
+  var GULL_LO = 0.30, GULL_HI = 0.80;
   function spawnGull() {
-    var fromLeft = chance(0.5);
-    gulls.push({ x: fromLeft ? -20 : W + 20, y: rand(H * 0.03, H * 0.16), vx: (fromLeft ? 1 : -1) * rand(28, 55), ph: rand(0, 6), s: rand(0.7, 1.15) });
+    gulls.push({ x: rand(GULL_LO, GULL_HI) * W, y: rand(H * 0.05, H * 0.17), vx: (chance(0.5) ? 1 : -1) * rand(20, 40), ph: rand(0, 6), s: rand(0.7, 1.15) });
   }
   function updateGulls(dt) {
-    if (gulls.length < 3 && chance(0.004)) spawnGull();
+    if (gulls.length < 3 && chance(0.006)) spawnGull();
     for (var i = gulls.length - 1; i >= 0; i--) {
       var g = gulls[i]; g.x += g.vx * dt; g.ph += dt * 9; g.y += Math.sin(g.ph * 0.3) * 6 * dt;
-      if (g.x < -40 || g.x > W + 40) gulls.splice(i, 1);
+      if (g.x < GULL_LO * W || g.x > GULL_HI * W) g.vx *= -1;   // wheel back over the water, don't drift onto land
     }
   }
   function drawGulls(pal) {
@@ -474,16 +486,18 @@
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
     var shoreMul = (G && G.route === "shore") ? 1.35 : 1;   // the fork changes what the coast looks like
     for (var c = 0; c < coast.length; c++) {
-      if (G && G.route === "sea" && c % 4 !== 0) continue;  // open water: land is a rumor
       var o = coast[c];
+      if (G && G.route === "sea" && !o.isle && c % 4 !== 0) continue;  // out to sea: land is only a rumor
       o.y += (stormy ? 90 : 55) * 0.016 * (0.6 + (c % 3) * 0.2);
       var yy2 = (o.y % (H + 260)); if (yy2 < -160) yy2 += H + 260;
       if (yy2 > skyH - 40 && yy2 < H + 40) {
-        var cx = o.side === 0 ? -10 + o.w * shoreMul * 0.4 : W + 10 - o.w * shoreMul * 0.4;
+        var ew = o.isle ? o.w : o.w * shoreMul;
+        // mainland hugs the left edge; islands stand off in open water to the right
+        var cx = o.isle ? (W - ew * 1.5 - W * 0.02) : (-10 + ew * 0.4);
         ctx.fillStyle = pal.land; ctx.globalAlpha = 0.85;
-        ctx.beginPath(); ctx.ellipse(cx, yy2, o.w * shoreMul, o.h, 0, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx, yy2, ew, o.h, 0, 0, 7); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,.15)";
-        ctx.beginPath(); ctx.ellipse(cx, yy2 + o.h * 0.6, o.w * shoreMul * 1.05, o.h * 0.25, 0, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx, yy2 + o.h * 0.6, ew * 1.05, o.h * 0.25, 0, 0, 7); ctx.fill();
         drawCoastDecor(cx, yy2, o);
         ctx.globalAlpha = 1;
       }
@@ -731,9 +745,17 @@
   }
 
   // ---------------------------------------------------------------- SAIL leg
+  // Phones have far less left-right room than a desktop canvas, which made
+  // dodging much harder there. narrowEase() > 1 on tall/narrow screens; we use
+  // it to thin out spawns, slow things down, and widen the steering band so a
+  // portrait phone plays about as fair as a widescreen.
+  function narrowEase() { var ar = W / H; return ar >= 1 ? 1 : clamp(1 + (1 - ar) * 0.85, 1, 1.55); }
+  function steerLo() { return W / H < 0.85 ? 0.05 : 0.08; }
+  function steerHi() { return W / H < 0.85 ? 0.95 : 0.92; }
+
   function SailScene() {
     // longer legs by design (the kids said the voyage flew by) — Full Canvas buys the pace back
-    var legTime = rand(10, 14) * legSpeedMul(), t = 0;
+    var legTime = rand(10, 14) * legSpeedMul(), t = 0, ease = narrowEase();
     var shore = G.route === "shore", sea = G.route === "sea";
     var objs = [], balls = [], spawnT = 1.2, fireGun = gunner();
     var sharkT = sea ? rand(4, 8) : (shore ? rand(9, 14) : rand(4, 9));
@@ -753,24 +775,30 @@
         seaT += dt; t += dt; updateGulls(dt);
         var sp = steerSpeed() * slow * dt;
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
-        if (input.pDown && input.py > H * 0.4) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.2);
-        G.shipX = clamp(G.shipX, 0.08, 0.92);
+        if (input.pDown && input.py > H * 0.4) G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.2);
+        G.shipX = clamp(G.shipX, steerLo(), steerHi());
         var shipPX = G.shipX * W, shipPY = H * 0.82;
         // guns are live on the open sea: blast the wreckage out of your way (hold to keep firing)
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(shipPX, shipPY - 18, 2); }
         spawnT -= dt;
         if (spawnT <= 0) {
-          spawnT = rand(0.55, 1.15) * hazMul;
+          // far fewer things to dodge than before, and the hazards are natural now —
+          // reefs and rocks near the coast, drift ice up north, open ocean stays clear.
+          spawnT = rand(1.0, 1.9) * hazMul * ease;
           var roll = Math.random(), o;
-          if (roll < 0.40) o = { kind: "hazard", sub: choice(shore ? ["rock", "rock", "rock", "wood"] : ["rock", "ice", "rock", "wood"]), r: rand(16, 26), sp: rand(150, 230), hp: 1 };
-          else if (roll < 0.50) o = { kind: "fin", sub: "fin", r: 15, sp: rand(90, 130), drift: rand(-40, 40) };
-          else {
+          var north = Math.floor(clamp(G.progress, 0, 0.999) * STAGES.length) >= 3;
+          var hazChance = sea ? 0.14 : (shore ? 0.34 : 0.24);
+          if (roll < hazChance) {
+            var hsub = north ? choice(["ice", "rock", "ice"]) : (shore ? "rock" : choice(["rock", "ice"]));
+            o = { kind: "hazard", sub: hsub, r: rand(16, 26), sp: rand(140, 200) / ease, hp: hsub === "rock" ? 2 : 1 };
+          } else if (roll < hazChance + 0.10) {
+            o = { kind: "fin", sub: "fin", r: 15, sp: rand(90, 130) / ease, drift: rand(-40, 40) };
+          } else {
             var picks = ["coin", "coin", "coin", "wind", "barrel"];
             if (shore) picks.push("dory", "barrel");
-            if (sea) picks.push("wind");
-            o = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(150, 230) };
+            if (sea) picks.push("wind", "coin");
+            o = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(140, 200) / ease };
           }
-          if (o.kind === "hazard" && o.sub === "rock") o.hp = 2;
           o.x = rand(0.1, 0.9) * W; o.y = -40; o.a = 0; o.spin = rand(-2, 2);
           objs.push(o);
         }
@@ -783,8 +811,9 @@
         // breaching sharks: a fin shadows you, then the whole shark comes out of the water
         sharkT -= dt;
         if (sharkT <= 0) {
-          sharkT = sea ? rand(4, 8) : (shore ? rand(9, 14) : rand(6, 11));
-          objs.push({ kind: "shark", phase: "stalk", pt: 1.1 + warnBonus() * 0.3, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
+          sharkT = sea ? rand(5, 9) : (shore ? rand(10, 15) : rand(7, 12));
+          // longer wind-up so you can react even while looking forward to shoot
+          objs.push({ kind: "shark", phase: "stalk", pt: (1.7 + warnBonus() * 0.3) * ease, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
         }
         // the narrows: a wall of land with one gap — thread the needle
         if (narrowsAt > 0 && !narrowsDone && t >= narrowsAt) {
@@ -795,10 +824,10 @@
           var o = objs[i];
           if (o.kind === "shark") {
             if (o.phase === "stalk") {
-              o.y = shipPY + 26; o.x = lerp(o.x, shipPX, 1.5 * dt); o.pt -= dt;
-              if (o.pt <= 0) { o.phase = "leap"; o.vy = -rand(430, 520); o.vx = clamp((shipPX - o.x) * 1.2, -120, 120); splash(o.x, H * 0.9, 12); }
+              o.y = shipPY + 26; o.x = lerp(o.x, shipPX, 1.2 * dt); o.pt -= dt;
+              if (o.pt <= 0) { o.phase = "leap"; o.vy = -rand(360, 430); o.vx = clamp((shipPX - o.x) * 1.0, -100, 100); splash(o.x, H * 0.9, 12); }
             } else {
-              o.vy += 620 * dt; o.x += o.vx * dt; o.y += o.vy * dt;
+              o.vy += 520 * dt; o.x += o.vx * dt; o.y += o.vy * dt;
               if (Math.hypot(o.x - shipPX, o.y - shipPY) < o.r + 16) { splash(o.x, o.y, 10, "#9fb6c9"); damage(1); objs.splice(i, 1); continue; }
               if (o.y > H + 60 && o.vy > 0) { objs.splice(i, 1); continue; }
             }
@@ -857,11 +886,19 @@
           if (o.kind === "fin") { drawFin(o.x, o.y, (o.drift || 1) >= 0 ? 1 : -1); continue; }
           if (o.kind === "shark") {
             if (o.phase === "stalk") {
+              // dark shadow + a bold pulsing cue up where you're looking, so a
+              // shark can't sneak up while you're aiming forward
+              ctx.fillStyle = "rgba(20,40,50,.4)"; ctx.beginPath(); ctx.ellipse(o.x, o.y + 6, 30, 10, 0, 0, 7); ctx.fill();
               drawFin(o.x, o.y, 1);
-              if (o.pt < 0.5) {   // it's about to jump — ripple and shadow
-                ctx.strokeStyle = "rgba(223,241,244,.7)"; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(o.x, o.y + 4, 18 + (0.5 - o.pt) * 60, 0, 7); ctx.stroke();
-                ctx.fillStyle = "rgba(20,40,50,.35)"; ctx.beginPath(); ctx.ellipse(o.x, o.y + 6, 30, 9, 0, 0, 7); ctx.fill();
+              var pulse = 0.55 + 0.45 * Math.sin(seaT * 12);
+              ctx.globalAlpha = pulse;
+              text("🦈 SHARK!", o.x, H * 0.82 - 58, clamp(W * 0.045, 15, 20), "#ff8a7a", "center", "bold");
+              text("▼", o.x, H * 0.82 - 40, 18, "#ff8a7a", "center", "bold");
+              ctx.globalAlpha = 1;
+              var wind = clamp(1 - o.pt, 0, 1);   // ripple grows in the last second before the leap
+              if (wind > 0) {
+                ctx.strokeStyle = "rgba(255,138,122,.8)"; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(o.x, o.y + 4, 18 + wind * 55, 0, 7); ctx.stroke();
               }
             } else drawShark(o.x, o.y, o.vx >= 0 ? 1 : -1);
             continue;
@@ -1105,8 +1142,8 @@
         if (phase === "done") { if (consumeTap()) advance(); return; }
         var sp = steerSpeed() * dt;
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
-        if (input.pDown && input.py > H * 0.5) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
-        G.shipX = clamp(G.shipX, 0.08, 0.92);
+        if (input.pDown && input.py > H * 0.5) G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.25);
+        G.shipX = clamp(G.shipX, steerLo(), steerHi());
         var shipPX = G.shipX * W, shipPY = H * 0.82;
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -420).forEach(function (nb) { balls.push(nb); }); SFX.fire(); smoke(shipPX, shipPY - 18, 3); }
         enemy.x += enemy.dir * type.speed * dt;
@@ -1184,8 +1221,8 @@
         }
         var sp = steerSpeed() * dt;
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
-        if (input.pDown && input.py > H * 0.5) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
-        G.shipX = clamp(G.shipX, 0.08, 0.92);
+        if (input.pDown && input.py > H * 0.5) G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.25);
+        G.shipX = clamp(G.shipX, steerLo(), steerHi());
         var shipPX = G.shipX * W, shipPY = H * 0.82;
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -420).forEach(function (nb) { balls.push(nb); }); SFX.fire(); smoke(shipPX, shipPY - 18, 3); }
         ships.forEach(function (s) {
@@ -1257,8 +1294,8 @@
         if (phase === "done") { if (consumeTap()) advance(); return; }
         var sp = steerSpeed() * dt;
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
-        if (input.pDown && input.py > H * 0.55) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
-        G.shipX = clamp(G.shipX, 0.08, 0.92);
+        if (input.pDown && input.py > H * 0.55) G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.25);
+        G.shipX = clamp(G.shipX, steerLo(), steerHi());
         var shipPX = G.shipX * W, shipPY = H * 0.84;
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -460).forEach(function (nb) { delete nb.own; balls.push(nb); }); SFX.fire(); }
         stateT -= dt;
@@ -1504,7 +1541,7 @@
         gustT -= dt;
         if (!gust && gustT <= 0) { gust = { push: chance(0.5) ? 0.28 : -0.28, t: 1.6, warn: 0.8 + warnBonus() * 0.3 }; gustT = rand(6, 9); }
         spawnT -= dt;
-        if (spawnT <= 0) { spawnT = rand(0.22, 0.5) * (1 - fury * 0.35); objs.push({ x: rand(0.08, 0.92) * W, y: -30, r: rand(15, 24), sp: rand(240, 330) + fury * 60, a: 0, spin: rand(-3, 3), sub: choice(["rock", "wood", "wood"]), hp: 1 }); }
+        if (spawnT <= 0) { spawnT = rand(0.22, 0.5) * (1 - fury * 0.35) * narrowEase(); objs.push({ x: rand(0.08, 0.92) * W, y: -30, r: rand(15, 24), sp: (rand(240, 330) + fury * 60) / Math.max(1, narrowEase() * 0.85), a: 0, spin: rand(-3, 3), sub: choice(["rock", "wood", "wood"]), hp: 1 }); }
         barrelT -= dt;
         if (barrelT <= 0) { barrelT = rand(8, 10); objs.push({ x: rand(0.1, 0.9) * W, y: -30, r: 15, sp: rand(200, 260), a: 0, spin: rand(-1, 1), sub: "barrel" }); }
         for (var i = objs.length - 1; i >= 0; i--) {
@@ -1613,8 +1650,8 @@
         if (phase === "done") { if (consumeTap()) advance(); return; }
         var sp = steerSpeed() * dt;
         if (input.left) G.shipX -= sp; if (input.right) G.shipX += sp;
-        if (input.pDown && input.py > H * 0.55) G.shipX = lerp(G.shipX, clamp(input.px / W, 0.08, 0.92), 0.25);
-        G.shipX = clamp(G.shipX, 0.08, 0.92);
+        if (input.pDown && input.py > H * 0.55) G.shipX = lerp(G.shipX, clamp(input.px / W, steerLo(), steerHi()), 0.25);
+        G.shipX = clamp(G.shipX, steerLo(), steerHi());
         var shipPX = G.shipX * W, shipPY = H * 0.84;
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -460).forEach(function (nb) { balls.push(nb); }); SFX.fire(); }
         // triple strike: every living head rears at once — find the open water
