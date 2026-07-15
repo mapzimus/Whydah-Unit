@@ -376,7 +376,20 @@
     { id: "sigmabird", w: 2, tag: "multi", ins: true, t: "The sigma albatross", b: "It refuses to fly with the flock. It grinds alone. The crew watches it lift weights made of driftwood.", fx: { s: 15 } },
     { id: "auracheck", w: 2, tag: "multi", ins: true, t: "AURA CHECK", b: "A wave of pure vibes passes through the ship. The bosun gains +999 aura. That is worth points now. This is the multiverse.", fx: { s: 35 } },
     { id: "sixseven",  w: 1, tag: "multi", ins: true, t: "Six... seven...", b: "The powder monkey counts the cannonballs and cannot stop at six-seven. Nobody can. Nobody knows why. Six! Seven!", fx: { s: 15 } },
-    { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } }
+    { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
+    // legends and myths, mission-weighted via m: so they surface near where they belong
+    { id: "davyjones", w: 2, tag: "yarn",   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
+    { id: "fiddlers",  w: 2, tag: "yarn",   m: "rhodeisland", t: "Fiddler's Green", b: "Fiddler's Green, the old hands call it — the far shore where the rum never runs dry and the fiddler never stops playing. You have to drown to get there, though. Mixed review.", fx: { s: 12 } },
+    { id: "jonah",     w: 2, tag: "",       m: "rhodeisland", t: "A Jonah aboard", b: "A hand swears somebody's bad luck is following the ship. A Jonah, sailors call it — a man who curses a voyage just by being on it.", choice: [
+        { l: "Keep him aboard", r: "He stays. The crew mutters, but he's a fine hand with a gun.", fx: { s: -15 } },
+        { l: "Set him ashore (10 gold)", r: "You pay him off at the next landing. The crew breathes easier.", fx: { g: -10, s: 10 } } ] },
+    { id: "klabauter", w: 2, tag: "yarn",   m: "virginia", t: "The Klabautermann", b: "The ship's klabautermann only shows himself when she's doomed, the old hands say. Something small and quick just ducked behind a barrel.", fx: { s: -5 } },
+    { id: "selkie",    w: 2, tag: "yarn",   m: "gulfstream", t: "A seal with a person's eyes", b: "A seal surfaces close alongside and watches the ship pass, eyes too knowing for a seal's. The new hand swears it sang.", fx: { s: 15 } },
+    { id: "aspido",    w: 2, tag: "yarn",   m: "windward", t: "The island that swam away", b: "The reef you anchored by last night is gone this morning — the whole island, swum off in the dark. Some islands, the old charts warn, are not islands at all.", fx: { s: 15 } },
+    { id: "blackbeard",w: 2, tag: "record", m: "carolina", t: "Tavern talk of Blackbeard", b: "Talk in the tavern is all Edward Thatch — Blackbeard, they're calling him now. Fought these same waters not long before you came through.", fx: { s: 10, g: 5 } },
+    { id: "bonnyread", w: 2, tag: "record", t: "Word of Bonny and Read", b: "Word reaches the ship of two more gone on the account — dressed as men, fighting harder than most of the crew. Anne Bonny and Mary Read, the talk says.", fx: { s: 15 } },
+    { id: "oldsowlore",w: 2, tag: "record", m: "capecod", t: "An old dory man's warning", b: "An old dory man at the dock warns you: past Eastport the sea turns on itself, wide enough to swallow a sloop whole. Row wide of it, he says. Row wide.", fx: { s: 10 } },
+    { id: "chantey",   w: 2, tag: "",       t: "A new chantey", b: "A new chantey spreads through the crew, one hand teaching it to the next until the whole ship is singing it on the capstan.", fx: { s: 12 } }
   ];
   // The guaranteed Cape Cod story beat — not part of the random pool, dealt
   // directly by the "hallett" beat kind. Sets a blessed/cursed mod the storm
@@ -437,7 +450,7 @@
       sub: "Hallett's Curse",
       obj: "The last landfall before the run to Maine.",
       decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
-      slots: { event: [0, 0], mini: [0, 0], battle: 0 }, signature: "serpent", battleTier: 3, routeVariant: false },
+      slots: { event: [0, 1], mini: [0, 0], battle: 0 }, signature: "serpent", battleTier: 3, routeVariant: false },
     { id: "noreaster",   name: "The Nor'easter",        nameInsane: "The Chaos Vortex",
       sub: "April 26, 1717",
       obj: "The wolf pack, the storm, and whatever waits past it.",
