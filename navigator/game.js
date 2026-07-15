@@ -761,6 +761,7 @@
     opt = opt || {};
     ctx.save(); ctx.translate(x, y); ctx.rotate(opt.rot || 0);
     if (opt.blink) ctx.globalAlpha = 0.35;
+    if (opt.whydah) s *= 1.094;   // she's a bigger ship once you've boarded her
     var bob = Math.sin(seaT * 2 + (opt.phase || 0)) * 2;
     ctx.translate(0, bob);
     if (opt.wake) { ctx.fillStyle = "rgba(223,241,244,.5)"; ctx.beginPath(); ctx.moveTo(-6 * s, 10 * s); ctx.lineTo(6 * s, 10 * s); ctx.lineTo(2 * s, 30 * s); ctx.lineTo(-2 * s, 30 * s); ctx.closePath(); ctx.fill(); }
@@ -788,6 +789,9 @@
   function playerShipOpts(extra) {
     var lvls = 0; for (var u in SAVE.upg) lvls += upgLvl(u);
     var o = { wake: true, flag: "#111", dmg: G ? (G.maxHull - G.hull) : 0 };
+    // once the Three-Day Chase is won, the player sails the Whydah herself —
+    // black flag always flew, so this just locks in her darker hull and trim
+    if (SAVE.whydahTaken) { o.whydah = true; o.hull = "#2a1a10"; o.trim = "#e0b25c"; }
     if (G && G.iframes > 0 && Math.floor(G.iframes / 0.08) % 2 === 0) o.blink = true;   // hit grace: she flickers
     if (lvls >= 3) o.trim = "#e0b25c";
     if (lvls >= 6) o.sail = "#fdf6e0";
@@ -1117,6 +1121,167 @@
     }
     G.shipX = clamp(G.shipX, steerLo(), steerHi());
     G.shipY = clamp(G.shipY, 0, 1);
+  }
+
+  // ==================================================================
+  // SCENES: PROLOGUE — before the pirate life (M0 dive, M1 chase)
+  // ==================================================================
+  function drawDiver(x, y) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = "rgba(0,0,0,.15)"; ctx.beginPath(); ctx.ellipse(0, 20, 14, 5, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#d9a97a"; ctx.beginPath(); ctx.arc(0, -8, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = "#5a4632"; ctx.beginPath(); ctx.arc(0, -11, 7.2, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = "#3a5f6a"; ctx.beginPath(); ctx.moveTo(-6, -1); ctx.lineTo(6, -1); ctx.lineTo(4, 13); ctx.lineTo(-4, 13); ctx.closePath(); ctx.fill();
+    var kick = Math.sin(seaT * 8) * 6;
+    ctx.strokeStyle = "#3a5f6a"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-3, 13); ctx.lineTo(-3 + kick, 22); ctx.moveTo(3, 13); ctx.lineTo(3 - kick, 22); ctx.stroke();
+    if (chance(0.06)) spawn(x + rand(-4, 4), y - 12, { vy: -30, life: 0.8, r: 2.5, c: "rgba(220,240,250,.7)" });
+    ctx.restore();
+  }
+  function drawAspido(x, y, t) {
+    ctx.save(); ctx.translate(x, y); ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#2a4a3a";
+    ctx.beginPath(); ctx.ellipse(0, 0, 90, 34, 0, 0, 7); ctx.fill();
+    for (var i = -2; i <= 2; i++) { ctx.beginPath(); ctx.ellipse(i * 26, 6, 16, 10, 0, 0, 7); ctx.fill(); }
+    ctx.beginPath(); ctx.ellipse(-100, 4, 22, 14, 0, 0, 7); ctx.fill();   // head end, low and slow
+    ctx.restore();
+  }
+  // M0 — The Wreck Diver (1716, before the pirate life): helm() drives a
+  // diver instead of a ship; breath drains below, refills near the surface;
+  // grab gold among the wreck timbers; slow patrol sharks, no leaps.
+  function DiveScene() {
+    var diveTime = 46, goldQuota = 70, t = 0;
+    var breath = 1, gasp = false;
+    var objs = [], spawnT = 0.9;
+    var turtleAt = rand(14, diveTime - 10), turtleDone = false, turtleT = 0;
+    var done = false;
+    return {
+      debugWin: function () { G.gold = goldQuota; },
+      enter: function () { document.body.classList.add("playing"); G.shipY = 0.25; if (chance(0.6)) spawnGull(); },
+      update: function (dt) {
+        if (done) return;
+        seaT += dt; t += dt;
+        helm(dt, 0.8, 0.4, false);
+        var dx = G.shipX * W, dy = (0.14 + G.shipY * 0.74) * H;
+        var deep = G.shipY > 0.22;
+        breath = clamp(breath + (deep ? -0.052 : 0.4) * dt, 0, 1);
+        if (breath <= 0 && !gasp) { gasp = true; damage(1); breath = 0.4; }
+        if (breath > 0.06) gasp = false;
+        spawnT -= dt;
+        if (spawnT <= 0) {
+          spawnT = rand(0.65, 1.15);
+          if (chance(0.7)) objs.push({ kind: "gold", x: rand(0.12, 0.88) * W, y: -20, sp: rand(58, 88), r: 12, a: 0, spin: rand(-1.5, 1.5) });
+          else objs.push({ kind: "shark", x: rand(0.15, 0.85) * W, y: rand(0.3, 0.8) * H, dir: chance(0.5) ? 1 : -1, sp: rand(32, 50) });
+        }
+        if (!turtleDone && t >= turtleAt) { turtleDone = true; toast("Something vast, and slow, swims off."); }
+        if (turtleDone) turtleT += dt;
+        for (var i = objs.length - 1; i >= 0; i--) {
+          var o = objs[i];
+          if (o.kind === "gold") {
+            o.y += o.sp * dt; o.a += o.spin * dt;
+            if (Math.hypot(o.x - dx, o.y - dy) < o.r + 18) { addGold(8); addScore(6); SFX.coin(); coinBurst(o.x, o.y); objs.splice(i, 1); continue; }
+            if (o.y > H + 40) objs.splice(i, 1);
+          } else {
+            o.x += o.dir * o.sp * dt;
+            if (o.x < 24 || o.x > W - 24) o.dir *= -1;
+            if (Math.hypot(o.x - dx, o.y - dy) < 26) { damage(1); shake(8); splash(o.x, o.y, 8, "#9fb6c9"); o.x = rand(0.15, 0.85) * W; o.y = rand(0.3, 0.8) * H; }
+          }
+        }
+        if (t >= diveTime || G.gold >= goldQuota) {
+          done = true;
+          setScene(Prompt("THE WRECK", "Bellamy and Williams came south to dive the sunken Spanish fleet. They found nearly nothing. They went on the account instead.", advance, "recorded in the log"));
+        }
+      },
+      render: function () {
+        var g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, "#3f93a8"); g.addColorStop(0.55, "#175a72"); g.addColorStop(1, "#061c28");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = "#eafaff";
+        for (var r = 0; r < 5; r++) { ctx.save(); ctx.translate(W * (0.15 + r * 0.2), 0); ctx.rotate(0.25); ctx.fillRect(-14, -20, 26, H * 1.3); ctx.restore(); }
+        ctx.restore();
+        ctx.fillStyle = "rgba(20,15,10,.6)";
+        for (var wt = 0; wt < 4; wt++) { var wx = W * (0.1 + wt * 0.26); ctx.save(); ctx.translate(wx, H - 24); ctx.rotate(rand(-0.1, 0.1) * (wt % 2 ? 1 : -1)); ctx.fillRect(-40, -8, 80, 16); ctx.restore(); }
+        if (turtleDone && turtleT < 7) drawAspido(W * (0.5 - turtleT * 0.09), H * 0.28, turtleT);
+        for (var i = 0; i < objs.length; i++) {
+          var o = objs[i];
+          if (o.kind === "gold") { ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#b98f20"; ctx.font = "13px serif"; ctx.textAlign = "center"; ctx.fillText("$", 0, 4); ctx.textAlign = "left"; ctx.restore(); }
+          else drawShark(o.x, o.y, o.dir);
+        }
+        var dx = G.shipX * W, dy = (0.14 + G.shipY * 0.74) * H;
+        drawDiver(dx, dy);
+        drawParts();
+        drawHUD();
+        var bw = clamp(W * 0.44, 140, 340), bx = (W - bw) / 2, by = 58, bh2 = 8;
+        ctx.fillStyle = "rgba(11,22,32,.55)"; roundRect(bx - 4, by - 4, bw + 8, bh2 + 8, 8); ctx.fill();
+        ctx.fillStyle = "rgba(160,220,240,.25)"; roundRect(bx, by, bw, bh2, 5); ctx.fill();
+        ctx.fillStyle = breath < 0.25 ? "#e05c5c" : "#7fd6ea"; roundRect(bx, by, bw * breath, bh2, 5); ctx.fill();
+        text("BREATH", bx + bw / 2, by + bh2 + 13, 10.5, "rgba(224,246,252,.75)", "center", "bold");
+        text("gold: " + G.gold + " / " + goldQuota, W / 2, H * 0.94, 12, "rgba(244,231,201,.8)", "center", "bold");
+        if (t < 2.2) { ctx.globalAlpha = clamp(2.2 - t, 0, 1); text("Dive for gold. Mind your breath. Sharks patrol, slow and lazy — just don't touch them.", W / 2, H * 0.5, 15, "#eafaff", "center", "bold"); ctx.globalAlpha = 1; }
+      }
+    };
+  }
+  // M1 — The Three-Day Chase (Feb 1717): stay inside the pursuit band behind
+  // the fleeing Whydah, dodging stern-chaser fire and wake debris. Win = board
+  // her — the player's ship becomes the Whydah for the rest of the campaign.
+  function ChaseScene() {
+    var DAYS = [
+      { label: "DAY ONE — DAWN",   pal: PALETTES[0], bandHalf: 0.32, dur: 13 },
+      { label: "DAY TWO — NOON",   pal: PALETTES[1], bandHalf: 0.24, dur: 14 },
+      { label: "DAY THREE — NIGHT", pal: PALETTES[4], bandHalf: 0.17, dur: 15 }
+    ];
+    var day = 0, t = 0, dayT = 0, balls = [], objs = [], spawnT = 1.0, fireT = rand(1.6, 2.6), fireGun = gunner();
+    var done = false;
+    return {
+      debugWin: function () { day = DAYS.length - 1; dayT = DAYS[day].dur; },
+      enter: function () { document.body.classList.add("playing"); G.pal = DAYS[0].pal; G.shipY = 0.5; toast(DAYS[0].label); if (chance(0.5)) spawnGull(); },
+      update: function (dt) {
+        if (done) return;
+        seaT += dt; t += dt; dayT += dt; updateGulls(dt);
+        helm(dt, 1, 0.4, false);
+        var px = G.shipX * W, py = shipYPx();
+        var d = DAYS[day];
+        var bandLo = clamp(0.5 - d.bandHalf, 0, 1), bandHi = clamp(0.5 + d.bandHalf, 0, 1);
+        var inBand = G.shipY >= bandLo && G.shipY <= bandHi;
+        addScore((inBand ? 3 : -2) * dt);
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        fireT -= dt;
+        if (fireT <= 0) { fireT = Math.max(1.3, rand(2.2, 3.4) - day * 0.3); balls.push({ x: clamp(px + rand(-90, 90), 30, W - 30), y: 6, vy: 220 + day * 15, own: false }); SFX.fire(); }
+        spawnT -= dt;
+        if (spawnT <= 0) { spawnT = rand(1.0, 1.7); objs.push({ x: rand(0.15, 0.85) * W, y: -20, sp: rand(120, 170), r: rand(12, 18), a: 0, spin: rand(-1.5, 1.5) }); }
+        for (var i = objs.length - 1; i >= 0; i--) {
+          var o = objs[i]; o.y += o.sp * dt; o.a += o.spin * dt;
+          if (Math.hypot(o.x - px, o.y - py) < o.r + 16) { damage(1); splash(o.x, o.y, 8); objs.splice(i, 1); continue; }
+          if (o.y > H + 40) objs.splice(i, 1);
+        }
+        var chaseTargets = [];
+        objs.forEach(function (o2) { chaseTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function (b) { addScore(4); splash(o2.x, o2.y, 6); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1); } }); });
+        stepBalls(balls, dt, chaseTargets, { x: px, y: py, r: 18 });
+        if (dayT >= d.dur) {
+          dayT = 0; day++;
+          if (day >= DAYS.length) {
+            done = true; SAVE.whydahTaken = true; persist();
+            setScene(Prompt("BOARDED!", "Three days on her stern, and she finally struck her colors. Bellamy took her as his own — the Whydah Gally, forty guns.", advance, "your ship, from here on"));
+            return;
+          }
+          G.pal = DAYS[day].pal; toast(DAYS[day].label);
+        }
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 70, false);
+        var d = DAYS[day];
+        var bandLoPx = (Y_LO + clamp(0.5 - d.bandHalf, 0, 1) * Y_SPAN) * H, bandHiPx = (Y_LO + clamp(0.5 + d.bandHalf, 0, 1) * Y_SPAN) * H;
+        ctx.fillStyle = "rgba(224,178,92,.14)"; ctx.fillRect(0, bandLoPx, W, bandHiPx - bandLoPx);
+        drawShip(W * 0.5 + Math.sin(seaT * 0.6) * 40, H * 0.12, 1.5, { flag: "#111", hull: "#3a2818", sail: "#f3ead2", wake: true });
+        for (var i = 0; i < objs.length; i++) { var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); ctx.fillStyle = "#8a5a34"; blob(o.r); ctx.restore(); }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.5, playerShipOpts());
+        drawParts();
+        drawHUD();
+        text(d.label, W / 2, H * 0.22, 14, "#ffd24a", "center", "bold");
+        if (t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Stay in the gold band, on her stern. Dodge the wake, dodge the guns.", W / 2, H * 0.5, 15, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+      }
+    };
   }
 
   function SailScene() {
@@ -2449,6 +2614,7 @@
       unlock: function () { SAVE.extremeWon = true; persist(); },
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
+      winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
       newRun: function (fromMission) { startRun(fromMission); },
       buildSeq: function (fromMission) { newGame(fromMission); return G.seq.map(function (b) { return "m" + b.m + ":" + b.kind + (b.ev ? ":" + b.ev.id : "") + (b.which ? ":" + b.which : ""); }); },
       choose: function (i) { if (scene && scene.debugChoose) scene.debugChoose(i); },
