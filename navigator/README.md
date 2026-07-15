@@ -49,6 +49,17 @@ The old version put breaching sharks everywhere, and playtesters hated it. Now r
 - **Gold banks at every port**, spendable on eight upgrades: Oak Timbers, Bilge Pumps, Chain Shot, Crow's Nest, Weather Helm, Lucky Charm, Full Canvas, Long Nines. Buying Oak Timbers mid-run raises your hull cap immediately.
 - **The nor'easter.** Targeted lightning, telegraphed gusts, rogue waves you brace with a well-timed tap. Beat it and the win locks in — make for port, or turn and fight the Grandfather Serpent that followed you out. Either way, the Old Sow is waiting.
 
+## v8 — the depth pass
+
+- **Real prologues.** The Wreck Diver is three descending dive sites (shallow wreck → gun deck → treasure hold) with eels, air pockets, falling timbers, and a graded haul. The Three-Day Chase now requires sailing: close the distance meter inside her weaving wake, survive escalating stern-chaser fire and powder kegs, and finish with a grapple flurry — do nothing and she escapes.
+- **A boss for every mission.** New: THE MOONCUSSER (a false-light narrows gauntlet with a shootable shore battery), THE SHARKNADO (yes, really — telegraphed shark volleys, shoot the eye when it opens), and THE HUNTER'S FLAGSHIP (a three-phase man-of-war duel with broadside sweeps and ramming runs).
+- **No more quick cuts.** Scenes crossfade; sail legs wind down — spawns stop early, leftover coins sweep to the ship, hazards fade, and a LEG CLEAR banner plays you out.
+- **Merchant hails.** Mid-campaign, a trading brig may heave to: repairs, powder, weather gossip, mystery crates, and tea/spice cargo that pays double at your next port (if you live to reach it).
+- **Ship liveries.** Nine unlockable paint schemes earned by feats — win a voyage, beat each boss, witness the ghost light untouched, speak the secret word. Pick yours in the Harbor.
+- **A suggestion box.** The 📮 IDEAS button in the Harbor logs student suggestions (with an ✉ export for the teacher).
+- **The secret word.** INSANE mode no longer unlocks by beating EXTREME — a certain word, typed on the title screen, is the only way in.
+- Faster on Chromebooks (particle caps, cheaper whirlpool/sea rendering), and the multiverse traded its brainrot for the Great Meme Reset of 2026.
+
 ## INSANE mode
 
 Beat EXTREME once and the multiverse opens up. Every run draws **two random mutators** (coins as cheese wheels, watching gulls, big head mode, everything's bouncier) and every leg spins a chaos modifier (low gravity, a speed run, a tiny ship, mirrored steering, disco seas, upside-down gulls, everything's legally a crab, sudden night). The enemy fleet stops being ships entirely — battles and squadrons roll a **Colossal Rubber Duck**, **a Belligerent Toaster**, **a Furious Snowman** (it melts as it takes damage), **the Garden Gnome Flotilla**, **a Haunted Grand Piano**, or **Crab With A Sword** — same hp and fire rate as the ship they replace, just funnier. The sea serpent becomes **the Sea Pug** (tennis-ball venom, a "BOOP!" when it lunges), and the final boss becomes **PUGNAROK, the three-headed good boy**. Ten multiverse-only logbook cards round it out. Hard/Easy/Extreme visuals are completely untouched — the chaos is opt-in.
