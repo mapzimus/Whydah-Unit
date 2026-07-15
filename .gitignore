@@ -20,6 +20,10 @@
 !*.webp
 !*.gif
 
+# Favicon + web app manifest (root-level default lookup paths)
+!favicon.ico
+!site.webmanifest
+
 # Subdirectories for assets
 !pics/
 !pics/**
