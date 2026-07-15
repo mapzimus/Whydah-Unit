@@ -933,7 +933,7 @@
     ctx.globalAlpha = 1;
     if (G.mode && G.mode !== "hard") text((G.mode === "insane" ? "🌀 " : "") + DIFF[G.mode].label, pad + 2, 46, 10.5, G.mode === "easy" ? "#8fd6a0" : "#ff9de2", "left", "bold");
     ctx.font = "bold 19px Georgia, serif"; ctx.textAlign = "right"; ctx.fillStyle = "#f4e7c9";
-    ctx.fillText("⚑ " + G.score, W - pad, 26);
+    ctx.fillText("⚑ " + Math.round(G.score), W - pad, 26);
     ctx.fillStyle = "#f7d84a";
     ctx.fillText("🪙 " + G.gold, W - pad, 48);
     ctx.textAlign = "left";
@@ -1247,122 +1247,306 @@
     ctx.beginPath(); ctx.ellipse(-100, 4, 22, 14, 0, 0, 7); ctx.fill();   // head end, low and slow
     ctx.restore();
   }
-  // M0 — The Wreck Diver (1716, before the pirate life): helm() drives a
-  // diver instead of a ship; breath drains below, refills near the surface;
-  // grab gold among the wreck timbers; slow patrol sharks, no leaps.
+  // M0 — The Wreck Diver (1716, before the pirate life). Three descents into
+  // the sunken plate fleet, each deeper, darker, richer, and meaner: the
+  // shallow wreck (sharks), the gun deck (moray eels in the timbers, air
+  // pockets to grab), and the treasure hold (falling timbers, near-dark, big
+  // gold). Breath drains faster with depth, so the deep sites live and die on
+  // air pockets. History does the failing for you: come up light and the exit
+  // card says what it really said — they found nearly nothing, and went on
+  // the account instead.
   function DiveScene() {
-    var diveTime = 46, goldQuota = 70, t = 0;
+    var SITES = [
+      { name: "THE SHALLOW WRECK", dur: 18, drain: 0.05,  goldV: 8,  target: 40,  dark: 0,    sharkN: 2, eels: 0, timbers: false },
+      { name: "THE GUN DECK",      dur: 22, drain: 0.065, goldV: 12, target: 100, dark: 0.35, sharkN: 3, eels: 2, timbers: false },
+      { name: "THE TREASURE HOLD", dur: 24, drain: 0.085, goldV: 18, target: 180, dark: 0.7,  sharkN: 3, eels: 2, timbers: true }
+    ];
+    var site = 0, t = 0, siteT = 0, descendT = -1;
     var breath = 1, gasp = false;
-    var objs = [], spawnT = 0.9;
-    var turtleAt = rand(14, diveTime - 10), turtleDone = false, turtleT = 0;
+    var objs = [], eels = [], spawnT = 0.9, airT = rand(5, 8), timberT = rand(4, 7), timber = null;
+    var turtleAt = rand(20, 32), turtleDone = false, turtleT = 0, turtleTouched = false;
     var done = false;
+    function seedEels(n) {
+      eels = [];
+      for (var e = 0; e < n; e++) {
+        var side = e % 2 === 0 ? 1 : -1;
+        eels.push({ x: side > 0 ? rand(0.04, 0.1) * W : rand(0.9, 0.96) * W, y: rand(0.35, 0.8) * H, dir: side, state: "hide", st: rand(2, 5), lx: 0 });
+      }
+    }
+    function descend() {
+      site++; siteT = 0; descendT = 0;
+      objs = []; timber = null; airT = rand(3, 6); timberT = rand(3, 6);
+      seedEels(SITES[site].eels);
+      SFX.good();
+    }
     return {
-      debugWin: function () { G.gold = goldQuota; },
-      enter: function () { document.body.classList.add("playing"); G.shipY = 0.25; if (chance(0.6)) spawnGull(); },
+      debugWin: function () { site = SITES.length - 1; G.gold = Math.max(G.gold, SITES[site].target); siteT = SITES[site].dur; },
+      enter: function () { document.body.classList.add("playing"); G.shipY = 0.25; toast(SITES[0].name); },
       update: function (dt) {
         if (done) return;
         seaT += dt; t += dt;
+        if (descendT >= 0) { descendT += dt; if (descendT > 1.2) descendT = -1; return; }   // a black-water beat between sites
+        siteT += dt;
+        var s = SITES[site];
         helm(dt, 0.8, 0.4, false);
         var dx = G.shipX * W, dy = (0.14 + G.shipY * 0.74) * H;
         var deep = G.shipY > 0.22;
-        breath = clamp(breath + (deep ? -0.052 : 0.4) * dt, 0, 1);
+        breath = clamp(breath + (deep ? -s.drain : 0.4) * dt, 0, 1);
         if (breath <= 0 && !gasp) { gasp = true; damage(1); breath = 0.4; }
         if (breath > 0.06) gasp = false;
+        // gold sinks past; sharks patrol lanes (a shade quicker per site); air
+        // pockets bubble up from the wreck on the deeper sites
         spawnT -= dt;
-        if (spawnT <= 0) {
-          spawnT = rand(0.65, 1.15);
-          if (chance(0.7)) objs.push({ kind: "gold", x: rand(0.12, 0.88) * W, y: -20, sp: rand(58, 88), r: 12, a: 0, spin: rand(-1.5, 1.5) });
-          else objs.push({ kind: "shark", x: rand(0.15, 0.85) * W, y: rand(0.3, 0.8) * H, dir: chance(0.5) ? 1 : -1, sp: rand(32, 50) });
+        if (spawnT <= 0 && siteT < s.dur - 1.2) {
+          spawnT = rand(0.6, 1.05);
+          var sharksNow = 0; for (var sc = 0; sc < objs.length; sc++) if (objs[sc].kind === "shark") sharksNow++;
+          if (sharksNow < s.sharkN && chance(0.3)) objs.push({ kind: "shark", x: rand(0.15, 0.85) * W, y: rand(0.3, 0.8) * H, dir: chance(0.5) ? 1 : -1, sp: rand(32, 50) + site * 12 });
+          else if (site === 2 && chance(0.25)) objs.push({ kind: "gem", x: rand(0.12, 0.88) * W, y: -20, sp: rand(48, 70), r: 11, a: 0, spin: rand(-2, 2) });
+          else objs.push({ kind: "gold", x: rand(0.12, 0.88) * W, y: -20, sp: rand(58, 88) + site * 8, r: 12, a: 0, spin: rand(-1.5, 1.5) });
         }
+        if (site > 0) {
+          airT -= dt;
+          if (airT <= 0) { airT = rand(5.5, 8.5) - site; objs.push({ kind: "air", x: rand(0.15, 0.85) * W, y: H + 20, sp: -rand(34, 50), r: 13, a: 0, spin: 0 }); }
+        }
+        // the treasure hold is coming down around you: telegraphed falling timbers
+        if (s.timbers) {
+          if (!timber) timberT -= dt;
+          if (!timber && timberT <= 0) timber = { x: clamp(dx + rand(-W * 0.2, W * 0.2), W * 0.1, W * 0.9), warn: 1.0 + warnBonus() * 0.3, y: -30, live: false };
+          if (timber) {
+            if (!timber.live) { timber.warn -= dt; if (timber.warn <= 0) { timber.live = true; SFX.bad(); } }
+            else {
+              timber.y += 340 * dt;
+              if (Math.abs(timber.x - dx) < 26 && Math.abs(timber.y - dy) < 24) { damage(1); shake(10); splash(timber.x, timber.y, 10); timber = null; timberT = rand(3.5, 6); }
+              else if (timber.y > H + 30) { timber = null; timberT = rand(3.5, 6); }
+            }
+          }
+        }
+        // moray eels nest at the screen edges: a head pokes out with a pulsing
+        // tell, then a short horizontal lunge across the lane
+        for (var ei = 0; ei < eels.length; ei++) {
+          var el = eels[ei]; el.st -= dt;
+          if (el.state === "hide") { if (el.st <= 0) { el.state = "warn"; el.st = 0.9 + warnBonus() * 0.25; } }
+          else if (el.state === "warn") { if (el.st <= 0) { el.state = "lunge"; el.st = 0.55; el.lx = 0; SFX.bad(); } }
+          else if (el.state === "lunge") {
+            el.lx += el.dir * 300 * dt;
+            var ex = el.x + el.lx;
+            if (Math.abs(ex - dx) < 22 && Math.abs(el.y - dy) < 20) { damage(1); shake(8); splash(ex, el.y, 8, "#8fae7d"); el.state = "retreat"; el.st = 0.5; }
+            else if (el.st <= 0) { el.state = "retreat"; el.st = 0.5; }
+          } else {
+            el.lx = lerp(el.lx, 0, clamp(6 * dt, 0, 1));
+            if (el.st <= 0) { el.state = "hide"; el.st = rand(2.5, 6); el.y = rand(0.35, 0.8) * H; }
+          }
+        }
+        // the island that swims: drift close while it passes and it counts
         if (!turtleDone && t >= turtleAt) { turtleDone = true; toast("Something vast, and slow, swims off."); }
-        if (turtleDone) turtleT += dt;
+        if (turtleDone && turtleT < 7) {
+          turtleT += dt;
+          var tx = W * (0.5 - turtleT * 0.09), ty = H * 0.28;
+          if (!turtleTouched && Math.hypot(tx - dx, ty - dy) < 70) {
+            turtleTouched = true; addScore(25); SFX.win(); toast("You touched the island that swims. +25");
+          }
+        } else if (turtleDone) turtleT += dt;
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i];
-          if (o.kind === "gold") {
-            o.y += o.sp * dt; o.a += o.spin * dt;
-            if (Math.hypot(o.x - dx, o.y - dy) < o.r + 18) { addGold(8); addScore(6); SFX.coin(); coinBurst(o.x, o.y); objs.splice(i, 1); continue; }
-            if (o.y > H + 40) objs.splice(i, 1);
-          } else {
+          if (o.kind === "shark") {
             o.x += o.dir * o.sp * dt;
             if (o.x < 24 || o.x > W - 24) o.dir *= -1;
             if (Math.hypot(o.x - dx, o.y - dy) < 26) { damage(1); shake(8); splash(o.x, o.y, 8, "#9fb6c9"); o.x = rand(0.15, 0.85) * W; o.y = rand(0.3, 0.8) * H; }
+            continue;
           }
+          o.y += o.sp * dt; o.a += o.spin * dt;
+          if (Math.hypot(o.x - dx, o.y - dy) < o.r + 18) {
+            if (o.kind === "air") { breath = clamp(breath + 0.45, 0, 1); SFX.good(); splash(o.x, o.y, 8, "#cfeef8"); toast("💨 air pocket"); }
+            else if (o.kind === "gem") { addGold(18); addScore(14); SFX.coin(); coinBurst(o.x, o.y); }
+            else { addGold(s.goldV); addScore(6); SFX.coin(); coinBurst(o.x, o.y); }
+            objs.splice(i, 1); continue;
+          }
+          if (o.y > H + 40 || o.y < -50) objs.splice(i, 1);
         }
-        if (t >= diveTime || G.gold >= goldQuota) {
+        // a site ends on its timer, or early once you've stripped it
+        if (siteT >= s.dur || G.gold >= s.target) {
+          if (site < SITES.length - 1) { descend(); return; }
           done = true;
-          setScene(Prompt("THE WRECK", "Bellamy and Williams came south to dive the sunken Spanish fleet. They found nearly nothing. They went on the account instead.", advance, "recorded in the log"));
+          if (G.gold >= SITES[2].target) {
+            addScore(80);
+            setScene(Prompt("THE WRECK, STRIPPED", "You came up heavier than any diver on that coast — in this telling, at least. The real crews found nearly nothing. It's why they went on the account instead.", advance, "+80 dive bonus · recorded in the log"));
+          } else if (G.gold >= 60) {
+            setScene(Prompt("THE WRECK", "A few handfuls of eight-reales and a lot of dead men's timber. Bellamy and Williams came south for the sunken Spanish fleet and found nearly nothing. They went on the account instead.", advance, "recorded in the log"));
+          } else {
+            setScene(Prompt("NEARLY NOTHING", "Empty hands and burning lungs. This part is true: the wreck divers of 1716 came up with nearly nothing. It is exactly why Bellamy turned pirate.", advance, "recorded in the log"));
+          }
         }
       },
       render: function () {
+        var s = SITES[site];
         var g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, "#3f93a8"); g.addColorStop(0.55, "#175a72"); g.addColorStop(1, "#061c28");
+        g.addColorStop(0, ["#3f93a8", "#2e7690", "#1e5a78"][site]); g.addColorStop(0.55, ["#175a72", "#0f4a62", "#0a3a52"][site]); g.addColorStop(1, "#061c28");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-        ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = "#eafaff";
+        ctx.save(); ctx.globalAlpha = 0.12 * (1 - s.dark * 0.7); ctx.fillStyle = "#eafaff";
         for (var r = 0; r < 5; r++) { ctx.save(); ctx.translate(W * (0.15 + r * 0.2), 0); ctx.rotate(0.25); ctx.fillRect(-14, -20, 26, H * 1.3); ctx.restore(); }
         ctx.restore();
         ctx.fillStyle = "rgba(20,15,10,.6)";
-        for (var wt = 0; wt < 4; wt++) { var wx = W * (0.1 + wt * 0.26); ctx.save(); ctx.translate(wx, H - 24); ctx.rotate(rand(-0.1, 0.1) * (wt % 2 ? 1 : -1)); ctx.fillRect(-40, -8, 80, 16); ctx.restore(); }
+        var nT = 4 + site * 2;
+        for (var wt = 0; wt < nT; wt++) { var wx = W * (0.08 + wt * 0.86 / nT); ctx.save(); ctx.translate(wx, H - 24 - (wt % 3) * 14); ctx.rotate((wt % 2 ? 1 : -1) * 0.08); ctx.fillRect(-40, -8, 80, 16); ctx.restore(); }
         if (turtleDone && turtleT < 7) drawAspido(W * (0.5 - turtleT * 0.09), H * 0.28, turtleT);
+        // eels: nest, tell, lunge
+        for (var ei = 0; ei < eels.length; ei++) {
+          var el = eels[ei];
+          if (el.state === "hide") continue;
+          var ex = el.x + el.lx;
+          if (el.state === "warn") { var wp2 = 0.5 + 0.5 * Math.sin(seaT * 12); ctx.globalAlpha = wp2; text("!", el.x + el.dir * 18, el.y - 18, 18, "#ffd24a", "center", "bold"); ctx.globalAlpha = 1; }
+          ctx.save();
+          ctx.strokeStyle = "#5e7a4a"; ctx.lineWidth = 9; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(el.x - el.dir * 14, el.y); ctx.quadraticCurveTo(el.x + el.lx * 0.5, el.y + Math.sin(seaT * 9) * 5, ex, el.y); ctx.stroke();
+          ctx.fillStyle = "#6e8a58"; ctx.beginPath(); ctx.ellipse(ex, el.y, 9, 6.5, 0, 0, 7); ctx.fill();
+          ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(ex + el.dir * 3, el.y - 2, 1.6, 0, 7); ctx.fill();
+          ctx.restore();
+        }
+        // falling timber: a marked column, then the beam
+        if (timber) {
+          if (!timber.live) { var tp = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 10)); ctx.globalAlpha = tp * 0.5; ctx.fillStyle = "#ffd24a"; ctx.fillRect(timber.x - 20, 0, 40, H); ctx.globalAlpha = 1; text("⚠", timber.x, 40, 18, "#ffd24a", "center", "bold"); }
+          else { ctx.save(); ctx.translate(timber.x, timber.y); ctx.rotate(0.12); ctx.fillStyle = "#5a3a22"; ctx.fillRect(-10, -34, 20, 68); ctx.restore(); }
+        }
         for (var i = 0; i < objs.length; i++) {
           var o = objs[i];
-          if (o.kind === "gold") { ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#b98f20"; ctx.font = "13px serif"; ctx.textAlign = "center"; ctx.fillText("$", 0, 4); ctx.textAlign = "left"; ctx.restore(); }
-          else drawShark(o.x, o.y, o.dir);
+          if (o.kind === "shark") { drawShark(o.x, o.y, o.dir); continue; }
+          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
+          if (o.kind === "air") { ctx.strokeStyle = "rgba(210,240,250,.9)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.stroke(); ctx.fillStyle = "rgba(210,240,250,.25)"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); }
+          else if (o.kind === "gem") { ctx.fillStyle = "#7adfc8"; ctx.beginPath(); ctx.moveTo(0, -o.r); ctx.lineTo(o.r, 0); ctx.lineTo(0, o.r); ctx.lineTo(-o.r, 0); ctx.closePath(); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.moveTo(0, -o.r * 0.5); ctx.lineTo(o.r * 0.5, 0); ctx.lineTo(0, o.r * 0.5); ctx.lineTo(-o.r * 0.5, 0); ctx.closePath(); ctx.fill(); }
+          else { ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#b98f20"; ctx.font = "13px serif"; ctx.textAlign = "center"; ctx.fillText("$", 0, 4); ctx.textAlign = "left"; }
+          ctx.restore();
         }
         var dx = G.shipX * W, dy = (0.14 + G.shipY * 0.74) * H;
         drawDiver(dx, dy);
         drawParts();
+        // depth darkness with a lantern circle around the diver (deep sites)
+        if (s.dark > 0) {
+          var lr = clamp(W * 0.26, 110, 190);
+          var dg = ctx.createRadialGradient(dx, dy, lr * 0.3, dx, dy, lr);
+          dg.addColorStop(0, "rgba(4,10,16,0)"); dg.addColorStop(1, "rgba(4,10,16," + (s.dark * 0.9) + ")");
+          ctx.fillStyle = dg; ctx.fillRect(0, 0, W, H);
+        }
+        if (descendT >= 0) {
+          ctx.fillStyle = "rgba(4,10,16," + clamp(Math.sin(descendT / 1.2 * Math.PI) * 0.85, 0, 0.85) + ")"; ctx.fillRect(0, 0, W, H);
+          text("⬇ " + s.name, W / 2, H / 2, 22, "#7fd6ea", "center", "bold");
+        }
         drawHUD();
         var bw = clamp(W * 0.44, 140, 340), bx = (W - bw) / 2, by = 58, bh2 = 8;
         ctx.fillStyle = "rgba(11,22,32,.55)"; roundRect(bx - 4, by - 4, bw + 8, bh2 + 8, 8); ctx.fill();
         ctx.fillStyle = "rgba(160,220,240,.25)"; roundRect(bx, by, bw, bh2, 5); ctx.fill();
         ctx.fillStyle = breath < 0.25 ? "#e05c5c" : "#7fd6ea"; roundRect(bx, by, bw * breath, bh2, 5); ctx.fill();
         text("BREATH", bx + bw / 2, by + bh2 + 13, 10.5, "rgba(224,246,252,.75)", "center", "bold");
-        text("gold: " + G.gold + " / " + goldQuota, W / 2, H * 0.94, 12, "rgba(244,231,201,.8)", "center", "bold");
+        text("DIVE " + (site + 1) + "/3 · " + s.name, W / 2, H * 0.9, 11, "#7fd6ea", "center", "bold");
+        text("gold: " + G.gold + " / " + s.target + (site < 2 ? "  ·  strip the site to descend early" : ""), W / 2, H * 0.94, 12, "rgba(244,231,201,.8)", "center", "bold");
         if (t < 2.2) { ctx.globalAlpha = clamp(2.2 - t, 0, 1); text("Dive for gold. Mind your breath. Sharks patrol, slow and lazy — just don't touch them.", W / 2, H * 0.5, 15, "#eafaff", "center", "bold"); ctx.globalAlpha = 1; }
+        else if (site === 1 && siteT < 2.4) { ctx.globalAlpha = clamp(2.4 - siteT, 0, 1); text("Eels nest in the timbers — watch for the head. Grab air pockets to stay down.", W / 2, H * 0.5, 15, "#eafaff", "center", "bold"); ctx.globalAlpha = 1; }
+        else if (site === 2 && siteT < 2.4) { ctx.globalAlpha = clamp(2.4 - siteT, 0, 1); text("The hold is coming down. Stay out of the marked columns. The big gold is here.", W / 2, H * 0.5, 15, "#eafaff", "center", "bold"); ctx.globalAlpha = 1; }
       }
     };
   }
-  // M1 — The Three-Day Chase (Feb 1717): stay inside the pursuit band behind
-  // the fleeing Whydah, dodging stern-chaser fire and wake debris. Win = board
-  // her — the player's ship becomes the Whydah for the rest of the campaign.
+  // M1 — The Three-Day Chase (Feb 1717), rebuilt to require actual sailing.
+  // The Whydah weaves ahead; her wake is a 2D pocket (fore-aft band AND
+  // behind her stern left-right). Inside the pocket you CLOSE distance;
+  // outside you lose it, and her stern-chasers and wake debris try to shake
+  // you off. Fire escalates by day (aimed → spread → aimed + powder kegs in
+  // the wake), a gust leans in with a warning before it shoves. Close the
+  // distance and it ends in a grapple flurry — miss the flurry and she pulls
+  // back ahead. Fail to catch her by the end of day three and she's gone:
+  // the day restarts and the score pays for it. Doing nothing now fails.
   function ChaseScene() {
     var DAYS = [
-      { label: "DAY ONE — DAWN",   pal: PALETTES[0], bandHalf: 0.32, dur: 13 },
-      { label: "DAY TWO — NOON",   pal: PALETTES[1], bandHalf: 0.24, dur: 14 },
-      { label: "DAY THREE — NIGHT", pal: PALETTES[4], bandHalf: 0.17, dur: 15 }
+      { label: "DAY ONE — DAWN",   pal: PALETTES[0], bandHalf: 0.30, wakeHalf: 120, dur: 16, close: 0.055, drift: 0.028, spread: false, kegs: false },
+      { label: "DAY TWO — NOON",   pal: PALETTES[1], bandHalf: 0.23, wakeHalf: 100, dur: 17, close: 0.055, drift: 0.034, spread: true,  kegs: false },
+      { label: "DAY THREE — NIGHT", pal: PALETTES[4], bandHalf: 0.17, wakeHalf: 86,  dur: 18, close: 0.055, drift: 0.042, spread: true,  kegs: true }
     ];
-    var day = 0, t = 0, dayT = 0, balls = [], objs = [], spawnT = 1.0, fireT = rand(1.6, 2.6), fireGun = gunner();
+    var day = 0, t = 0, dayT = 0, balls = [], objs = [], spawnT = 1.0, fireT = rand(1.6, 2.6), kegT = rand(3, 5), fireGun = gunner();
+    var dist = 0.3;                       // 0 = two miles off her stern, 1 = alongside
+    var whX = W * 0.5, whDir = 1;         // she actively sails, she doesn't just bob
+    var gust = null, gustT = rand(6, 9);
+    var grapple = null;                    // {taps, t} — the boarding flurry
+    var retries = 0;
     var done = false;
     return {
-      debugWin: function () { day = DAYS.length - 1; dayT = DAYS[day].dur; },
+      debugWin: function () { dist = 1; grapple = { taps: 5, t: 3, need: 5 }; },
       enter: function () { document.body.classList.add("playing"); G.pal = DAYS[0].pal; G.shipY = 0.5; toast(DAYS[0].label); if (chance(0.5)) spawnGull(); },
       update: function (dt) {
         if (done) return;
-        seaT += dt; t += dt; dayT += dt; updateGulls(dt);
-        helm(dt, 1, 0.4, false);
-        var px = G.shipX * W, py = shipYPx();
+        seaT += dt; t += dt; updateGulls(dt);
         var d = DAYS[day];
+        var px = G.shipX * W, py = shipYPx();
+        // ------ the grapple flurry: she's alongside, tap fast or lose her
+        if (grapple) {
+          grapple.t -= dt;
+          if (consumeTap()) { grapple.taps++; SFX.hit(); shake(3); splash(px + rand(-20, 20), py - 30, 4); }
+          if (grapple.taps >= grapple.need) {
+            done = true; SAVE.whydahTaken = true; persist(); addScore(120); SFX.win();
+            setScene(Prompt("BOARDED!", "Three days on her stern and a flurry of grapples across her rail. Bellamy took her as his own — the Whydah Gally, forty guns.", advance, "+120 · your ship, from here on"));
+            return;
+          }
+          if (grapple.t <= 0) { grapple = null; dist = 0.8; toast("The grapples fall short — she pulls ahead!"); SFX.bad(); }
+          return;
+        }
+        helm(dt, 1, 0.4, false);
+        // ------ she sails: weaves across the water, quicker each day
+        whX += whDir * (34 + day * 12) * dt;
+        if (whX < W * 0.2) whDir = 1;
+        if (whX > W * 0.8) whDir = -1;
+        if (chance(0.004 + day * 0.002)) whDir *= -1;   // and sometimes she tacks without warning
+        // ------ the wake pocket: fore-aft band AND behind her stern
         var bandLo = clamp(0.5 - d.bandHalf, 0, 1), bandHi = clamp(0.5 + d.bandHalf, 0, 1);
         var inBand = G.shipY >= bandLo && G.shipY <= bandHi;
-        addScore((inBand ? 3 : -2) * dt);
+        var inWake = Math.abs(px - whX) < d.wakeHalf;
+        var closing = inBand && inWake;
+        dist = clamp(dist + (closing ? d.close : -d.drift) * dt, 0, 1);
+        if (closing) addScore(3 * dt);
+        if (dist >= 1) { grapple = { taps: 0, need: 5, t: 3.0 }; SFX.good(); return; }
+        // ------ stern-chasers: aimed shots, and a spread from day two on
         if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
         fireT -= dt;
-        if (fireT <= 0) { fireT = Math.max(1.3, rand(2.2, 3.4) - day * 0.3); balls.push({ x: clamp(px + rand(-90, 90), 30, W - 30), y: 6, vy: 220 + day * 15, own: false }); SFX.fire(); }
+        if (fireT <= 0) {
+          fireT = Math.max(1.1, rand(2.0, 3.0) - day * 0.35);
+          var aim = clamp((px - whX) * 0.55, -140, 140);
+          balls.push({ x: whX, y: 26, vy: 235 + day * 20, vx: aim, own: 0 });
+          if (d.spread) { balls.push({ x: whX, y: 26, vy: 225 + day * 20, vx: aim - 80, own: 0 }); balls.push({ x: whX, y: 26, vy: 225 + day * 20, vx: aim + 80, own: 0 }); }
+          SFX.fire(); smoke(whX, 30, 2);
+        }
+        // ------ powder kegs dropped in her own wake on the last night
+        if (d.kegs) {
+          kegT -= dt;
+          if (kegT <= 0) { kegT = rand(2.6, 4.2); objs.push({ kind: "keg", x: clamp(whX + rand(-d.wakeHalf * 0.7, d.wakeHalf * 0.7), 30, W - 30), y: 40, sp: rand(120, 150), r: 13, a: 0, spin: rand(-1, 1) }); }
+        }
+        // ------ wind gusts lean in before they shove
+        gustT -= dt;
+        if (!gust && gustT <= 0) { gust = { push: chance(0.5) ? 0.26 : -0.26, warn: 0.8 + warnBonus() * 0.3, t: 1.4 }; gustT = rand(7, 10); }
+        if (gust) {
+          if (gust.warn > 0) gust.warn -= dt;
+          else { G.shipX = clamp(G.shipX + gust.push * dt, steerLo(), steerHi()); gust.t -= dt; if (gust.t <= 0) gust = null; }
+        }
+        // ------ wake debris
         spawnT -= dt;
-        if (spawnT <= 0) { spawnT = rand(1.0, 1.7); objs.push({ x: rand(0.15, 0.85) * W, y: -20, sp: rand(120, 170), r: rand(12, 18), a: 0, spin: rand(-1.5, 1.5) }); }
+        if (spawnT <= 0) { spawnT = rand(0.9, 1.5) - day * 0.12; objs.push({ kind: "debris", x: clamp(whX + rand(-140, 140), 20, W - 20), y: 30, sp: rand(120, 170) + day * 15, r: rand(12, 18), a: 0, spin: rand(-1.5, 1.5) }); }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i]; o.y += o.sp * dt; o.a += o.spin * dt;
-          if (Math.hypot(o.x - px, o.y - py) < o.r + 16) { damage(1); splash(o.x, o.y, 8); objs.splice(i, 1); continue; }
+          if (Math.hypot(o.x - px, o.y - py) < o.r + 16) {
+            if (o.kind === "keg") { damage(1); shake(14); splash(o.x, o.y, 14, "#ffcf6a"); dist = clamp(dist - 0.08, 0, 1); }
+            else { damage(1); splash(o.x, o.y, 8); dist = clamp(dist - 0.04, 0, 1); }
+            objs.splice(i, 1); continue;
+          }
           if (o.y > H + 40) objs.splice(i, 1);
         }
         var chaseTargets = [];
-        objs.forEach(function (o2) { chaseTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function (b) { addScore(4); splash(o2.x, o2.y, 6); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1); } }); });
-        stepBalls(balls, dt, chaseTargets, { x: px, y: py, r: 18 });
+        objs.forEach(function (o2) { chaseTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function (b) { addScore(o2.kind === "keg" ? 8 : 4); splash(o2.x, o2.y, o2.kind === "keg" ? 12 : 6, o2.kind === "keg" ? "#ffcf6a" : undefined); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1); } }); });
+        stepBalls(balls, dt, chaseTargets, { x: px, y: py, r: 18, onHit: function () { damage(1); dist = clamp(dist - 0.05, 0, 1); } });
+        // ------ the days turn; run out of them and she's away
+        if (dayT >= 0) dayT += dt;
         if (dayT >= d.dur) {
           dayT = 0; day++;
           if (day >= DAYS.length) {
-            done = true; SAVE.whydahTaken = true; persist();
-            setScene(Prompt("BOARDED!", "Three days on her stern, and she finally struck her colors. Bellamy took her as his own — the Whydah Gally, forty guns.", advance, "your ship, from here on"));
+            day = DAYS.length - 1; retries++;
+            addScore(-40); dist = 0.45; objs = []; balls = []; grapple = null;
+            G.pal = DAYS[day].pal;
+            toast("SHE SLIPPED AWAY IN THE DARK — run her down again! (−40)");
+            SFX.lose();
             return;
           }
           G.pal = DAYS[day].pal; toast(DAYS[day].label);
@@ -1371,16 +1555,48 @@
       render: function () {
         drawSea(G.pal, seaT * 70, false);
         var d = DAYS[day];
+        // the wake pocket: the fore-aft band tinted only behind her stern
         var bandLoPx = (Y_LO + clamp(0.5 - d.bandHalf, 0, 1) * Y_SPAN) * H, bandHiPx = (Y_LO + clamp(0.5 + d.bandHalf, 0, 1) * Y_SPAN) * H;
-        ctx.fillStyle = "rgba(224,178,92,.14)"; ctx.fillRect(0, bandLoPx, W, bandHiPx - bandLoPx);
-        drawShip(W * 0.5 + Math.sin(seaT * 0.6) * 40, H * 0.12, 1.5, { flag: "#111", hull: "#3a2818", sail: "#f3ead2", wake: true });
-        for (var i = 0; i < objs.length; i++) { var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); ctx.fillStyle = "#8a5a34"; blob(o.r); ctx.restore(); }
+        ctx.fillStyle = "rgba(224,178,92,.07)"; ctx.fillRect(0, bandLoPx, W, bandHiPx - bandLoPx);
+        ctx.fillStyle = "rgba(224,178,92,.16)"; ctx.fillRect(whX - d.wakeHalf, bandLoPx, d.wakeHalf * 2, bandHiPx - bandLoPx);
+        // her churned wake trailing down the screen
+        ctx.fillStyle = "rgba(223,241,244,.10)";
+        ctx.beginPath(); ctx.moveTo(whX - 14, H * 0.14); ctx.lineTo(whX + 14, H * 0.14); ctx.lineTo(whX + d.wakeHalf * 0.8, H); ctx.lineTo(whX - d.wakeHalf * 0.8, H); ctx.closePath(); ctx.fill();
+        drawShip(whX, H * 0.12, 1.5, { flag: "#111", hull: "#3a2818", sail: "#f3ead2", wake: true });
+        for (var i = 0; i < objs.length; i++) {
+          var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
+          if (o.kind === "keg") { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-9, -12, 18, 24); ctx.strokeStyle = "#3a2414"; ctx.lineWidth = 2; ctx.strokeRect(-9, -12, 18, 24); ctx.strokeStyle = "#c9962e"; ctx.beginPath(); ctx.moveTo(-9, -4); ctx.lineTo(9, -4); ctx.moveTo(-9, 4); ctx.lineTo(9, 4); ctx.stroke(); }
+          else { ctx.fillStyle = "#8a5a34"; blob(o.r); }
+          ctx.restore();
+        }
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.5, playerShipOpts());
         drawParts();
         drawHUD();
-        text(d.label, W / 2, H * 0.22, 14, "#ffd24a", "center", "bold");
-        if (t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Stay in the gold band, on her stern. Dodge the wake, dodge the guns.", W / 2, H * 0.5, 15, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        // the chase meter: how close to her stern you are
+        var mw = clamp(W * 0.5, 180, 380), mx = (W - mw) / 2, my2 = 58;
+        ctx.fillStyle = "rgba(11,22,32,.55)"; roundRect(mx - 4, my2 - 4, mw + 8, 16, 8); ctx.fill();
+        ctx.fillStyle = "rgba(244,231,201,.2)"; roundRect(mx, my2, mw, 8, 4); ctx.fill();
+        ctx.fillStyle = dist > 0.75 ? "#8fd6a0" : "#e0b25c"; roundRect(mx, my2, mw * dist, 8, 4); ctx.fill();
+        drawShip(mx + mw * dist, my2 + 4, 0.42, { wake: false, flag: "#111", dmg: 0 });
+        text("CLOSING ON HER STERN", mx + mw / 2, my2 + 22, 10.5, "rgba(244,231,201,.8)", "center", "bold");
+        text(d.label + (retries ? "  ·  attempt " + (retries + 1) : ""), W / 2, H * 0.22, 14, "#ffd24a", "center", "bold");
+        var inPocket = G.shipY >= clamp(0.5 - d.bandHalf, 0, 1) && G.shipY <= clamp(0.5 + d.bandHalf, 0, 1) && Math.abs(G.shipX * W - whX) < d.wakeHalf;
+        if (!inPocket && t > 2.4 && !grapple) {
+          ctx.globalAlpha = 0.55 + 0.45 * Math.sin(seaT * 8);
+          text("GET IN HER WAKE — you're losing her!", W / 2, H * 0.32, 14, "#ff8a7a", "center", "bold");
+          ctx.globalAlpha = 1;
+        }
+        if (gust && gust.warn > 0) text("💨 WIND RISING " + (gust.push > 0 ? "→" : "←") + " — brace the wheel!", W / 2, H * 0.38, 14, "#bfe0ff", "center", "bold");
+        if (grapple) {
+          var gw = clamp(W * 0.7, 240, 400);
+          panel(W / 2, H / 2, gw, 150);
+          text("SHE'S ALONGSIDE!", W / 2, H / 2 - 38, 22, "#8fd6a0", "center", "bold");
+          text("TAP! Throw the grapples — " + grapple.taps + " / " + grapple.need, W / 2, H / 2 - 4, 15, "#f4e7c9", "center", "bold");
+          ctx.fillStyle = "rgba(244,231,201,.2)"; roundRect(W / 2 - gw / 2 + 30, H / 2 + 20, gw - 60, 10, 5); ctx.fill();
+          ctx.fillStyle = grapple.t < 1 ? "#e05c5c" : "#e0b25c"; roundRect(W / 2 - gw / 2 + 30, H / 2 + 20, (gw - 60) * clamp(grapple.t / 3, 0, 1), 10, 5); ctx.fill();
+        }
+        if (t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Hold her wake — the gold pocket behind her stern — to close the distance.", W / 2, H * 0.5, 15, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
       }
     };
   }
