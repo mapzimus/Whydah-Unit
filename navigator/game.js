@@ -1123,16 +1123,21 @@
     // longer legs by design (the kids said the voyage flew by) — Full Canvas buys the pace back
     var legTime = rand(10, 14) * legSpeedMul(), t = 0, ease = narrowEase();
     var shore = G.route === "shore", sea = G.route === "sea";
+    var lm = mission().legMods;
+    if (G.forceLegMod) { lm = Object.assign({}, lm, G.forceLegMod); G.forceLegMod = null; }
     var objs = [], balls = [], spawnT = 1.2, fireGun = gunner();
-    var sharkT = sea ? rand(4, 8) : (shore ? rand(9, 14) : rand(4, 9));
+    // Sharks are confined to the sea route of the three "hunting ground"
+    // missions (Carolina/Virginia/Long Island) — the kids hated them showing
+    // up everywhere, so nowhere else in the campaign spawns a real shark.
+    var sharksHere = sea && mission().routeVariant;
+    var sharkT = sharksHere ? rand(9, 15) : Infinity;
     // Narrows only appear where the mission calls for them (the island maze,
     // the fog-bound Carolina coast) — no longer a flat "early legs" heuristic.
-    var narrowsHere = mission().legMods.narrows;
     var narrowsLatest = legTime - (H + 220) / 105 - 0.5;   // wall crosses the ship line before the leg ends
-    var narrowsAt = (narrowsHere && narrowsLatest > 1 && chance(0.6)) ? rand(1, narrowsLatest) : -1;
+    var narrowsAt = (lm.narrows && narrowsLatest > 1 && chance(0.6)) ? rand(1, narrowsLatest) : -1;
     var narrowsDone = false;
-    // never an empty leg: if no narrows rolled, a shark shows up early — and sometimes treasure
-    if (narrowsAt < 0) sharkT = Math.min(sharkT, rand(1.5, legTime * 0.4));
+    // never an empty leg: if no narrows rolled, a shark shows up early where they exist at all
+    if (narrowsAt < 0 && sharksHere) sharkT = Math.min(sharkT, rand(2, legTime * 0.5));
     var coinArcAt = chance(0.3) ? rand(2, Math.max(3, legTime - 3)) : -1;
     var slow = consumeMod("slow") ? 0.75 : 1;
     G.mods.fogNow = !!consumeMod("fog");
@@ -1150,10 +1155,17 @@
     if (chaos === "speed") legTime *= 0.8;
     var hitR = chaos === "tiny" ? 9 : 16, shipScale = chaos === "tiny" ? 1.1 : 1.6;
     var spMul = chaos === "speed" ? 1.35 : 1, discoT = 0;
+    // themed leg systems: a scripted waterspout and/or whirlpool, at most one
+    // each per leg, plus a constant current push where the mission calls for it
+    var waterspoutAt = (lm.waterspout > 0 && chance(lm.waterspout) && legTime > 6) ? rand(3, legTime - 2) : -1;
+    var waterspoutDone = false, wspout = null;
+    var whirlAt = (lm.whirlpool > 0 && chance(lm.whirlpool) && legTime > 5) ? rand(2, legTime - 3) : -1;
+    var whirlDone = false;
     return {
       enter: function () {
         document.body.classList.add("playing");
-        if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES);
+        if (lm.night) G.pal = PALETTES[4];        // moonlit night, forced for the Ghost Light leg
+        else if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES);
         if (chance(0.6)) spawnGull();
         if (chaos) { toast(CHAOS[chaos]); SFX.good(); }
       },
@@ -1161,6 +1173,7 @@
         seaT += dt; t += dt; updateGulls(dt);
         if (chaos === "disco") { discoT -= dt; if (discoT <= 0) { discoT = 2; G.pal = choice(PALETTES_INSANE); } }
         helm(dt, slow, 0.4, chaos === "mirror");
+        if (lm.current) G.shipX = clamp(G.shipX + lm.current * 0.09 * dt, steerLo(), steerHi());   // the Gulf Stream fights the helm
         var shipPX = G.shipX * W, shipPY = shipYPx();
         // guns are live on the open sea: blast the wreckage out of your way (hold to keep firing)
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(shipPX, shipPY - 18, 2); }
@@ -1169,14 +1182,16 @@
           // far fewer things to dodge than before, and the hazards are natural now —
           // reefs and rocks near the coast, drift ice up north, open ocean stays clear.
           spawnT = rand(1.0, 1.9) * hazMul * ease;
-          var roll = Math.random(), o;
-          var north = mission().legMods.icy;
+          var roll = Math.random(), spawnObj;
+          var north = lm.icy;
           var hazChance = sea ? 0.14 : (shore ? 0.34 : 0.24);
           if (roll < hazChance) {
             var hsub = north ? choice(["ice", "rock", "ice"]) : (shore ? "rock" : choice(["rock", "ice"]));
-            o = { kind: "hazard", sub: hsub, r: rand(16, 26), sp: rand(140, 200) * spMul / ease, hp: hsub === "rock" ? 2 : 1 };
+            spawnObj = { kind: "hazard", sub: hsub, r: rand(16, 26), sp: rand(140, 200) * spMul / ease, hp: hsub === "rock" ? 2 : 1 };
           } else if (roll < hazChance + 0.10) {
-            o = { kind: "fin", sub: "fin", r: 15, sp: rand(90, 130) * spMul / ease, drift: rand(-40, 40) };
+            // the old shark-fin cue, reskinned as a harmless jellyfish bloom now that
+            // real sharks are confined to their own hunting grounds
+            spawnObj = { kind: "fin", sub: "jelly", r: 15, sp: rand(90, 130) * spMul / ease, drift: rand(-40, 40) };
           } else {
             var picks = ["coin", "coin", "coin", "wind", "barrel"];
             if (shore) picks.push("dory", "barrel");
@@ -1185,12 +1200,12 @@
             // on extreme they only show once you're desperate
             if (G.hull < G.maxHull) for (var hw = 0; hw < diff().heart; hw++) picks.push("heart");
             if (G.hull <= 2) picks.push("heart");
-            o = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(140, 200) * spMul / ease };
-            if (o.sub === "coin" && chaos === "gigacoins") { o.r = 26; o.giga = true; }
+            spawnObj = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(140, 200) * spMul / ease };
+            if (spawnObj.sub === "coin" && chaos === "gigacoins") { spawnObj.r = 26; spawnObj.giga = true; }
           }
-          if (chaos === "gravity") o.drift2 = rand(-55, 55);
-          o.x = rand(0.1, 0.9) * W; o.y = -40; o.a = 0; o.spin = rand(-2, 2);
-          objs.push(o);
+          if (chaos === "gravity") spawnObj.drift2 = rand(-55, 55);
+          spawnObj.x = rand(0.1, 0.9) * W; spawnObj.y = -40; spawnObj.a = 0; spawnObj.spin = rand(-2, 2);
+          objs.push(spawnObj);
         }
         // a drifting arc of coins, worth chasing
         if (coinArcAt > 0 && t >= coinArcAt) {
@@ -1198,26 +1213,55 @@
           var arcX = rand(0.25, 0.75);
           for (var ca = 0; ca < 5; ca++) objs.push({ kind: "pickup", sub: "coin", r: 15, sp: 180, x: (arcX + Math.sin(ca * 1.1) * 0.12) * W, y: -40 - ca * 55, a: 0, spin: 0 });
         }
-        // breaching sharks: a fin shadows you, then the whole shark comes out of the water
-        sharkT -= dt;
-        if (sharkT <= 0) {
-          sharkT = sea ? rand(5, 9) : (shore ? rand(10, 15) : rand(7, 12));
-          // longer wind-up so you can react even while looking forward to shoot
-          objs.push({ kind: "shark", phase: "stalk", pt: (1.7 + warnBonus() * 0.3) * ease, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
+        // breaching sharks — only where the mission's sea route says so
+        if (sharksHere) {
+          sharkT -= dt;
+          if (sharkT <= 0) {
+            sharkT = rand(10, 16);   // long intervals — this is a rare, telegraphed threat now
+            var easyNoLeap = gameMode() === "easy" && chance(0.5);
+            objs.push({ kind: "shark", phase: "stalk", pt: (2.2 + warnBonus() * 0.3) * ease, willLeap: !easyNoLeap, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
+          }
         }
-        // the narrows: a wall of land with one gap — thread the needle
+        // a scripted waterspout: a marked column, then a push/hit if you're still in it
+        if (waterspoutAt > 0 && !waterspoutDone && t >= waterspoutAt) { waterspoutDone = true; wspout = { x: rand(W * 0.15, W * 0.85), warn: 1.1 + warnBonus() * 0.3 }; }
+        if (wspout) {
+          wspout.warn -= dt;
+          if (wspout.warn <= 0) {
+            if (Math.abs(shipPX - wspout.x) < 60) { damage(1); shake(12); } else { addScore(15); SFX.point(); }
+            wspout = null;
+          }
+        }
+        // a whirlpool drifting down-screen: dodge it, or fight the pull at the rim
+        if (whirlAt > 0 && !whirlDone && t >= whirlAt) {
+          whirlDone = true;
+          objs.push({ kind: "whirlpool", x: rand(W * 0.3, W * 0.7), y: -110, R: clamp(W * 0.22, 90, 170), k: 0.5, sp: 42 });
+        }
+        // the narrows: a wall of land with one gap — thread the needle. On the
+        // mooncusser coast, a second false-lit gap tries to lure you onto the rocks.
         if (narrowsAt > 0 && !narrowsDone && t >= narrowsAt) {
           narrowsDone = true;
-          objs.push({ kind: "narrows", gap: rand(0.25, 0.75), gapW: clamp(W * 0.30, 130, 230), y: -90, sp: 105, r: 0 });
+          var narrowsObj = { kind: "narrows", gap: rand(0.25, 0.75), gapW: clamp(W * 0.30, 130, 230), y: -90, sp: 105, r: 0 };
+          if (lm.mooncusser && chance(0.7)) narrowsObj.falseGap = clamp(narrowsObj.gap + (chance(0.5) ? 1 : -1) * rand(0.25, 0.4), 0.1, 0.9);
+          objs.push(narrowsObj);
         }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i];
+          if (o.kind === "whirlpool") {
+            o.y += o.sp * dt;
+            var sucked = applyWhirlpool(dt, o, shipPX, shipPY);
+            if (sucked) { damage(1); shake(12); objs.splice(i, 1); continue; }
+            if (o.y - o.R > H) { objs.splice(i, 1); continue; }
+            continue;
+          }
           if (o.kind === "shark") {
             if (o.phase === "stalk") {
               o.y = shipPY + 26; o.x = lerp(o.x, shipPX, 1.2 * dt); o.pt -= dt;
-              if (o.pt <= 0) { o.phase = "leap"; o.vy = -rand(360, 430); o.vx = clamp((shipPX - o.x) * 1.0, -100, 100); splash(o.x, H * 0.9, 12); }
+              if (o.pt <= 0) {
+                if (!o.willLeap) { splash(o.x, H * 0.92, 8, "#9fb6c9"); objs.splice(i, 1); continue; }   // easy mode: it just sinks away
+                o.phase = "leap"; o.vy = -rand(320, 380); o.vx = clamp((shipPX - o.x) * 0.85, -85, 85); splash(o.x, H * 0.9, 12);
+              }
             } else {
-              o.vy += 520 * dt; o.x += o.vx * dt; o.y += o.vy * dt;
+              o.vy += 480 * dt; o.x += o.vx * dt; o.y += o.vy * dt;
               if (Math.hypot(o.x - shipPX, o.y - shipPY) < o.r + hitR) { splash(o.x, o.y, 10, "#9fb6c9"); damage(1); objs.splice(i, 1); continue; }
               if (o.y > H + 60 && o.vy > 0) { objs.splice(i, 1); continue; }
             }
@@ -1238,7 +1282,7 @@
           var d = Math.hypot(o.x - shipPX, o.y - shipPY);
           if (d < o.r + hitR) {
             if (o.kind === "hazard") { splash(o.x, o.y, 8); damage(1); objs.splice(i, 1); continue; }
-            if (o.kind === "fin") { splash(o.x, o.y, 6, "#9fb6c9"); addScore(-5); SFX.bad(); objs.splice(i, 1); continue; }
+            if (o.kind === "fin") { splash(o.x, o.y, 6, "rgba(180,140,220,.7)"); addScore(-5); SFX.bad(); objs.splice(i, 1); continue; }
             if (o.sub === "coin") {
               addScore(10); addGold((sea ? 15 : 10) * (o.giga ? 2 : 1)); SFX.coin(); coinBurst(o.x, o.y);
               G.coinStreak++;
@@ -1256,7 +1300,8 @@
           }
           if (o.y > H + 50) { if (o.kind === "hazard") addScore(2); objs.splice(i, 1); }
         }
-        // cannonballs vs hazards and airborne sharks
+        // cannonballs vs hazards and sharks — shootable in either phase now,
+        // so a spotted shark never HAS to become a leap at all
         var sailTargets = [];
         for (var oi = 0; oi < objs.length; oi++) {
           var ob = objs[oi];
@@ -1265,9 +1310,9 @@
               o2.hp--; splash(b.x, b.y, 6, o2.sub === "ice" ? "#cfe9f2" : "#cdb98a"); SFX.hit();
               if (o2.hp <= 0) { addScore(5); SFX.point(); splash(o2.x, o2.y, 10); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1); }
             } }); })(ob);
-          } else if (ob.kind === "shark" && ob.phase === "leap") {
+          } else if (ob.kind === "shark") {
             (function (o2) { sailTargets.push({ x: o2.x, y: o2.y, r: o2.r + 2, onHit: function (b) {
-              addScore(15); addGold(5); SFX.win(); splash(o2.x, o2.y, 14, "#9fb6c9"); coinBurst(o2.x, o2.y);
+              addScore(o2.phase === "stalk" ? 10 : 15); addGold(5); SFX.win(); splash(o2.x, o2.y, 14, "#9fb6c9"); coinBurst(o2.x, o2.y);
               var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1);
             } }); })(ob);
           }
@@ -1279,7 +1324,8 @@
         drawSea(G.pal, seaT * 55, false);
         for (var i = 0; i < objs.length; i++) {
           var o = objs[i];
-          if (o.kind === "fin") { drawFin(o.x, o.y, (o.drift || 1) >= 0 ? 1 : -1); continue; }
+          if (o.kind === "whirlpool") { drawWhirlpool(o); continue; }
+          if (o.kind === "fin") { drawJelly(o.x, o.y); continue; }
           if (o.kind === "shark") {
             if (o.phase === "stalk") {
               // dark shadow + a bold pulsing cue up where you're looking, so a
@@ -1289,7 +1335,7 @@
               var pulse = 0.55 + 0.45 * Math.sin(seaT * 12);
               ctx.globalAlpha = pulse;
               text("🦈 SHARK!", o.x, shipYPx() - 58, clamp(W * 0.045, 15, 20), "#ff8a7a", "center", "bold");
-              text("▼", o.x, shipYPx() - 40, 18, "#ff8a7a", "center", "bold");
+              text("▼ shoot it or dodge", o.x, shipYPx() - 40, 13, "#ff8a7a", "center", "bold");
               ctx.globalAlpha = 1;
               var wind = clamp(1 - o.pt, 0, 1);   // ripple grows in the last second before the leap
               if (wind > 0) {
@@ -1314,13 +1360,26 @@
           }
           ctx.restore();
         }
+        if (wspout) drawWaterspoutWarn(wspout);
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts());
         drawParts();
+        // fog: a radial lantern-circle mask instead of a flat haze; night: a warm glow around the ship
+        if (lm.fog) {
+          var maskR = clamp(W * 0.24, 100, 170) * (1 + warnBonus() * 0.35);
+          var mg = ctx.createRadialGradient(G.shipX * W, shipYPx(), maskR * 0.28, G.shipX * W, shipYPx(), maskR);
+          mg.addColorStop(0, "rgba(10,14,18,0)"); mg.addColorStop(1, "rgba(10,14,18,.88)");
+          ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
+        }
+        if (lm.night) {
+          var ng = ctx.createRadialGradient(G.shipX * W, shipYPx(), 0, G.shipX * W, shipYPx(), 74);
+          ng.addColorStop(0, "rgba(255,210,120,.12)"); ng.addColorStop(1, "rgba(255,210,120,0)");
+          ctx.fillStyle = ng; ctx.fillRect(0, 0, W, H);
+        }
         drawHUD();
         for (var n = 0; n < objs.length; n++) if (objs[n].kind === "narrows" && objs[n].y < H * 0.7) {
           var no = objs[n], ngx = no.gap * W;
-          text("NARROWS AHEAD — find the gap!", W / 2, H * 0.42, 16, "#ffd24a", "center", "bold");
+          text(no.falseGap != null ? "NARROWS — one light lies. Follow the steady flame." : "NARROWS AHEAD — find the gap!", W / 2, H * 0.42, 15, "#ffd24a", "center", "bold");
           text("▼", ngx, Math.max(no.y + 74, 90), 20, "#ffd24a", "center", "bold");
         }
         if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(missionName() + ". Coins feed the war chest. Shoot or dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
@@ -1352,11 +1411,56 @@
       ctx.lineTo(x1, o.y + hh); ctx.lineTo(x0, o.y + hh); ctx.closePath(); ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.fillRect(x0, o.y + hh - 8, x1 - x0, 8);   // surf line
     });
+    // the real gap: a steady lighthouse flame
     ctx.fillStyle = "rgba(223,241,244,.5)";
     ctx.fillRect(gx - half + 4, o.y + hh - 4, 6, 4); ctx.fillRect(gx + half - 10, o.y + hh - 4, 6, 4);
+    ctx.fillStyle = "#ffe4a0"; ctx.beginPath(); ctx.arc(gx, o.y - hh - 6, 5, 0, 7); ctx.fill();
+    // the mooncusser's false gap: a decoy in the rocks, its wreckers' fire flickering
+    if (o.falseGap != null) {
+      var fgx = o.falseGap * W;
+      ctx.fillStyle = "rgba(120,80,40,.4)";
+      ctx.fillRect(fgx - half + 4, o.y + hh - 4, 6, 4); ctx.fillRect(fgx + half - 10, o.y + hh - 4, 6, 4);
+      var flick = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 17 + fgx));
+      ctx.globalAlpha = flick;
+      ctx.fillStyle = "#ff9a3a"; ctx.beginPath(); ctx.arc(fgx, o.y - hh - 6, 5, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
     ctx.restore();
   }
   function blob(r) { ctx.beginPath(); ctx.moveTo(r, 0); for (var a = 0; a <= 7; a += 0.7) { var rr = r * (0.8 + 0.2 * Math.sin(a * 3)); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); }
+  // the passive "fin" hazard, reskinned: a harmless jellyfish bloom drifting
+  // by, now that real sharks are confined to their own hunting grounds
+  function drawJelly(x, y) {
+    ctx.save(); ctx.translate(x, y);
+    var pulse = 0.85 + 0.15 * Math.sin(seaT * 3 + x * 0.05);
+    ctx.fillStyle = "rgba(200,150,230,.55)";
+    ctx.beginPath(); ctx.ellipse(0, 0, 15 * pulse, 10 * pulse, 0, Math.PI, 0); ctx.fill();
+    ctx.strokeStyle = "rgba(200,150,230,.4)"; ctx.lineWidth = 2;
+    for (var i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(i * 5, 2);
+      ctx.quadraticCurveTo(i * 5 + Math.sin(seaT * 4 + i) * 4, 14, i * 5 + Math.sin(seaT * 4 + i) * 2, 24);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(230,200,250,.7)";
+    ctx.beginPath(); ctx.ellipse(0, -2, 9 * pulse, 5 * pulse, 0, Math.PI, 0); ctx.fill();
+    ctx.restore();
+  }
+  // Virginia Capes waterspout: a marked column that warns before it resolves
+  function drawWaterspoutWarn(wp) {
+    var pulse = 0.5 + 0.5 * Math.sin(seaT * 10);
+    ctx.save();
+    ctx.strokeStyle = "rgba(200,220,235," + (0.3 + pulse * 0.4) + ")"; ctx.lineWidth = 5;
+    ctx.beginPath();
+    for (var y = H; y > -20; y -= 14) {
+      var wob = Math.sin(y * 0.06 + seaT * 6) * 10;
+      if (y === H) ctx.moveTo(wp.x + wob, y); else ctx.lineTo(wp.x + wob, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = pulse;
+    text("🌪 WATERSPOUT", wp.x, H * 0.3, 15, "#eaf6ff", "center", "bold");
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
 
   // ---------------------------------------------------------------- EVENT card
   function EventScene(ev) {
@@ -2355,6 +2459,14 @@
       toHarbor: function () { setScene(HarborScene(false)); },
       pause: function (v) { setPause(v); return paused; },
       isPaused: function () { return paused; },
+      forceLegMod: function (k) {
+        var FORCE = {
+          fog: { fog: true }, night: { night: true }, current: { current: 1 },
+          narrows: { narrows: true, mooncusser: false }, mooncusser: { narrows: true, mooncusser: true },
+          waterspout: { waterspout: 1 }, whirlpool: { whirlpool: 1 }
+        };
+        G.forceLegMod = FORCE[k] || null;
+      },
       err: function () { return window.__err ? window.__err.slice(0, 6) : []; }
     };
   }
