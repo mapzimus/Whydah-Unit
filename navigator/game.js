@@ -132,7 +132,9 @@
   if (!isTouch) document.body.classList.add("hide-touch");
 
   // ---------------------------------------------------------------- persistence
-  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } };
+  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false,
+    furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false,
+    upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } };
   function loadSave() {
     try {
       var raw = localStorage.getItem("firstsail-save-v3");
@@ -913,6 +915,10 @@
     if (G.seqIndex >= G.seq.length) { endRun(true, false); return; }
     var beat = G.seq[G.seqIndex];
     G.mIndex = beat.m; G.mFrac = beat.mBeatCount > 1 ? beat.mBeatIdx / (beat.mBeatCount - 1) : 0; setProgress();
+    // remember how far the crew has ever gotten, so a death never wipes the afternoon
+    if (G.mode === "insane") { if (G.mIndex > SAVE.furthestInsane) { SAVE.furthestInsane = G.mIndex; persist(); } }
+    else if (G.mIndex > SAVE.furthest) { SAVE.furthest = G.mIndex; persist(); }
+    if (G.mIndex >= 2 && !SAVE.prologueDone) { SAVE.prologueDone = true; persist(); }
     G.curBeat = beat.kind + (beat.which ? ":" + beat.which : "") + (beat.ev ? ":" + beat.ev.id : "");
     if (beat.kind === "sail") setScene(SailScene());
     else if (beat.kind === "battle") setScene(BattleScene());
@@ -973,7 +979,8 @@
 
   // ---------------------------------------------------------------- TITLE
   function TitleScene() {
-    var hint = false;
+    var hint = false, skipPrologue = false;
+    function beginVoyage() { startRun(skipPrologue ? 2 : 0); }
     return {
       noPause: true,
       enter: function () {
@@ -983,7 +990,7 @@
       update: function (dt) { seaT += dt; updateGulls(dt); },
       render: function () {
         drawSea(G.pal || PALETTES[1], seaT * 40, false);
-        drawShip(W / 2, H * 0.62, 2.2, playerShipOpts({ dmg: 0 }));
+        drawShip(W / 2, H * 0.56, 2, playerShipOpts({ dmg: 0 }));
         var w = clamp(W * 0.88, 300, 540);
         panel(W / 2, H * 0.3, w, 196);
         text("FIRST SAIL", W / 2, H * 0.3 - 58, 38, "#e0b25c", "center", "bold");
@@ -1010,10 +1017,23 @@
           if (sel) { ctx.strokeStyle = "#ffd24a"; ctx.lineWidth = 2.5; roundRect(mx - 2, my - 2, mw + 4, 34, 12); ctx.stroke(); }
         }
         text(SAVE.mode === "insane" ? "the multiverse is waiting. good luck." : (SAVE.extremeWon ? "difficulty" : "difficulty  ·  beat EXTREME to unlock 🌀"), W / 2, my - 10, 10.5, "rgba(244,231,201,.6)");
-        if (uiButton(W / 2 - bw - 10, by - 26, bw, 52, "⚓ SET SAIL", { size: 17 })) { startRun(); }
+        // resume the furthest voyage reached, or start fresh (with a prologue-skip toggle once it's been seen once)
+        var curMode = insane() ? SAVE.furthestInsane : SAVE.furthest;
+        var canResume = curMode > 2;
+        var resumeY = my - 80;
+        if (canResume) {
+          var resumeMsn = MISSIONS[clamp(curMode, 0, MISSIONS.length - 1)];
+          var rName = (insane() && resumeMsn.nameInsane) ? resumeMsn.nameInsane : resumeMsn.name;
+          if (uiButton(W / 2 - bw - 10, resumeY, bw * 2 + 20, 32, "↪ RESUME — M" + (curMode + 1) + " " + rName, { size: 12.5, color: "#6a3f9e" })) { startRun(curMode); }
+        }
+        if (SAVE.prologueDone) {
+          var toggleLbl = (skipPrologue ? "☑" : "☐") + " skip the prologue (+160 pts)";
+          if (uiButton(W / 2 - 110, resumeY - (canResume ? 34 : 0), 220, 22, toggleLbl, { size: 10.5, color: "rgba(30,40,50,.4)" })) { skipPrologue = !skipPrologue; SFX.point(); }
+        }
+        if (uiButton(W / 2 - bw - 10, by - 26, bw, 52, "⚓ SET SAIL", { size: 17 })) { beginVoyage(); }
         if (uiButton(W / 2 + 10, by - 26, bw, 52, "⚒ HARBOR", { size: 17, color: "#1f4a5e" })) { setScene(HarborScene(false)); }
         if (uiButton(W / 2 - bw / 2 - 5, by + 34, bw + 10, 36, "📖 LOG  " + seen + " / " + tot, { size: 13, color: "#4a3a5e" })) { setScene(LogScene()); }
-        if (consumeTap()) startRun();
+        if (consumeTap()) beginVoyage();
       }
     };
   }
@@ -2221,8 +2241,65 @@
     };
   }
 
+  // ---------------------------------------------------------------- PORT CALLS (between missions)
+  // A compact refit stop after every mission but the last. The gold you've
+  // earned since the last port banks the moment you arrive — dying later only
+  // costs what you've made since. Buying Oak Timbers here helps immediately.
+  var PORT_NAMES = ["Nassau", "Eleuthera", "Charles Town Lights", "Ocracoke", "Hampton Roads", "Montauk", "Block Island", "Provincetown", "Race Point"];
+  function PortScene() {
+    var mi = G.mIndex, portName = PORT_NAMES[clamp(mi, 0, PORT_NAMES.length - 1)];
+    var msg = "";
+    return {
+      noPause: true,
+      enter: function () {
+        document.body.classList.remove("playing");
+        if (G.gold > 0) { SAVE.bank += G.gold; G.gold = 0; persist(); }   // the purser banks the chest the moment you tie up
+      },
+      update: function (dt) { seaT += dt; updateGulls(dt); },
+      render: function () {
+        drawSea(PALETTES[2], seaT * 25, false);
+        drawShip(W * 0.5, H * 0.87, 1.7, playerShipOpts({ dmg: 0 }));
+        var w = clamp(W * 0.92, 300, 560);
+        var rows = UPG.length, rowH = clamp(H * 0.068, 38, 48), cols = 1;
+        var h = 106 + rows * rowH;
+        if (h > H * 0.76) { h = H * 0.76; rowH = (h - 98) / rows; }
+        if (rowH < 30) { cols = 2; rows = Math.ceil(UPG.length / 2); rowH = clamp((H * 0.76 - 98) / rows, 30, 48); h = 102 + rows * rowH; }
+        var top = clamp(H * 0.05, 8, 36);
+        panel(W / 2, top + h / 2, w, h);
+        text("⚓  PUT IN AT " + portName.toUpperCase(), W / 2, top + 28, 18, "#e0b25c", "center", "bold");
+        text("Bank: 🪙 " + SAVE.bank + (msg ? "   " + msg : ""), W / 2, top + 49, 12.5, "#f7d84a", "center", "bold");
+        var colW = w / cols;
+        for (var i = 0; i < UPG.length; i++) {
+          var u = UPG[i], lvl = upgLvl(u.id), maxed = lvl >= u.max, cost = maxed ? 0 : u.cost[lvl];
+          var col = cols === 2 ? i % 2 : 0, rowIdx = cols === 2 ? Math.floor(i / 2) : i;
+          var rx = W / 2 - w / 2 + 16 + col * colW;
+          var ry = top + 64 + rowIdx * rowH;
+          text(u.icon + " " + u.name, rx + 4, ry + 14, cols === 2 ? 11.5 : 13, "#f4e7c9", "left", "bold");
+          for (var p = 0; p < u.max; p++) { ctx.fillStyle = p < lvl ? "#e0b25c" : "rgba(244,231,201,.2)"; ctx.beginPath(); ctx.arc(rx + 8 + p * 12, ry + 26, 4, 0, 7); ctx.fill(); }
+          var bw2 = cols === 2 ? 72 : 94, bh2 = rowH - 12;
+          var bx = rx + colW - bw2 - 24;
+          if (maxed) { uiButton(bx, ry, bw2, bh2, "MAXED", { disabled: true, size: 11 }); }
+          else if (uiButton(bx, ry, bw2, bh2, "🪙 " + cost, { size: cols === 2 ? 10.5 : 12, color: SAVE.bank >= cost ? "#2c5e38" : "#5a4030" })) {
+            if (SAVE.bank >= cost) {
+              SAVE.bank -= cost; SAVE.upg[u.id] = lvl + 1;
+              if (u.id === "hull") { G.maxHull++; G.hull++; }   // takes hold immediately, mid-voyage
+              persist(); SFX.buy(); msg = u.name + " improved!";
+            } else { msg = "Not enough gold."; SFX.bad(); }
+          }
+        }
+        var sy = top + h + 12;
+        if (sy + 44 > H) sy = H - 50;
+        if (uiButton(W / 2 - 90, sy, 180, 42, "⚓ SAIL ON", { size: 15.5 })) advance();
+      }
+    };
+  }
+
   // ---------------------------------------------------------------- boot / loop
-  function startRun(fromMission) { newGame(fromMission); G.seqIndex = -1; advance(); }
+  function startRun(fromMission) {
+    newGame(fromMission);
+    if (fromMission) G.score = 80 * fromMission;   // a resumed voyage isn't scored from zero, but never double-counts a prior run
+    G.seqIndex = -1; advance();
+  }
 
   var last = 0;
   function loop(ts) {
@@ -2274,7 +2351,7 @@
       gold: function (n) { SAVE.bank += n; persist(); },
       buy: function (id) { var lvl = upgLvl(id); var u = null; for (var i = 0; i < UPG.length; i++) if (UPG[i].id === id) u = UPG[i]; if (!u || lvl >= u.max) return "no"; SAVE.bank -= u.cost[lvl]; SAVE.upg[id] = lvl + 1; persist(); return SAVE.upg[id]; },
       save: function () { return JSON.parse(JSON.stringify(SAVE)); },
-      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
+      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
       toHarbor: function () { setScene(HarborScene(false)); },
       pause: function (v) { setPause(v); return paused; },
       isPaused: function () { return paused; },
