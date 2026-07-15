@@ -78,6 +78,12 @@
     toast("🌀 SIDEQUEST ACCEPTED");
     SFX.win();
   }
+  // feats: permanent one-way flags that unlock ship skins
+  function feat(id) {
+    if (!SAVE.feats) SAVE.feats = {};
+    if (SAVE.feats[id]) return;
+    SAVE.feats[id] = true; persist();
+  }
   function keydown(e) {
     var k = e.key.toLowerCase();
     if (scene && scene.isTitle && /^[a-z]$/.test(k)) {
@@ -145,7 +151,7 @@
   if (!isTouch) document.body.classList.add("hide-touch");
 
   // ---------------------------------------------------------------- persistence
-  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, secretUnlock: false,
+  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, secretUnlock: false, feats: {}, skin: "auto", suggestions: [],
     furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false,
     upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } };
   function loadSave() {
@@ -402,6 +408,13 @@
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
     { id: "pugcaptain", w: 1, tag: "multi", ins: true, t: "The pug takes the wheel", b: "For six glorious minutes the ship's pug is captain. It makes no orders, changes no headings, and is the best captain anyone has ever served under.", fx: { s: 20 } },
     { id: "duckdirect",w: 1, tag: "multi", ins: true, t: "A duck asks for directions", b: "A duck the size of a longboat paddles up alongside and asks, quite politely, if this is the way to Maine. The crew is too stunned to lie.", fx: { s: 15, g: 5 } },
+    // the 2026 wave — the great meme reset, in period costume
+    { id: "memereset",  w: 2, tag: "multi", ins: true, t: "THE GREAT MEME RESET", b: "A wave rolls through the multiverse and every joke on the ship resets to the classics. The bosun tells a knock-knock joke. It absolutely destroys the whole crew.", fx: { s: 30 } },
+    { id: "pbplease",   w: 2, tag: "multi", ins: true, t: "\"Peanut butter, please.\"", b: "A colossal, extremely polite grouper surfaces and asks for peanut butter. You have none. It says, \"Peanut butter, please,\" again, exactly as politely. This continues for one hour.", fx: { s: 20, g: -5 } },
+    { id: "doomscroll", w: 2, tag: "multi", ins: true, t: "Doomscrolling the logbook", b: "The navigator has been re-reading the same three pages of the ship's log for four hours. 'One more entry,' he says. He does not mean it.", fx: { s: 15, h: -1 } },
+    { id: "cityboy",    w: 2, tag: "multi", ins: true, t: "A city boy joins the crew", b: "He has never seen the sea. He calls the mast 'the big pole' and the anchor 'the heavy.' Somehow he is the best sailor aboard by Thursday.", fx: { s: 20, g: 5 } },
+    { id: "googoo",     w: 1, tag: "multi", ins: true, t: "The parrot regresses", b: "The ship's parrot, a decorated veteran of four voyages, abruptly switches to baby talk. 'Googoo gaga,' it announces, with the confidence of an admiral. The crew salutes.", fx: { s: 15 } },
+    { id: "talltales",  w: 2, tag: "multi", ins: true, t: "Tall tales about the captain", b: "The crew starts a game: the captain once rowed to Maine in one night. The captain counted every fish in the sea, twice. The captain's stare becalms storms. Points for the best one.", fx: { s: 25 } },
     // legends and myths, mission-weighted via m: so they surface near where they belong
     { id: "davyjones", w: 2, tag: "yarn",   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
     { id: "fiddlers",  w: 2, tag: "yarn",   m: "rhodeisland", t: "Fiddler's Green", b: "Fiddler's Green, the old hands call it — the far shore where the rum never runs dry and the fiddler never stops playing. You have to drown to get there, though. Mixed review.", fx: { s: 12 } },
@@ -564,7 +577,7 @@
       pal: choice(runMode === "insane" ? PALETTES_INSANE : PALETTES), shipX: 0.5, shipY: 0.7, route: "", iframes: 0, coinStreak: 0,
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
-      firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false,
+      firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false, cargo: 0,
       // INSANE: two per-run mutators, drawn fresh every voyage and announced on the first mission card
       mutators: runMode === "insane" ? shuffle(["cheese", "gullswatch", "bighead", "bouncy"]).slice(0, 2) : []
     };
@@ -589,6 +602,9 @@
         for (var k = 0; k < nMini; k++) randomBeats.push({ kind: "mini", which: minisPool[k % 3], m: mi });
       }
       for (var k2 = 0; k2 < msn.slots.battle; k2++) randomBeats.push({ kind: "battle", m: mi });
+      // a trading brig works these waters: sail legs from Windward on have a
+      // fair chance of a merchant hail (buy repairs, powder, or port cargo)
+      if (msn.legCount > 0 && mi >= 2 && chance(0.5)) randomBeats.push({ kind: "merchant", m: mi });
       shuffle(randomBeats);
 
       var legs = msn.legCount;
@@ -852,6 +868,9 @@
     // once the Three-Day Chase is won, the player sails the Whydah herself —
     // black flag always flew, so this just locks in her darker hull and trim
     if (SAVE.whydahTaken) { o.whydah = true; o.hull = "#2a1a10"; o.trim = "#e0b25c"; }
+    // an earned livery repaints her (she keeps the Whydah's size once taken)
+    var skn = currentSkin();
+    if (skn.id !== "auto") for (var sk2 in skn.opts) o[sk2] = skn.opts[sk2];
     if (G && G.iframes > 0 && Math.floor(G.iframes / 0.08) % 2 === 0) o.blink = true;   // hit grace: she flickers
     if (lvls >= 3) o.trim = "#e0b25c";
     if (lvls >= 6) o.sail = "#fdf6e0";
@@ -1057,6 +1076,7 @@
     else if (beat.kind === "mooncusser") setScene(MooncusserScene());
     else if (beat.kind === "sharknado") setScene(SharknadoScene());
     else if (beat.kind === "flagship") setScene(FlagshipScene());
+    else if (beat.kind === "merchant") setScene(MerchantScene());
     else if (beat.kind === "hallett") setScene(EventScene(HALLETT_EVENT));
     else setScene(SailScene());
   }
@@ -2448,7 +2468,7 @@
         stepBalls(balls, dt, [{ x: seg[0].x, y: seg[0].y, r: hasMut("bighead") ? 34 : 24, onHit: function () {
           hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
           if (hp <= 0) {
-            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14);
+            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14); feat(insane() ? "seapug" : "serpent");
             for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
           }
         } }]);
@@ -2541,7 +2561,7 @@
         } });
         stepBalls(balls, dt, mTargets, { x: px, y: py, r: 18 });
         if (walls >= WALLS && !wall && !done2) {
-          done2 = true; phase = "done"; addScore(60 + (batDead ? 0 : 0)); SFX.win();
+          done2 = true; phase = "done"; addScore(60); SFX.win(); feat("mooncusser");
         }
       },
       render: function () {
@@ -2640,7 +2660,7 @@
         if (eyeOpen > 0) nTargets.push({ x: nadoX, y: H * 0.3, r: 30, onHit: function (b) {
           nadoHp--; splash(b.x, b.y, 10, "#cfe9f2"); SFX.hit(); shake(4);
           if (nadoHp <= 0) {
-            phase = "done"; addScore(120); addGold(60); SFX.win(); shake(16);
+            phase = "done"; addScore(120); addGold(60); SFX.win(); shake(16); feat("sharknado");
             for (var k = 0; k < 40; k++) spawn(nadoX, H * 0.3, { vx: rand(-200, 200), vy: rand(-100, 240), g: 300, life: rand(0.6, 1.4), r: rand(2, 5), c: choice(["#cfe9f2", "#9fb6c9", "#fff"]) });
           }
         } });
@@ -2764,7 +2784,7 @@
           hp -= 1 + dmgBonus + (doubled ? 1 : 0);
           splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
           if (hp <= 0) {
-            phase = "done"; loot = randInt(90, 140); addGold(loot); addScore(150); G.shipsBeaten++; SFX.win(); shake(14);
+            phase = "done"; loot = randInt(90, 140); addGold(loot); addScore(150); G.shipsBeaten++; SFX.win(); shake(14); feat("flagship");
             for (var k = 0; k < 30; k++) spawn(fx2, shipY2, { vx: rand(-140, 140), vy: rand(-180, 60), g: 260, life: rand(0.6, 1.3), r: rand(2, 5), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
           }
         } }], { x: px, y: py, r: 18 });
@@ -3155,7 +3175,7 @@
               h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
               for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
               if (aliveHeads().length === 0) {
-                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20);
+                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20); feat(insane() ? "pugnarok" : "boss");
                 for (var k3 = 0; k3 < 60; k3++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-220, 220), vy: rand(-260, 80), g: 240, life: rand(0.7, 1.8), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
               }
             }
@@ -3287,7 +3307,7 @@
         var px = G.shipX * W, py = shipYPx();
         if (!touched && Math.hypot(ship.x - px, ship.y - py) < 46) { touched = true; damage(1); shake(10); toast("You got too close to the Light."); }
         if (t >= dur) {
-          if (!touched) addScore(40);
+          if (!touched) { addScore(40); feat("palatine"); }
           setScene(Prompt("THE PALATINE LIGHT", "Block Island sailors still see her: a ship afire on the horizon, crewed by no one living. Some say she's the wreck that never stopped burning.", advance, touched ? "you got too close" : "witnessed, and recorded"));
         }
       },
@@ -3466,7 +3486,137 @@
         }
         var sy = top + h + 14;
         if (sy + 48 > H) sy = H - 54;
-        if (uiButton(W / 2 - 90, sy, 180, 46, "⚓ SET SAIL", { size: 17 })) startRun();
+        if (uiButton(W / 2 - w / 2 + 6, sy, (w - 24) / 3, 46, "⛵ SKINS", { size: 14, color: "#4a3a5e" })) setScene(SkinScene());
+        if (uiButton(W / 2 - (w - 24) / 6, sy, (w - 24) / 3, 46, "⚓ SET SAIL", { size: 15 })) startRun();
+        if (uiButton(W / 2 + w / 2 - 6 - (w - 24) / 3, sy, (w - 24) / 3, 46, "📮 IDEAS", { size: 14, color: "#1f4a5e" })) {
+          var sug = null;
+          try { sug = window.prompt("What should we add to First Sail? (your idea goes in the ship's suggestion log)"); } catch (e3) {}
+          if (sug && sug.trim()) {
+            if (!SAVE.suggestions) SAVE.suggestions = [];
+            SAVE.suggestions.push({ t: sug.trim().slice(0, 200), d: new Date().toISOString().slice(0, 10) });
+            if (SAVE.suggestions.length > 100) SAVE.suggestions.shift();
+            persist(); SFX.good(); msg = "Logged! " + SAVE.suggestions.length + " idea" + (SAVE.suggestions.length === 1 ? "" : "s") + " in the book. 📮";
+          }
+        }
+        if (SAVE.suggestions && SAVE.suggestions.length) {
+          text(SAVE.suggestions.length + " idea" + (SAVE.suggestions.length === 1 ? "" : "s") + " logged", W / 2 + w / 2 - 6 - (w - 24) / 6, sy + 58, 10, "rgba(244,231,201,.6)", "center");
+          if (uiButton(W / 2 + w / 2 - 40, sy - 26, 34, 22, "✉", { size: 11, color: "#3a4550" })) {
+            var body = SAVE.suggestions.map(function (s2) { return "- (" + s2.d + ") " + s2.t; }).join("\n");
+            try { window.open("mailto:mhowe.gis@gmail.com?subject=" + encodeURIComponent("First Sail suggestions") + "&body=" + encodeURIComponent(body), "_blank"); } catch (e4) {}
+          }
+        }
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------- MERCHANT HAIL
+  // A trading brig heaves to alongside mid-mission. Three deals from a
+  // rotating stock — repairs, powder, intel, or cargo that pays out double
+  // at the next port (real risk: sink before port and the cargo goes down
+  // with the chest). One tap through if you'd rather keep sailing.
+  function MerchantScene() {
+    var msg = "", bought = {};
+    var STOCK = [
+      { id: "carpenter", icon: "🔨", name: "Ship's carpenter", desc: "Repair 2 hull", cost: 30, can: function () { return G.hull < G.maxHull; }, buy: function () { repair(2); return "The carpenter knocks her back together."; } },
+      { id: "stores",    icon: "🍋", name: "Fresh stores",     desc: "Repair 1 hull", cost: 15, can: function () { return G.hull < G.maxHull; }, buy: function () { repair(1); return "Limes and greens. The crew perks up."; } },
+      { id: "powder",    icon: "🧨", name: "Fine powder",      desc: "Next fight: shots hit harder", cost: 30, can: function () { return true; }, buy: function () { G.mods.drill = true; return "Dry, fast-burning, beautiful powder."; } },
+      { id: "intel",     icon: "🗺", name: "Weather gossip",   desc: "Shorter storm at the cape", cost: 25, can: function () { return true; }, buy: function () { G.mods.warned = true; return "'Nor'easter brewing. Keep her trim.'"; } },
+      { id: "tea",       icon: "📦", name: "Tea cargo",        desc: "Pays 🪙 80 at your next port", cost: 40, can: function () { return true; }, buy: function () { G.cargo += 80; return "Crates of tea below decks."; } },
+      { id: "spice",     icon: "🌶", name: "Spice cargo",      desc: "Pays 🪙 130 at your next port", cost: 65, can: function () { return true; }, buy: function () { G.cargo += 130; return "The hold smells incredible."; } },
+      { id: "crate",     icon: "❓", name: "A sealed crate",   desc: "Could be anything", cost: 25, can: function () { return true; }, buy: function () {
+          var roll = Math.random();
+          if (roll < 0.3) { addGold(60); return "Silver plate! +60 🪙"; }
+          if (roll < 0.55) { addScore(40); return "Charts of the whole coast. +40 ⚑"; }
+          if (roll < 0.8) { repair(1); return "Rum and fresh oakum. +1 ♥"; }
+          return "It is full of extremely confident crabs. They leave.";
+        } },
+      { id: "yarn",      icon: "🍺", name: "Buy a round",      desc: "Hear the news (+15 ⚑)", cost: 10, can: function () { return true; }, buy: function () { addScore(15); return "Half of it is even true."; } }
+    ];
+    var deals = shuffle(STOCK.slice()).slice(0, 3);
+    return {
+      noPause: true,
+      enter: function () { document.body.classList.remove("playing"); },
+      update: function (dt) { seaT += dt; updateGulls(dt); },
+      render: function () {
+        drawSea(G.pal || PALETTES[1], seaT * 20, false);
+        drawShip(W * 0.3, H * 0.85, 1.6, playerShipOpts({ dmg: 0 }));
+        drawShip(W * 0.7, H * 0.85, 1.5, { rot: Math.PI * 0.06, hull: "#3d3a2f", deck: "#5e5a44", sail: "#efe6cc", flag: "#b98f20", wake: false, phase: 2 });
+        var w = clamp(W * 0.88, 300, 520), rowH = clamp(H * 0.09, 52, 64);
+        var h = 128 + 3 * rowH;
+        var top = clamp(H * 0.05, 8, 40);
+        panel(W / 2, top + h / 2, w, h);
+        text("🏳 A MERCHANT HEAVES TO", W / 2, top + 30, 18, "#e0b25c", "center", "bold");
+        text(insane() ? "The merchant is a completely ordinary trading brig. Suspicious." : "\"Trade, captain? Coin on the barrel, no questions either way.\"", W / 2, top + 52, 11.5, "rgba(244,231,201,.75)", "center");
+        text("🪙 " + G.gold + (G.cargo ? "   📦 cargo aboard: pays " + G.cargo + " at port" : "") + (msg ? "   " + msg : ""), W / 2, top + 72, 12, "#f7d84a", "center", "bold");
+        for (var i = 0; i < deals.length; i++) {
+          var dl = deals[i], ry = top + 88 + i * rowH;
+          var usable = dl.can() && !bought[dl.id];
+          text(dl.icon + " " + dl.name, W / 2 - w / 2 + 20, ry + 18, 14, usable ? "#f4e7c9" : "rgba(244,231,201,.4)", "left", "bold");
+          text(dl.desc, W / 2 - w / 2 + 20, ry + 36, 11, usable ? "rgba(244,231,201,.7)" : "rgba(244,231,201,.35)", "left");
+          var bw2 = 96;
+          if (bought[dl.id]) uiButton(W / 2 + w / 2 - bw2 - 16, ry + 6, bw2, rowH - 18, "SOLD", { disabled: true, size: 12 });
+          else if (uiButton(W / 2 + w / 2 - bw2 - 16, ry + 6, bw2, rowH - 18, "🪙 " + dl.cost, { size: 13, disabled: !dl.can(), color: G.gold >= dl.cost ? "#2c5e38" : "#5a4030" })) {
+            if (G.gold >= dl.cost) { G.gold -= dl.cost; bought[dl.id] = true; msg = dl.buy(); SFX.buy(); }
+            else { msg = "Not enough gold aboard."; SFX.bad(); }
+          }
+        }
+        var sy = top + h + 12;
+        if (sy + 44 > H) sy = H - 50;
+        if (uiButton(W / 2 - 80, sy, 160, 42, "⚓ SAIL ON", { size: 15 })) advance();
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------- SHIP SKINS
+  // Cosmetic liveries earned by playing. "auto" keeps the classic behavior
+  // (your ship, then the Whydah once she's taken); everything else overrides.
+  var SHIP_SKINS = [
+    { id: "auto",    name: "The Sultana",       desc: "Your first command — becomes the Whydah when you take her.", unlock: function () { return true; }, opts: {} },
+    { id: "gilded",  name: "The Gilded Gally",  desc: "Win a voyage.", unlock: function () { return SAVE.wins >= 1; }, opts: { hull: "#6a4a1a", deck: "#8a6a2a", trim: "#f7d84a", sail: "#fdf2d0", flag: "#f7d84a" } },
+    { id: "night",   name: "The Night Runner",  desc: "Beat the Mooncusser's gauntlet.", unlock: function () { return SAVE.feats && SAVE.feats.mooncusser; }, opts: { hull: "#1a2230", deck: "#2a3648", sail: "#3a4a62", flag: "#0e141e", trim: "#7fd6ea" } },
+    { id: "tooth",   name: "The Sharktooth",    desc: "Bring down the Sharknado.", unlock: function () { return SAVE.feats && SAVE.feats.sharknado; }, opts: { hull: "#4a5c66", deck: "#5e7280", sail: "#dfe9ee", flag: "#e05c5c" } },
+    { id: "crimson", name: "The Crimson Corsair", desc: "Sink the Hunter's Flagship.", unlock: function () { return SAVE.feats && SAVE.feats.flagship; }, opts: { hull: "#5e1a1a", deck: "#7a2a2a", sail: "#e8c1ae", flag: "#c73a3a", trim: "#f7d84a" } },
+    { id: "ghost",   name: "The Palatine",      desc: "Witness the ghost light — and keep your distance.", unlock: function () { return SAVE.feats && SAVE.feats.palatine; }, opts: { hull: "#241512", deck: "#3a2a24", sail: "rgba(255,220,180,.55)", flag: "#000" } },
+    { id: "serpent", name: "The Serpent's Wake", desc: "Drive off the Cape Cod serpent.", unlock: function () { return SAVE.feats && SAVE.feats.serpent; }, opts: { hull: "#2f6b4a", deck: "#3c7f58", sail: "#d6ffd0", flag: "#245239" } },
+    { id: "duck",    name: "The Rubber Ducky",  desc: "Speak the secret word.", unlock: function () { return SAVE.secretUnlock; }, opts: { hull: "#f7d84a", deck: "#ffe27a", sail: "#fff6d6", flag: "#e08c2a" } },
+    { id: "goodboy", name: "The Good Boy",      desc: "Befriend PUGNAROK.", unlock: function () { return SAVE.feats && SAVE.feats.pugnarok; }, opts: { hull: "#c9905a", deck: "#e8c087", sail: "#fff3dc", flag: "#ff8a9a", trim: "#4a3020" } }
+  ];
+  function currentSkin() {
+    for (var i = 0; i < SHIP_SKINS.length; i++) if (SHIP_SKINS[i].id === SAVE.skin && SHIP_SKINS[i].unlock()) return SHIP_SKINS[i];
+    return SHIP_SKINS[0];
+  }
+  function SkinScene() {
+    var msg = "";
+    return {
+      noPause: true,
+      enter: function () { document.body.classList.remove("playing"); },
+      update: function (dt) { seaT += dt; updateGulls(dt); },
+      render: function () {
+        drawSea(PALETTES[1], seaT * 25, false);
+        var w = clamp(W * 0.92, 300, 560);
+        var rowH = clamp(H * 0.075, 40, 52), rows = SHIP_SKINS.length;
+        var h = 110 + rows * rowH;
+        if (h > H * 0.86) { h = H * 0.86; rowH = (h - 100) / rows; }
+        var top = clamp(H * 0.05, 8, 40);
+        panel(W / 2, top + h / 2, w, h);
+        text("⛵  SHIP LIVERIES", W / 2, top + 30, 20, "#e0b25c", "center", "bold");
+        text(msg || "earn them by sailing — pick any you've unlocked", W / 2, top + 52, 11.5, "rgba(244,231,201,.7)", "center");
+        for (var i = 0; i < SHIP_SKINS.length; i++) {
+          var sk = SHIP_SKINS[i], open2 = sk.unlock(), sel = (SAVE.skin || "auto") === sk.id;
+          var ry = top + 70 + i * rowH;
+          ctx.save(); ctx.translate(W / 2 - w / 2 + 34, ry + rowH / 2 - 4); ctx.scale(0.62, 0.62);
+          if (open2) drawShip(0, 0, 1.4, Object.assign({ wake: false, dmg: 0, flag: "#111" }, sk.opts));
+          else { ctx.globalAlpha = 0.25; drawShip(0, 0, 1.4, { wake: false, dmg: 0, hull: "#444", deck: "#555", sail: "#666", flag: "#333" }); ctx.globalAlpha = 1; }
+          ctx.restore();
+          text(open2 ? sk.name : "🔒 ???", W / 2 - w / 2 + 66, ry + rowH / 2 - 4, 13.5, open2 ? "#f4e7c9" : "rgba(244,231,201,.4)", "left", "bold");
+          text(sk.desc, W / 2 - w / 2 + 66, ry + rowH / 2 + 12, 10.5, open2 ? "rgba(244,231,201,.65)" : "rgba(244,231,201,.35)", "left");
+          var bw2 = 92;
+          if (sel) uiButton(W / 2 + w / 2 - bw2 - 16, ry + 4, bw2, rowH - 12, "FLYING", { disabled: true, size: 12 });
+          else if (open2 && uiButton(W / 2 + w / 2 - bw2 - 16, ry + 4, bw2, rowH - 12, "HOIST", { size: 12.5, color: "#2c5e38" })) { SAVE.skin = sk.id; persist(); SFX.buy(); msg = sk.name + " hoisted!"; }
+        }
+        var sy = top + h + 12;
+        if (sy + 44 > H) sy = H - 50;
+        if (uiButton(W / 2 - 70, sy, 140, 40, "⚒ HARBOR", { size: 14, color: "#1f4a5e" })) setScene(HarborScene(false));
       }
     };
   }
@@ -3483,6 +3633,7 @@
       noPause: true,
       enter: function () {
         document.body.classList.remove("playing");
+        if (G.cargo > 0) { G.gold += G.cargo; toast("📦 Cargo sold at " + portName + "! +" + G.cargo + " 🪙"); SFX.coin(); G.cargo = 0; }   // merchant cargo pays out here
         if (G.gold > 0) { SAVE.bank += G.gold; G.gold = 0; persist(); }   // the purser banks the chest the moment you tie up
       },
       update: function (dt) { seaT += dt; updateGulls(dt); },
@@ -3582,13 +3733,17 @@
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
       skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], chaos: G ? G.chaosNow || null : null }; },
+      skins: function () { return SHIP_SKINS.map(function (s) { return { id: s.id, name: s.name, open: !!s.unlock() }; }); },
+      grantFeat: function (id) { feat(id); },
+      setSkin: function (id) { SAVE.skin = id; persist(); return currentSkin().id; },
+      suggest: function (txt) { if (!SAVE.suggestions) SAVE.suggestions = []; SAVE.suggestions.push({ t: String(txt).slice(0, 200), d: new Date().toISOString().slice(0, 10) }); persist(); return SAVE.suggestions.length; },
       newRun: function (fromMission) { startRun(fromMission); flushFade(); },
       buildSeq: function (fromMission) { newGame(fromMission); return G.seq.map(function (b) { return "m" + b.m + ":" + b.kind + (b.ev ? ":" + b.ev.id : "") + (b.which ? ":" + b.which : ""); }); },
       choose: function (i) { if (scene && scene.debugChoose) scene.debugChoose(i); },
       gold: function (n) { SAVE.bank += n; persist(); },
       buy: function (id) { var lvl = upgLvl(id); var u = null; for (var i = 0; i < UPG.length; i++) if (UPG[i].id === id) u = UPG[i]; if (!u || lvl >= u.max) return "no"; SAVE.bank -= u.cost[lvl]; SAVE.upg[id] = lvl + 1; persist(); return SAVE.upg[id]; },
       save: function () { return JSON.parse(JSON.stringify(SAVE)); },
-      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, secretUnlock: false, furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
+      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, secretUnlock: false, feats: {}, skin: "auto", suggestions: [], furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
       toHarbor: function () { setScene(HarborScene(false)); },
       pause: function (v) { setPause(v); return paused; },
       isPaused: function () { return paused; },
