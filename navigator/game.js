@@ -245,6 +245,14 @@
       }
     }
   }
+  // INSANE per-run mutators: persistent for the whole voyage, unlike consumeMod's one-shots
+  function hasMut(id) { return !!(G && G.mutators && G.mutators.indexOf(id) >= 0); }
+  var MUTATOR_LINES = {
+    cheese: "🧀 coins are cheese wheels",
+    gullswatch: "👀 the gulls are watching",
+    bighead: "🗣 big head mode",
+    bouncy: "🎈 everything is bouncier"
+  };
   // one-shot G.mods flag: read then clear in one call so scenes never forget to reset a mod
   function consumeMod(name) {
     var v = G.mods[name];
@@ -377,6 +385,8 @@
     { id: "auracheck", w: 2, tag: "multi", ins: true, t: "AURA CHECK", b: "A wave of pure vibes passes through the ship. The bosun gains +999 aura. That is worth points now. This is the multiverse.", fx: { s: 35 } },
     { id: "sixseven",  w: 1, tag: "multi", ins: true, t: "Six... seven...", b: "The powder monkey counts the cannonballs and cannot stop at six-seven. Nobody can. Nobody knows why. Six! Seven!", fx: { s: 15 } },
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
+    { id: "pugohio",   w: 1, tag: "multi", ins: true, t: "The pug barks at Ohio", b: "Somewhere off the bow, Ohio drifts by again. The ship's pug stands at the rail and barks at it, once, with total conviction. Nobody argues.", fx: { s: 20 } },
+    { id: "duckdirect",w: 1, tag: "multi", ins: true, t: "A duck asks for directions", b: "A duck the size of a longboat paddles up alongside and asks, quite politely, if this is the way to Maine. The crew is too stunned to lie.", fx: { s: 15, g: 5 } },
     // legends and myths, mission-weighted via m: so they surface near where they belong
     { id: "davyjones", w: 2, tag: "yarn",   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
     { id: "fiddlers",  w: 2, tag: "yarn",   m: "rhodeisland", t: "Fiddler's Green", b: "Fiddler's Green, the old hands call it — the far shore where the rum never runs dry and the fiddler never stops playing. You have to drown to get there, though. Mixed review.", fx: { s: 12 } },
@@ -539,7 +549,9 @@
       pal: choice(runMode === "insane" ? PALETTES_INSANE : PALETTES), shipX: 0.5, shipY: 0.7, route: "", iframes: 0, coinStreak: 0,
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
-      firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: []
+      firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false,
+      // INSANE: two per-run mutators, drawn fresh every voyage and announced on the first mission card
+      mutators: runMode === "insane" ? shuffle(["cheese", "gullswatch", "bighead", "bouncy"]).slice(0, 2) : []
     };
     // Build the voyage mission by mission: an intro card, then sail legs with
     // that mission's random events/minis/battles spread through the gaps,
@@ -674,19 +686,22 @@
   }
   function updateGulls(dt) {
     if (gulls.length < 3 && chance(0.006)) spawnGull();
+    var watching = hasMut("gullswatch");
     for (var i = gulls.length - 1; i >= 0; i--) {
       var g = gulls[i]; g.x += g.vx * dt; g.ph += dt * 9; g.y += Math.sin(g.ph * 0.3) * 6 * dt;
       if (g.x < GULL_LO * W || g.x > GULL_HI * W) g.vx *= -1;   // wheel back over the water, don't drift onto land
+      if (watching && G) g.vx = lerp(g.vx, Math.sign(G.shipX * W - g.x) * 26, 0.4 * dt);   // they track the ship, unblinking
     }
   }
   function drawGulls(pal) {
     ctx.strokeStyle = pal.sky[1] === "#141d30" ? "rgba(200,215,230,.7)" : "rgba(40,50,60,.75)";
     ctx.lineWidth = 2; ctx.lineCap = "round";
+    var flip = (G && G.gullFlip) ? -1 : 1;   // insane-mode chaos: they fly upside down
     for (var i = 0; i < gulls.length; i++) {
       var g = gulls[i], f = Math.sin(g.ph) * 4 * g.s, s = 7 * g.s;
       ctx.beginPath();
-      ctx.moveTo(g.x - s, g.y + f); ctx.quadraticCurveTo(g.x - s * 0.4, g.y - 3 * g.s, g.x, g.y);
-      ctx.quadraticCurveTo(g.x + s * 0.4, g.y - 3 * g.s, g.x + s, g.y + f);
+      ctx.moveTo(g.x - s, g.y + f); ctx.quadraticCurveTo(g.x - s * 0.4, g.y - 3 * g.s * flip, g.x, g.y);
+      ctx.quadraticCurveTo(g.x + s * 0.4, g.y - 3 * g.s * flip, g.x + s, g.y + f);
       ctx.stroke();
     }
     ctx.lineCap = "butt";
@@ -789,7 +804,7 @@
     ctx.save(); ctx.translate(x, y); ctx.rotate(opt.rot || 0);
     if (opt.blink) ctx.globalAlpha = 0.35;
     if (opt.whydah) s *= 1.094;   // she's a bigger ship once you've boarded her
-    var bob = Math.sin(seaT * 2 + (opt.phase || 0)) * 2;
+    var bob = Math.sin(seaT * 2 + (opt.phase || 0)) * 2 * (hasMut("bouncy") ? 2.4 : 1);
     ctx.translate(0, bob);
     if (opt.wake) { ctx.fillStyle = "rgba(223,241,244,.5)"; ctx.beginPath(); ctx.moveTo(-6 * s, 10 * s); ctx.lineTo(6 * s, 10 * s); ctx.lineTo(2 * s, 30 * s); ctx.lineTo(-2 * s, 30 * s); ctx.closePath(); ctx.fill(); }
     var hullC = opt.hull || "#5a3a22", deck = opt.deck || "#8a5a34";
@@ -837,6 +852,10 @@
       if (i % 3 === 0) { ctx.fillStyle = "#245239"; ctx.beginPath(); ctx.ellipse(seg[i].x, seg[i].y, w * 0.7, w * 0.35, 0, 0, 7); ctx.fill(); }
     }
     var hd = seg[0];
+    if (rainbow) {
+      if (hasMut("bighead")) { ctx.translate(hd.x, hd.y); ctx.scale(1.35, 1.35); ctx.translate(-hd.x, -hd.y); }
+      drawPugHead(hd.x, hd.y, headOpen, flash); ctx.restore(); return;
+    }
     ctx.fillStyle = flash ? "#efffe9" : "#357a55";
     ctx.beginPath(); ctx.ellipse(hd.x, hd.y, 26, 20, 0, 0, 7); ctx.fill();
     if (headOpen) { ctx.fillStyle = "#7a1f1f"; ctx.beginPath(); ctx.ellipse(hd.x, hd.y + 8, 15, 10, 0, 0, 7); ctx.fill(); }
@@ -845,6 +864,25 @@
     ctx.strokeStyle = "#8fae7d"; ctx.lineWidth = 4; ctx.beginPath();
     ctx.moveTo(hd.x - 10, hd.y - 16); ctx.lineTo(hd.x - 16, hd.y - 28);
     ctx.moveTo(hd.x + 10, hd.y - 16); ctx.lineTo(hd.x + 16, hd.y - 28); ctx.stroke();
+    ctx.restore();
+  }
+  // the Sea Pug / Pugnarok head: a round fawn head, black-mask muzzle, floppy
+  // ears, huge eyes, pink tongue — insane mode's serpent/boss reskin
+  function drawPugHead(x, y, mouthOpen, flash) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = flash ? "#fff3dc" : "#e8c087";
+    ctx.beginPath(); ctx.ellipse(0, 0, 27, 23, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#c9905a";   // floppy ears
+    ctx.beginPath(); ctx.ellipse(-24, -6, 11, 16, -0.4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(24, -6, 11, 16, 0.4, 0, 7); ctx.fill();
+    ctx.fillStyle = "#4a3020";   // black mask muzzle
+    ctx.beginPath(); ctx.ellipse(0, 8, 15, 11, 0, 0, 7); ctx.fill();
+    if (mouthOpen) { ctx.fillStyle = "#ff8a9a"; ctx.beginPath(); ctx.ellipse(0, 13, 8, 7, 0, 0, 7); ctx.fill(); }   // pink tongue
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-11, -3, 8, 0, 7); ctx.arc(11, -3, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-10, -2, 4.5, 0, 7); ctx.arc(10, -2, 4.5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#4a3020"; ctx.beginPath(); ctx.arc(0, 4, 3.5, 0, 7); ctx.fill();   // nose
+    ctx.strokeStyle = "#4a3020"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-6, 6); ctx.quadraticCurveTo(0, 12, 6, 6); ctx.stroke();   // wrinkly mouth line
     ctx.restore();
   }
   function drawFin(x, y, dir) {
@@ -978,7 +1016,13 @@
     var msn = MISSIONS[mi], t = 0;
     var name = (insane() && msn.nameInsane) ? msn.nameInsane : msn.name;
     return {
-      enter: function () { document.body.classList.add("playing"); if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES); },
+      enter: function () {
+        document.body.classList.add("playing"); if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES);
+        // announce the run's two multiverse mutators on the very first mission card
+        if (mi === G.startMission && G.mutators && G.mutators.length) {
+          toast("Today's multiverse: " + G.mutators.map(function (m) { return MUTATOR_LINES[m]; }).join("  ·  "));
+        }
+      },
       update: function (dt) { seaT += dt; t += dt; updateGulls(dt); if (t > 0.4 && consumeTap()) advance(); },
       render: function () {
         drawSea(G.pal, seaT * 30, false);
@@ -1342,9 +1386,12 @@
       tiny:      "🐜 TINY SHIP!",
       gigacoins: "🪙 GIGA COINS!",
       mirror:    "🪞 MIRROR DIMENSION — the helm is reversed!",
-      disco:     "🪩 DISCO SEA!"
+      disco:     "🪩 DISCO SEA!",
+      upsidegulls: "🙃 UPSIDE-DOWN GULLS!",
+      crablegally: "🦀 EVERYTHING IS LEGALLY A CRAB!",
+      suddennight: "🌙 SUDDEN NIGHT!"
     };
-    var chaos = insane() ? choice(["gravity", "speed", "tiny", "gigacoins", "mirror", "disco"]) : null;
+    var chaos = insane() ? choice(["gravity", "speed", "tiny", "gigacoins", "mirror", "disco", "upsidegulls", "crablegally", "suddennight"]) : null;
     if (chaos === "speed") legTime *= 0.8;
     var hitR = chaos === "tiny" ? 9 : 16, shipScale = chaos === "tiny" ? 1.1 : 1.6;
     var spMul = chaos === "speed" ? 1.35 : 1, discoT = 0;
@@ -1357,8 +1404,10 @@
     return {
       enter: function () {
         document.body.classList.add("playing");
-        if (lm.night) G.pal = PALETTES[4];        // moonlit night, forced for the Ghost Light leg
+        if (lm.night || chaos === "suddennight") G.pal = PALETTES[4];   // moonlit night, forced for the Ghost Light leg (or the chaos roll)
         else if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES);
+        G.gullFlip = chaos === "upsidegulls";
+        G.chaosNow = chaos;
         if (chance(0.6)) spawnGull();
         if (chaos) { toast(CHAOS[chaos]); SFX.good(); }
       },
@@ -1539,13 +1588,15 @@
             continue;
           }
           if (o.kind === "narrows") { drawNarrows(o); continue; }
+          if (o.kind === "hazard" && chaos === "crablegally") { drawCrabEnemy(o.x, o.y, o.r / 20, {}); continue; }
           ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
           if (o.kind === "hazard") {
             if (o.sub === "rock") { ctx.fillStyle = o.hp < 2 ? "#6e6a62" : "#5b5750"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.12)"; blob(o.r * 0.6); }
             else if (o.sub === "ice") { ctx.fillStyle = "#cfe9f2"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.5)"; blob(o.r * 0.5); }
             else { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-o.r, -5, o.r * 2, 10); }
           } else {
-            if (o.sub === "coin") { ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#b98f20"; ctx.font = "14px serif"; ctx.textAlign = "center"; ctx.fillText("$", 0, 5); ctx.textAlign = "left"; }
+            if (o.sub === "coin" && hasMut("cheese")) { ctx.fillStyle = "#f0c14a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#c9962e"; ctx.beginPath(); ctx.arc(-o.r * 0.3, -o.r * 0.2, o.r * 0.22, 0, 7); ctx.arc(o.r * 0.25, o.r * 0.3, o.r * 0.16, 0, 7); ctx.arc(o.r * 0.1, -o.r * 0.45, o.r * 0.14, 0, 7); ctx.fill(); }
+            else if (o.sub === "coin") { ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); ctx.fillStyle = "#b98f20"; ctx.font = "14px serif"; ctx.textAlign = "center"; ctx.fillText("$", 0, 5); ctx.textAlign = "left"; }
             else if (o.sub === "wind") { ctx.strokeStyle = "#eafaff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, o.r, 0.6, 5.2); ctx.stroke(); }
             else if (o.sub === "dory") { ctx.fillStyle = "#7a5a34"; ctx.beginPath(); ctx.moveTo(-14, -4); ctx.quadraticCurveTo(0, 10, 14, -4); ctx.lineTo(10, -8); ctx.lineTo(-10, -8); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#4a3520"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(8, -6); ctx.stroke(); }
             else if (o.sub === "heart") { var hs = o.r * 0.9; ctx.fillStyle = "#e05c5c"; ctx.beginPath(); ctx.moveTo(0, hs * 0.75); ctx.bezierCurveTo(hs, 0, hs * 0.55, -hs, 0, -hs * 0.35); ctx.bezierCurveTo(-hs * 0.55, -hs, -hs, 0, 0, hs * 0.75); ctx.closePath(); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.arc(-hs * 0.3, -hs * 0.28, hs * 0.16, 0, 7); ctx.fill(); }
@@ -1821,6 +1872,64 @@
     { id: "brig",  name: "Armed merchant brig", hp: 7, speed: 80,  fire: [0.7, 1.3], gold: [50, 80], score: 60, hull: "#3d3a2f", deck: "#5e5a44", flag: "#b98f20", sail: "#efe6cc" },
     { id: "navy",  name: "King's man-of-war",   hp: 9, speed: 100, fire: [0.55, 1.0], gold: [70, 110], score: 90, hull: "#2f3a4a", deck: "#48586e", flag: "#e8e8f0", sail: "#f5f2ea" }
   ];
+  // INSANE mode: the enemy fleet stops being ships. Same hp/speed/fire numbers
+  // as ENEMY_TYPES — only the visual, name, projectile, and death line change.
+  function drawDuckEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#f7d84a";
+    ctx.beginPath(); ctx.ellipse(0, 4 * s, 20 * s, 15 * s, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-10 * s, -10 * s, 10 * s, 9 * s, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#e08c2a"; ctx.beginPath(); ctx.moveTo(-20 * s, -10 * s); ctx.lineTo(-32 * s, -7 * s); ctx.lineTo(-20 * s, -4 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-12 * s, -13 * s, 2 * s, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  function drawToasterEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#c7ccd1"; roundRect(-18 * s, -10 * s, 36 * s, 24 * s, 6 * s); ctx.fill();
+    ctx.fillStyle = "#d9a45c"; ctx.beginPath(); ctx.moveTo(-8 * s, -10 * s); ctx.lineTo(-8 * s, -22 * s); ctx.quadraticCurveTo(-2 * s, -28 * s, 4 * s, -22 * s); ctx.lineTo(4 * s, -10 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#8a8f94"; ctx.beginPath(); ctx.arc(10 * s, 4 * s, 3 * s, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  function drawSnowmanEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    var sk = opt.hpFrac != null ? (0.65 + 0.35 * opt.hpFrac) : 1;   // melts as hp drops
+    ctx.fillStyle = "#f0f6fa";
+    ctx.beginPath(); ctx.arc(0, 10 * s * sk, 14 * s * sk, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -6 * s * sk, 10 * s * sk, 0, 7); ctx.fill();
+    ctx.fillStyle = "#e08c2a"; ctx.beginPath(); ctx.moveTo(0, -6 * s * sk); ctx.lineTo(11 * s * sk, -4 * s * sk); ctx.lineTo(0, -2 * s * sk); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-3 * s * sk, -9 * s * sk, 1.6 * s, 0, 7); ctx.arc(3 * s * sk, -9 * s * sk, 1.6 * s, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  function drawGnomeEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#3a6b4a"; ctx.beginPath(); ctx.moveTo(-11 * s, 11 * s); ctx.lineTo(11 * s, 11 * s); ctx.lineTo(0, -6 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#e8c2a0"; ctx.beginPath(); ctx.arc(0, -10 * s, 6.5 * s, 0, 7); ctx.fill();
+    ctx.fillStyle = "#c73a3a"; ctx.beginPath(); ctx.moveTo(-8 * s, -14 * s); ctx.lineTo(8 * s, -14 * s); ctx.lineTo(0, -28 * s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawPianoEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#1a1a1a"; roundRect(-20 * s, -12 * s, 40 * s, 24 * s, 4 * s); ctx.fill();
+    ctx.fillStyle = "#fff";
+    for (var k = -3; k <= 3; k++) ctx.fillRect(k * 5 * s - 2 * s, 2 * s, 4 * s, 8 * s);
+    ctx.restore();
+  }
+  function drawCrabEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#c73a3a"; ctx.beginPath(); ctx.ellipse(0, 0, 18 * s, 12 * s, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(-16 * s, -4 * s, 6 * s, 0, 7); ctx.arc(16 * s, -4 * s, 6 * s, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#dfe9ee"; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(-4 * s, -2 * s); ctx.lineTo(6 * s, -14 * s); ctx.stroke();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-4 * s, -2 * s, 1.6 * s, 0, 7); ctx.arc(4 * s, -2 * s, 1.6 * s, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  var SKIN_ENEMIES = [
+    { id: "duck",     name: "The Colossal Rubber Duck",  draw: drawDuckEnemy,     projStyle: "quack",    deathLine: "It squeaks its last and drifts belly-up." },
+    { id: "toaster",  name: "A Belligerent Toaster",     draw: drawToasterEnemy,  projStyle: "toast",    deathLine: "It pops one final slice and goes dark." },
+    { id: "snowman",  name: "A Furious Snowman, Lost",   draw: drawSnowmanEnemy,  projStyle: "snowball", deathLine: "It melts into a very confused puddle." },
+    { id: "gnome",    name: "The Garden Gnome Flotilla", draw: drawGnomeEnemy,    projStyle: "ball",     deathLine: "The flotilla scatters, pointy hats and all." },
+    { id: "piano",    name: "A Haunted Grand Piano",     draw: drawPianoEnemy,    projStyle: "note",     deathLine: "It plays one last discordant chord and sinks." },
+    { id: "crab",     name: "Crab With A Sword",         draw: drawCrabEnemy,     projStyle: "bubble",   deathLine: "It scuttles off sideways, sword and all." }
+  ];
   function BattleScene() {
     G.battleNum++;
     var tier = G.battleNum + (consumeMod("navyNext") ? 1 : 0);
@@ -1831,9 +1940,11 @@
     var enemy = { x: W * 0.5, y: H * 0.2, hp: ehp, max: ehp, dir: 1, fireT: 1.2 };
     var fireMod = consumeMod("navyintel") ? 0.3 : 0;
     var dmgBonus = consumeMod("drill") ? 1 : 0;
+    var funSkin = insane() ? choice(SKIN_ENEMIES) : null;
+    var enemyName = funSkin ? funSkin.name : type.name;
     var balls = [], t = 0, prompt = null, loot = 0, fireGun = gunner();
     return {
-      enter: function () { prompt = Prompt(type.name + "!", "She wants your ship at the bottom. Fire when you can. Dodge her shot. Sink her for gold.", function () { phase = "fight"; }); },
+      enter: function () { prompt = Prompt(enemyName + "!", funSkin ? "It wants your ship at the bottom, somehow. Fire when you can. Dodge its shot. Sink it for gold." : "She wants your ship at the bottom. Fire when you can. Dodge her shot. Sink her for gold.", function () { phase = "fight"; }); },
       update: function (dt) {
         seaT += dt; t += dt; updateGulls(dt);
         if (phase === "intro") { prompt.update(dt); return; }
@@ -1844,7 +1955,7 @@
         enemy.x += enemy.dir * type.speed * dt;
         if (enemy.x < W * 0.15 || enemy.x > W * 0.85) enemy.dir *= -1;
         enemy.fireT -= dt;
-        if (enemy.fireT <= 0) { enemy.fireT = rand(type.fire[0], type.fire[1]) * diff().fire + fireMod; balls.push({ x: enemy.x, y: enemy.y + 18, vy: 300 + tier * 25, own: 0 }); }
+        if (enemy.fireT <= 0) { enemy.fireT = rand(type.fire[0], type.fire[1]) * diff().fire + fireMod; balls.push({ x: enemy.x, y: enemy.y + 18, vy: 300 + tier * 25, own: 0, style: funSkin ? funSkin.projStyle : undefined }); }
         stepBalls(balls, dt, [{ x: enemy.x, y: enemy.y, r: 20, onHit: function (b) {
           var doubled = chance(shotBonus());
           if (doubled) toast("⛓ Chain shot strikes double!");
@@ -1853,6 +1964,7 @@
           if (enemy.hp <= 0) {
             phase = "done"; loot = randInt(type.gold[0], type.gold[1]); addGold(loot); addScore(type.score); G.shipsBeaten++;
             SFX.win();
+            if (funSkin) toast(funSkin.deathLine);
             for (var k = 0; k < 24; k++) spawn(enemy.x, enemy.y, { vx: rand(-120, 120), vy: rand(-160, 40), g: 260, life: rand(0.6, 1.2), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
           }
         } }], { x: shipPX, y: shipPY, r: 18 });
@@ -1864,12 +1976,13 @@
           ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 10, 4); ctx.fill();
           ctx.fillStyle = "#7a1f1f"; roundRect(bx, 8, bw * (enemy.hp / enemy.max), 6, 3); ctx.fill();
         }
-        drawShip(enemy.x, enemy.y, 1.7, { rot: Math.PI, flag: type.flag, hull: type.hull, deck: type.deck, sail: type.sail, dmg: enemy.max - enemy.hp });
+        if (funSkin) funSkin.draw(enemy.x, enemy.y, 1.7, { hpFrac: enemy.hp / enemy.max });
+        else drawShip(enemy.x, enemy.y, 1.7, { rot: Math.PI, flag: type.flag, hull: type.hull, deck: type.deck, sail: type.sail, dmg: enemy.max - enemy.hp });
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         if (phase === "intro") prompt.render();
-        if (phase === "done") { var w = clamp(W * 0.72, 240, 390); panel(W / 2, H / 2, w, 126); text("She strikes her colors!", W / 2, H / 2 - 24, 22, "#8fd6a0", "center", "bold"); text("+" + loot + " gold   +" + type.score + " points", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "done") { var w = clamp(W * 0.72, 240, 390); panel(W / 2, H / 2, w, 126); text(funSkin ? "Defeated!" : "She strikes her colors!", W / 2, H / 2 - 24, 22, "#8fd6a0", "center", "bold"); text("+" + loot + " gold   +" + type.score + " points", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
   }
@@ -1883,12 +1996,16 @@
     var dmgBonus = consumeMod("drill") ? 1 : 0;
     var ships = [];
     var shp = Math.max(2, Math.round(3 * diff().hp));
+    // INSANE: either a conga line of identical ducklings, or a mixed flotilla
+    // of the same funny roster the single-ship battles use
+    var squadMixed = insane() && chance(0.5);
     for (var i = 0; i < count; i++) {
       ships.push({
         hp: shp, max: shp, alive: true, slot: i,
         x: (i % 2 === 0 ? -60 : W + 60), y: H * (0.14 + (i % 2) * 0.1),
         dir: i % 2 === 0 ? 1 : -1, fireT: rand(1.5, 2.5),
-        active: i < 2                    // second wave holds back
+        active: i < 2,                    // second wave holds back
+        skin: insane() ? (squadMixed ? choice(SKIN_ENEMIES) : SKIN_ENEMIES[0]) : null
       });
     }
     var wave2T = 4;
@@ -1900,7 +2017,11 @@
       return [clamp(lane - 0.5 / n, 0.08, 0.92) * W + 30, clamp(lane + 0.5 / n, 0.08, 0.92) * W - 30];
     }
     return {
-      enter: function () { prompt = Prompt("PRIVATEERS — A WOLF PACK", "The governors put a price on the Whydah, and these sloops mean to collect it. They hunt together. Break the pack before the storm breaks you.", function () { phase = "fight"; }); },
+      enter: function () {
+        prompt = insane()
+          ? Prompt(squadMixed ? "A MIXED FLOTILLA OF NONSENSE" : "A CONGA LINE OF ANGRY DUCKLINGS", "Reality is still figuring out what a pirate hunter is supposed to look like. Break the pack before the storm breaks you.", function () { phase = "fight"; }, "🐤 MULTIVERSE")
+          : Prompt("PRIVATEERS — A WOLF PACK", "The governors put a price on the Whydah, and these sloops mean to collect it. They hunt together. Break the pack before the storm breaks you.", function () { phase = "fight"; });
+      },
       update: function (dt) {
         seaT += dt; t += dt; updateGulls(dt);
         if (phase === "intro") { prompt.update(dt); return; }
@@ -1919,7 +2040,7 @@
           if (s.x < band[0]) { s.x = band[0]; s.dir = 1; }
           if (s.x > band[1]) { s.x = band[1]; s.dir = -1; }
           s.fireT -= dt;
-          if (s.fireT <= 0) { s.fireT = rand(1.3, 2.1) * diff().fire + fireMod; balls.push({ x: s.x, y: s.y + 18, vy: 320, own: 0 }); }
+          if (s.fireT <= 0) { s.fireT = rand(1.3, 2.1) * diff().fire + fireMod; balls.push({ x: s.x, y: s.y + 18, vy: 320, own: 0, style: s.skin ? s.skin.projStyle : undefined }); }
         });
         var squadTargets = [];
         ships.forEach(function (s2) {
@@ -1946,7 +2067,8 @@
           var bw = 54, bx = s.x - bw / 2;
           ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, s.y - 44, bw + 4, 8, 3); ctx.fill();
           ctx.fillStyle = "#7a1f1f"; roundRect(bx, s.y - 42, bw * (s.hp / s.max), 4, 2); ctx.fill();
-          drawShip(s.x, s.y, 1.35, { rot: Math.PI, flag: "#c03a2b", hull: "#4a2f2f", deck: "#6a4444", sail: "#e8d3b0", dmg: s.max - s.hp });
+          if (s.skin) s.skin.draw(s.x, s.y, 1.1, { hpFrac: s.hp / s.max });
+          else drawShip(s.x, s.y, 1.35, { rot: Math.PI, flag: "#c03a2b", hull: "#4a2f2f", deck: "#6a4444", sail: "#e8d3b0", dmg: s.max - s.hp });
         });
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
@@ -1966,7 +2088,11 @@
     var t = 0, state = "weave", stateT = rand(1.2, 2.0), lungeX = 0, lungeY = H * 0.7, headOpen = false, flashT = 0, balls = [], spits = [], spitT = rand(1.5, 2.5) * diff().spit, fireGun = gunner();
     var baseY = H * 0.32, rearTime = 0.65 + warnBonus() * 0.3;
     return {
-      enter: function () { prompt = Prompt("A SEA SERPENT!", "Sailors in 1717 swore these waters hid monsters. This one is a sea story. Dodge the lunge and the spray it spits, then fire at its head.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
+      enter: function () {
+        prompt = insane()
+          ? Prompt("THE SEA PUG", "Somewhere between dimensions, the serpent legend turned into this. It just wants to play fetch. Dodge the tennis balls, then fire at its head.", function () { phase = "fight"; }, "🐶 MULTIVERSE")
+          : Prompt("A SEA SERPENT!", "Sailors in 1717 swore these waters hid monsters. This one is a sea story. Dodge the lunge and the spray it spits, then fire at its head.", function () { phase = "fight"; }, "🌀 SEA YARN");
+      },
       update: function (dt) {
         seaT += dt; t += dt; if (flashT > 0) flashT -= dt;
         if (phase === "intro") { prompt.update(dt); moveHead(dt, W * 0.5, baseY); return; }
@@ -1997,7 +2123,7 @@
           if (stateT <= 0) { state = "lunge"; stateT = 0.38; lungeY = shipPY; }
         } else if (state === "lunge") {
           moveHead(dt, lungeX, lungeY);
-          if (Math.hypot(seg[0].x - shipPX, seg[0].y - shipPY) < 46) { damage(2); state = "recover"; stateT = 1.0; }
+          if (Math.hypot(seg[0].x - shipPX, seg[0].y - shipPY) < 46) { damage(2); if (insane()) toast("BOOP!"); state = "recover"; stateT = 1.0; }
           if (stateT <= 0) { state = chance(0.3) ? "rear" : "recover"; stateT = state === "rear" ? rearTime * 0.8 : 0.8; if (state === "rear") lungeX = shipPX; }
         } else {
           headOpen = false;
@@ -2009,7 +2135,7 @@
           if (Math.hypot(sv.x - shipPX, sv.y - shipPY) < 18) { spits.splice(si, 1); damage(1); continue; }
           if (sv.y > H + 30) spits.splice(si, 1);
         }
-        stepBalls(balls, dt, [{ x: seg[0].x, y: seg[0].y, r: 24, onHit: function () {
+        stepBalls(balls, dt, [{ x: seg[0].x, y: seg[0].y, r: hasMut("bighead") ? 34 : 24, onHit: function () {
           hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
           if (hp <= 0) {
             phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14);
@@ -2019,15 +2145,18 @@
       },
       render: function () {
         drawSea(G.pal, seaT * 50, false);
-        if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text("SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
+        if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text(insane() ? "SEA PUG" : "SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
         drawSerpent(seg, headOpen, flashT > 0);
-        for (var s2 = 0; s2 < spits.length; s2++) { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(143,214,160,.4)"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 10, 0, 7); ctx.fill(); }
+        for (var s2 = 0; s2 < spits.length; s2++) {
+          if (insane()) { ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0.3, 2.2); ctx.stroke(); }
+          else { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(143,214,160,.4)"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 10, 0, 7); ctx.fill(); }
+        }
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
-        if (headOpen && phase === "fight") text("FIRE!", seg[0].x, seg[0].y - 40, 16, "#ffd24a", "center", "bold");
+        if (headOpen && phase === "fight") text(insane() ? "BOOP IT!" : "FIRE!", seg[0].x, seg[0].y - 40, 16, "#ffd24a", "center", "bold");
         if (phase === "intro") prompt.render();
-        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text("Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text(insane() ? "The Sea Pug is befriended!" : "Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text(insane() ? "it follows at a respectful distance — tap to sail on" : "tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
     function moveHead(dt, tx, ty) {
@@ -2330,7 +2459,11 @@
     function aliveHeads() { return heads.filter(function (h) { return h.alive; }); }
     return {
       debugWin: function () { heads.forEach(function (h) { h.hp = 0; h.alive = false; }); phase = "dying"; dieT = 0; G.bossBeaten = true; addScore(300); addGold(200); },
-      enter: function () { prompt = Prompt("THE GRANDFATHER SERPENT", "The old salts say the first one was a pup. This is what it ran home to. Three heads. One ship. Send it back to the deep.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
+      enter: function () {
+        prompt = insane()
+          ? Prompt("PUGNAROK", "The legend of the grandfather serpent got lost somewhere in the multiverse and came back as this. Three heads. One very good boy. Send it back for belly rubs.", function () { phase = "fight"; }, "🐶 MULTIVERSE")
+          : Prompt("THE GRANDFATHER SERPENT", "The old salts say the first one was a pup. This is what it ran home to. Three heads. One ship. Send it back to the deep.", function () { phase = "fight"; }, "🌀 SEA YARN");
+      },
       update: function (dt) {
         seaT += dt; t += dt;
         if (phase === "intro") { prompt.update(dt); heads.forEach(function (h) { moveChain(h, dt, h.baseX * W, baseY); }); return; }
@@ -2355,6 +2488,7 @@
           var lanes = shuffle([0.18, 0.5, 0.82]);
           aliveHeads().forEach(function (h, i2) { h.state = "rear"; h.stateT = triple.warn; h.lungeX = lanes[i2] * W; h.open = true; });
           SFX.thunder();
+          if (insane()) toast("TRIPLE BOOP incoming!");
         }
         if (triple) {
           triple.warn -= dt;
@@ -2392,7 +2526,7 @@
         var headTargets = [];
         heads.forEach(function (h2) {
           if (!h2.alive) return;
-          headTargets.push({ x: h2.seg[0].x, y: h2.seg[0].y, r: 24, onHit: function () {
+          headTargets.push({ x: h2.seg[0].x, y: h2.seg[0].y, r: hasMut("bighead") ? 34 : 24, onHit: function () {
             h2.hp--; h2.flashT = 0.12; SFX.hit(); splash(h2.seg[0].x, h2.seg[0].y, 10, "#8fd6a0");
             if (h2.hp <= 0) {
               h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
@@ -2413,18 +2547,22 @@
             var h3 = heads[hb], bw = 90, bx2 = h3.baseX * W - bw / 2;
             ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx2 - 2, 6, bw + 4, 10, 4); ctx.fill();
             ctx.fillStyle = h3.alive ? "#2f6b4a" : "#333"; roundRect(bx2, 8, bw * clamp(h3.hp / h3.max, 0, 1), 6, 3); ctx.fill();
+            if (insane() && hb !== 1) text("boy " + (hb + 1), h3.baseX * W, 24, 9.5, "#cdeccf", "center", "bold");   // the middle label would collide with the title
           }
-          text("THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
+          text(insane() ? "PUGNAROK" : "THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
         }
         heads.forEach(function (h) { if (h.alive || h.seg[0].y < H + 240) drawSerpent(h.seg, h.open, h.flashT > 0); });
-        for (var s2 = 0; s2 < spits.length; s2++) { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); }
+        for (var s2 = 0; s2 < spits.length; s2++) {
+          if (insane()) { ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0.3, 2.2); ctx.stroke(); }
+          else { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); }
+        }
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
-        heads.forEach(function (h) { if (h.open && phase === "fight") text("FIRE!", h.seg[0].x, h.seg[0].y - 40, 15, "#ffd24a", "center", "bold"); });
+        heads.forEach(function (h) { if (h.open && phase === "fight") text(insane() ? "BOOP IT!" : "FIRE!", h.seg[0].x, h.seg[0].y - 40, 15, "#ffd24a", "center", "bold"); });
         if (flashW > 0) { ctx.fillStyle = "rgba(255,255,255," + flashW * 1.8 + ")"; ctx.fillRect(0, 0, W, H); }
         if (phase === "intro") prompt.render();
-        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 140); text("THE DEEP TAKES IT BACK!", W / 2, H / 2 - 28, 21, "#8fd6a0", "center", "bold"); text("+300 points   +200 gold", W / 2, H / 2 + 6, 17, "#e0b25c", "center", "bold"); text("tap to make port", W / 2, H / 2 + 44, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 140); text(insane() ? "ALL THREE GOOD BOYS SATISFIED" : "THE DEEP TAKES IT BACK!", W / 2, H / 2 - 28, 21, "#8fd6a0", "center", "bold"); text(insane() ? "+300 points (belly rubs)   +200 gold" : "+300 points   +200 gold", W / 2, H / 2 + 6, 17, "#e0b25c", "center", "bold"); text("tap to make port", W / 2, H / 2 + 44, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
     function moveChain(h, dt, tx, ty, speed) {
@@ -2815,6 +2953,7 @@
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
+      skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], chaos: G ? G.chaosNow || null : null }; },
       newRun: function (fromMission) { startRun(fromMission); },
       buildSeq: function (fromMission) { newGame(fromMission); return G.seq.map(function (b) { return "m" + b.m + ":" + b.kind + (b.ev ? ":" + b.ev.id : "") + (b.which ? ":" + b.which : ""); }); },
       choose: function (i) { if (scene && scene.debugChoose) scene.debugChoose(i); },
