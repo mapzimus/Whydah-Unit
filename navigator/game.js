@@ -957,7 +957,35 @@
   // SCENES
   // ==================================================================
   var scene = null;
-  function setScene(s) { scene = s; if (s.enter) s.enter(); }
+  // Scene changes crossfade through black instead of hard-cutting: fadeT runs
+  // 0→1 (out, old scene still drawn), the swap happens at the midpoint, then
+  // 1→0 (in). setScene(s, true) skips the fade for boot/instant swaps.
+  var fadeT = 0, fadeDir = 0, pendingScene = null;
+  var FADE_LEN = 0.55;
+  function setScene(s, instant) {
+    if (instant || !scene) { scene = s; if (s.enter) s.enter(); fadeT = scene ? 0.999 : 0; fadeDir = -1; return; }
+    pendingScene = s; fadeDir = 1;
+  }
+  function stepFade(dt) {
+    if (!fadeDir) return;
+    fadeT += fadeDir * dt / (FADE_LEN / 2);
+    if (fadeDir > 0 && fadeT >= 1) {
+      fadeT = 1; fadeDir = -1;
+      if (pendingScene) { var s = pendingScene; pendingScene = null; scene = s; if (s.enter) s.enter(); }
+    } else if (fadeDir < 0 && fadeT <= 0) { fadeT = 0; fadeDir = 0; }
+  }
+  function drawFade() {
+    if (fadeT <= 0) return;
+    ctx.fillStyle = "rgba(6,12,18," + clamp(fadeT, 0, 1) + ")";
+    ctx.fillRect(0, 0, W, H);
+  }
+  function fading() { return fadeDir !== 0 || pendingScene !== null; }
+  // debug/test path: complete any in-flight fade instantly so state() reflects
+  // the destination scene right away
+  function flushFade() {
+    if (pendingScene) { var s = pendingScene; pendingScene = null; scene = s; if (s.enter) s.enter(); }
+    fadeT = 0; fadeDir = 0;
+  }
 
   // ---------------------------------------------------------------- pause
   // Meta scenes (Title/Log/Harbor/Port/Result) mark themselves noPause:true —
@@ -980,6 +1008,7 @@
   }
 
   function advance() {
+    if (pendingScene) return;   // a scene change is already in flight
     G.seqIndex++;
     if (G.seqIndex >= G.seq.length) { endRun(true, false); return; }
     var beat = G.seq[G.seqIndex];
@@ -1401,6 +1430,25 @@
     var waterspoutDone = false, wspout = null;
     var whirlAt = (lm.whirlpool > 0 && chance(lm.whirlpool) && legTime > 5) ? rand(2, legTime - 3) : -1;
     var whirlDone = false;
+    // end-of-leg wind-down: spawns stop early, leftover pickups sweep to the
+    // ship, hazards fade out, a LEG CLEAR banner shows, THEN the scene fades —
+    // no more hard cuts with coins still on screen
+    var legDone = -1;
+    function collectPickup(o) {
+      if (o.sub === "coin") {
+        addScore(10); addGold((sea ? 15 : 10) * (o.giga ? 2 : 1)); SFX.coin(); coinBurst(o.x, o.y);
+        G.coinStreak++;
+        if (G.coinStreak >= 5) { G.coinStreak = 0; addGold(25); SFX.win(); toast("GOLD BAR! +25 🪙"); spawn(o.x, o.y - 20, { vy: -50, life: 1.0, r: 14, c: "#f7d84a", shape: "txt", txt: "+25 🪙" }); }
+      }
+      else if (o.sub === "dory") { addGold(10); addScore(5); SFX.coin(); coinBurst(o.x, o.y); }
+      else if (o.sub === "wind") { addScore(8); SFX.good(); if (legDone < 0) t += 0.6; }
+      else if (o.sub === "heart") {
+        if (G.hull < G.maxHull) { repair(1); toast("❤ +1 heart"); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#ff8a7a", shape: "txt", txt: "+1 ♥" }); }
+        else { addScore(15); }   // already full — a little score instead
+        SFX.good(); for (var hb = 0; hb < 8; hb++) spawn(o.x, o.y, { vx: rand(-50, 50), vy: rand(-80, -10), g: 160, life: 0.7, r: 3, c: "#ff8a7a" });
+      }
+      else if (o.sub === "barrel") { repair(1); SFX.good(); for (var b2 = 0; b2 < 8; b2++) spawn(o.x, o.y, { vx: rand(-40, 40), vy: rand(-70, -10), g: 160, life: 0.7, r: 3, c: "#8fd6a0" }); }
+    }
     return {
       enter: function () {
         document.body.classList.add("playing");
@@ -1420,7 +1468,7 @@
         // guns are live on the open sea: blast the wreckage out of your way (hold to keep firing)
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(shipPX, shipPY - 18, 2); }
         spawnT -= dt;
-        if (spawnT <= 0) {
+        if (spawnT <= 0 && t < legTime - 1.6 && legDone < 0) {
           // far fewer things to dodge than before, and the hazards are natural now —
           // reefs and rocks near the coast, drift ice up north, open ocean stays clear.
           spawnT = rand(1.0, 1.9) * hazMul * ease;
@@ -1455,8 +1503,9 @@
           var arcX = rand(0.25, 0.75);
           for (var ca = 0; ca < 5; ca++) objs.push({ kind: "pickup", sub: "coin", r: 15, sp: 180, x: (arcX + Math.sin(ca * 1.1) * 0.12) * W, y: -40 - ca * 55, a: 0, spin: 0 });
         }
-        // breaching sharks — only where the mission's sea route says so
-        if (sharksHere) {
+        // breaching sharks — only where the mission's sea route says so, and
+        // never so late in the leg that the stalk can't resolve before it ends
+        if (sharksHere && t < legTime - 4.5 && legDone < 0) {
           sharkT -= dt;
           if (sharkT <= 0) {
             sharkT = rand(10, 16);   // long intervals — this is a rare, telegraphed threat now
@@ -1488,6 +1537,18 @@
         }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i];
+          if (legDone >= 0) {
+            // wind-down: pickups magnet to the ship and auto-collect; anything
+            // with teeth fades out harmlessly
+            if (o.kind === "pickup") {
+              o.x = lerp(o.x, shipPX, 6.5 * dt); o.y = lerp(o.y, shipPY, 6.5 * dt); o.a += o.spin * dt;
+              if (Math.hypot(o.x - shipPX, o.y - shipPY) < o.r + hitR + 8) { collectPickup(o); objs.splice(i, 1); }
+              continue;
+            }
+            o.fade = (o.fade == null ? 1 : o.fade) - 2.6 * dt;
+            if (o.fade <= 0) objs.splice(i, 1);
+            continue;
+          }
           if (o.kind === "whirlpool") {
             o.y += o.sp * dt;
             var sucked = applyWhirlpool(dt, o, shipPX, shipPY);
@@ -1525,19 +1586,7 @@
           if (d < o.r + hitR) {
             if (o.kind === "hazard") { splash(o.x, o.y, 8); damage(1); objs.splice(i, 1); continue; }
             if (o.kind === "fin") { splash(o.x, o.y, 6, "rgba(180,140,220,.7)"); addScore(-5); SFX.bad(); objs.splice(i, 1); continue; }
-            if (o.sub === "coin") {
-              addScore(10); addGold((sea ? 15 : 10) * (o.giga ? 2 : 1)); SFX.coin(); coinBurst(o.x, o.y);
-              G.coinStreak++;
-              if (G.coinStreak >= 5) { G.coinStreak = 0; addGold(25); SFX.win(); toast("GOLD BAR! +25 🪙"); spawn(o.x, o.y - 20, { vy: -50, life: 1.0, r: 14, c: "#f7d84a", shape: "txt", txt: "+25 🪙" }); }
-            }
-            else if (o.sub === "dory") { addGold(10); addScore(5); SFX.coin(); coinBurst(o.x, o.y); }
-            else if (o.sub === "wind") { addScore(8); SFX.good(); t += 0.6; }
-            else if (o.sub === "heart") {
-              if (G.hull < G.maxHull) { repair(1); toast("❤ +1 heart"); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#ff8a7a", shape: "txt", txt: "+1 ♥" }); }
-              else { addScore(15); }   // already full — a little score instead
-              SFX.good(); for (var hb = 0; hb < 8; hb++) spawn(o.x, o.y, { vx: rand(-50, 50), vy: rand(-80, -10), g: 160, life: 0.7, r: 3, c: "#ff8a7a" });
-            }
-            else if (o.sub === "barrel") { repair(1); SFX.good(); for (var b2 = 0; b2 < 8; b2++) spawn(o.x, o.y, { vx: rand(-40, 40), vy: rand(-70, -10), g: 160, life: 0.7, r: 3, c: "#8fd6a0" }); }
+            collectPickup(o);
             objs.splice(i, 1); continue;
           }
           if (o.y > H + 50) { if (o.kind === "hazard") addScore(2); objs.splice(i, 1); }
@@ -1560,12 +1609,17 @@
           }
         }
         stepBalls(balls, dt, sailTargets);
-        if (t >= legTime) advance();
+        if (t >= legTime && legDone < 0) { legDone = 0; wspout = null; addScore(10); SFX.point(); }
+        if (legDone >= 0) {
+          legDone += dt;
+          if (legDone >= 1.15) advance();
+        }
       },
       render: function () {
         drawSea(G.pal, seaT * 55, false);
         for (var i = 0; i < objs.length; i++) {
           var o = objs[i];
+          ctx.globalAlpha = o.fade != null ? clamp(o.fade, 0, 1) : 1;   // wind-down fade-out
           if (o.kind === "whirlpool") { drawWhirlpool(o); continue; }
           if (o.kind === "fin") { drawJelly(o.x, o.y); continue; }
           if (o.kind === "shark") {
@@ -1574,11 +1628,12 @@
               // shark can't sneak up while you're aiming forward
               ctx.fillStyle = "rgba(20,40,50,.4)"; ctx.beginPath(); ctx.ellipse(o.x, o.y + 6, 30, 10, 0, 0, 7); ctx.fill();
               drawFin(o.x, o.y, 1);
+              var fadeA = o.fade != null ? clamp(o.fade, 0, 1) : 1;
               var pulse = 0.55 + 0.45 * Math.sin(seaT * 12);
-              ctx.globalAlpha = pulse;
+              ctx.globalAlpha = pulse * fadeA;
               text("🦈 SHARK!", o.x, shipYPx() - 58, clamp(W * 0.045, 15, 20), "#ff8a7a", "center", "bold");
               text("▼ shoot it or dodge", o.x, shipYPx() - 40, 13, "#ff8a7a", "center", "bold");
-              ctx.globalAlpha = 1;
+              ctx.globalAlpha = fadeA;
               var wind = clamp(1 - o.pt, 0, 1);   // ripple grows in the last second before the leap
               if (wind > 0) {
                 ctx.strokeStyle = "rgba(255,138,122,.8)"; ctx.lineWidth = 3;
@@ -1604,6 +1659,7 @@
           }
           ctx.restore();
         }
+        ctx.globalAlpha = 1;
         if (wspout) drawWaterspoutWarn(wspout);
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts());
@@ -1627,6 +1683,12 @@
           text("▼", ngx, Math.max(no.y + 74, 90), 20, "#ffd24a", "center", "bold");
         }
         if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(missionName() + ". Coins feed the war chest. Shoot or dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        if (legDone >= 0) {
+          ctx.globalAlpha = clamp(legDone * 4, 0, 1);
+          text("⚓ LEG CLEAR", W / 2, H * 0.44, 26, "#8fd6a0", "center", "bold");
+          text("+10  ·  the crew hauls in what's adrift", W / 2, H * 0.44 + 26, 13, "#e0b25c", "center", "bold");
+          ctx.globalAlpha = 1;
+        }
       }
     };
   }
@@ -2912,15 +2974,19 @@
   function loop(ts) {
     var dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts;
     if (!paused) {
+      stepFade(dt);
       updateTimers(dt);
       if (G && G.iframes > 0) G.iframes -= dt;
-      if (scene && scene.update) scene.update(dt);
+      // the outgoing scene freezes while fading out — no double-advances, no
+      // gameplay happening under a black screen
+      if (scene && scene.update && !pendingScene) scene.update(dt);
       updateParts(dt);
     }
     ctx.save();
     if (!paused && shakeAmt > 0) { ctx.translate(rand(-shakeAmt, shakeAmt), rand(-shakeAmt, shakeAmt)); shakeAmt = Math.max(0, shakeAmt - dt * 40); }
     if (scene && scene.render) scene.render();
     if (!paused && redFlash > 0) { redFlash -= dt; ctx.fillStyle = "rgba(200,40,30," + clamp(redFlash * 2.2, 0, 0.33) + ")"; ctx.fillRect(0, 0, W, H); }
+    drawFade();
     drawToasts(paused ? 0 : dt);
     if (paused) drawPauseOverlay();
     ctx.restore();
@@ -2940,12 +3006,13 @@
   if (window.__FS_DEBUG) {
     window.__fsAPI = {
       state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), shipX: +Number(G.shipX || 0).toFixed(3), shipY: +Number(G.shipY || 0).toFixed(3), mode: G.mode, won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared } : null; },
-      start: function (fromMission) { startRun(fromMission); },
-      skip: function () { advance(); },
-      toStorm: function () { for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "storm") { G.seqIndex = i - 1; advance(); return; } },
-      toBoss: function () { G.stormCleared = true; G.reachedStorm = true; for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "boss") { G.seqIndex = i - 1; advance(); return; } },
-      toSquadron: function () { for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "squadron") { G.seqIndex = i - 1; advance(); return; } },
-      toMission: function (n) { for (var i = 0; i < G.seq.length; i++) if (G.seq[i].kind === "missionIntro" && G.seq[i].m === n) { G.seqIndex = i - 1; advance(); return; } },
+      start: function (fromMission) { startRun(fromMission); flushFade(); },
+      skip: function () { flushFade(); advance(); flushFade(); },
+      toStorm: function () { flushFade(); for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "storm") { G.seqIndex = i - 1; advance(); flushFade(); return; } },
+      toBoss: function () { flushFade(); G.stormCleared = true; G.reachedStorm = true; for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "boss") { G.seqIndex = i - 1; advance(); flushFade(); return; } },
+      toSquadron: function () { flushFade(); for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "squadron") { G.seqIndex = i - 1; advance(); flushFade(); return; } },
+      toMission: function (n) { flushFade(); for (var i = 0; i < G.seq.length; i++) if (G.seq[i].kind === "missionIntro" && G.seq[i].m === n) { G.seqIndex = i - 1; advance(); flushFade(); return; } },
+      flushFade: function () { flushFade(); },
       missionState: function () { return { mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), name: missionName() }; },
       setRoute: function (r) { G.route = r; rerollEvents(r); },
       setMode: function (m) { if (DIFF[m]) { SAVE.mode = m; persist(); } return SAVE.mode; },
@@ -2954,7 +3021,7 @@
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
       skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], chaos: G ? G.chaosNow || null : null }; },
-      newRun: function (fromMission) { startRun(fromMission); },
+      newRun: function (fromMission) { startRun(fromMission); flushFade(); },
       buildSeq: function (fromMission) { newGame(fromMission); return G.seq.map(function (b) { return "m" + b.m + ":" + b.kind + (b.ev ? ":" + b.ev.id : "") + (b.which ? ":" + b.which : ""); }); },
       choose: function (i) { if (scene && scene.debugChoose) scene.debugChoose(i); },
       gold: function (n) { SAVE.bank += n; persist(); },
