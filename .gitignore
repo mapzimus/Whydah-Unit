@@ -35,3 +35,7 @@
 # Black Sam & the Whydah game (whole folder is public)
 !black-sam/
 !black-sam/**
+
+# Photography unit (whole folder is public)
+!photo/
+!photo/**

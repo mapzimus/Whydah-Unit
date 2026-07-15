@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salem Photo Walk</title>
+<meta name="description" content="Salem photo walk map — stops and shot ideas around Salem, Massachusetts.">
+<meta name="theme-color" content="#14161a">
+<link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
+<link rel="stylesheet" href="photo.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+#map { height: 62vh; min-height: 380px; border-radius: 8px; border: 1px solid var(--border); background: #0d0e11; }
+.stop-card { border-left: 4px solid var(--accent); }
+.stop-card h3 { margin: 0 0 0.2em; color: var(--accent); font-size: 1.05em; }
+.stop-card .tip { font-size: 0.9em; }
+.stop-num { display: inline-block; background: var(--accent); color: #1a1408; border-radius: 50%; width: 1.5em; height: 1.5em; text-align: center; line-height: 1.5em; font-weight: 700; font-size: 0.85em; margin-right: 0.4em; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--card-bg); color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-header">
+    <div class="kicker">Photography Unit</div>
+    <h1>🗺️ Salem Photo Walk</h1>
+    <div class="crumbs"><a href="../">whydahstory.com</a> / <a href="index.html">photo</a> / map</div>
+  </header>
+
+  <div id="map"></div>
+  <p class="muted" id="map-note">Tap a marker for the shot idea at each stop. The full list is below in walking order.</p>
+  <div id="stop-list"></div>
+
+  <nav class="footer-nav"><a href="index.html">← Photo home</a></nav>
+</div>
+
+<script>
+/* ===== EDIT YOUR WALK HERE =====
+ * Each stop: name, [latitude, longitude], and a shot idea.
+ * Reorder the array to change the walking order.
+ */
+const STOPS = [
+  { name: 'Salem Common', coords: [42.5228, -70.8891],
+    tip: 'Wide shot: use the tree-lined paths as leading lines toward the bandstand.' },
+  { name: 'Bewitched Statue (Lappin Park)', coords: [42.5216, -70.8963],
+    tip: 'Get low and shoot up — try framing the statue against the sky or storefronts.' },
+  { name: 'The Witch House (Jonathan Corwin House)', coords: [42.5219, -70.8988],
+    tip: 'The black facade is high contrast — meter for the house, not the sky. Try a corner angle to show depth.' },
+  { name: 'Ropes Mansion & Garden', coords: [42.5222, -70.8995],
+    tip: 'Detail shots: fence posts, garden textures, symmetry of the front door.' },
+  { name: 'Chestnut Street', coords: [42.5199, -70.9017],
+    tip: 'One-point perspective straight down the street — line up the brick sidewalks and doorways.' },
+  { name: 'Old Burying Point Cemetery (Charter St)', coords: [42.5202, -70.8925],
+    tip: 'Shallow depth of field on a single headstone; be respectful of the space.' },
+  { name: 'Custom House (Salem Maritime NHS)', coords: [42.5187, -70.8871],
+    tip: 'Golden eagle on the roof — zoom in tight, or frame the whole building from across Derby St.' },
+  { name: 'Derby Wharf & Lighthouse', coords: [42.5158, -70.8845],
+    tip: 'Walk to the end: horizon-line minimalism with the small lighthouse. Great at golden hour.' },
+  { name: 'House of the Seven Gables', coords: [42.5179, -70.8829],
+    tip: 'Rooflines against the sky — count the gables in your frame. Water views behind.' },
+  { name: 'Pickering Wharf & Marina', coords: [42.5186, -70.8880],
+    tip: 'Reflections: boats and masts doubled in the water. Try both landscape and portrait.' },
+  { name: 'Punto Urban Art Museum (murals)', coords: [42.5144, -70.8973],
+    tip: 'Color! Fill the frame with a mural, or place a person small against a huge wall.' },
+];
+const WALK_CENTER = [42.5195, -70.8920];
+
+// Walking-order list (always renders, even if the map can't load on school WiFi)
+const list = document.getElementById('stop-list');
+STOPS.forEach((s, i) => {
+  const d = document.createElement('div');
+  d.className = 'card stop-card';
+  d.innerHTML = `<h3><span class="stop-num">${i + 1}</span>${s.name}</h3><div class="tip">📷 ${s.tip}</div>`;
+  list.appendChild(d);
+});
+
+// Map (Leaflet + OpenStreetMap). If the CDN or tiles are blocked, fall back gracefully.
+const lf = document.createElement('script');
+lf.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+lf.onload = () => {
+  try {
+    const map = L.map('map').setView(WALK_CENTER, 15);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+    STOPS.forEach((s, i) => {
+      L.marker(s.coords).addTo(map)
+        .bindPopup(`<strong>${i + 1}. ${s.name}</strong><br>📷 ${s.tip}`);
+    });
+    L.polyline(STOPS.map(s => s.coords), { color: '#e8b64c', weight: 3, opacity: 0.6, dashArray: '6 8' }).addTo(map);
+  } catch (e) { mapFallback(); }
+};
+lf.onerror = mapFallback;
+document.head.appendChild(lf);
+function mapFallback() {
+  document.getElementById('map').style.display = 'none';
+  document.getElementById('map-note').textContent =
+    'The interactive map could not load on this network — use the stop list below (each stop links to Google Maps).';
+  STOPS.forEach((s, i) => {
+    const card = list.children[i];
+    const a = document.createElement('a');
+    a.href = `https://www.google.com/maps?q=${s.coords[0]},${s.coords[1]}`;
+    a.textContent = 'Open in Google Maps';
+    a.className = 'muted';
+    card.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>
