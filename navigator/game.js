@@ -69,8 +69,21 @@
                 leftPressed: false, rightPressed: false,
                 px: 0, py: 0, pDown: false, pPressed: false };
 
+  // the secret word: typing it on the title screen opens INSANE mode —
+  // the only way in. (Touch path: tap the locked 🌀 chip five times.)
+  var secretBuf = "";
+  function grantSecret() {
+    if (SAVE.secretUnlock) return;
+    SAVE.secretUnlock = true; persist();
+    toast("🌀 SIDEQUEST ACCEPTED");
+    SFX.win();
+  }
   function keydown(e) {
     var k = e.key.toLowerCase();
+    if (scene && scene.isTitle && /^[a-z]$/.test(k)) {
+      secretBuf = (secretBuf + k).slice(-12);
+      if (secretBuf.indexOf("sidequest") >= 0) { secretBuf = ""; grantSecret(); }
+    }
     if (k === "arrowleft" || k === "a") { if (!input.left) input.leftPressed = true; input.left = true; }
     else if (k === "arrowright" || k === "d") { if (!input.right) input.rightPressed = true; input.right = true; }
     else if (k === "arrowup" || k === "w") input.up = true;
@@ -132,7 +145,7 @@
   if (!isTouch) document.body.classList.add("hide-touch");
 
   // ---------------------------------------------------------------- persistence
-  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false,
+  var SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, secretUnlock: false,
     furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false,
     upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } };
   function loadSave() {
@@ -275,15 +288,17 @@
     return d < wp.R * 0.22;   // true = you've been sucked into the core
   }
   function drawWhirlpool(wp) {
+    // deliberately cheap: 4 spirals × 13 segments (was 5 × 27) — the Old Sow
+    // draws this across the whole screen every frame, and Chromebooks noticed
     ctx.save(); ctx.translate(wp.x, wp.y);
-    for (var ring = 0; ring < 5; ring++) {
-      var rr = wp.R * (1 - ring * 0.18);
-      ctx.strokeStyle = "rgba(20,40,55," + (0.15 + ring * 0.09) + ")";
-      ctx.lineWidth = 4;
+    for (var ring = 0; ring < 4; ring++) {
+      var rr = wp.R * (1 - ring * 0.22);
+      ctx.strokeStyle = "rgba(20,40,55," + (0.16 + ring * 0.1) + ")";
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      for (var a = 0; a <= 26; a++) {
-        var ang = a * 0.5 + seaT * (2.4 - ring * 0.3);
-        var rad = rr * (0.6 + 0.4 * (a / 26));
+      for (var a = 0; a <= 13; a++) {
+        var ang = a + seaT * (2.4 - ring * 0.3);
+        var rad = rr * (0.6 + 0.4 * (a / 13));
         var px = Math.cos(ang) * rad, py = Math.sin(ang) * rad * 0.6;
         if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
@@ -375,17 +390,17 @@
     { id: "whalepod",  w: 2, tag: "",       t: "A whale pod all around", route: "sea", b: "Backs like islands rise on every side. The whole crew hangs on the rail in silence.", fx: { s: 20 } },
     { id: "brendan",   w: 1, tag: "yarn",   t: "St. Brendan's isle", route: "sea", b: "The lookout swears there is an island where no chart shows one. By dawn it is gone. Sailors have told that one for a thousand years.", fx: { s: 15 } },
     // -------- INSANE mode only: the multiverse cards (tag "multi" = 🤯 MULTIVERSE)
-    { id: "skibidi",   w: 3, tag: "multi", ins: true, t: "The gulls start chanting", b: "Every gull on the water turns to face the ship and says, in perfect unison, 'skibidi.' Nobody sleeps that night.", fx: { s: 20 } },
-    { id: "rizzdolph", w: 2, tag: "multi", ins: true, t: "A dolphin with unspeakable rizz", b: "It winks at the entire crew at once. Three sailors faint. Morale has never been higher.", fx: { s: 25, g: 10 } },
-    { id: "fanumtax",  w: 2, tag: "multi", ins: true, t: "FANUM TAX", b: "A ghostly hand rises from the sea and takes a portion of your snacks. No court in the multiverse will hear your case.", fx: { g: -25 } },
-    { id: "ohio",      w: 2, tag: "multi", ins: true, t: "You drift through Ohio", b: "There is no ocean in Ohio. And yet. The less said about what you saw there, the better.", fx: { s: 30, h: -1 } },
-    { id: "npclook",   w: 2, tag: "multi", ins: true, t: "The lookout becomes an NPC", b: "'Nice weather. Nice weather. Nice weather.' He says it four hundred times. It is, to be fair, nice weather.", fx: { s: 10 } },
+    { id: "gullchoir",  w: 3, tag: "multi", ins: true, t: "The gulls start harmonizing", b: "Every gull on the water turns to face the ship and sings one long, perfect chord. Then they all pretend it never happened.", fx: { s: 20 } },
+    { id: "wigdolph",   w: 2, tag: "multi", ins: true, t: "A dolphin in a powdered wig", b: "It surfaces wearing a magistrate's wig and regards the crew with enormous disappointment. Three sailors apologize without knowing why.", fx: { s: 25, g: 10 } },
+    { id: "biscuittax", w: 2, tag: "multi", ins: true, t: "THE SEAGULL TAX", b: "An extremely organized flock presents the ship with paperwork and levies one biscuit per crewman. No court in the multiverse will hear your case.", fx: { g: -25 } },
+    { id: "upsidesea",  w: 2, tag: "multi", ins: true, t: "You drift through the Upside-Sea", b: "For one full watch the fish fly, the gulls swim, and the anchor floats. The less said about what the soup did, the better.", fx: { s: 30, h: -1 } },
+    { id: "politewhale", w: 2, tag: "multi", ins: true, t: "A very polite whale", b: "It surfaces alongside, says nothing, nods respectfully at each member of the crew in turn, and leaves. Everyone stands a little straighter.", fx: { s: 10 } },
     { id: "hydrate",   w: 2, tag: "multi", ins: true, t: "A giant emotional-support cup", b: "An enormous pastel tumbler drifts by, full of ice-cold fresh water. The crew is so hydrated. So, so hydrated.", fx: { h: 1 } },
-    { id: "sigmabird", w: 2, tag: "multi", ins: true, t: "The sigma albatross", b: "It refuses to fly with the flock. It grinds alone. The crew watches it lift weights made of driftwood.", fx: { s: 15 } },
-    { id: "auracheck", w: 2, tag: "multi", ins: true, t: "AURA CHECK", b: "A wave of pure vibes passes through the ship. The bosun gains +999 aura. That is worth points now. This is the multiverse.", fx: { s: 35 } },
-    { id: "sixseven",  w: 1, tag: "multi", ins: true, t: "Six... seven...", b: "The powder monkey counts the cannonballs and cannot stop at six-seven. Nobody can. Nobody knows why. Six! Seven!", fx: { s: 15 } },
+    { id: "gymbird",    w: 2, tag: "multi", ins: true, t: "The bodybuilding albatross", b: "It refuses to fly with the flock. It stays on the bowsprit doing wing exercises with two pieces of driftwood. The crew is inspired.", fx: { s: 15 } },
+    { id: "luckwave",   w: 2, tag: "multi", ins: true, t: "A wave of impossible luck", b: "Every rope coils itself. Every knot unties on request. The bosun wins three card games in a row against himself and refuses to explain how.", fx: { s: 35 } },
+    { id: "countcrab",  w: 1, tag: "multi", ins: true, t: "The counting crab", b: "A crab boards the ship and counts the cannonballs. It gets a different number every time. Every number is somehow correct.", fx: { s: 15 } },
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
-    { id: "pugohio",   w: 1, tag: "multi", ins: true, t: "The pug barks at Ohio", b: "Somewhere off the bow, Ohio drifts by again. The ship's pug stands at the rail and barks at it, once, with total conviction. Nobody argues.", fx: { s: 20 } },
+    { id: "pugcaptain", w: 1, tag: "multi", ins: true, t: "The pug takes the wheel", b: "For six glorious minutes the ship's pug is captain. It makes no orders, changes no headings, and is the best captain anyone has ever served under.", fx: { s: 20 } },
     { id: "duckdirect",w: 1, tag: "multi", ins: true, t: "A duck asks for directions", b: "A duck the size of a longboat paddles up alongside and asks, quite politely, if this is the way to Maine. The crew is too stunned to lie.", fx: { s: 15, g: 5 } },
     // legends and myths, mission-weighted via m: so they surface near where they belong
     { id: "davyjones", w: 2, tag: "yarn",   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
@@ -421,42 +436,42 @@
       obj: "Grab what gold you can. Watch for sharks.",
       decor: "tropics", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
       signature: "dive", battleTier: 0, routeVariant: false, prologue: true },
-    { id: "chase",       name: "The Three-Day Chase",   nameInsane: "The Three-Day Vibe Check",
+    { id: "chase",       name: "The Three-Day Chase",   nameInsane: "The Three-Day Staring Contest",
       sub: "February 1717",
       obj: "Stay on her stern. Don't fall back. Don't take too much fire.",
       decor: "tropics", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
       signature: "chase", battleTier: 0, routeVariant: false, prologue: true },
-    { id: "windward",    name: "Windward Passage",      nameInsane: "Skibidi Shallows",
+    { id: "windward",    name: "Windward Passage",      nameInsane: "The Rubber Duck Shallows",
       sub: "The Island Maze",
       obj: "Thread the channels. Something moves below.",
       decor: "tropics", pal: null, legCount: 2, legMods: { hazChance: 0.24, sharkT: null, narrows: true, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0, icy: false, mooncusser: false },
       slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "kraken", battleTier: 1, routeVariant: false },
-    { id: "gulfstream",  name: "Florida Straits",       nameInsane: "Rizz Reef",
+    { id: "gulfstream",  name: "Florida Straits",       nameInsane: "The Soup Current",
       sub: "The Gulf Stream",
       obj: "Ride the current north. Choose your water.",
       decor: "tropics", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0.5, night: false, waterspout: 0, icy: false, mooncusser: false },
       slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "fork", battleTier: 1, routeVariant: false },
-    { id: "carolina",    name: "Carolina Coast",        nameInsane: "The Backrooms Bight",
+    { id: "carolina",    name: "Carolina Coast",        nameInsane: "The Fog of Utter Nonsense",
       sub: "Fog and Shoals",
       obj: "Mind the false lights. Follow the steady flame, not the flicker.",
       decor: "dunes", pal: null, legCount: 2, legMods: { hazChance: 0.26, sharkT: null, narrows: true, whirlpool: 0, fog: true, current: 0, night: false, waterspout: 0, icy: false, mooncusser: true },
       slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "mooncusser", battleTier: 1, routeVariant: true },
-    { id: "virginia",    name: "Virginia Capes",        nameInsane: "Ohio (somehow)",
+    { id: "virginia",    name: "Virginia Capes",        nameInsane: "The Sideways Squall",
       sub: "The Squall",
       obj: "Weather the twisting wind. Hold your course.",
       decor: "dunes", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0.5, icy: true, mooncusser: false },
       slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "sharknado", battleTier: 2, routeVariant: true },
-    { id: "longisland",  name: "Long Island Sound",     nameInsane: "Sigma Sound",
+    { id: "longisland",  name: "Long Island Sound",     nameInsane: "Duckling Sound",
       sub: "The Hunt",
       obj: "Privateers are working these waters. Sink them before they sink you.",
       decor: "sounds", pal: null, legCount: 1, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
       slots: { event: [0, 1], mini: [0, 1], battle: 2 }, signature: "flagship", battleTier: 2, routeVariant: true },
-    { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "Fanum Straits",
+    { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "The Haunted Piano Sound",
       sub: "The Ghost Light",
       obj: "A light burns where no ship should be. Keep clear of it.",
       decor: "sounds", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: true, waterspout: 0, icy: true, mooncusser: false },
       slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "palatine", battleTier: 3, routeVariant: false },
-    { id: "capecod",     name: "Cape Cod",              nameInsane: "Cape Brainrot",
+    { id: "capecod",     name: "Cape Cod",              nameInsane: "Cape Absurdity",
       sub: "Hallett's Curse",
       obj: "The last landfall before the run to Maine.",
       decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
@@ -540,7 +555,7 @@
 
   function newGame(fromMission) {
     var runMode = DIFF[SAVE.mode] ? SAVE.mode : "hard";
-    if (runMode === "insane" && !SAVE.extremeWon) runMode = "hard";   // no sneaking in
+    if (runMode === "insane" && !SAVE.secretUnlock) runMode = "hard";   // no sneaking in — only the secret word opens it
     var startM = clamp(fromMission || 0, 0, MISSIONS.length - 1);
     var maxH = 5 + upgLvl("hull") + (runMode === "easy" ? 1 : 0);
     G = {
@@ -635,6 +650,7 @@
   // ---------------------------------------------------------------- particles + shake
   var parts = [];
   function spawn(x, y, opt) {
+    if (parts.length > 200) parts.shift();   // hard cap — burst-heavy scenes (storm) can't pile up a lag swamp
     parts.push({ x: x, y: y, vx: opt.vx || 0, vy: opt.vy || 0, life: opt.life || 0.6, t: 0,
       r: opt.r || 3, c: opt.c || "#fff", g: opt.g || 0, fade: opt.fade !== false, shape: opt.shape || "dot", txt: opt.txt || "" });
   }
@@ -759,13 +775,15 @@
     ctx.fillStyle = g; ctx.fillRect(0, skyH, W, H - skyH);
     ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.fillRect(0, skyH - 2, W, 4);
     ctx.strokeStyle = pal.foam;
-    for (var r = 0; r < 22; r++) {
-      var y = skyH + ((r * 46 + (scroll % 46)) % (H - skyH));
+    // 16 rows at a 34px step (was 22 × 24px) — halves the per-frame line work
+    // in the busiest scenes (storm) with no visible change at these alphas
+    for (var r = 0; r < 16; r++) {
+      var y = skyH + ((r * 62 + (scroll % 62)) % (H - skyH));
       var depth = (y - skyH) / (H - skyH);
       ctx.globalAlpha = 0.05 + depth * 0.12;
       ctx.lineWidth = 1 + depth * 1.6;
       ctx.beginPath();
-      for (var x = 0; x <= W; x += 24) {
+      for (var x = 0; x <= W; x += 34) {
         var yy = y + Math.sin((x * 0.02) + seaT * (stormy ? 4 : 1.6) + r) * (2 + depth * (stormy ? 10 : 5));
         if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
       }
@@ -1087,10 +1105,11 @@
 
   // ---------------------------------------------------------------- TITLE
   function TitleScene() {
-    var hint = false, skipPrologue = false;
+    var hint = false, skipPrologue = false, secretTaps = 0;
     function beginVoyage() { startRun(skipPrologue ? 2 : 0); }
     return {
       noPause: true,
+      isTitle: true,
       enter: function () {
         document.body.classList.remove("playing"); seedCoast(); if (!G) newGame();
         if (muted && (SAVE.sndHint || 0) < 3) { SAVE.sndHint = (SAVE.sndHint || 0) + 1; persist(); hint = true; }
@@ -1118,13 +1137,23 @@
         if (!DIFF[SAVE.mode]) SAVE.mode = "hard";
         for (var mi = 0; mi < MODE_ORDER.length; mi++) {
           var mid2 = MODE_ORDER[mi], md = DIFF[mid2], mx = W / 2 - bw - 10 + mi * (mw + 6);
-          var locked = mid2 === "insane" && !SAVE.extremeWon;
+          var locked = mid2 === "insane" && !SAVE.secretUnlock;
           var sel = SAVE.mode === mid2;
           var label = locked ? "🔒" : (mid2 === "insane" ? "🌀 " + md.label : md.label);
           if (uiButton(mx, my, mw, 30, label, { size: mw < 74 ? 9.5 : 10.5, disabled: locked, color: sel ? md.color : "#3a4550" }) && !locked) { SAVE.mode = mid2; persist(); SFX.buy(); }
+          // the touch path to the secret word: five taps on the lock
+          if (locked && input.pPressed && input.px >= mx && input.px <= mx + mw && input.py >= my && input.py <= my + 30) {
+            input.pPressed = false;
+            secretTaps++;
+            if (secretTaps >= 5) {
+              secretTaps = 0;
+              var w2 = null; try { w2 = window.prompt("Speak the secret word…"); } catch (e2) {}
+              if (w2 && w2.trim().toLowerCase() === "sidequest") grantSecret(); else if (w2 != null) SFX.bad();
+            }
+          }
           if (sel) { ctx.strokeStyle = "#ffd24a"; ctx.lineWidth = 2.5; roundRect(mx - 2, my - 2, mw + 4, 34, 12); ctx.stroke(); }
         }
-        text(SAVE.mode === "insane" ? "the multiverse is waiting. good luck." : (SAVE.extremeWon ? "difficulty" : "difficulty  ·  beat EXTREME to unlock 🌀"), W / 2, my - 10, 10.5, "rgba(244,231,201,.6)");
+        text(SAVE.mode === "insane" ? "the multiverse is waiting. good luck." : (SAVE.secretUnlock ? "difficulty" : (SAVE.extremeWon ? "difficulty  ·  a secret word opens 🌀" : "difficulty")), W / 2, my - 10, 10.5, "rgba(244,231,201,.6)");
         // resume the furthest voyage reached, or start fresh (with a prologue-skip toggle once it's been seen once)
         var curMode = insane() ? SAVE.furthestInsane : SAVE.furthest;
         var canResume = curMode > 2;
@@ -3548,7 +3577,7 @@
       missionState: function () { return { mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), name: missionName() }; },
       setRoute: function (r) { G.route = r; rerollEvents(r); },
       setMode: function (m) { if (DIFF[m]) { SAVE.mode = m; persist(); } return SAVE.mode; },
-      unlock: function () { SAVE.extremeWon = true; persist(); },
+      unlock: function () { SAVE.extremeWon = true; SAVE.secretUnlock = true; persist(); },
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
@@ -3559,7 +3588,7 @@
       gold: function (n) { SAVE.bank += n; persist(); },
       buy: function (id) { var lvl = upgLvl(id); var u = null; for (var i = 0; i < UPG.length; i++) if (UPG[i].id === id) u = UPG[i]; if (!u || lvl >= u.max) return "no"; SAVE.bank -= u.cost[lvl]; SAVE.upg[id] = lvl + 1; persist(); return SAVE.upg[id]; },
       save: function () { return JSON.parse(JSON.stringify(SAVE)); },
-      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
+      wipe: function () { try { localStorage.removeItem("firstsail-save-v3"); } catch (e) {} SAVE = { bank: 0, best: 0, wins: 0, runs: 0, sndHint: 0, seen: {}, mode: "hard", extremeWon: false, secretUnlock: false, furthest: 0, furthestInsane: 0, prologueDone: false, whydahTaken: false, bellSeen: false, upg: { hull: 0, pumps: 0, shot: 0, nest: 0, helm: 0, charm: 0, canvas: 0, guns: 0 } }; },
       toHarbor: function () { setScene(HarborScene(false)); },
       pause: function (v) { setPause(v); return paused; },
       isPaused: function () { return paused; },
