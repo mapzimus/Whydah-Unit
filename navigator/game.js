@@ -378,6 +378,15 @@
     { id: "sixseven",  w: 1, tag: "multi", ins: true, t: "Six... seven...", b: "The powder monkey counts the cannonballs and cannot stop at six-seven. Nobody can. Nobody knows why. Six! Seven!", fx: { s: 15 } },
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } }
   ];
+  // The guaranteed Cape Cod story beat — not part of the random pool, dealt
+  // directly by the "hallett" beat kind. Sets a blessed/cursed mod the storm
+  // reads at the Nor'easter finale.
+  var HALLETT_EVENT = { id: "hallett", tag: "yarn", t: "Goody Hallett's Curse",
+    b: "Maria Hallett — Bellamy's sweetheart, left behind on this same Cape Cod shore. The story says she cursed him for it, and cursed any ship that sails past without paying respect.",
+    choice: [
+      { l: "Leave an offering (20 gold)", r: "You set gold on the rocks where she's said to walk. The crew feels lighter for it.", fx: { g: -20 }, mod: "blessed" },
+      { l: "Sail on", r: "You crowd on sail and don't look back. Some of the crew won't stop looking at the shore.", mod: "cursed" }
+    ] };
 
   // ==================================================================
   // MISSIONS — the campaign. Ten stops, each with its own theme, hazard
@@ -556,10 +565,15 @@
         randomBeats.forEach(function (rb) { G.seq.push(rb); });
       }
 
+      // Goody Hallett's curse: a guaranteed story beat, not part of the
+      // random pool, right before Cape Cod's serpent encounter
+      if (msn.id === "capecod") G.seq.push({ kind: "hallett", m: mi });
+
       if (msn.signature === "finale") {
         G.seq.push({ kind: "squadron", m: mi });
         G.seq.push({ kind: "storm", m: mi });
         G.seq.push({ kind: "boss", m: mi });
+        G.seq.push({ kind: "oldsow", m: mi });   // the great whirlpool guarding the harbor mouth, after the boss
       } else if (msn.signature) {
         G.seq.push({ kind: msn.signature, m: mi });
       }
@@ -942,6 +956,7 @@
     else if (beat.kind === "kraken") setScene(typeof KrakenScene === "function" ? KrakenScene() : SerpentScene());
     else if (beat.kind === "palatine") setScene(typeof PalatineScene === "function" ? PalatineScene() : SailScene());
     else if (beat.kind === "oldsow") setScene(typeof OldSowScene === "function" ? OldSowScene() : SailScene());
+    else if (beat.kind === "hallett") setScene(EventScene(HALLETT_EVENT));
     else setScene(SailScene());
   }
 
@@ -1001,7 +1016,7 @@
         wrapText("February 1717. The crew took the Whydah after a three day chase. Sam Bellamy is captain. Run her north. Make Maine. Beat the storm the real crew never did.",
           W / 2, H * 0.3 - 24, w - 46, 20, 14, "#f4e7c9");
         text("steer with ← → ↑ ↓ or WASD  ·  SPACE fires (hold for a broadside)", W / 2, H * 0.3 + 62, 13, "#cdb98a");
-        text("Best " + SAVE.best + "  ·  Bank 🪙 " + SAVE.bank + "  ·  Voyages " + SAVE.runs, W / 2, H * 0.3 + 84, 12, "rgba(244,231,201,.7)");
+        text("Best " + SAVE.best + "  ·  Bank 🪙 " + SAVE.bank + "  ·  Voyages " + SAVE.runs + (SAVE.bellSeen ? "  ·  🔔 wreck found, 1984" : ""), W / 2, H * 0.3 + 84, 12, "rgba(244,231,201,.7)");
         if (hint && muted) {
           ctx.globalAlpha = 0.6 + 0.4 * Math.sin(seaT * 3);
           text("tap 🔇 up top for sound", W - 16, 64, 12, "#ffe1b0", "right", "bold");
@@ -1059,7 +1074,7 @@
         panel(W / 2, top + h / 2, w, h);
         var seen = countSeen();
         text("📖  THE TALES LOGBOOK", W / 2, top + 32, 20, "#e0b25c", "center", "bold");
-        text(seen + " of " + EVENTS.length + " tales found  ·  page " + (page + 1) + " / " + pages, W / 2, top + 54, 12, "rgba(244,231,201,.75)", "center");
+        text(seen + " of " + EVENTS.length + " tales found  ·  page " + (page + 1) + " / " + pages + (SAVE.bellSeen ? "  ·  🔔 1984: the wreck is found" : ""), W / 2, top + 54, 12, "rgba(244,231,201,.75)", "center");
         var innerRowH = (h - 130) / perPage;
         for (var i = 0; i < perPage; i++) {
           var idx = page * perPage + i;
@@ -1664,6 +1679,8 @@
       else if (m === "warned") G.mods.warned = true;
       else if (m === "navyintel") G.mods.navyintel = true;
       else if (m === "navy") G.mods.navyNext = true;
+      else if (m === "blessed") G.mods.blessed = true;
+      else if (m === "cursed") G.mods.cursed = true;
     }
     function fxLine(fx) {
       fx = fx || {}; var bits = [];
@@ -2140,13 +2157,24 @@
     // the storm's own beat position within its mission, so progress moves
     // continuously through it instead of jumping beat-to-beat
     var beatInfo = G.seq[G.seqIndex] || { m: G.mIndex, mBeatIdx: 0, mBeatCount: 1 };
-    var t = 0, survive = (rand(28, 34) - (G.mods.warned ? 4 : 0)) * diff().storm, objs = [], balls = [], spawnT = 0, lightning = 0, waveT = rand(2.5, 4), bigWave = null;
+    // Goody Hallett's curse, set (or lifted) back at Cape Cod: blessed shortens
+    // the storm; cursed brings the rogue waves in faster, but surviving it
+    // breaks the curse for a bonus
+    var blessed = consumeMod("blessed"), cursed = consumeMod("cursed");
+    var t = 0, survive = (rand(28, 34) - (G.mods.warned ? 4 : 0)) * diff().storm * (blessed ? 0.9 : 1), objs = [], balls = [], spawnT = 0, lightning = 0, waveT = rand(2.5, 4) * (cursed ? 0.6 : 1), bigWave = null;
     var bolt = null, boltT = rand(3, 5);       // targeted lightning: a marked column, then the strike
     var gust = null, gustT = rand(5, 8);       // wind gusts that shove the ship sideways
     var barrelT = rand(8, 10);                 // a rare mercy in the wreckage
     var braceT = 0, fireGun = gunner();        // brace = a fresh tap inside the wave window
     var warnLen = 1.4 + warnBonus();
+    // "make for port" still passes the Old Sow guarding the harbor mouth —
+    // both endings reach it, only "turn and fight" adds the boss first
+    function goPort() {
+      for (var oi = G.seqIndex; oi < G.seq.length; oi++) if (G.seq[oi].kind === "oldsow") { G.seqIndex = oi - 1; advance(); return; }
+      endRun(true, false);
+    }
     return {
+      debugWin: function () { phase = "play"; t = survive; },
       enter: function () {
         G.preStormScore = G.score; G.reachedStorm = true;
         prompt = Prompt("THE NOR'EASTER", "Cape Cod. The same storm that sank the real Whydah on April 26, 1717. Dodge the wreckage and the lightning. Tap to brace for the great waves. Fight the wind. Hold on.", function () { phase = "play"; }, "⚓ FROM THE RECORD");
@@ -2156,7 +2184,7 @@
         if (phase === "intro") { prompt.update(dt); return; }
         if (phase === "won") {
           if (chosen) return;
-          if (input.leftPressed) { chosen = true; endRun(true, false); return; }
+          if (input.leftPressed) { chosen = true; goPort(); return; }
           if (input.rightPressed) { chosen = true; advance(); return; }
           return;
         }
@@ -2232,7 +2260,10 @@
           }
         }
         if (chance(0.5)) spawn(rand(0, W), rand(H * 0.2, H), { vx: rand(-40, 40), vy: rand(80, 160), g: 0, life: 0.5, r: rand(1, 2.5), c: "rgba(220,235,240,.7)" });
-        if (t >= survive) { phase = "won"; G.stormCleared = true; repair(2); SFX.win(); }   // the crew patches her up in the calm
+        if (t >= survive) {
+          phase = "won"; G.stormCleared = true; repair(2); SFX.win();
+          if (cursed) { addScore(80); toast("THE CURSE IS BROKEN"); }
+        }   // the crew patches her up in the calm
       },
       render: function () {
         drawSea(STORM_PAL, seaT * 90, true);
@@ -2263,7 +2294,7 @@
           text("THE STORM BREAKS!", W / 2, H / 2 - 68, 24, "#8fd6a0", "center", "bold");
           wrapText("You beat the storm the real Whydah could not. The win is yours and the crew patches her up. But something followed you out of the dark. Something with three heads.", W / 2, H / 2 - 40, w - 44, 19, 13.5, "#f4e7c9");
           var bw = (w - 60) / 2, by = H / 2 + 30;
-          if (!chosen && uiButton(W / 2 - w / 2 + 20, by, bw, 46, "⚓ MAKE FOR PORT", { size: 13.5, color: "#2c5e38" })) { chosen = true; endRun(true, false); return; }
+          if (!chosen && uiButton(W / 2 - w / 2 + 20, by, bw, 46, "⚓ MAKE FOR PORT", { size: 13.5, color: "#2c5e38" })) { chosen = true; goPort(); return; }
           if (!chosen && uiButton(W / 2 + 10, by, bw, 46, "🐍 TURN AND FIGHT", { size: 13.5, color: "#96341f" })) { chosen = true; advance(); return; }
           text("← port keeps the win  ·  → risks gold for glory", W / 2, H / 2 + 94, 10.5, "rgba(244,231,201,.6)");
         }
@@ -2285,6 +2316,7 @@
     var rearTime = 0.55 + warnBonus() * 0.25;
     function aliveHeads() { return heads.filter(function (h) { return h.alive; }); }
     return {
+      debugWin: function () { heads.forEach(function (h) { h.hp = 0; h.alive = false; }); phase = "dying"; dieT = 0; G.bossBeaten = true; addScore(300); addGold(200); },
       enter: function () { prompt = Prompt("THE GRANDFATHER SERPENT", "The old salts say the first one was a pup. This is what it ran home to. Three heads. One ship. Send it back to the deep.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
       update: function (dt) {
         seaT += dt; t += dt;
@@ -2393,6 +2425,160 @@
     }
   }
 
+  // ---------------------------------------------------------------- KRAKEN (M2, Windward Passage)
+  // A yarn promoted into gameplay: telegraphed tentacles rise from below in
+  // random lanes; shoot the arms or keep clear, and outlast the encounter.
+  function KrakenScene() {
+    var phase = "intro", prompt = null, t = 0, dur = 20, balls = [], fireGun = gunner();
+    var tentacles = [], spawnT = 1.2;
+    return {
+      debugWin: function () { t = dur; tentacles = []; },
+      enter: function () { prompt = Prompt("THE KRAKEN", "Sailors swore something vast slept in these straits. This one is a sea story — shoot the arms or keep clear, and outlast it.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
+      update: function (dt) {
+        seaT += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        t += dt;
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        spawnT -= dt;
+        if (spawnT <= 0 && tentacles.length < 2 && t < dur - 2) {
+          spawnT = rand(2.0, 3.0);
+          var lane = clamp(px + rand(-170, 170), W * 0.12, W * 0.88);
+          tentacles.push({ x: lane, y: H + 80, target: H * rand(0.4, 0.55), state: "warn", warn: 0.9 + warnBonus() * 0.3, hold: 1.4, hp: 2 });
+        }
+        for (var i = tentacles.length - 1; i >= 0; i--) {
+          var tc = tentacles[i];
+          if (tc.state === "warn") { tc.warn -= dt; if (tc.warn <= 0) tc.state = "rise"; }
+          else if (tc.state === "rise") { tc.y = lerp(tc.y, tc.target, clamp(3.2 * dt, 0, 1)); if (Math.abs(tc.y - tc.target) < 4) tc.state = "hold"; }
+          else if (tc.state === "hold") {
+            tc.hold -= dt;
+            if (Math.hypot(tc.x - px, tc.y - py) < 34) { damage(1); shake(8); }
+            if (tc.hold <= 0) tc.state = "sink";
+          } else { tc.y += 160 * dt; if (tc.y > H + 150) { tentacles.splice(i, 1); continue; } }
+        }
+        var krakenTargets = [];
+        tentacles.forEach(function (tc2) {
+          if (tc2.state !== "hold" && tc2.state !== "rise") return;
+          krakenTargets.push({ x: tc2.x, y: tc2.y, r: 24, onHit: function () {
+            tc2.hp--; splash(tc2.x, tc2.y, 8, "#3c7f58"); SFX.hit();
+            if (tc2.hp <= 0) { addScore(35); addGold(10); SFX.win(); tc2.state = "sink"; tc2.hold = 0; }
+          } });
+        });
+        stepBalls(balls, dt, krakenTargets);
+        if (t >= dur && tentacles.length === 0) { phase = "done"; addScore(60); SFX.win(); }
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 55, false);
+        for (var i = 0; i < tentacles.length; i++) {
+          var tc = tentacles[i];
+          if (tc.state === "warn") {
+            var pulse = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 9));
+            ctx.strokeStyle = "rgba(60,127,88," + pulse + ")"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(tc.x, H - 30, 22 + (1 - clamp(tc.warn, 0, 1)) * 26, 0, 7); ctx.stroke();
+            continue;
+          }
+          var seg = [];
+          for (var s = 0; s < 9; s++) seg.push({ x: tc.x + Math.sin(s * 0.6 + seaT * 3) * 12, y: tc.y + s * 22 });
+          drawSerpent(seg, false, false);
+        }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "fight" && t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Shoot the arms or keep clear. Outlast it.", W / 2, H * 0.5, 15, "#cdeccf", "center", "bold"); ctx.globalAlpha = 1; }
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 130); text("IT SLIPS BACK UNDER", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text("+60 points", W / 2, H / 2 + 6, 16, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 36, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------- THE PALATINE LIGHT (M7, Rhode Island Sound)
+  // A burning ghost ship crosses the sea. Keep clear — score for witnessing,
+  // damage for getting too close.
+  function PalatineScene() {
+    var t = 0, dur = 12, ship = null, touched = false;
+    return {
+      debugWin: function () { t = dur - 0.1; },
+      enter: function () {
+        document.body.classList.add("playing"); G.pal = PALETTES[4];
+        ship = { x: -80, y: H * rand(0.28, 0.48), sp: rand(70, 100) };
+        if (chance(0.5)) spawnGull();
+      },
+      update: function (dt) {
+        seaT += dt; t += dt; updateGulls(dt);
+        helm(dt, 1, 0.4);
+        ship.x += ship.sp * dt;
+        if (chance(0.4)) spawn(ship.x + rand(-20, 20), ship.y + rand(-10, 10), { vy: -40, life: 0.6, r: rand(3, 7), c: choice(["#ff9a3a", "#ffcf6a", "#ff5a3a"]), shape: "smoke" });
+        var px = G.shipX * W, py = shipYPx();
+        if (!touched && Math.hypot(ship.x - px, ship.y - py) < 46) { touched = true; damage(1); shake(10); toast("You got too close to the Light."); }
+        if (t >= dur) {
+          if (!touched) addScore(40);
+          setScene(Prompt("THE PALATINE LIGHT", "Block Island sailors still see her: a ship afire on the horizon, crewed by no one living. Some say she's the wreck that never stopped burning.", advance, touched ? "you got too close" : "witnessed, and recorded"));
+        }
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 40, false);
+        var glow = ctx.createRadialGradient(ship.x, ship.y, 4, ship.x, ship.y, 70);
+        glow.addColorStop(0, "rgba(255,150,60,.55)"); glow.addColorStop(1, "rgba(255,150,60,0)");
+        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(ship.x, ship.y, 70, 0, 7); ctx.fill();
+        drawShip(ship.x, ship.y, 1.4, { hull: "#241512", sail: "rgba(255,220,180,.5)", flag: "#000", wake: false });
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Keep clear of the Light. It's not really there. Probably.", W / 2, H * 0.5, 15, "#eafaff", "center", "bold"); ctx.globalAlpha = 1; }
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------- THE OLD SOW (M9 tail, after the boss or "make for port")
+  // The real giant whirlpool off Eastport, Maine, guarding the harbor mouth —
+  // a full-screen force field on top of the shared helm; out-rowable at the
+  // rim, not the core.
+  function OldSowScene() {
+    var phase = "intro", prompt = null, t = 0, dur = 14, sucked = false;
+    var wp = { x: 0, y: 0, R: 0, k: 0.9 }, debris = [], spawnT = 0.6;
+    return {
+      debugWin: function () { phase = "spin"; t = dur; },
+      enter: function () {
+        document.body.classList.add("playing"); G.pal = PALETTES[3];
+        wp.x = W * 0.5; wp.y = H * 0.4; wp.R = Math.max(W, H) * 0.6;
+        prompt = Prompt("THE OLD SOW", "Off Eastport, Maine, the sea turns on itself — the largest whirlpool in the Western Hemisphere, guarding the harbor mouth. Row wide of the core and ride her rim home.", function () { phase = "spin"; }, "🌀 IT'S REAL — RECORDED IN THE LOG");
+      },
+      update: function (dt) {
+        seaT += dt; updateGulls(dt);
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        t += dt;
+        helm(dt, 0.85, 0.4, false);
+        var px = G.shipX * W, py = shipYPx();
+        if (!sucked) { if (applyWhirlpool(dt, wp, px, py)) sucked = true; }
+        spawnT -= dt;
+        if (spawnT <= 0) { spawnT = rand(0.5, 0.9); debris.push({ x: rand(0.1, 0.9) * W, y: -20, sp: rand(50, 90), r: rand(8, 16), a: 0, spin: rand(-2, 2) }); }
+        for (var i = debris.length - 1; i >= 0; i--) { var o = debris[i]; o.y += o.sp * dt; o.a += o.spin * dt; if (o.y > H + 50) debris.splice(i, 1); }
+        if (t >= dur || sucked) {
+          phase = "done";
+          if (sucked) { var toll = Math.floor(G.gold * 0.3); G.gold -= toll; toast("Into the harbor mouth."); }
+          else { addScore(150); toast("Out-rowed the Old Sow!"); }
+        }
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 40, false);
+        if (phase !== "intro") drawWhirlpool(wp);
+        for (var i = 0; i < debris.length; i++) { var o = debris[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); ctx.fillStyle = "#8a5a34"; blob(o.r); ctx.restore(); }
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") {
+          var w = clamp(W * 0.78, 260, 430);
+          panel(W / 2, H / 2, w, 150);
+          text(sucked ? "THE HARBOR MOUTH" : "RODE THE RIM", W / 2, H / 2 - 30, 21, sucked ? "#e08c6a" : "#8fd6a0", "center", "bold");
+          text(sucked ? "The chest is lighter, but you made port." : "+150 points", W / 2, H / 2 + 6, 15, "#e0b25c", "center", "bold");
+          text("tap to make port", W / 2, H / 2 + 44, 11.5, "rgba(244,231,201,.6)");
+        }
+      }
+    };
+  }
+
   // ---------------------------------------------------------------- END / RESULTS / HARBOR
   function endRun(reachedEnd, sunk) {
     if (G.ended) return; G.ended = true;
@@ -2406,6 +2592,7 @@
     }
     G.score = Math.round(G.score * diff().score);      // harder seas pay better
     if (G.won && G.mode === "extreme" && !SAVE.extremeWon) { SAVE.extremeWon = true; G.unlockedInsane = true; }
+    if (G.won && !SAVE.bellSeen) { SAVE.bellSeen = true; }   // the epilogue line, once the first career win lands
     G.rank = rankFor(G.score, G.won);
     var banked = G.gold;                               // the crew always saves the chest
     G.bankedGold = banked;
