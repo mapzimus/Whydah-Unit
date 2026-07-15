@@ -377,14 +377,65 @@
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } }
   ];
 
-  // ---------------------------------------------------------------- voyage stages (the real route north)
-  var STAGES = ["Windward Passage", "Florida Straits", "Carolina Coast", "Virginia Capes", "Long Island Sound", "Rhode Island Sound", "Cape Cod"];
-  // insane mode sails a different multiverse entirely
-  var STAGES_INSANE = ["Skibidi Shallows", "Rizz Reef", "The Backrooms Bight", "Ohio (somehow)", "Sigma Sound", "Fanum Straits", "Cape Brainrot"];
-  function stageFor(p) {
-    var list = insane() ? STAGES_INSANE : STAGES;
-    return list[clamp(Math.floor(p * (list.length - 1)), 0, list.length - 1)];
-  }
+  // ==================================================================
+  // MISSIONS — the campaign. Ten stops, each with its own theme, hazard
+  // profile, and objective. This replaces the old shuffled-pool voyage.
+  // ==================================================================
+  var MISSIONS = [
+    { id: "wreckdiver",  name: "The Wreck Diver",       nameInsane: "The Puddle Diver",
+      sub: "1716 — the Spanish plate fleet, off the Florida coast",
+      obj: "Grab what gold you can. Watch for sharks.",
+      decor: "tropics", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
+      signature: "dive", battleTier: 0, routeVariant: false, prologue: true },
+    { id: "chase",       name: "The Three-Day Chase",   nameInsane: "The Three-Day Vibe Check",
+      sub: "February 1717",
+      obj: "Stay on her stern. Don't fall back. Don't take too much fire.",
+      decor: "tropics", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
+      signature: "chase", battleTier: 0, routeVariant: false, prologue: true },
+    { id: "windward",    name: "Windward Passage",      nameInsane: "Skibidi Shallows",
+      sub: "The Island Maze",
+      obj: "Thread the channels. Something moves below.",
+      decor: "tropics", pal: null, legCount: 2, legMods: { hazChance: 0.24, sharkT: null, narrows: true, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0, icy: false, mooncusser: false },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "kraken", battleTier: 1, routeVariant: false },
+    { id: "gulfstream",  name: "Florida Straits",       nameInsane: "Rizz Reef",
+      sub: "The Gulf Stream",
+      obj: "Ride the current north. Choose your water.",
+      decor: "tropics", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0.5, night: false, waterspout: 0, icy: false, mooncusser: false },
+      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "fork", battleTier: 1, routeVariant: false },
+    { id: "carolina",    name: "Carolina Coast",        nameInsane: "The Backrooms Bight",
+      sub: "Fog and Shoals",
+      obj: "Mind the false lights. Follow the steady flame, not the flicker.",
+      decor: "dunes", pal: null, legCount: 2, legMods: { hazChance: 0.26, sharkT: null, narrows: true, whirlpool: 0, fog: true, current: 0, night: false, waterspout: 0, icy: false, mooncusser: true },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: null, battleTier: 1, routeVariant: true },
+    { id: "virginia",    name: "Virginia Capes",        nameInsane: "Ohio (somehow)",
+      sub: "The Squall",
+      obj: "Weather the twisting wind. Hold your course.",
+      decor: "dunes", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0.5, icy: true, mooncusser: false },
+      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: null, battleTier: 2, routeVariant: true },
+    { id: "longisland",  name: "Long Island Sound",     nameInsane: "Sigma Sound",
+      sub: "The Hunt",
+      obj: "Privateers are working these waters. Sink them before they sink you.",
+      decor: "sounds", pal: null, legCount: 1, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
+      slots: { event: [0, 1], mini: [0, 1], battle: 2 }, signature: null, battleTier: 2, routeVariant: true },
+    { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "Fanum Straits",
+      sub: "The Ghost Light",
+      obj: "A light burns where no ship should be. Keep clear of it.",
+      decor: "sounds", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: true, waterspout: 0, icy: true, mooncusser: false },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "palatine", battleTier: 3, routeVariant: false },
+    { id: "capecod",     name: "Cape Cod",              nameInsane: "Cape Brainrot",
+      sub: "Hallett's Curse",
+      obj: "The last landfall before the run to Maine.",
+      decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
+      slots: { event: [0, 0], mini: [0, 0], battle: 0 }, signature: "serpent", battleTier: 3, routeVariant: false },
+    { id: "noreaster",   name: "The Nor'easter",        nameInsane: "The Chaos Vortex",
+      sub: "April 26, 1717",
+      obj: "The wolf pack, the storm, and whatever waits past it.",
+      decor: "cape", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
+      signature: "finale", battleTier: 3, routeVariant: false }
+  ];
+  function mission() { return MISSIONS[clamp(G ? G.mIndex : 0, 0, MISSIONS.length - 1)]; }
+  function missionName() { var m = mission(); return (insane() && m.nameInsane) ? m.nameInsane : m.name; }
+  function setProgress() { G.progress = clamp((G.mIndex + G.mFrac) / MISSIONS.length, 0, 1); }
 
   // ---------------------------------------------------------------- palettes
   var PALETTES = [
@@ -406,13 +457,17 @@
   // ---------------------------------------------------------------- run state
   var G = null;
   function isBad(ev) { if (ev.choice) return false; var f = ev.fx || {}; return (f.s || 0) < 0 || (f.g || 0) < 0 || (f.h || 0) < 0; }
-  function pickEvents(n, route, exclude) {
+  function pickEvents(n, route, exclude, preferMission) {
     exclude = exclude || [];
     var pool = EVENTS.filter(function (e) {
       if (!!e.ins !== insane()) return false;   // multiverse cards only in insane mode — and only them
       return (!e.route || e.route === route) && exclude.indexOf(e.id) < 0;
     }), out = [];
-    function wOf(e) { return e.w + (e.route && e.route === route ? 2 : 0); }   // route cards front and center
+    function wOf(e) {
+      var w = e.w + (e.route && e.route === route ? 2 : 0);   // route cards front and center
+      if (preferMission && e.m === preferMission) w += 3;      // cards weighted toward their home mission
+      return w;
+    }
     function draw() {
       var tot = 0, i; for (i = 0; i < pool.length; i++) tot += wOf(pool[i]);
       var r = Math.random() * tot;
@@ -441,35 +496,75 @@
     for (i = 0; i < G.seq.length; i++) if (G.seq[i].ev) G.events.push(G.seq[i].ev.id);
   }
 
-  function newGame() {
+  // stamp every beat with its position within its own mission, so the HUD
+  // (and StormScene's continuous fury-based fraction) can compute mFrac
+  function stampMissionBeats() {
+    var byM = {};
+    for (var i = 0; i < G.seq.length; i++) { var b = G.seq[i]; (byM[b.m] = byM[b.m] || []).push(b); }
+    for (var mk in byM) { var arr = byM[mk]; for (var j = 0; j < arr.length; j++) { arr[j].mBeatIdx = j; arr[j].mBeatCount = arr.length; } }
+  }
+
+  function newGame(fromMission) {
     var runMode = DIFF[SAVE.mode] ? SAVE.mode : "hard";
     if (runMode === "insane" && !SAVE.extremeWon) runMode = "hard";   // no sneaking in
+    var startM = clamp(fromMission || 0, 0, MISSIONS.length - 1);
     var maxH = 5 + upgLvl("hull") + (runMode === "easy" ? 1 : 0);
     G = {
       score: 0, gold: 0, hull: maxH, maxHull: maxH, mode: runMode, unlockedInsane: false,
-      seq: [], seqIndex: -1, progress: 0,
+      seq: [], seqIndex: -1, progress: 0, mIndex: startM, mFrac: 0, startMission: startM,
       pal: choice(runMode === "insane" ? PALETTES_INSANE : PALETTES), shipX: 0.5, shipY: 0.7, route: "", iframes: 0, coinStreak: 0,
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: []
     };
-    // Build the voyage: events + battles + minis + a mid-run fork + serpent,
-    // shuffled; then the wolf pack, the storm, and the grandfather serpent.
-    var evs = pickEvents(randInt(5, 7));
-    G.events = evs.map(function (e) { return e.id; });
-    var pool = evs.map(function (e) { return { kind: "event", ev: e }; });
-    var nBattle = G.firstRun ? 2 : randInt(2, 3), nMini = randInt(2, 3);
-    var minis = shuffle(["backstaff", "leadline", "logline"]);
-    for (var b = 0; b < nBattle; b++) pool.push({ kind: "battle" });
-    for (var m = 0; m < nMini; m++) pool.push({ kind: "mini", which: minis[m % 3] });
-    shuffle(pool);
-    var mid = clamp(randInt(Math.floor(pool.length / 3), Math.floor(pool.length * 2 / 3)), 1, pool.length);
-    pool.splice(mid, 0, { kind: "fork" }, { kind: "serpent" });
-    G.seq = [{ kind: "sail" }];
-    for (var p = 0; p < pool.length; p++) { G.seq.push(pool[p]); G.seq.push({ kind: "sail" }); }
-    G.seq.push({ kind: "squadron" });
-    G.seq.push({ kind: "storm" });
-    G.seq.push({ kind: "boss" });
+    // Build the voyage mission by mission: an intro card, then sail legs with
+    // that mission's random events/minis/battles spread through the gaps,
+    // then the mission's signature beat, then a port call before the next.
+    var usedEventIds = [];
+    G.seq = [];
+    for (var mi = startM; mi < MISSIONS.length; mi++) {
+      var msn = MISSIONS[mi];
+      G.seq.push({ kind: "missionIntro", m: mi });
+
+      var randomBeats = [];
+      var nEv = randInt(msn.slots.event[0], msn.slots.event[1]);
+      if (nEv > 0) {
+        var evs = pickEvents(nEv, G.route, usedEventIds, msn.id);
+        evs.forEach(function (e) { usedEventIds.push(e.id); G.events.push(e.id); randomBeats.push({ kind: "event", ev: e, m: mi }); });
+      }
+      var nMini = randInt(msn.slots.mini[0], msn.slots.mini[1]);
+      if (nMini > 0) {
+        var minisPool = shuffle(["backstaff", "leadline", "logline"]);
+        for (var k = 0; k < nMini; k++) randomBeats.push({ kind: "mini", which: minisPool[k % 3], m: mi });
+      }
+      for (var k2 = 0; k2 < msn.slots.battle; k2++) randomBeats.push({ kind: "battle", m: mi });
+      shuffle(randomBeats);
+
+      var legs = msn.legCount;
+      if (legs > 0) {
+        var gaps = legs + 1, bucket = [];
+        for (var gi = 0; gi < gaps; gi++) bucket.push([]);
+        randomBeats.forEach(function (rb, idx) { bucket[idx % gaps].push(rb); });
+        for (var li = 0; li < legs; li++) {
+          bucket[li].forEach(function (rb) { G.seq.push(rb); });
+          G.seq.push({ kind: "sail", m: mi });
+        }
+        bucket[legs].forEach(function (rb) { G.seq.push(rb); });
+      } else {
+        randomBeats.forEach(function (rb) { G.seq.push(rb); });
+      }
+
+      if (msn.signature === "finale") {
+        G.seq.push({ kind: "squadron", m: mi });
+        G.seq.push({ kind: "storm", m: mi });
+        G.seq.push({ kind: "boss", m: mi });
+      } else if (msn.signature) {
+        G.seq.push({ kind: msn.signature, m: mi });
+      }
+
+      if (mi < MISSIONS.length - 1) G.seq.push({ kind: "port", m: mi });
+    }
+    stampMissionBeats();
   }
 
   function addScore(n) { G.score += n; if (G.score < 0) G.score = 0; }
@@ -567,19 +662,19 @@
     }
     ctx.lineCap = "butt";
   }
-  // what stands on the shore changes as the voyage runs north
+  // what stands on the shore is driven by the current mission's decor bucket
   function drawCoastDecor(cx, y, o) {
-    var idx = G ? Math.floor(clamp(G.progress, 0, 0.999) * STAGES.length) : 0;
+    var decor = (G && MISSIONS[G.mIndex]) ? MISSIONS[G.mIndex].decor : "tropics";
     var top = y - o.h * 0.55;
-    if (idx <= 1) {                                     // tropics: palms
+    if (decor === "tropics") {
       if (o.d < 0.6) drawPalm(cx + (o.d - 0.3) * o.w, top, 0.8 + o.d * 0.5);
-    } else if (idx <= 3) {                              // Carolinas/Virginia: dunes and pines
+    } else if (decor === "dunes") {
       if (o.d < 0.5) drawPine(cx + (o.d - 0.25) * o.w, top, 0.7 + o.d * 0.6);
       else if (o.d < 0.7) { ctx.fillStyle = "#d8c690"; ctx.beginPath(); ctx.ellipse(cx, top + 6, o.w * 0.5, 8, 0, 0, 7); ctx.fill(); }
-    } else if (idx <= 5) {                              // the Sounds: pine forest, odd cottage
+    } else if (decor === "sounds") {
       if (o.d < 0.55) { drawPine(cx - o.w * 0.2, top, 0.9); drawPine(cx + o.w * 0.25, top + 4, 0.7); }
       else if (o.d < 0.7) drawCottage(cx, top);
-    } else {                                            // Cape Cod: lighthouses on the rocks
+    } else {                                            // cape: lighthouses on the rocks
       if (o.d < 0.35) drawLighthouse(cx, top);
       else if (o.d < 0.7) drawPine(cx + (o.d - 0.5) * o.w, top, 0.75);
     }
@@ -778,7 +873,13 @@
     ctx.font = "13px serif"; ctx.fillStyle = "#f4e7c9";
     ctx.fillText("⚓", bx + bw * clamp(G.progress, 0, 1) - 6, by + bh + 14);
     text("MAINE", bx + bw + 26, by + 9, 10, "#cdeccf", "center", "bold");
-    text(stageFor(G.progress), W / 2, by + bh + 26, 11.5, "rgba(244,231,201,.85)", "center");
+    // small pips, one per mission, filled up to the current one
+    var nM = MISSIONS.length, pipW = bw / nM;
+    for (var pm = 0; pm < nM; pm++) {
+      ctx.fillStyle = pm <= (G.mIndex || 0) ? "rgba(224,178,92,.85)" : "rgba(244,231,201,.25)";
+      ctx.fillRect(bx + pm * pipW + 1, by + bh + 4, pipW - 2, 2);
+    }
+    text("M" + ((G.mIndex || 0) + 1) + " · " + missionName(), W / 2, by + bh + 26, 11.5, "rgba(244,231,201,.85)", "center");
   }
 
   // ==================================================================
@@ -810,8 +911,8 @@
   function advance() {
     G.seqIndex++;
     if (G.seqIndex >= G.seq.length) { endRun(true, false); return; }
-    G.progress = clamp(G.seqIndex / (G.seq.length - 1), 0, 1);
     var beat = G.seq[G.seqIndex];
+    G.mIndex = beat.m; G.mFrac = beat.mBeatCount > 1 ? beat.mBeatIdx / (beat.mBeatCount - 1) : 0; setProgress();
     G.curBeat = beat.kind + (beat.which ? ":" + beat.which : "") + (beat.ev ? ":" + beat.ev.id : "");
     if (beat.kind === "sail") setScene(SailScene());
     else if (beat.kind === "battle") setScene(BattleScene());
@@ -822,7 +923,38 @@
     else if (beat.kind === "fork") setScene(ForkScene());
     else if (beat.kind === "event") setScene(EventScene(beat.ev));
     else if (beat.kind === "mini") setScene(MiniScene(beat.which));
+    else if (beat.kind === "missionIntro") setScene(MissionIntroScene(beat.m));
+    // the following kinds get real scenes in later phases; a plain sail leg
+    // is a safe, playable stand-in until then so the campaign never breaks
+    else if (beat.kind === "port") setScene(typeof PortScene === "function" ? PortScene() : SailScene());
+    else if (beat.kind === "dive") setScene(typeof DiveScene === "function" ? DiveScene() : SailScene());
+    else if (beat.kind === "chase") setScene(typeof ChaseScene === "function" ? ChaseScene() : SailScene());
+    else if (beat.kind === "kraken") setScene(typeof KrakenScene === "function" ? KrakenScene() : SerpentScene());
+    else if (beat.kind === "palatine") setScene(typeof PalatineScene === "function" ? PalatineScene() : SailScene());
+    else if (beat.kind === "oldsow") setScene(typeof OldSowScene === "function" ? OldSowScene() : SailScene());
     else setScene(SailScene());
+  }
+
+  // ---------------------------------------------------------------- MISSION INTRO
+  function MissionIntroScene(mi) {
+    var msn = MISSIONS[mi], t = 0;
+    var name = (insane() && msn.nameInsane) ? msn.nameInsane : msn.name;
+    return {
+      enter: function () { document.body.classList.add("playing"); if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES); },
+      update: function (dt) { seaT += dt; t += dt; updateGulls(dt); if (t > 0.4 && consumeTap()) advance(); },
+      render: function () {
+        drawSea(G.pal, seaT * 30, false);
+        drawShip(W / 2, H * 0.72, 1.7, playerShipOpts());
+        drawParts(); drawHUD();
+        var w = clamp(W * 0.86, 290, 480), h = 214, cy = H * 0.4;
+        panel(W / 2, cy, w, h);
+        text("MISSION " + (mi + 1) + " OF " + MISSIONS.length, W / 2, cy - h / 2 + 26, 11, "#9fb6d6", "center", "bold");
+        text(name, W / 2, cy - h / 2 + 56, 24, "#e0b25c", "center", "bold");
+        var yy = wrapText(msn.sub, W / 2, cy - h / 2 + 84, w - 46, 20, 14, "#f4e7c9");
+        wrapText(msn.obj, W / 2, yy + 26, w - 60, 18, 13, "#cdeccf");
+        text("tap or press SPACE to begin", W / 2, cy + h / 2 - 14, 11.5, "rgba(244,231,201,.6)");
+      }
+    };
   }
 
   function Prompt(title, body, cb, tagline) {
@@ -973,11 +1105,11 @@
     var shore = G.route === "shore", sea = G.route === "sea";
     var objs = [], balls = [], spawnT = 1.2, fireGun = gunner();
     var sharkT = sea ? rand(4, 8) : (shore ? rand(9, 14) : rand(4, 9));
-    // Narrows are a Caribbean thing — the island passages of the Windward Passage
-    // and Florida Straits (the first legs). Further north it's open coast, no gaps.
-    var caribbean = Math.floor(clamp(G.progress, 0, 0.999) * STAGES.length) <= 1;
+    // Narrows only appear where the mission calls for them (the island maze,
+    // the fog-bound Carolina coast) — no longer a flat "early legs" heuristic.
+    var narrowsHere = mission().legMods.narrows;
     var narrowsLatest = legTime - (H + 220) / 105 - 0.5;   // wall crosses the ship line before the leg ends
-    var narrowsAt = (caribbean && narrowsLatest > 1 && chance(0.6)) ? rand(1, narrowsLatest) : -1;
+    var narrowsAt = (narrowsHere && narrowsLatest > 1 && chance(0.6)) ? rand(1, narrowsLatest) : -1;
     var narrowsDone = false;
     // never an empty leg: if no narrows rolled, a shark shows up early — and sometimes treasure
     if (narrowsAt < 0) sharkT = Math.min(sharkT, rand(1.5, legTime * 0.4));
@@ -1018,7 +1150,7 @@
           // reefs and rocks near the coast, drift ice up north, open ocean stays clear.
           spawnT = rand(1.0, 1.9) * hazMul * ease;
           var roll = Math.random(), o;
-          var north = Math.floor(clamp(G.progress, 0, 0.999) * STAGES.length) >= 3;
+          var north = mission().legMods.icy;
           var hazChance = sea ? 0.14 : (shore ? 0.34 : 0.24);
           if (roll < hazChance) {
             var hsub = north ? choice(["ice", "rock", "ice"]) : (shore ? "rock" : choice(["rock", "ice"]));
@@ -1171,7 +1303,7 @@
           text("NARROWS AHEAD — find the gap!", W / 2, H * 0.42, 16, "#ffd24a", "center", "bold");
           text("▼", ngx, Math.max(no.y + 74, 90), 20, "#ffd24a", "center", "bold");
         }
-        if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(stageFor(G.progress) + ". Coins feed the war chest. Shoot or dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(missionName() + ". Coins feed the war chest. Shoot or dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
       }
     };
   }
@@ -1716,6 +1848,9 @@
   // ---------------------------------------------------------------- STORM finale
   function StormScene() {
     var phase = "intro", prompt = null, chosen = false;
+    // the storm's own beat position within its mission, so progress moves
+    // continuously through it instead of jumping beat-to-beat
+    var beatInfo = G.seq[G.seqIndex] || { m: G.mIndex, mBeatIdx: 0, mBeatCount: 1 };
     var t = 0, survive = (rand(28, 34) - (G.mods.warned ? 4 : 0)) * diff().storm, objs = [], balls = [], spawnT = 0, lightning = 0, waveT = rand(2.5, 4), bigWave = null;
     var bolt = null, boltT = rand(3, 5);       // targeted lightning: a marked column, then the strike
     var gust = null, gustT = rand(5, 8);       // wind gusts that shove the ship sideways
@@ -1739,7 +1874,7 @@
         t += dt;
         G.stormT = clamp(t / survive, 0, 1);
         var fury = G.stormT;                   // the storm builds as it goes
-        G.progress = clamp(0.86 + 0.12 * fury, 0, 1);
+        G.mIndex = beatInfo.m; G.mFrac = clamp((beatInfo.mBeatIdx + fury) / beatInfo.mBeatCount, 0, 1); setProgress();
         helm(dt, 1, 0.4);
         G.shipX += Math.sin(t * 1.3) * 0.12 * dt;      // the sea itself works the wheel
         if (gust) {
@@ -2087,7 +2222,7 @@
   }
 
   // ---------------------------------------------------------------- boot / loop
-  function startRun() { newGame(); G.seqIndex = -1; advance(); }
+  function startRun(fromMission) { newGame(fromMission); G.seqIndex = -1; advance(); }
 
   var last = 0;
   function loop(ts) {
@@ -2120,19 +2255,21 @@
   // ---------------------------------------------------------------- debug API (inert unless the page sets __FS_DEBUG)
   if (window.__FS_DEBUG) {
     window.__fsAPI = {
-      state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), shipX: +Number(G.shipX || 0).toFixed(3), shipY: +Number(G.shipY || 0).toFixed(3), mode: G.mode, won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared } : null; },
-      start: function () { startRun(); },
+      state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), shipX: +Number(G.shipX || 0).toFixed(3), shipY: +Number(G.shipY || 0).toFixed(3), mode: G.mode, won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared } : null; },
+      start: function (fromMission) { startRun(fromMission); },
       skip: function () { advance(); },
       toStorm: function () { for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "storm") { G.seqIndex = i - 1; advance(); return; } },
       toBoss: function () { G.stormCleared = true; G.reachedStorm = true; for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "boss") { G.seqIndex = i - 1; advance(); return; } },
       toSquadron: function () { for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "squadron") { G.seqIndex = i - 1; advance(); return; } },
+      toMission: function (n) { for (var i = 0; i < G.seq.length; i++) if (G.seq[i].kind === "missionIntro" && G.seq[i].m === n) { G.seqIndex = i - 1; advance(); return; } },
+      missionState: function () { return { mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), name: missionName() }; },
       setRoute: function (r) { G.route = r; rerollEvents(r); },
       setMode: function (m) { if (DIFF[m]) { SAVE.mode = m; persist(); } return SAVE.mode; },
       unlock: function () { SAVE.extremeWon = true; persist(); },
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
-      newRun: function () { startRun(); },
-      buildSeq: function () { newGame(); return G.seq.map(function (b) { return b.kind + (b.ev ? ":" + b.ev.id : "") + (b.which ? ":" + b.which : ""); }); },
+      newRun: function (fromMission) { startRun(fromMission); },
+      buildSeq: function (fromMission) { newGame(fromMission); return G.seq.map(function (b) { return "m" + b.m + ":" + b.kind + (b.ev ? ":" + b.ev.id : "") + (b.which ? ":" + b.which : ""); }); },
       choose: function (i) { if (scene && scene.debugChoose) scene.debugChoose(i); },
       gold: function (n) { SAVE.bank += n; persist(); },
       buy: function (id) { var lvl = upgLvl(id); var u = null; for (var i = 0; i < UPG.length; i++) if (UPG[i].id === id) u = UPG[i]; if (!u || lvl >= u.max) return "no"; SAVE.bank -= u.cost[lvl]; SAVE.upg[id] = lvl + 1; persist(); return SAVE.upg[id]; },
