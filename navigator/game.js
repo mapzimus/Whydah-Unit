@@ -440,17 +440,17 @@
       sub: "Fog and Shoals",
       obj: "Mind the false lights. Follow the steady flame, not the flicker.",
       decor: "dunes", pal: null, legCount: 2, legMods: { hazChance: 0.26, sharkT: null, narrows: true, whirlpool: 0, fog: true, current: 0, night: false, waterspout: 0, icy: false, mooncusser: true },
-      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: null, battleTier: 1, routeVariant: true },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "mooncusser", battleTier: 1, routeVariant: true },
     { id: "virginia",    name: "Virginia Capes",        nameInsane: "Ohio (somehow)",
       sub: "The Squall",
       obj: "Weather the twisting wind. Hold your course.",
       decor: "dunes", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0.5, icy: true, mooncusser: false },
-      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: null, battleTier: 2, routeVariant: true },
+      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "sharknado", battleTier: 2, routeVariant: true },
     { id: "longisland",  name: "Long Island Sound",     nameInsane: "Sigma Sound",
       sub: "The Hunt",
       obj: "Privateers are working these waters. Sink them before they sink you.",
       decor: "sounds", pal: null, legCount: 1, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
-      slots: { event: [0, 1], mini: [0, 1], battle: 2 }, signature: null, battleTier: 2, routeVariant: true },
+      slots: { event: [0, 1], mini: [0, 1], battle: 2 }, signature: "flagship", battleTier: 2, routeVariant: true },
     { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "Fanum Straits",
       sub: "The Ghost Light",
       obj: "A light burns where no ship should be. Keep clear of it.",
@@ -1036,6 +1036,9 @@
     else if (beat.kind === "kraken") setScene(typeof KrakenScene === "function" ? KrakenScene() : SerpentScene());
     else if (beat.kind === "palatine") setScene(typeof PalatineScene === "function" ? PalatineScene() : SailScene());
     else if (beat.kind === "oldsow") setScene(typeof OldSowScene === "function" ? OldSowScene() : SailScene());
+    else if (beat.kind === "mooncusser") setScene(MooncusserScene());
+    else if (beat.kind === "sharknado") setScene(SharknadoScene());
+    else if (beat.kind === "flagship") setScene(FlagshipScene());
     else if (beat.kind === "hallett") setScene(EventScene(HALLETT_EVENT));
     else setScene(SailScene());
   }
@@ -2447,6 +2450,319 @@
     }
   }
 
+  // ==================================================================
+  // MISSION BOSSES (v8) — every leg of the coast now ends in a fight
+  // ==================================================================
+  // M4 Carolina — THE MOONCUSSER. A night-fog gauntlet: three narrows in a
+  // row, each with one steady true light and flickering wreckers' fires, while
+  // the mooncusser's shore battery throws shot from the dunes. Silence the
+  // battery (it can be shot) and the last wall comes clean.
+  function MooncusserScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], fireGun = gunner();
+    var walls = 0, WALLS = 3, wall = null, wallGapT = 1.4;
+    var batHp = Math.max(4, Math.round(6 * diff().hp)), batX = 0, batFireT = 2, batDead = false;
+    var done2 = false;
+    function nextWall() {
+      var w = { kind: "narrows", gap: rand(0.25, 0.75), gapW: clamp(W * 0.3, 130, 230), y: -90, sp: 118, r: 0 };
+      w.falseGap = clamp(w.gap + (chance(0.5) ? 1 : -1) * rand(0.25, 0.4), 0.1, 0.9);
+      if (walls === 2 && !batDead && chance(0.6)) w.falseGap2 = clamp(w.gap - (w.falseGap > w.gap ? 1 : -1) * rand(0.22, 0.35), 0.08, 0.92);
+      return w;
+    }
+    return {
+      debugWin: function () { walls = WALLS; wall = null; },
+      enter: function () {
+        G.pal = PALETTES[4];
+        batX = chance(0.5) ? W * 0.06 : W * 0.94;
+        prompt = Prompt("THE MOONCUSSER", "Wreckers work this shore — false lights swung on the dunes to walk ships onto the bar, and a stolen gun to finish the job. Three narrows between you and open water. The true light burns steady. Theirs flickers.", function () { phase = "fight"; }, "🌀 SEA YARN — BUT THE WRECKERS WERE REAL");
+      },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        // the shore battery: aimed shots from the dunes until it's silenced
+        if (!batDead) {
+          batFireT -= dt;
+          if (batFireT <= 0) {
+            batFireT = rand(2.2, 3.2) * diff().fire;
+            var bvx = clamp((px - batX) * 0.5, -170, 170);
+            balls.push({ x: batX, y: 26, vy: 230, vx: bvx, own: 0 });
+            SFX.fire(); smoke(batX, 30, 2);
+          }
+        }
+        // the gauntlet: one wall at a time, a breath between them
+        if (!wall) {
+          wallGapT -= dt;
+          if (wallGapT <= 0 && walls < WALLS) { wall = nextWall(); toast("NARROWS " + (walls + 1) + " OF " + WALLS); }
+        } else {
+          wall.y += wall.sp * dt;
+          var gx = wall.gap * W, half = wall.gapW / 2;
+          if (Math.abs(wall.y - py) < 34 && (px < gx - half + 12 || px > gx + half - 12)) {
+            splash(px, py, 12); damage(1); shake(14); wall = null; walls++; wallGapT = 1.6;
+          } else if (wall.y > H + 120) {
+            addScore(25); SFX.point(); wall = null; walls++; wallGapT = 1.6;
+          }
+        }
+        var mTargets = [];
+        if (!batDead) mTargets.push({ x: batX, y: 30, r: 26, onHit: function (b) {
+          batHp--; splash(b.x, b.y, 8, "#cdb98a"); SFX.hit();
+          if (batHp <= 0) { batDead = true; addScore(40); addGold(20); SFX.win(); shake(8); toast("THE BATTERY IS SILENCED! +40"); for (var k = 0; k < 16; k++) spawn(batX, 30, { vx: rand(-90, 90), vy: rand(-40, 90), g: 200, life: rand(0.5, 1), r: rand(2, 4), c: choice(["#ffcf6a", "#e08c6a", "#fff"]) }); }
+        } });
+        stepBalls(balls, dt, mTargets, { x: px, y: py, r: 18 });
+        if (walls >= WALLS && !wall && !done2) {
+          done2 = true; phase = "done"; addScore(60 + (batDead ? 0 : 0)); SFX.win();
+        }
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 55, false);
+        if (wall) drawNarrows(wall);
+        // the battery on the dunes
+        if (!batDead) {
+          ctx.save(); ctx.translate(batX, 30);
+          ctx.fillStyle = "#3a3630"; ctx.fillRect(-16, -8, 32, 14);
+          ctx.fillStyle = "#22201c"; ctx.fillRect(batX < W / 2 ? 8 : -22, -4, 14, 6);
+          var fl = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 13));
+          ctx.globalAlpha = fl; ctx.fillStyle = "#ff9a3a"; ctx.beginPath(); ctx.arc(0, -16, 4, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+          ctx.restore();
+          var bw2 = 60, bx2 = batX - bw2 / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(clamp(bx2, 4, W - bw2 - 4) - 2, 46, bw2 + 4, 8, 3); ctx.fill();
+          ctx.fillStyle = "#7a1f1f"; roundRect(clamp(bx2, 4, W - bw2 - 4), 48, bw2 * clamp(batHp / Math.max(4, Math.round(6 * diff().hp)), 0, 1), 4, 2); ctx.fill();
+        }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts();
+        // fog closes in around the lantern — the whole fight reads by its lights
+        var maskR = clamp(W * 0.3, 130, 210) * (1 + warnBonus() * 0.3);
+        var mg = ctx.createRadialGradient(G.shipX * W, shipYPx(), maskR * 0.3, G.shipX * W, shipYPx(), maskR);
+        mg.addColorStop(0, "rgba(8,12,18,0)"); mg.addColorStop(1, "rgba(8,12,18,.7)");
+        ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
+        drawHUD();
+        text("WALLS CLEARED " + walls + " / " + WALLS + (batDead ? "  ·  battery silenced" : ""), W / 2, H * 0.9, 12, "#cdeccf", "center", "bold");
+        if (wall && wall.y < H * 0.7) text("Follow the STEADY flame. Shoot the battery if you can.", W / 2, H * 0.42, 14, "#ffd24a", "center", "bold");
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.76, 250, 420); panel(W / 2, H / 2, w, 130); text("THROUGH THE FALSE LIGHTS", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text("+60 points" + (batDead ? "   (+40 for the battery)" : ""), W / 2, H / 2 + 6, 15, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 38, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // M5 Virginia Capes — THE SHARKNADO. A waterspout wandered over the wrong
+  // stretch of sea and now it's throwing sharks. Volleys are telegraphed with
+  // landing markers; airborne sharks are shootable for points. Shoot the eye
+  // of the column when it opens between volleys, or outlast its whole pass.
+  function SharknadoScene() {
+    var phase = "intro", prompt = null, t = 0, dur = 32, balls = [], fireGun = gunner();
+    var nadoX = W * 0.5, nadoDir = 1, nadoHp = Math.max(8, Math.round(12 * diff().hp)), nadoMax = nadoHp;
+    var volleyT = 2.2, marks = [], flungs = [], eyeOpen = 0;
+    return {
+      debugWin: function () { nadoHp = 0; phase = "done"; addScore(120); addGold(60); },
+      enter: function () {
+        prompt = Prompt("THE SHARKNADO", "A waterspout crossed the wrong shoal and picked up passengers. Nobody will believe the log entry. Dodge the marked splashes, shoot the sharks out of the air, and put shot into the eye when it opens.", function () { phase = "fight"; }, insane() ? "🤯 MULTIVERSE-ADJACENT, SOMEHOW REAL HERE" : "🌀 SEA YARN — THE TALLEST ONE IN THE BOOK");
+      },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -440).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        // the column wanders, and shoves anything that touches it
+        nadoX += nadoDir * 46 * dt;
+        if (nadoX < W * 0.18) nadoDir = 1;
+        if (nadoX > W * 0.82) nadoDir = -1;
+        if (chance(0.005)) nadoDir *= -1;
+        if (Math.abs(px - nadoX) < 46 && py < H * 0.95) { damage(1); shake(12); G.shipX = clamp(G.shipX + (px < nadoX ? -0.14 : 0.14), steerLo(), steerHi()); }
+        // volleys: marked landing points, then sharks on ballistic arcs
+        if (eyeOpen > 0) eyeOpen -= dt;
+        volleyT -= dt;
+        if (volleyT <= 0) {
+          volleyT = rand(3.2, 4.4) * diff().spit;
+          var n = 3 + (diff().spawn < 1 ? 0 : 1) + (chance(0.4) ? 1 : 0);
+          for (var v = 0; v < n; v++) {
+            var mx = clamp(px + rand(-W * 0.3, W * 0.3), W * 0.08, W * 0.92);
+            marks.push({ x: mx, y: clamp(py + rand(-60, 60), H * 0.55, H * 0.92), warn: 1.05 + warnBonus() * 0.3 + v * 0.14 });
+          }
+          eyeOpen = 1.6;   // between volleys the eye opens — that's your window
+          SFX.thunder();
+        }
+        for (var mi2 = marks.length - 1; mi2 >= 0; mi2--) {
+          var mk = marks[mi2]; mk.warn -= dt;
+          if (mk.warn <= 0) {
+            // launch a shark from the column top on an arc that lands on the mark
+            var fT = 0.8;
+            flungs.push({ x: nadoX, y: H * 0.18, vx: (mk.x - nadoX) / fT, vy: (mk.y - H * 0.18) / fT - 0.5 * 900 * fT, tx: mk.x, ty: mk.y, r: 18 });
+            marks.splice(mi2, 1); SFX.bad();
+          }
+        }
+        for (var fi = flungs.length - 1; fi >= 0; fi--) {
+          var f = flungs[fi];
+          f.vy += 900 * dt; f.x += f.vx * dt; f.y += f.vy * dt;
+          if (Math.hypot(f.x - px, f.y - py) < f.r + 15) { damage(1); splash(f.x, f.y, 10, "#9fb6c9"); flungs.splice(fi, 1); continue; }
+          if (f.y > f.ty + 24 && f.vy > 0) { splash(f.x, f.y, 8, "#9fb6c9"); flungs.splice(fi, 1); }
+        }
+        var nTargets = [];
+        flungs.forEach(function (f2) {
+          nTargets.push({ x: f2.x, y: f2.y, r: f2.r + 2, onHit: function () {
+            addScore(12); addGold(4); SFX.win(); splash(f2.x, f2.y, 12, "#9fb6c9"); coinBurst(f2.x, f2.y);
+            var idx = flungs.indexOf(f2); if (idx >= 0) flungs.splice(idx, 1);
+          } });
+        });
+        if (eyeOpen > 0) nTargets.push({ x: nadoX, y: H * 0.3, r: 30, onHit: function (b) {
+          nadoHp--; splash(b.x, b.y, 10, "#cfe9f2"); SFX.hit(); shake(4);
+          if (nadoHp <= 0) {
+            phase = "done"; addScore(120); addGold(60); SFX.win(); shake(16);
+            for (var k = 0; k < 40; k++) spawn(nadoX, H * 0.3, { vx: rand(-200, 200), vy: rand(-100, 240), g: 300, life: rand(0.6, 1.4), r: rand(2, 5), c: choice(["#cfe9f2", "#9fb6c9", "#fff"]) });
+          }
+        } });
+        stepBalls(balls, dt, nTargets);
+        if (t >= dur && phase === "fight") { phase = "done"; addScore(80); SFX.win(); toast("It spins itself out over the cape."); }
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 60, false);
+        // the column: stacked wobbling ellipses, sharks visible in the swirl
+        ctx.save();
+        for (var s2 = 0; s2 < 9; s2++) {
+          var sy = H * 0.16 + s2 * (H * 0.085), sw = 18 + s2 * 7;
+          var wob = Math.sin(seaT * 5 + s2 * 0.9) * (5 + s2 * 2);
+          ctx.fillStyle = "rgba(160,190,210," + (0.5 - s2 * 0.035) + ")";
+          ctx.beginPath(); ctx.ellipse(nadoX + wob, sy, sw, 12 + s2 * 1.6, 0, 0, 7); ctx.fill();
+        }
+        for (var sk = 0; sk < 3; sk++) {
+          var ang = seaT * (2.2 + sk * 0.4) + sk * 2.1;
+          ctx.save(); ctx.translate(nadoX + Math.cos(ang) * (26 + sk * 14), H * (0.28 + sk * 0.14) + Math.sin(ang) * 8);
+          ctx.scale(0.6, 0.6); ctx.rotate(Math.sin(ang) * 0.6);
+          drawShark(0, 0, Math.cos(ang) >= 0 ? 1 : -1); ctx.restore();
+        }
+        if (eyeOpen > 0 && phase === "fight") {
+          var ep = 0.5 + 0.5 * Math.sin(seaT * 10);
+          ctx.strokeStyle = "rgba(255,210,74," + ep + ")"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(nadoX, H * 0.3, 30, 0, 7); ctx.stroke();
+          text("THE EYE — FIRE!", nadoX, H * 0.3 - 44, 14, "#ffd24a", "center", "bold");
+        }
+        ctx.restore();
+        // landing marks
+        for (var mi3 = 0; mi3 < marks.length; mi3++) {
+          var mk2 = marks[mi3], mp = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 10));
+          ctx.strokeStyle = "rgba(255,138,122," + mp + ")"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(mk2.x, mk2.y, 20 + clamp(1 - mk2.warn, 0, 1) * 10, 0, 7); ctx.stroke();
+        }
+        for (var fi2 = 0; fi2 < flungs.length; fi2++) { var f3 = flungs[fi2]; ctx.save(); ctx.translate(f3.x, f3.y); ctx.rotate(Math.atan2(f3.vy, f3.vx) * 0.3); ctx.scale(0.85, 0.85); drawShark(0, 0, f3.vx >= 0 ? 1 : -1); ctx.restore(); }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase !== "intro") {
+          var bw = 150, bx = W / 2 - bw / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 46, bw + 4, 10, 4); ctx.fill();
+          ctx.fillStyle = "#5e8aa8"; roundRect(bx, 48, bw * clamp(nadoHp / nadoMax, 0, 1), 6, 3); ctx.fill();
+          text("THE SHARKNADO", W / 2, 70, 11, "#cdeccf", "center", "bold");
+        }
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.76, 250, 420); panel(W / 2, H / 2, w, 130); text(nadoHp <= 0 ? "THE COLUMN COLLAPSES!" : "IT BLOWS ITSELF OUT", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text(nadoHp <= 0 ? "+120 points   +60 gold" : "+80 points", W / 2, H / 2 + 6, 15, "#e0b25c", "center", "bold"); text("tap to sail on — and good luck with the log entry", W / 2, H / 2 + 38, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // M6 Long Island Sound — THE HUNTER'S FLAGSHIP. The privateers' paymaster:
+  // a man-of-war duel in three phases — aimed fire, then sweeping broadsides
+  // with one safe gap, then ramming runs down your column.
+  function FlagshipScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], fireGun = gunner();
+    var hp = Math.max(10, Math.round(16 * diff().hp)), max = hp;
+    var fx2 = W * 0.5, fdir = 1, fireT = 1.6, sweepT = 6, ram = null, ramT = 9;
+    var dmgBonus = consumeMod("drill") ? 1 : 0, loot = 0;
+    function stage() { return hp > max * 0.66 ? 1 : (hp > max * 0.33 ? 2 : 3); }
+    return {
+      debugWin: function () { hp = 0; phase = "done"; loot = 120; addScore(150); addGold(120); },
+      enter: function () { prompt = Prompt("THE HUNTER'S FLAGSHIP", "Every privateer in the Sound answers to her — a King's man-of-war flying a hunting pennant with the Whydah's name on it. Sink the paymaster and the hunt goes home.", function () { phase = "fight"; }, "⚓ THE HUNT WAS REAL"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 3); }
+        var st = stage();
+        // she works the top of the screen, faster as she's hurt
+        if (!ram) {
+          fx2 += fdir * (95 + st * 25) * dt;
+          if (fx2 < W * 0.15) fdir = 1;
+          if (fx2 > W * 0.85) fdir = -1;
+        }
+        // phase 1+: aimed fire (doubles at stage 2)
+        fireT -= dt;
+        if (fireT <= 0 && !ram) {
+          fireT = (st === 1 ? rand(1.1, 1.7) : rand(0.9, 1.4)) * diff().fire;
+          var aim = clamp((px - fx2) * 0.6, -160, 160);
+          balls.push({ x: fx2, y: H * 0.2 + 16, vy: 300, vx: aim, own: 0 });
+          if (st >= 2) balls.push({ x: fx2, y: H * 0.2 + 16, vy: 290, vx: aim + (chance(0.5) ? 70 : -70), own: 0 });
+          SFX.fire();
+        }
+        // phase 2+: the broadside sweep — a wall of shot with one gap
+        if (st >= 2 && !ram) {
+          sweepT -= dt;
+          if (sweepT <= 0) {
+            sweepT = rand(5.5, 7.5);
+            var gapAt = rand(0.2, 0.8);
+            for (var sw2 = 0.08; sw2 <= 0.92; sw2 += 0.08) {
+              if (Math.abs(sw2 - gapAt) < 0.09) continue;
+              balls.push({ x: sw2 * W, y: H * 0.2 + 10, vy: 250, own: 0 });
+            }
+            toast("BROADSIDE — find the gap!"); SFX.thunder();
+          }
+        }
+        // phase 3: ramming runs — she lines up on your column and charges
+        if (st >= 3) {
+          if (!ram) {
+            ramT -= dt;
+            if (ramT <= 0) { ram = { x: px, warn: 0.9 + warnBonus() * 0.3, y: H * 0.2, charging: false, back: false }; SFX.thunder(); }
+          } else {
+            if (!ram.charging && !ram.back) { ram.warn -= dt; ram.x = lerp(ram.x, px, 1.5 * dt); fx2 = lerp(fx2, ram.x, 4 * dt); if (ram.warn <= 0) ram.charging = true; }
+            else if (ram.charging) {
+              ram.y += 520 * dt; fx2 = ram.x;
+              if (Math.hypot(ram.x - px, ram.y - py) < 42) { damage(2); shake(16); splash(px, py, 14); ram.charging = false; ram.back = true; }
+              if (ram.y > H + 60) { ram.charging = false; ram.back = true; }
+            } else {
+              ram.y -= 380 * dt;
+              if (ram.y <= H * 0.2) { ram = null; ramT = rand(7, 10); }
+            }
+          }
+        }
+        var shipY2 = ram ? ram.y : H * 0.2;
+        stepBalls(balls, dt, [{ x: fx2, y: shipY2, r: 24, onHit: function (b) {
+          var doubled = chance(shotBonus());
+          if (doubled) toast("⛓ Chain shot strikes double!");
+          hp -= 1 + dmgBonus + (doubled ? 1 : 0);
+          splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+          if (hp <= 0) {
+            phase = "done"; loot = randInt(90, 140); addGold(loot); addScore(150); G.shipsBeaten++; SFX.win(); shake(14);
+            for (var k = 0; k < 30; k++) spawn(fx2, shipY2, { vx: rand(-140, 140), vy: rand(-180, 60), g: 260, life: rand(0.6, 1.3), r: rand(2, 5), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
+          }
+        } }], { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 50, false);
+        var st = stage();
+        if (phase !== "intro") {
+          var bw = 170, bx = W / 2 - bw / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#2f3a4a"; roundRect(bx, 8, bw * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
+          text("THE HUNTER'S FLAGSHIP" + (st > 1 ? "  ·  she's angry" : ""), W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        if (ram && !ram.charging && !ram.back) {
+          var rp = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 11));
+          ctx.globalAlpha = rp * 0.4; ctx.fillStyle = "#ff8a7a"; ctx.fillRect(ram.x - 26, 0, 52, H); ctx.globalAlpha = 1;
+          text("SHE'S CHARGING — MOVE!", ram.x, H * 0.42, 15, "#ff8a7a", "center", "bold");
+        }
+        drawShip(fx2, ram ? ram.y : H * 0.2, 2.0, { rot: Math.PI, flag: "#e8e8f0", hull: "#2f3a4a", deck: "#48586e", sail: "#f5f2ea", dmg: max - hp });
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.76, 250, 420); panel(W / 2, H / 2, w, 132); text("THE PAYMASTER GOES DOWN", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text("+150 points   +" + loot + " gold — the hunt goes home", W / 2, H / 2 + 6, 14, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 40, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
   // ---------------------------------------------------------------- NAV MINI-GAMES
   function MiniScene(kind) {
     if (kind === "backstaff") return Backstaff();
