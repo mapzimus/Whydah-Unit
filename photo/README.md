@@ -9,7 +9,7 @@ site (different audience) and is not linked from the main dashboard.
 | Page | URL | Purpose |
 |------|-----|---------|
 | `index.html` | `/photo` | Landing page linking the three tools below. |
-| `map.html` | `/photo/map.html` | Salem photo-walk map (Leaflet + OpenStreetMap) with a shot idea per stop. Edit the `STOPS` array near the top of the file to change stops. Falls back to a plain list + Google Maps links if the map can't load on school WiFi. |
+| `map.html` | `/photo/map.html` | The **Salem Photography Walks** scouting map — 17 walkable shooting spots around Collins Middle School, color-coded by category (nature / historic / urban / train), each with a walking time from the school, plus a true 5/10/15-minute pedestrian walk-shed and the commuter rail line. Draggable pins, GeoJSON export, and print. This is a copy of the canonical map in the `maxwellhowegis` repo (`salem-photo-walk/index.html`); edit the `SPOTS` array near the top to change locations, and re-copy here if you update the master. Uses Leaflet + Tabler Icons + CARTO/Esri/OSM tiles from CDNs (the one part of `/photo` that depends on outside hosts). |
 | `claim.html` | `/photo/claim.html` | **Camera photo pickup.** Teacher uploads a batch of photos from the shared digital cameras (via the "Teacher" panel at the bottom); students find their shots, tap **Claim** to put their name on one, then **Download** to their Chromebook. Students can also download all their claimed photos as a `.zip`. |
 | `gallery.html` | `/photo/gallery.html` | **Student galleries.** A student uploads phone photos into a gallery they create, then opens the gallery on their Chromebook and downloads everything (individually or as a `.zip`) to edit. |
 
