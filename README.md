@@ -8,7 +8,8 @@ Built for **LEAP4Ed's Summer 2026 middle school program** in Salem, Massachusett
 
 The class site is live at **[whydahstory.com](https://whydahstory.com)** (hosted on GitHub Pages). During the domain move it is also mirrored at **[maxwellhowegis.com/whydah](https://maxwellhowegis.com/whydah)** so the old link keeps working.
 
-- **[whydah-dashboard.html](./whydah-dashboard.html)** — the main hub: the story, the people, maps and navigation, the wreck, the final project, and a teacher-only Captain's Cabin (password-gated).
+- **[index.html](./index.html)** — the evergreen public landing page for the story, curriculum, and games.
+- **[unit/](./unit/)** — the working hub: the story, the people, maps and navigation, the wreck, the final project, and a teacher-only Captain's Cabin (password-gated). `whydah-dashboard.html` remains as a compatibility URL.
 - **Daily student pages** — each class day has its own `dayN.html` missions page, reached from the red TODAY banner on the dashboard. The banner is date-driven (`day-config.js`) and flips itself at midnight Eastern.
 - **Games** — `navigator/` (First Sail, a voyage game) and `black-sam/` (a choose-your-own-adventure). See [navigator/README.md](./navigator/README.md).
 - **[unit-at-a-glance.html](./unit-at-a-glance.html)** — a one-page, print-ready summary (driving question, five-week arc, standards, and access) suited to handing out at a meeting.

@@ -39,3 +39,7 @@
 # Photography unit (whole folder is public)
 !photo/
 !photo/**
+
+# Stable route for the live unit dashboard
+!unit/
+!unit/**
