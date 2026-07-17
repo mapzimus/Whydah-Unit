@@ -1,26 +1,15 @@
 /*
- * Black Sam & the Whydah — the Hall of Fame (local scoreboard)
+ * Captain Bellamy — Hall of Fame (local scoreboard)
  *
- * Fully self-contained: every completed voyage is scored and stored in
- * localStorage, so the leaderboard works offline on GitHub Pages with no
- * backend. window.SCOREBOARD exposes the scoring + storage logic and a
- * renderer for the board body; the engine owns the buttons and the
- * end-of-run score panel.
- *
- * The "Legend Score" rewards a rich, skilful, adventurous run:
- *   Fortune  — final Plunder + Crew + Renown (×100 each)
- *   Skill    — how well you played the mini-games you attempted
- *   Fate     — the ending you reached (rarer/harder endings score higher)
- *   Discovery— +200 for every DISTINCT ending you've ever reached
+ * Legend Score = Fortune + Skill + Fate + Discovery
  */
 (function () {
   "use strict";
 
-  var KEY = "blacksam.board.v1";
+  var KEY = "blacksam.board.v2";
   var MAX_RUNS = 12;
   var TOTAL_ENDINGS = 10;
 
-  // Point value per ending — the hidden/hard/legendary ones are worth most.
   var ENDING_VALUES = {
     ending_pilot: 1200,
     ending_legend: 1000,
@@ -29,13 +18,24 @@
     ending_wreck: 500,
     ending_gallows: 450,
     ending_mutiny: 400,
-    ending_pardon: 350,
-    ending_farmer: 250,
-    ending_honest: 250
+    ending_sunk: 380,
+    ending_starve: 350,
+    ending_farmer: 250
   };
 
-  // Weight applied to each mini-game's raw score in state.scores[name].
-  // (helm is 0–100, so it gets a small multiplier; the rest are small counts.)
+  var ENDING_BADGES = {
+    ending_pilot: "Master Pilot",
+    ending_legend: "Legend",
+    ending_survivor: "Survivor",
+    ending_caribbean: "Caribbean King",
+    ending_wreck: "Shipwreck",
+    ending_gallows: "Caught",
+    ending_mutiny: "Mutiny",
+    ending_sunk: "Lost Ship",
+    ending_starve: "Starved Out",
+    ending_farmer: "Quiet Life"
+  };
+
   var SKILL_WEIGHTS = {
     dig: 40, duel: 60, cannon: 60, helm: 3,
     dice: 12, knots: 45, lookout: 45, goatchase: 40
@@ -60,8 +60,14 @@
   }
 
   function endingBadge(id) {
-    var sc = window.STORY && window.STORY.scenes[id];
-    return (sc && sc.badge) || "Unknown Fate";
+    if (ENDING_BADGES[id]) return ENDING_BADGES[id];
+    var ends = window.CAMPAIGN && window.CAMPAIGN.endings;
+    if (ends) {
+      for (var k in ends) {
+        if (ends[k] && ends[k].id === id) return ends[k].badge || id;
+      }
+    }
+    return "Unknown Fate";
   }
 
   function computeScore(state, endingId) {
@@ -75,7 +81,6 @@
       }
     }
     var fate = ENDING_VALUES[endingId] || 300;
-    // Discovery counts this ending too, so a brand-new ending pays off now.
     var board = loadBoard();
     var discovered = {};
     for (var k in board.endings) discovered[k] = true;
@@ -93,7 +98,6 @@
     return String(Date.now()) + "-" + Math.floor(Math.random() * 1e6);
   }
 
-  // Record a finished run. Returns { entry, rank, totalRuns, score, board }.
   function recordRun(state, endingId, endingTitle, name) {
     var board = loadBoard();
     var sc = computeScore(state, endingId);
@@ -123,7 +127,6 @@
     return { entry: entry, rank: rank, totalRuns: board.runs.length, score: sc, board: board };
   }
 
-  // Live-rename a recorded entry (from the ending's name field).
   function updateEntryName(id, name) {
     var board = loadBoard();
     var clean = (name || "Black Sam").slice(0, 24);
@@ -147,7 +150,6 @@
   }
   function num(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
-  // Build the score panel shown on the ending screen (HTML string).
   function scorePanelHtml(scoreObj, rank, totalRuns) {
     var rankLine = rank === 1
       ? "A new personal best — your greatest voyage yet!"
@@ -165,14 +167,11 @@
     '</div>';
   }
 
-  // Render the full Hall of Fame body into a container.
   function renderInto(container) {
     if (!container) return;
     var board = loadBoard();
     var html = "";
 
-    // Best-score callout — the single greatest voyage ever logged.
-    // (Runs are stored sorted by score, but scan anyway to be safe.)
     if (board.runs.length) {
       var best = board.runs[0];
       for (var b = 1; b < board.runs.length; b++) {
@@ -185,7 +184,6 @@
       '</div>';
     }
 
-    // Endings collection tracker.
     var ids = Object.keys(ENDING_VALUES).sort(function (a, b) { return ENDING_VALUES[b] - ENDING_VALUES[a]; });
     var found = ids.filter(function (id) { return board.endings[id]; }).length;
     html += '<div class="board-collection">' +
@@ -200,26 +198,21 @@
     });
     html += '</div></div>';
 
-    // Leaderboard.
     html += '<p class="board-section-title">Greatest Voyages</p>';
     if (!board.runs.length) {
-      html += '<p class="board-empty">No voyages logged yet. Set sail and make history.</p>';
+      html += '<p class="board-empty">No voyages logged yet. Take command and make history.</p>';
     } else {
       var medals = ["🥇", "🥈", "🥉"];
       html += '<ol class="board-list">';
       board.runs.forEach(function (r, i) {
         var rankLabel = i < 3 ? medals[i] : (i + 1);
-        // Second line under the captain's name: that run's final stats.
-        // Older saved entries may predate the stats field — render nothing
-        // for them rather than a row of misleading zeroes.
         var st = r.stats;
         var statLine = st
           ? '<span style="display:block;font-size:0.76em;font-weight:normal;opacity:0.65;margin-top:1px;">' +
-              num(st.gold || 0) + ' plunder &middot; ' +
-              num(st.crew || 0) + ' crew &middot; ' +
+              num(st.gold || 0) + ' gold &middot; ' +
+              num(st.crew || 0) + ' crew mood &middot; ' +
               num(st.renown || 0) + ' renown</span>'
           : "";
-        // Tooltip: how the Legend Score broke down for this voyage.
         var p = r.parts;
         var tip = p
           ? "Fortune " + num(p.fortune || 0) + " + Skill " + num(p.skill || 0) +
