@@ -434,14 +434,14 @@
     { id: "googoo",     w: 1, tag: "multi", ins: true, t: "The parrot regresses", b: "The ship's parrot, a decorated veteran of four voyages, abruptly switches to baby talk. 'Googoo gaga,' it announces, with the confidence of an admiral. The crew salutes.", fx: { s: 15 } },
     { id: "talltales",  w: 2, tag: "multi", ins: true, t: "Tall tales about the captain", b: "The crew starts a game: the captain once rowed to Maine in one night. The captain counted every fish in the sea, twice. The captain's stare becalms storms. Points for the best one.", fx: { s: 25 } },
     // legends and myths, mission-weighted via m: so they surface near where they belong
-    { id: "davyjones", w: 2, tag: "yarn",   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
-    { id: "fiddlers",  w: 2, tag: "yarn",   m: "rhodeisland", t: "Fiddler's Green", b: "Fiddler's Green, the old hands call it — the far shore where the rum never runs dry and the fiddler never stops playing. You have to drown to get there, though. Mixed review.", fx: { s: 12 } },
+    { id: "davyjones", w: 2, tag: "yarn", ins: true,   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
+    { id: "fiddlers",  w: 2, tag: "yarn", ins: true,   m: "rhodeisland", t: "Fiddler's Green", b: "Fiddler's Green, the old hands call it — the far shore where the rum never runs dry and the fiddler never stops playing. You have to drown to get there, though. Mixed review.", fx: { s: 12 } },
     { id: "jonah",     w: 2, tag: "",       m: "rhodeisland", t: "A Jonah aboard", b: "A hand swears somebody's bad luck is following the ship. A Jonah, sailors call it — a man who curses a voyage just by being on it.", choice: [
         { l: "Keep him aboard", r: "He stays. The crew mutters, but he's a fine hand with a gun.", fx: { s: -15 } },
         { l: "Set him ashore (10 gold)", r: "You pay him off at the next landing. The crew breathes easier.", fx: { g: -10, s: 10 } } ] },
-    { id: "klabauter", w: 2, tag: "yarn",   m: "virginia", t: "The Klabautermann", b: "The ship's klabautermann only shows himself when she's doomed, the old hands say. Something small and quick just ducked behind a barrel.", fx: { s: -5 } },
-    { id: "selkie",    w: 2, tag: "yarn",   m: "gulfstream", t: "A seal with a person's eyes", b: "A seal surfaces close alongside and watches the ship pass, eyes too knowing for a seal's. The new hand swears it sang.", fx: { s: 15 } },
-    { id: "aspido",    w: 2, tag: "yarn",   m: "windward", t: "The island that swam away", b: "The reef you anchored by last night is gone this morning — the whole island, swum off in the dark. Some islands, the old charts warn, are not islands at all.", fx: { s: 15 } },
+    { id: "klabauter", w: 2, tag: "yarn", ins: true,   m: "virginia", t: "The Klabautermann", b: "The ship's klabautermann only shows himself when she's doomed, the old hands say. Something small and quick just ducked behind a barrel.", fx: { s: -5 } },
+    { id: "selkie",    w: 2, tag: "yarn", ins: true,   m: "gulfstream", t: "A seal with a person's eyes", b: "A seal surfaces close alongside and watches the ship pass, eyes too knowing for a seal's. The new hand swears it sang.", fx: { s: 15 } },
+    { id: "aspido",    w: 2, tag: "yarn", ins: true,   m: "windward", t: "The island that swam away", b: "The reef you anchored by last night is gone this morning — the whole island, swum off in the dark. Some islands, the old charts warn, are not islands at all.", fx: { s: 15 } },
     { id: "blackbeard",w: 2, tag: "record", m: "carolina", t: "Tavern talk of Blackbeard", b: "Talk in the tavern is all Edward Thatch — Blackbeard, they're calling him now. Fought these same waters not long before you came through.", fx: { s: 10, g: 5 } },
     { id: "bonnyread", w: 2, tag: "record", t: "Word of Bonny and Read", b: "Word reaches the ship of two more gone on the account — dressed as men, fighting harder than most of the crew. Anne Bonny and Mary Read, the talk says.", fx: { s: 15 } },
     { id: "oldsowlore",w: 2, tag: "record", m: "capecod", t: "An old dory man's warning", b: "An old dory man at the dock warns you: past Eastport the sea turns on itself, wide enough to swallow a sloop whole. Row wide of it, he says. Row wide.", fx: { s: 10 } },
@@ -474,9 +474,10 @@
       signature: "chase", battleTier: 0, routeVariant: false, prologue: true },
     { id: "windward",    name: "Windward Passage",      nameInsane: "The Rubber Duck Shallows",
       sub: "The Island Maze",
-      obj: "Thread the channels. Something moves below.",
+      obj: "Thread the channels. A bounty sloop hunts the maze.",
+      objInsane: "Thread the channels. Something moves below.",
       decor: "tropics", pal: null, legCount: 2, legMods: { hazChance: 0.24, sharkT: null, narrows: true, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0, icy: false, mooncusser: false },
-      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "kraken", battleTier: 1, routeVariant: false },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "sloopboss", sigInsane: "kraken", battleTier: 1, routeVariant: false },
     { id: "gulfstream",  name: "Florida Straits",       nameInsane: "The Soup Current",
       sub: "The Gulf Stream",
       obj: "Ride the current north. Choose your water.",
@@ -489,9 +490,10 @@
       slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "mooncusser", battleTier: 1, routeVariant: true },
     { id: "virginia",    name: "Virginia Capes",        nameInsane: "The Sideways Squall",
       sub: "The Squall",
-      obj: "Weather the twisting wind. Hold your course.",
+      obj: "Weather the twisting wind. A powder brig bars the capes.",
+      objInsane: "Weather the twisting wind. The forecast says sharks.",
       decor: "dunes", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0.5, icy: true, mooncusser: false },
-      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "sharknado", battleTier: 2, routeVariant: true },
+      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "brigboss", sigInsane: "sharknado", battleTier: 2, routeVariant: true },
     { id: "longisland",  name: "Long Island Sound",     nameInsane: "Duckling Sound",
       sub: "The Hunt",
       obj: "Privateers are working these waters. Sink them before they sink you.",
@@ -504,9 +506,21 @@
       slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "palatine", battleTier: 3, routeVariant: false },
     { id: "capecod",     name: "Cape Cod",              nameInsane: "Cape Absurdity",
       sub: "Hallett's Curse",
-      obj: "The last landfall before the run to Maine.",
+      obj: "The King's ships bar the last passage north.",
+      objInsane: "The last landfall before the run to Maine. Something wants to play.",
       decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
-      slots: { event: [0, 1], mini: [0, 0], battle: 0 }, signature: "serpent", battleTier: 3, routeVariant: false },
+      slots: { event: [0, 1], mini: [0, 0], battle: 0 }, signature: "blockade", sigInsane: "serpent", battleTier: 3, routeVariant: false },
+    // the multiverse runs longer than history: two mythic legs exist only in INSANE
+    { id: "locker",      name: "The Locker",            nameInsane: "Davy Jones' Locker", insaneOnly: true,
+      sub: "Below everything",
+      obj: "The sea keeps what it takes. Sail through the keeper's yard.",
+      decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.26, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: true, waterspout: 0, icy: false, mooncusser: false },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "davyjones", battleTier: 3, routeVariant: false },
+    { id: "poseidon",    name: "Poseidon's Domain",     nameInsane: "Poseidon's Domain", insaneOnly: true,
+      sub: "The old god has noticed you",
+      obj: "Nobody sails through his water without paying the toll.",
+      decor: "none", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.6, fog: false, current: 0.4, night: false, waterspout: 0.6, icy: false, mooncusser: false },
+      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "poseidon", battleTier: 3, routeVariant: false },
     { id: "noreaster",   name: "The Nor'easter",        nameInsane: "The Chaos Vortex",
       sub: "April 26, 1717",
       obj: "The wolf pack, the storm, and whatever waits past it.",
@@ -515,7 +529,9 @@
   ];
   function mission() { return MISSIONS[clamp(G ? G.mIndex : 0, 0, MISSIONS.length - 1)]; }
   function missionName() { var m = mission(); return (insane() && m.nameInsane) ? m.nameInsane : m.name; }
-  function setProgress() { G.progress = clamp((G.mIndex + G.mFrac) / MISSIONS.length, 0, 1); }
+  function runPos() { var i = G.runMissions ? G.runMissions.indexOf(G.mIndex) : -1; return i >= 0 ? i : G.mIndex; }
+  function runCount() { return (G.runMissions && G.runMissions.length) || MISSIONS.length; }
+  function setProgress() { G.progress = clamp((runPos() + G.mFrac) / runCount(), 0, 1); }
 
   // ---------------------------------------------------------------- palettes
   var PALETTES = [
@@ -604,7 +620,15 @@
     // then the mission's signature beat, then a port call before the next.
     var usedEventIds = [];
     G.seq = [];
-    for (var mi = startM; mi < MISSIONS.length; mi++) {
+    // the run's mission list: INSANE sails the whole multiverse (extra mythic
+    // legs included); every other mode sails only the historical ladder
+    G.runMissions = [];
+    for (var rm = 0; rm < MISSIONS.length; rm++) {
+      if (MISSIONS[rm].insaneOnly && runMode !== "insane") continue;
+      if (rm >= startM) G.runMissions.push(rm);
+    }
+    for (var ri = 0; ri < G.runMissions.length; ri++) {
+      var mi = G.runMissions[ri];
       var msn = MISSIONS[mi];
       G.seq.push({ kind: "missionIntro", m: mi });
 
@@ -643,16 +667,17 @@
       // random pool, right before Cape Cod's serpent encounter
       if (msn.id === "capecod") G.seq.push({ kind: "hallett", m: mi });
 
-      if (msn.signature === "finale") {
+      var sig = (runMode === "insane" && msn.sigInsane) ? msn.sigInsane : msn.signature;
+      if (sig === "finale") {
         G.seq.push({ kind: "squadron", m: mi });
         G.seq.push({ kind: "storm", m: mi });
         G.seq.push({ kind: "boss", m: mi });
         G.seq.push({ kind: "oldsow", m: mi });   // the great whirlpool guarding the harbor mouth, after the boss
-      } else if (msn.signature) {
-        G.seq.push({ kind: msn.signature, m: mi });
+      } else if (sig) {
+        G.seq.push({ kind: sig, m: mi });
       }
 
-      if (mi < MISSIONS.length - 1) G.seq.push({ kind: "port", m: mi });
+      if (ri < G.runMissions.length - 1) G.seq.push({ kind: "port", m: mi });
     }
     stampMissionBeats();
   }
@@ -999,13 +1024,13 @@
     ctx.font = "13px serif"; ctx.fillStyle = "#f4e7c9";
     ctx.fillText("⚓", bx + bw * clamp(G.progress, 0, 1) - 6, by + bh + 14);
     text("MAINE", bx + bw + 26, by + 9, 10, "#cdeccf", "center", "bold");
-    // small pips, one per mission, filled up to the current one
-    var nM = MISSIONS.length, pipW = bw / nM;
+    // small pips, one per mission in THIS run, filled up to the current one
+    var nM = runCount(), pipW = bw / nM, curPos = runPos();
     for (var pm = 0; pm < nM; pm++) {
-      ctx.fillStyle = pm <= (G.mIndex || 0) ? "rgba(224,178,92,.85)" : "rgba(244,231,201,.25)";
+      ctx.fillStyle = pm <= curPos ? "rgba(224,178,92,.85)" : "rgba(244,231,201,.25)";
       ctx.fillRect(bx + pm * pipW + 1, by + bh + 4, pipW - 2, 2);
     }
-    text("M" + ((G.mIndex || 0) + 1) + " · " + missionName(), W / 2, by + bh + 26, 11.5, "rgba(244,231,201,.85)", "center");
+    text("M" + (curPos + 1) + " · " + missionName(), W / 2, by + bh + 26, 11.5, "rgba(244,231,201,.85)", "center");
   }
 
   // ==================================================================
@@ -1095,6 +1120,11 @@
     else if (beat.kind === "sharknado") setScene(SharknadoScene());
     else if (beat.kind === "flagship") setScene(FlagshipScene());
     else if (beat.kind === "merchant") setScene(MerchantScene());
+    else if (beat.kind === "sloopboss") setScene(SloopBossScene());
+    else if (beat.kind === "brigboss") setScene(BrigBossScene());
+    else if (beat.kind === "blockade") setScene(BlockadeScene());
+    else if (beat.kind === "davyjones") setScene(DavyJonesScene());
+    else if (beat.kind === "poseidon") setScene(PoseidonScene());
     else if (beat.kind === "hallett") setScene(EventScene(HALLETT_EVENT));
     else setScene(SailScene());
   }
@@ -1118,10 +1148,11 @@
         drawParts(); drawHUD();
         var w = clamp(W * 0.86, 290, 480), h = 214, cy = H * 0.4;
         panel(W / 2, cy, w, h);
-        text("MISSION " + (mi + 1) + " OF " + MISSIONS.length, W / 2, cy - h / 2 + 26, 11, "#9fb6d6", "center", "bold");
+        var pos2 = G.runMissions ? G.runMissions.indexOf(mi) : mi;
+        text("MISSION " + ((pos2 >= 0 ? pos2 : mi) + 1) + " OF " + runCount(), W / 2, cy - h / 2 + 26, 11, "#9fb6d6", "center", "bold");
         text(name, W / 2, cy - h / 2 + 56, 24, "#e0b25c", "center", "bold");
         var yy = wrapText(msn.sub, W / 2, cy - h / 2 + 84, w - 46, 20, 14, "#f4e7c9");
-        wrapText(msn.obj, W / 2, yy + 26, w - 60, 18, 13, "#cdeccf");
+        wrapText((insane() && msn.objInsane) ? msn.objInsane : msn.obj, W / 2, yy + 26, w - 60, 18, 13, "#cdeccf");
         text("tap or press SPACE to begin", W / 2, cy + h / 2 - 14, 11.5, "rgba(244,231,201,.6)");
       }
     };
@@ -1197,9 +1228,14 @@
         var canResume = curMode > 2;
         var resumeY = my - 80;
         if (canResume) {
-          var resumeMsn = MISSIONS[clamp(curMode, 0, MISSIONS.length - 1)];
+          // outside INSANE the mythic-only legs don't exist: land the resume on
+          // the next real mission, and number it by its place in THIS mode's run
+          var resumeIdx = clamp(curMode, 0, MISSIONS.length - 1);
+          if (!insane()) while (resumeIdx < MISSIONS.length - 1 && MISSIONS[resumeIdx].insaneOnly) resumeIdx++;
+          var resumeMsn = MISSIONS[resumeIdx], dispN = 0;
+          for (var rq = 0; rq <= resumeIdx; rq++) if (insane() || !MISSIONS[rq].insaneOnly) dispN++;
           var rName = (insane() && resumeMsn.nameInsane) ? resumeMsn.nameInsane : resumeMsn.name;
-          if (uiButton(W / 2 - bw - 10, resumeY, bw * 2 + 20, 32, "↪ RESUME — M" + (curMode + 1) + " " + rName, { size: 12.5, color: "#6a3f9e" })) { startRun(curMode); }
+          if (uiButton(W / 2 - bw - 10, resumeY, bw * 2 + 20, 32, "↪ RESUME — M" + dispN + " " + rName, { size: 12.5, color: "#6a3f9e" })) { startRun(resumeIdx); }
         }
         if (SAVE.prologueDone) {
           var toggleLbl = (skipPrologue ? "☑" : "☐") + " skip the prologue (+160 pts)";
@@ -1408,7 +1444,7 @@
           }
         }
         // the island that swims: drift close while it passes and it counts
-        if (!turtleDone && t >= turtleAt) { turtleDone = true; toast("Something vast, and slow, swims off."); }
+        if (!turtleDone && insane() && t >= turtleAt) { turtleDone = true; toast("Something vast, and slow, swims off."); }
         if (turtleDone && turtleT < 7) {
           turtleT += dt;
           var tx = W * (0.5 - turtleT * 0.09), ty = H * 0.28;
@@ -3235,6 +3271,503 @@
         h.seg[i].y = lerp(h.seg[i].y, h.seg[i - 1].y + 15, clamp(12 * dt, 0, 1));
       }
     }
+  }
+
+  // ==================================================================
+  // THE SHIP-BOSS LADDER (v9) — the main game's bosses are all real-world
+  // fights that get harder as the voyage runs north: bounty sloop (M2) →
+  // the Mooncusser (M4) → powder brig in the squalls (M5) → the Hunter's
+  // Flagship (M6) → the King's Blockade (M8). The myths that used to sit
+  // in these slots live in INSANE now.
+  // ==================================================================
+  // M2 — THE BOUNTY SLOOP. The first real fight: fast, light, aimed fire,
+  // and a telegraphed raking dash across your row. Learn to lead a target.
+  function SloopBossScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], fireGun = gunner();
+    var hp = Math.max(5, Math.round(8 * diff().hp)), max = hp;
+    var sx2 = W * 0.5, sdir = 1, fireT = 1.6, dash = null, dashT = 8;
+    var loot = 0;
+    return {
+      debugWin: function () { hp = 0; phase = "done"; loot = 50; addScore(80); addGold(50); feat("sloopboss"); },
+      enter: function () { prompt = Prompt("THE BOUNTY SLOOP", "There is a price on every hand aboard, and this sloop means to collect the easy way — from a distance, with nine-pounders. She is faster than you. Be smarter than her.", function () { phase = "fight"; }, "⚓ THE BOUNTIES WERE REAL"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        if (!dash) {
+          sx2 += sdir * 150 * dt;
+          if (sx2 < W * 0.12) sdir = 1;
+          if (sx2 > W * 0.88) sdir = -1;
+          if (chance(0.006)) sdir *= -1;
+          fireT -= dt;
+          if (fireT <= 0) {
+            fireT = rand(1.3, 1.9) * diff().fire;
+            balls.push({ x: sx2, y: H * 0.18 + 14, vy: 290, vx: clamp((px - sx2) * 0.55, -150, 150), own: 0 });
+            SFX.fire();
+          }
+          dashT -= dt;
+          if (dashT <= 0) dash = { warn: 0.9 + warnBonus() * 0.3, y: py, from: sx2 < W / 2 ? -60 : W + 60, x: 0, going: false };
+        } else {
+          if (!dash.going) { dash.warn -= dt; dash.y = lerp(dash.y, py, 1.2 * dt); if (dash.warn <= 0) { dash.going = true; dash.x = dash.from; SFX.thunder(); } }
+          else {
+            var dvx = dash.from < 0 ? 560 : -560;
+            dash.x += dvx * dt;
+            if (Math.abs(dash.x - px) < 34 && Math.abs(dash.y - py) < 30) { damage(1); shake(12); splash(px, py, 10); }
+            if (dash.x < -80 || dash.x > W + 80) { dash = null; dashT = rand(7, 10); sx2 = clamp(dash ? sx2 : rand(0.2, 0.8) * W, W * 0.12, W * 0.88); }
+          }
+        }
+        var tx = dash && dash.going ? dash.x : sx2, ty = dash && dash.going ? dash.y : H * 0.18;
+        stepBalls(balls, dt, [{ x: tx, y: ty, r: 20, onHit: function (b) {
+          hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+          if (hp <= 0) {
+            phase = "done"; loot = randInt(40, 60); addGold(loot); addScore(80); G.shipsBeaten++; SFX.win(); shake(10); feat("sloopboss");
+            for (var k = 0; k < 22; k++) spawn(tx, ty, { vx: rand(-120, 120), vy: rand(-160, 40), g: 260, life: rand(0.6, 1.1), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
+          }
+        } }], { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 50, false);
+        if (phase !== "intro") {
+          var bw = 130, bx = W / 2 - bw / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#7a1f1f"; roundRect(bx, 8, bw * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
+          text("THE BOUNTY SLOOP", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        if (dash && !dash.going) {
+          var dp = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 11));
+          ctx.globalAlpha = dp * 0.35; ctx.fillStyle = "#ff8a7a"; ctx.fillRect(0, dash.y - 24, W, 48); ctx.globalAlpha = 1;
+          text("SHE'S COMING ACROSS — " + (dash.from < 0 ? "from PORT" : "from STARBOARD"), W / 2, dash.y - 34, 13, "#ff8a7a", "center", "bold");
+        }
+        if (dash && dash.going) drawShip(dash.x, dash.y, 1.4, { rot: dash.from < 0 ? Math.PI / 2 : -Math.PI / 2, flag: "#7a1f1f", hull: "#4a2f2f", deck: "#6a4444", sail: "#e8d3b0" });
+        else drawShip(sx2, H * 0.18, 1.5, { rot: Math.PI, flag: "#7a1f1f", hull: "#4a2f2f", deck: "#6a4444", sail: "#e8d3b0", dmg: max - hp });
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.74, 250, 410); panel(W / 2, H / 2, w, 128); text("SHE STRIKES HER COLORS", W / 2, H / 2 - 24, 20, "#8fd6a0", "center", "bold"); text("+80 points   +" + loot + " gold", W / 2, H / 2 + 8, 15, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // M5 — THE POWDER BRIG. Slow and mean in bad water: paired aimed shots,
+  // powder kegs rolled off her stern, and two live waterspouts working the
+  // field while you fight.
+  function BrigBossScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], kegs = [], fireGun = gunner();
+    var hp = Math.max(8, Math.round(12 * diff().hp)), max = hp;
+    var bx2 = W * 0.5, bdir = 1, fireT = 1.6, kegT = 3;
+    var spouts = [{ x: W * 0.25, dir: 1 }, { x: W * 0.75, dir: -1 }];
+    var loot = 0;
+    return {
+      debugWin: function () { hp = 0; phase = "done"; loot = 80; addScore(110); addGold(80); feat("brigboss"); },
+      enter: function () { prompt = Prompt("THE POWDER BRIG", "An armed merchant out of Hampton Roads, riding low with a hold full of powder — and a captain who would rather sink you in a squall than share the sea. Mind her kegs. Mind the spouts.", function () { phase = "fight"; }, "⚓ ARMED MERCHANTS WERE REAL"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        bx2 += bdir * 70 * dt;
+        if (bx2 < W * 0.18) bdir = 1;
+        if (bx2 > W * 0.82) bdir = -1;
+        fireT -= dt;
+        if (fireT <= 0) {
+          fireT = rand(1.5, 2.1) * diff().fire;
+          var aim = clamp((px - bx2) * 0.55, -150, 150);
+          balls.push({ x: bx2 - 12, y: H * 0.18 + 14, vy: 280, vx: aim, own: 0 });
+          balls.push({ x: bx2 + 12, y: H * 0.18 + 14, vy: 280, vx: aim, own: 0 });
+          SFX.fire();
+        }
+        kegT -= dt;
+        if (kegT <= 0) { kegT = rand(2.6, 3.8); kegs.push({ x: clamp(bx2 + rand(-40, 40), 30, W - 30), y: H * 0.2, sp: rand(110, 140), r: 13, a: 0, spin: rand(-1, 1) }); }
+        for (var ki = kegs.length - 1; ki >= 0; ki--) {
+          var kg = kegs[ki]; kg.y += kg.sp * dt; kg.a += kg.spin * dt;
+          if (Math.hypot(kg.x - px, kg.y - py) < kg.r + 15) { damage(1); shake(14); splash(kg.x, kg.y, 14, "#ffcf6a"); kegs.splice(ki, 1); continue; }
+          if (kg.y > H + 30) kegs.splice(ki, 1);
+        }
+        // the squall never stops: two wandering waterspouts shove and sting
+        for (var si2 = 0; si2 < spouts.length; si2++) {
+          var sp2 = spouts[si2];
+          sp2.x += sp2.dir * 55 * dt;
+          if (sp2.x < W * 0.08) sp2.dir = 1;
+          if (sp2.x > W * 0.92) sp2.dir = -1;
+          if (chance(0.004)) sp2.dir *= -1;
+          if (Math.abs(px - sp2.x) < 38 && py < H * 0.97) { damage(1); shake(10); G.shipX = clamp(G.shipX + (px < sp2.x ? -0.12 : 0.12), steerLo(), steerHi()); }
+        }
+        var kegTargets = [];
+        kegs.forEach(function (kg2) { kegTargets.push({ x: kg2.x, y: kg2.y, r: kg2.r, onHit: function () { addScore(8); splash(kg2.x, kg2.y, 12, "#ffcf6a"); var i2 = kegs.indexOf(kg2); if (i2 >= 0) kegs.splice(i2, 1); } }); });
+        kegTargets.push({ x: bx2, y: H * 0.18, r: 22, onHit: function (b) {
+          hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+          if (hp <= 0) {
+            phase = "done"; loot = randInt(60, 90); addGold(loot); addScore(110); G.shipsBeaten++; SFX.win(); shake(14); feat("brigboss");
+            for (var k = 0; k < 30; k++) spawn(bx2, H * 0.18, { vx: rand(-160, 160), vy: rand(-200, 60), g: 260, life: rand(0.6, 1.3), r: rand(2, 5), c: choice(["#ffcf6a", "#e08c6a", "#fff"]) });
+          }
+        } });
+        stepBalls(balls, dt, kegTargets, { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 60, false);
+        for (var si3 = 0; si3 < spouts.length; si3++) {
+          var sp3 = spouts[si3];
+          for (var seg2 = 0; seg2 < 7; seg2++) {
+            var sy2 = H * 0.14 + seg2 * (H * 0.115), sw2 = 12 + seg2 * 6;
+            var wob2 = Math.sin(seaT * 5 + seg2 * 0.9 + si3 * 3) * (4 + seg2 * 2);
+            ctx.fillStyle = "rgba(170,200,220," + (0.42 - seg2 * 0.04) + ")";
+            ctx.beginPath(); ctx.ellipse(sp3.x + wob2, sy2, sw2, 10 + seg2 * 1.4, 0, 0, 7); ctx.fill();
+          }
+        }
+        if (phase !== "intro") {
+          var bw = 140, hx = W / 2 - bw / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx - 2, 6, bw + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#3d3a2f"; roundRect(hx, 8, bw * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
+          text("THE POWDER BRIG", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        drawShip(bx2, H * 0.18, 1.8, { rot: Math.PI, flag: "#b98f20", hull: "#3d3a2f", deck: "#5e5a44", sail: "#efe6cc", dmg: max - hp });
+        for (var ki2 = 0; ki2 < kegs.length; ki2++) {
+          var kg3 = kegs[ki2]; ctx.save(); ctx.translate(kg3.x, kg3.y); ctx.rotate(kg3.a);
+          ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-9, -12, 18, 24); ctx.strokeStyle = "#3a2414"; ctx.lineWidth = 2; ctx.strokeRect(-9, -12, 18, 24);
+          ctx.strokeStyle = "#c9962e"; ctx.beginPath(); ctx.moveTo(-9, -4); ctx.lineTo(9, -4); ctx.moveTo(-9, 4); ctx.lineTo(9, 4); ctx.stroke();
+          ctx.restore();
+        }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.74, 250, 410); panel(W / 2, H / 2, w, 128); text("DOWN WITH ALL HER POWDER", W / 2, H / 2 - 24, 19, "#8fd6a0", "center", "bold"); text("+110 points   +" + loot + " gold", W / 2, H / 2 + 8, 15, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // M8 — THE KING'S BLOCKADE. The hardest real fight of the ladder: two
+  // men-of-war holding the passage, alternating broadside sweeps with offset
+  // safe gaps, lobbed mortar fire on marked water, and an enrage when the
+  // first one goes down.
+  function BlockadeScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], mortars = [], fireGun = gunner();
+    var shipHp = Math.max(6, Math.round(8 * diff().hp));
+    var ships = [
+      { x: W * 0.26, hp: shipHp, max: shipHp, alive: true, fireT: 1.8 },
+      { x: W * 0.74, hp: shipHp, max: shipHp, alive: true, fireT: 2.6 }
+    ];
+    var sweepT = 5, sweepSide = 0, mortarT = 3.4, loot = 0;
+    function aliveList() { return ships.filter(function (s2) { return s2.alive; }); }
+    return {
+      debugWin: function () { ships.forEach(function (s2) { s2.hp = 0; s2.alive = false; }); phase = "done"; loot = 120; addScore(180); addGold(120); feat("blockade"); },
+      enter: function () { prompt = Prompt("THE KING'S BLOCKADE", "Two men-of-war anchored spring-on-cable across the passage — the Crown's answer to a pirate who will not be caught. Their broadsides alternate. Their mortars mark the water first. There is always one gap.", function () { phase = "fight"; }, "⚓ BLOCKADES WERE REAL"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -440).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 3); }
+        var enraged = aliveList().length === 1;
+        // aimed crossfire from each living ship
+        ships.forEach(function (s2) {
+          if (!s2.alive) return;
+          s2.fireT -= dt;
+          if (s2.fireT <= 0) {
+            s2.fireT = (enraged ? rand(0.8, 1.2) : rand(1.4, 2.0)) * diff().fire;
+            balls.push({ x: s2.x, y: H * 0.16 + 14, vy: 300, vx: clamp((px - s2.x) * 0.6, -170, 170), own: 0 });
+            SFX.fire();
+          }
+        });
+        // alternating broadside sweep: a wall of shot with one offset gap
+        sweepT -= dt;
+        if (sweepT <= 0) {
+          sweepT = enraged ? rand(3.8, 5) : rand(5, 6.5);
+          sweepSide = 1 - sweepSide;
+          var gapAt = sweepSide === 0 ? rand(0.15, 0.45) : rand(0.55, 0.85);
+          for (var sw3 = 0.06; sw3 <= 0.94; sw3 += 0.07) {
+            if (Math.abs(sw3 - gapAt) < 0.08) continue;
+            balls.push({ x: sw3 * W, y: H * 0.16 + 8, vy: enraged ? 275 : 245, own: 0 });
+          }
+          toast("BROADSIDE — the gap is " + (gapAt < 0.5 ? "to PORT" : "to STARBOARD") + "!"); SFX.thunder();
+        }
+        // mortars: marked water, then the ball drops
+        mortarT -= dt;
+        if (mortarT <= 0) {
+          mortarT = enraged ? rand(2.2, 3.2) : rand(3.2, 4.4);
+          mortars.push({ x: clamp(px + rand(-W * 0.18, W * 0.18), W * 0.08, W * 0.92), y: clamp(py + rand(-50, 50), H * 0.5, H * 0.94), warn: 1.1 + warnBonus() * 0.3 });
+        }
+        for (var mo = mortars.length - 1; mo >= 0; mo--) {
+          var m2 = mortars[mo]; m2.warn -= dt;
+          if (m2.warn <= 0) {
+            if (Math.hypot(m2.x - px, m2.y - py) < 44) { damage(1); shake(12); }
+            splash(m2.x, m2.y, 14); SFX.thunder();
+            mortars.splice(mo, 1);
+          }
+        }
+        var targets2 = [];
+        ships.forEach(function (s3) {
+          if (!s3.alive) return;
+          targets2.push({ x: s3.x, y: H * 0.16, r: 24, onHit: function (b) {
+            s3.hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+            if (s3.hp <= 0) {
+              s3.alive = false; addScore(90); addGold(50); loot += 50; SFX.win(); shake(12);
+              for (var k = 0; k < 26; k++) spawn(s3.x, H * 0.16, { vx: rand(-150, 150), vy: rand(-180, 60), g: 260, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
+              if (aliveList().length === 0) { phase = "done"; addScore(180); addGold(70); loot += 70; SFX.win(); feat("blockade"); }
+              else toast("HER SISTER RUNS OUT HER GUNS — she's angry now!");
+            }
+          } });
+        });
+        stepBalls(balls, dt, targets2, { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 50, false);
+        if (phase !== "intro") {
+          ships.forEach(function (s4) {
+            var bw2 = 96, hx2 = s4.x - bw2 / 2;
+            ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx2 - 2, 6, bw2 + 4, 10, 4); ctx.fill();
+            ctx.fillStyle = s4.alive ? "#2f3a4a" : "#333"; roundRect(hx2, 8, bw2 * clamp(s4.hp / s4.max, 0, 1), 6, 3); ctx.fill();
+          });
+          text("THE KING'S BLOCKADE", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        ships.forEach(function (s5) {
+          if (!s5.alive) return;
+          drawShip(s5.x, H * 0.16, 1.9, { rot: Math.PI, flag: "#e8e8f0", hull: "#2f3a4a", deck: "#48586e", sail: "#f5f2ea", dmg: s5.max - s5.hp });
+        });
+        for (var mo2 = 0; mo2 < mortars.length; mo2++) {
+          var m3 = mortars[mo2], mp2 = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 10));
+          ctx.strokeStyle = "rgba(255,138,122," + mp2 + ")"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(m3.x, m3.y, 24 + clamp(1.1 - m3.warn, 0, 1.1) * 12, 0, 7); ctx.stroke();
+        }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 132); text("THE PASSAGE IS OPEN", W / 2, H / 2 - 26, 20, "#8fd6a0", "center", "bold"); text("+180 points   +" + loot + " gold — Maine is close now", W / 2, H / 2 + 6, 14, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 40, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // ==================================================================
+  // INSANE-ONLY MYTHIC BOSSES (v9) — the multiverse got two new stops
+  // ==================================================================
+  // THE KEEPER OF THE LOCKER — Davy Jones himself, in the place where the
+  // sea keeps what it takes. Chains rise on marked columns, sea chests burst
+  // into rings of shot, and drowned fish sweep the water in schools.
+  function DavyJonesScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], chests = [], chains = [], fireGun = gunner();
+    var hp = Math.max(10, Math.round(14 * diff().hp)), max = hp;
+    var jx = W * 0.5, jdir = 1, chainT = 2.5, chestT = 4, sweepT = 7;
+    return {
+      debugWin: function () { hp = 0; phase = "done"; addScore(200); addGold(120); feat("davyjones"); },
+      enter: function () { G.pal = PALETTES[4]; prompt = Prompt("THE KEEPER OF THE LOCKER", "Every ship the sea has ever taken is filed neatly down here, and the clerk does not approve of visitors. Davy Jones rises from between the wrecks, ledger in one hand, chain in the other.", function () { phase = "fight"; }, "🤯 MULTIVERSE"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -440).forEach(function (b) { balls.push(b); }); SFX.fire(); }
+        var fury = 1 + (1 - hp / max) * 0.8;   // he speeds up as the ledger thins
+        jx += jdir * 60 * fury * dt;
+        if (jx < W * 0.18) jdir = 1;
+        if (jx > W * 0.82) jdir = -1;
+        // chains rise from below on marked columns
+        chainT -= dt;
+        if (chainT <= 0) {
+          chainT = rand(2.6, 3.6) / fury;
+          chains.push({ x: clamp(px + rand(-W * 0.22, W * 0.22), W * 0.08, W * 0.92), warn: 1.0 + warnBonus() * 0.3, y: H + 40, live: false });
+        }
+        for (var ci = chains.length - 1; ci >= 0; ci--) {
+          var ch = chains[ci];
+          if (!ch.live) { ch.warn -= dt; if (ch.warn <= 0) { ch.live = true; SFX.bad(); } }
+          else {
+            ch.y -= 480 * dt;
+            if (Math.abs(ch.x - px) < 24 && ch.y < py + 20) { damage(1); shake(12); splash(px, py, 10, "#8fae7d"); chains.splice(ci, 1); continue; }
+            if (ch.y < -60) chains.splice(ci, 1);
+          }
+        }
+        // sea chests lob onto the water and burst into a ring of shot
+        chestT -= dt;
+        if (chestT <= 0) {
+          chestT = rand(3.6, 5) / fury;
+          chests.push({ x: clamp(px + rand(-W * 0.2, W * 0.2), W * 0.12, W * 0.88), y: clamp(py + rand(-70, 30), H * 0.45, H * 0.9), warn: 1.2 });
+        }
+        for (var ce = chests.length - 1; ce >= 0; ce--) {
+          var cst = chests[ce]; cst.warn -= dt;
+          if (cst.warn <= 0) {
+            for (var ang = 0; ang < 6; ang++) {
+              var a2 = ang * (Math.PI * 2 / 6);
+              balls.push({ x: cst.x, y: cst.y, vx: Math.cos(a2) * 160, vy: Math.sin(a2) * 160, own: 0, style: "bubble" });
+            }
+            splash(cst.x, cst.y, 10, "#c9b26a"); SFX.thunder();
+            chests.splice(ce, 1);
+          }
+        }
+        // a school of the drowned sweeps one row, with a gap
+        sweepT -= dt;
+        if (sweepT <= 0) {
+          sweepT = rand(6.5, 8.5) / fury;
+          var gapAt2 = rand(0.15, 0.85);
+          for (var f2 = 0.05; f2 <= 0.95; f2 += 0.08) {
+            if (Math.abs(f2 - gapAt2) < 0.09) continue;
+            balls.push({ x: f2 * W, y: H * 0.12, vy: 235, own: 0, style: "venom" });
+          }
+          toast("THE DROWNED SWIM IN SCHOOLS — find the gap!"); SFX.thunder();
+        }
+        stepBalls(balls, dt, [{ x: jx, y: H * 0.17, r: hasMut("bighead") ? 36 : 28, onHit: function (b) {
+          hp--; splash(b.x, b.y, 10, "#8fd6a0"); SFX.hit(); shake(3);
+          if (hp <= 0) {
+            phase = "done"; addScore(200); addGold(120); SFX.win(); shake(18); feat("davyjones");
+            for (var k = 0; k < 40; k++) spawn(jx, H * 0.17, { vx: rand(-200, 200), vy: rand(-220, 80), g: 260, life: rand(0.7, 1.5), r: rand(2, 6), c: choice(["#8fae7d", "#c9b26a", "#fff"]) });
+          }
+        } }], { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 35, false);
+        // wreck silhouettes on the seabed of the multiverse
+        ctx.fillStyle = "rgba(10,16,22,.5)";
+        for (var wr = 0; wr < 3; wr++) { ctx.save(); ctx.translate(W * (0.2 + wr * 0.3), H * 0.05); ctx.rotate((wr % 2 ? 1 : -1) * 0.2); ctx.fillRect(-50, -8, 100, 16); ctx.restore(); }
+        // Davy Jones: coat, ledger, chain, beard of tendrils
+        ctx.save(); ctx.translate(jx, H * 0.17);
+        var big = hasMut("bighead") ? 1.35 : 1;
+        ctx.scale(big, big);
+        ctx.fillStyle = "#26333d"; ctx.beginPath(); ctx.ellipse(0, 16, 26, 22, 0, 0, 7); ctx.fill();   // coat
+        ctx.fillStyle = "#5e7a6a"; ctx.beginPath(); ctx.arc(0, -10, 15, 0, 7); ctx.fill();            // head
+        ctx.strokeStyle = "#4a6a58"; ctx.lineWidth = 4; ctx.lineCap = "round";
+        for (var td = -2; td <= 2; td++) {                                                             // the beard
+          ctx.beginPath(); ctx.moveTo(td * 5, -2);
+          ctx.quadraticCurveTo(td * 8 + Math.sin(seaT * 4 + td) * 4, 14, td * 7 + Math.sin(seaT * 4 + td) * 6, 26);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(-6, -13, 3, 0, 7); ctx.arc(6, -13, 3, 0, 7); ctx.fill();
+        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-6, -13, 1.4, 0, 7); ctx.arc(6, -13, 1.4, 0, 7); ctx.fill();
+        ctx.fillStyle = "#c9b26a"; ctx.fillRect(-34, 6, 12, 16);                                       // the ledger
+        ctx.restore();
+        if (phase !== "intro") {
+          var bw3 = 160, hx3 = W / 2 - bw3 / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx3 - 2, 6, bw3 + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#4a6a58"; roundRect(hx3, 8, bw3 * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
+          text("THE KEEPER OF THE LOCKER", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        for (var ci2 = 0; ci2 < chains.length; ci2++) {
+          var ch2 = chains[ci2];
+          if (!ch2.live) { var cp = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 10)); ctx.globalAlpha = cp * 0.5; ctx.fillStyle = "#8fae7d"; ctx.fillRect(ch2.x - 14, 0, 28, H); ctx.globalAlpha = 1; text("⛓", ch2.x, H - 24, 16, "#8fae7d", "center", "bold"); }
+          else { ctx.strokeStyle = "#6a7a72"; ctx.lineWidth = 6; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(ch2.x, H + 20); ctx.lineTo(ch2.x, ch2.y); ctx.stroke(); ctx.setLineDash([]); }
+        }
+        for (var ce2 = 0; ce2 < chests.length; ce2++) {
+          var cst2 = chests[ce2], cp2 = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 9));
+          ctx.save(); ctx.translate(cst2.x, cst2.y);
+          ctx.globalAlpha = cp2; ctx.strokeStyle = "#ffd24a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 26, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+          ctx.fillStyle = "#7a5a34"; ctx.fillRect(-12, -8, 24, 16); ctx.fillStyle = "#c9962e"; ctx.fillRect(-12, -2, 24, 3);
+          ctx.restore();
+        }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 132); text("THE LEDGER CLOSES", W / 2, H / 2 - 26, 20, "#8fd6a0", "center", "bold"); text("+200 points   +120 gold — he files you under 'escaped'", W / 2, H / 2 + 6, 13.5, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 40, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
+  }
+
+  // POSEIDON — the old god of the sea, at multiverse scale. Trident bolts on
+  // marked columns, summoned wave walls with one gap, and a whirlpool he
+  // stirs with his free hand.
+  function PoseidonScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], boltList = [], fireGun = gunner();
+    var hp = Math.max(12, Math.round(16 * diff().hp)), max = hp;
+    var gx2 = W * 0.5, gdir = 1, boltT = 2.2, waveT = 6, whirlT = 9, whirl = null;
+    return {
+      debugWin: function () { hp = 0; phase = "done"; addScore(250); addGold(150); feat("poseidon"); },
+      enter: function () { prompt = Prompt("POSEIDON", "The multiverse kept going and eventually the sea itself objected. He is taller than the weather. He is older than the charts. He would like a word about all the cannonballs you have been leaving in his ocean.", function () { phase = "fight"; }, "🤯 MULTIVERSE"); },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -450).forEach(function (b) { balls.push(b); }); SFX.fire(); }
+        var fury = 1 + (1 - hp / max);
+        gx2 += gdir * 40 * fury * dt;
+        if (gx2 < W * 0.25) gdir = 1;
+        if (gx2 > W * 0.75) gdir = -1;
+        // trident bolts: marked columns, then the strike
+        boltT -= dt;
+        if (boltT <= 0) {
+          boltT = rand(2.4, 3.4) / fury;
+          boltList.push({ x: clamp(px + rand(-W * 0.16, W * 0.16), W * 0.08, W * 0.92), warn: 0.9 + warnBonus() * 0.3 });
+        }
+        for (var bi2 = boltList.length - 1; bi2 >= 0; bi2--) {
+          var bl = boltList[bi2]; bl.warn -= dt;
+          if (bl.warn <= 0) {
+            if (Math.abs(px - bl.x) < 30) { damage(1); shake(12); }
+            for (var lb2 = 0; lb2 < 12; lb2++) spawn(bl.x + rand(-8, 8), rand(H * 0.2, H * 0.9), { vx: rand(-30, 30), vy: rand(60, 160), g: 0, life: 0.3, r: rand(1, 3), c: "#bfe8ff" });
+            SFX.thunder(); shake(6);
+            boltList.splice(bi2, 1);
+          }
+        }
+        // summoned wave walls with one gap
+        waveT -= dt;
+        if (waveT <= 0) {
+          waveT = rand(5.5, 7) / fury;
+          var gapAt3 = rand(0.15, 0.85);
+          for (var wv = 0.05; wv <= 0.95; wv += 0.07) {
+            if (Math.abs(wv - gapAt3) < 0.09) continue;
+            balls.push({ x: wv * W, y: H * 0.14, vy: 250, own: 0, style: "bubble" });
+          }
+          toast("HE LIFTS THE SEA — find the gap!"); SFX.thunder();
+        }
+        // he stirs a whirlpool with his free hand
+        whirlT -= dt;
+        if (!whirl && whirlT <= 0) { whirl = { x: rand(W * 0.3, W * 0.7), y: H * 0.35, R: clamp(W * 0.2, 90, 160), k: 0.55, life: 6 }; toast("THE WATER TURNS UNDER YOU"); }
+        if (whirl) {
+          whirl.life -= dt;
+          if (applyWhirlpool(dt, whirl, px, py)) { damage(1); shake(12); whirl = null; whirlT = rand(8, 11); }
+          else if (whirl.life <= 0) { whirl = null; whirlT = rand(8, 11); }
+        }
+        stepBalls(balls, dt, [{ x: gx2, y: H * 0.16, r: hasMut("bighead") ? 40 : 30, onHit: function (b) {
+          hp--; splash(b.x, b.y, 10, "#bfe8ff"); SFX.hit(); shake(3);
+          if (hp <= 0) {
+            phase = "done"; addScore(250); addGold(150); SFX.win(); shake(20); feat("poseidon");
+            for (var k = 0; k < 50; k++) spawn(gx2, H * 0.16, { vx: rand(-240, 240), vy: rand(-260, 100), g: 260, life: rand(0.8, 1.8), r: rand(2, 6), c: choice(["#bfe8ff", "#7fd6ea", "#fff"]) });
+          }
+        } }], { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        drawSea(G.pal, seaT * 55, true);
+        if (whirl) drawWhirlpool(whirl);
+        // the god: torso from the horizon, crown, trident
+        ctx.save(); ctx.translate(gx2, H * 0.16);
+        var big2 = hasMut("bighead") ? 1.3 : 1;
+        ctx.scale(big2, big2);
+        ctx.fillStyle = "#3e6a7a"; ctx.beginPath(); ctx.ellipse(0, 26, 34, 26, 0, 0, 7); ctx.fill();      // shoulders
+        ctx.fillStyle = "#5e8a98"; ctx.beginPath(); ctx.arc(0, -6, 17, 0, 7); ctx.fill();                 // head
+        ctx.strokeStyle = "#dfeff4"; ctx.lineWidth = 4; ctx.lineCap = "round";                            // beard of foam
+        for (var td2 = -2; td2 <= 2; td2++) { ctx.beginPath(); ctx.moveTo(td2 * 5, 2); ctx.quadraticCurveTo(td2 * 7, 16, td2 * 6 + Math.sin(seaT * 3 + td2) * 4, 26); ctx.stroke(); }
+        ctx.fillStyle = "#f7d84a";                                                                        // crown
+        ctx.beginPath(); ctx.moveTo(-14, -18); ctx.lineTo(-8, -28); ctx.lineTo(-2, -18); ctx.lineTo(2, -28); ctx.lineTo(8, -18); ctx.lineTo(14, -28); ctx.lineTo(14, -14); ctx.lineTo(-14, -14); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-7, -8, 3, 0, 7); ctx.arc(7, -8, 3, 0, 7); ctx.fill();
+        ctx.fillStyle = "#0c3a52"; ctx.beginPath(); ctx.arc(-7, -8, 1.5, 0, 7); ctx.arc(7, -8, 1.5, 0, 7); ctx.fill();
+        ctx.strokeStyle = "#c9b26a"; ctx.lineWidth = 5;                                                   // trident
+        ctx.beginPath(); ctx.moveTo(30, 34); ctx.lineTo(30, -30); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(22, -18); ctx.lineTo(22, -32); ctx.moveTo(30, -22); ctx.lineTo(30, -36); ctx.moveTo(38, -18); ctx.lineTo(38, -32); ctx.stroke();
+        ctx.restore();
+        if (phase !== "intro") {
+          var bw4 = 170, hx4 = W / 2 - bw4 / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx4 - 2, 6, bw4 + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#3e6a7a"; roundRect(hx4, 8, bw4 * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
+          text("POSEIDON", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        for (var bi3 = 0; bi3 < boltList.length; bi3++) {
+          var bl2 = boltList[bi3], bp2 = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 11));
+          ctx.globalAlpha = bp2 * 0.45; ctx.fillStyle = "#bfe8ff"; ctx.fillRect(bl2.x - 16, 0, 32, H); ctx.globalAlpha = 1;
+          text("⚡", bl2.x, 44, 18, "#bfe8ff", "center", "bold");
+        }
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (phase === "intro") prompt.render();
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 132); text("THE SEA SETTLES", W / 2, H / 2 - 26, 21, "#8fd6a0", "center", "bold"); text("+250 points   +150 gold — he nods, once, and sinks", W / 2, H / 2 + 6, 13.5, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 40, 11.5, "rgba(244,231,201,.6)"); }
+      }
+    };
   }
 
   // ---------------------------------------------------------------- KRAKEN (M2, Windward Passage)
