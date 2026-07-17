@@ -1,4 +1,4 @@
-# First Sail
+# Whydah’s Voyage
 
 A browser game for the Whydah unit. Live the whole voyage: dive a Spanish wreck off Florida, chase down and board the *Whydah*, then run her north to Maine through ten missions of escalating legend, hazard, and history — and try to beat the storm the real crew never did.
 
@@ -23,7 +23,7 @@ Ten missions, each its own leg of the real 1716–1717 voyage, each escalating i
 
 ## Legends and myths
 
-Pirate history is full of stories half the crew believed. First Sail plays a lot of them straight — some as flavor cards, some as things you actually sail through:
+Pirate history is full of stories half the crew believed. Whydah’s Voyage keeps the record in the main game and sends the legends to the multiverse — some as flavor cards, some as things you actually sail through:
 
 - **The Kraken**, **the Palatine Light**, and **the Old Sow** are full encounters (missions 3, 8, and 10).
 - **Goody Hallett's curse** is a real choice at Cape Cod, with a real consequence at the storm.

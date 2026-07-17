@@ -1,5 +1,5 @@
 /* =====================================================================
-   Whydah — First Sail (v3)
+   Whydah’s Voyage (v9) — formerly First Sail
    A voyage roguelite that mirrors the real story. February 1717: the
    crew has taken the Whydah near the Bahamas. Run her north for Maine.
    Random events from a 40-card pool, ship battles, a sea serpent (a
@@ -586,7 +586,7 @@
 
   function newGame(fromMission) {
     var runMode = DIFF[SAVE.mode] ? SAVE.mode : "hard";
-    if (runMode === "insane" && !SAVE.secretUnlock) runMode = "hard";   // no sneaking in — only the secret word opens it
+    if (runMode === "insane" && !(SAVE.extremeWon || SAVE.secretUnlock)) runMode = "hard";   // no sneaking in — beat EXTREME or speak the secret word
     var startM = clamp(fromMission || 0, 0, MISSIONS.length - 1);
     var maxH = 5 + upgLvl("hull") + (runMode === "easy" ? 1 : 0);
     G = {
@@ -1158,7 +1158,7 @@
         drawShip(W / 2, H * 0.56, 2, playerShipOpts({ dmg: 0 }));
         var w = clamp(W * 0.88, 300, 540);
         panel(W / 2, H * 0.3, w, 196);
-        text("FIRST SAIL", W / 2, H * 0.3 - 58, 38, "#e0b25c", "center", "bold");
+        text("WHYDAH\u2019S VOYAGE", W / 2, H * 0.3 - 58, 32, "#e0b25c", "center", "bold");
         wrapText("February 1717. The crew took the Whydah after a three day chase. Sam Bellamy is captain. Run her north. Make Maine. Beat the storm the real crew never did.",
           W / 2, H * 0.3 - 24, w - 46, 20, 14, "#f4e7c9");
         text("steer with ← → ↑ ↓ or WASD  ·  SPACE fires (hold for a broadside)", W / 2, H * 0.3 + 62, 13, "#cdb98a");
@@ -1175,7 +1175,7 @@
         if (!DIFF[SAVE.mode]) SAVE.mode = "hard";
         for (var mi = 0; mi < MODE_ORDER.length; mi++) {
           var mid2 = MODE_ORDER[mi], md = DIFF[mid2], mx = W / 2 - bw - 10 + mi * (mw + 6);
-          var locked = mid2 === "insane" && !SAVE.secretUnlock;
+          var locked = mid2 === "insane" && !(SAVE.extremeWon || SAVE.secretUnlock);
           var sel = SAVE.mode === mid2;
           var label = locked ? "🔒" : (mid2 === "insane" ? "🌀 " + md.label : md.label);
           if (uiButton(mx, my, mw, 30, label, { size: mw < 74 ? 9.5 : 10.5, disabled: locked, color: sel ? md.color : "#3a4550" }) && !locked) { SAVE.mode = mid2; persist(); SFX.buy(); }
@@ -1191,7 +1191,7 @@
           }
           if (sel) { ctx.strokeStyle = "#ffd24a"; ctx.lineWidth = 2.5; roundRect(mx - 2, my - 2, mw + 4, 34, 12); ctx.stroke(); }
         }
-        text(SAVE.mode === "insane" ? "the multiverse is waiting. good luck." : (SAVE.secretUnlock ? "difficulty" : (SAVE.extremeWon ? "difficulty  ·  a secret word opens 🌀" : "difficulty")), W / 2, my - 10, 10.5, "rgba(244,231,201,.6)");
+        text(SAVE.mode === "insane" ? "the multiverse is waiting. good luck." : ((SAVE.extremeWon || SAVE.secretUnlock) ? "difficulty" : "difficulty  ·  beat EXTREME to unlock 🌀 (or know the word)"), W / 2, my - 10, 10.5, "rgba(244,231,201,.6)");
         // resume the furthest voyage reached, or start fresh (with a prologue-skip toggle once it's been seen once)
         var curMode = insane() ? SAVE.furthestInsane : SAVE.furthest;
         var canResume = curMode > 2;
@@ -3508,7 +3508,7 @@
         if (uiButton(W / 2 - (w - 24) / 6, sy, (w - 24) / 3, 46, "⚓ SET SAIL", { size: 15 })) startRun();
         if (uiButton(W / 2 + w / 2 - 6 - (w - 24) / 3, sy, (w - 24) / 3, 46, "📮 IDEAS", { size: 14, color: "#1f4a5e" })) {
           var sug = null;
-          try { sug = window.prompt("What should we add to First Sail? Your idea is sent to Mr. Howe's suggestion log."); } catch (e3) {}
+          try { sug = window.prompt("What should we add to Whydah’s Voyage? Your idea is sent to Mr. Howe's suggestion log."); } catch (e3) {}
           if (sug && sug.trim()) {
             var idea = sug.trim().slice(0, 500);
             // keep a local copy so nothing is lost if the network hiccups, then
