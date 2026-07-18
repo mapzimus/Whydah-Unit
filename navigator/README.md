@@ -8,7 +8,7 @@ A browser game for the Whydah unit. Live the whole voyage: dive a Spanish wreck 
 
 Ten missions, each its own leg of the real 1716–1717 voyage, each escalating in theme and difficulty. The pirate battles get **harder, distinct boss fights** as the voyage runs north:
 
-1. **The Wreck Diver** *(1716, Florida)* — before the pirate life. A side-view dive: steer a diver instead of a ship, mind the breath bar, grab gold among the wreck timbers, and keep clear of slow patrol sharks.
+1. **Robin Hood's Men** *(Summer 1716, the Bahamas)* — how Bellamy became a captain, and your tutorial fight. The Florida salvage was a bust, so he went on the account with Hornigold's pirates — but Hornigold wouldn't raid English ships, so the crew **voted him out and elected Bellamy**. Take the wheel, run down the English prize Hornigold wouldn't touch, force her to strike, then choose how to treat her crew — spare-and-share (the real "Robin Hood's Men") or strip her hold. Either way, the men elect you captain.
 2. **The Three-Day Chase** *(February 1717)* — a pursuit, not a gun duel: no cannons. Ride the glowing **slipstream lane** behind her weaving stern to close the gap, dodging the debris and kegs she throws in her wake, then pull up **alongside her broadside** and grapple across. Clear it and **she becomes your ship** for the rest of the campaign.
 3. **Windward Passage** — the island maze. Thread the narrows and fight **THE BOUNTY SLOOP** — the first real ship battle: fast, light, aimed nine-pounders, and a telegraphed raking dash across your row.
 4. **Florida Straits** — ride the Gulf Stream, then **the fork**: hug the shore or stand out to sea. Each route plays differently the rest of the way north.
@@ -47,7 +47,7 @@ Small whirlpools start appearing from Long Island Sound onward — a force field
 
 ## Sharks — reworked
 
-The old version put breaching sharks everywhere, and playtesters hated it. Now real sharks only show up in two places: **slow, readable patrols** during the Wreck Diver dive, and **the open-sea route** of the three "hunting ground" missions (Carolina through Long Island) — the fork warns you first, so choosing the open sea is choosing sharks. Where they do appear, the stalk telegraphs longer, you can shoot the fin before it ever leaps, and the leap itself is slower and shorter-range. Everywhere else, what used to be a shark fin is now a harmless jellyfish bloom.
+The old version put breaching sharks everywhere, and playtesters hated it. Now real sharks only show up on **the open-sea route** of the three "hunting ground" missions (Carolina through Long Island) — the fork warns you first, so choosing the open sea is choosing sharks. Where they do appear, the stalk telegraphs longer, you can shoot the fin before it ever leaps, and the leap itself is slower and shorter-range. Everywhere else, what used to be a shark fin is now a harmless jellyfish bloom.
 
 ## Combat: chains, grazes, and the Powder Blast
 
@@ -72,7 +72,7 @@ It all interlocks: hit → chain climbs → dodge close → charge → blast to 
 
 ## v8 — the depth pass
 
-- **Real prologues.** The Wreck Diver is three descending dive sites (shallow wreck → gun deck → treasure hold) with eels, air pockets, falling timbers, and a graded haul. The Three-Day Chase now requires sailing: close the distance meter inside her weaving wake, survive escalating stern-chaser fire and powder kegs, and finish with a grapple flurry — do nothing and she escapes.
+- **A pirate-captain opening.** The prologue is the making of Bellamy: **Robin Hood's Men** (win the crew's vote by taking the prize Hornigold wouldn't) and the **Three-Day Chase** (run the Whydah down through her slipstream and board her alongside). Two exciting, historically-grounded missions before the campaign proper — no slow solo dive.
 - **A boss for every mission.** New: THE MOONCUSSER (a false-light narrows gauntlet with a shootable shore battery), THE SHARKNADO (yes, really — telegraphed shark volleys, shoot the eye when it opens), and THE HUNTER'S FLAGSHIP (a three-phase man-of-war duel with broadside sweeps and ramming runs).
 - **No more quick cuts.** Scenes crossfade; sail legs wind down — spawns stop early, leftover coins sweep to the ship, hazards fade, and a LEG CLEAR banner plays you out.
 - **Merchant hails.** Mid-campaign, a trading brig may heave to: repairs, powder, weather gossip, mystery crates, and tea/spice cargo that pays double at your next port (if you live to reach it).
