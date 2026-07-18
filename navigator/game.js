@@ -479,14 +479,14 @@
   // profile, and objective. This replaces the old shuffled-pool voyage.
   // ==================================================================
   var MISSIONS = [
-    { id: "wreckdiver",  name: "The Wreck Diver",       nameInsane: "The Puddle Diver",
-      sub: "1716 — the Spanish plate fleet, off the Florida coast",
-      obj: "Grab what gold you can. Watch for sharks.",
+    { id: "election",    name: "Robin Hood's Men",      nameInsane: "The Group-Chat Coup",
+      sub: "Summer 1716 — the Bahamas",
+      obj: "Hornigold won't raid an English ship. Take her yourself — and take the crew.",
       decor: "tropics", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
-      signature: "dive", battleTier: 0, routeVariant: false, prologue: true },
+      signature: "election", battleTier: 0, routeVariant: false, prologue: true },
     { id: "chase",       name: "The Three-Day Chase",   nameInsane: "The Three-Day Staring Contest",
       sub: "February 1717",
-      obj: "Stay on her stern. Don't fall back. Don't take too much fire.",
+      obj: "Ride her wake to close the gap, then pull up alongside and board.",
       decor: "tropics", pal: null, legCount: 0, legMods: {}, slots: { event: [0, 0], mini: [0, 0], battle: 0 },
       signature: "chase", battleTier: 0, routeVariant: false, prologue: true },
     { id: "windward",    name: "Windward Passage",      nameInsane: "The Rubber Duck Shallows",
@@ -1239,6 +1239,7 @@
     // the following kinds get real scenes in later phases; a plain sail leg
     // is a safe, playable stand-in until then so the campaign never breaks
     else if (beat.kind === "port") setScene(typeof PortScene === "function" ? PortScene() : SailScene());
+    else if (beat.kind === "election") setScene(typeof ElectionScene === "function" ? ElectionScene() : SailScene());
     else if (beat.kind === "dive") setScene(typeof DiveScene === "function" ? DiveScene() : SailScene());
     else if (beat.kind === "chase") setScene(typeof ChaseScene === "function" ? ChaseScene() : SailScene());
     else if (beat.kind === "kraken") setScene(typeof KrakenScene === "function" ? KrakenScene() : SerpentScene());
@@ -1459,8 +1460,100 @@
   }
 
   // ==================================================================
-  // SCENES: PROLOGUE — before the pirate life (M0 dive, M1 chase)
+  // SCENES: PROLOGUE — the making of a pirate captain (M0 election, M1 chase)
   // ==================================================================
+  // M0 — ROBIN HOOD'S MEN. The real hook of Bellamy's story, and the tutorial:
+  // the Florida salvage was a bust, so he fell in with Hornigold's pirates — but
+  // Hornigold wouldn't raid English ships, so in the summer of 1716 the crew
+  // VOTED him out and elected Bellamy captain. Here you earn that vote: take the
+  // wheel, run down the English prize Hornigold wouldn't touch, force her to
+  // strike, and choose how to treat her crew. Either way, the men elect you.
+  function ElectionScene() {
+    var phase = "intro", prompt = null, t = 0, balls = [], fireGun = gunner();
+    var hp = Math.max(4, Math.round(7 * diff().hp)), max = hp;   // a light merchant — the gentle first fight
+    var mx2 = W * 0.5, mdir = 1, fireT = 2.2;
+    var picked = -1, resultTitle = "", resultLine = "", loot = 0;
+    var CHOICES = [
+      { l: "Spare her crew — a berth for any who'll join, plunder split even", gold: 40, score: 70,
+        title: "ROBIN HOOD'S MEN", r: "You put her crew ashore unharmed and split every coin even. The men roar your name — Bellamy, captain, by a show of hands. They'll call themselves Robin Hood's Men." },
+      { l: "Strip her hold and set them adrift", gold: 65, score: 45,
+        title: "ELECTED CAPTAIN", r: "You take everything worth taking and cut her loose. Hard, but the hold is full — and a crew follows a captain who fills it. They elect you all the same." }
+    ];
+    function elect(i) {
+      picked = i; var c = CHOICES[i];
+      addGold(c.gold); addScore(c.score); loot = c.gold; resultTitle = c.title; resultLine = c.r;
+      feat("election"); SFX.win(); phase = "done";
+    }
+    return {
+      debugWin: function () { hp = 0; phase = "vote"; },
+      debugChoose: function (i) { if (phase === "vote" && picked < 0) elect(i); },
+      enter: function () {
+        document.body.classList.add("playing"); G.shipY = 0.68;
+        prompt = Prompt("ROBIN HOOD'S MEN", "The Florida wrecks were a bust — you came up with nearly nothing, like every diver on that coast. So you went on the account with Hornigold's pirates. But Hornigold won't raise a hand against an English ship, and the crew has had their fill of his caution. There's a fat English merchantman off the bow. Take the wheel. Show them who ought to be captain.", function () { phase = "fight"; }, "⚓ THE CREW ELECTED BELLAMY, SUMMER 1716");
+      },
+      update: function (dt) {
+        seaT += dt; t += dt;
+        if (phase === "intro") { prompt.update(dt); return; }
+        if (phase === "vote") return;             // waits on the crew's vote (buttons in render)
+        if (phase === "done") { if (consumeTap()) advance(); return; }
+        helm(dt, 1, 0.5);
+        var px = G.shipX * W, py = shipYPx();
+        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        // she runs from you and pops the odd swivel gun — slow and telegraphed;
+        // this is the first shots-fired the player ever sees.
+        mx2 += mdir * 58 * dt;
+        if (mx2 < W * 0.16) mdir = 1;
+        if (mx2 > W * 0.84) mdir = -1;
+        fireT -= dt;
+        if (fireT <= 0) {
+          fireT = rand(2.2, 3.0) * diff().fire;
+          balls.push({ x: mx2, y: H * 0.18 + 14, vy: 245, vx: clamp((px - mx2) * 0.4, -110, 110), own: 0 });
+          SFX.fire(); smoke(mx2, H * 0.18 + 10, 1);
+        }
+        stepBalls(balls, dt, [{ x: mx2, y: H * 0.18, r: 22, onHit: function (b) {
+          hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
+          if (hp <= 0 && phase === "fight") {
+            phase = "vote"; balls = []; SFX.win(); shake(10);   // clear her in-flight shot so nothing hangs under the vote panel
+            for (var k = 0; k < 22; k++) spawn(mx2, H * 0.18, { vx: rand(-130, 130), vy: rand(-160, 40), g: 260, life: rand(0.6, 1.2), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
+          }
+        } }], { x: px, y: py, r: 18 });
+      },
+      render: function () {
+        var ph = phase;   // snapshot: a vote click flips phase mid-render, so branch on the phase we entered with (no one-frame panel overlap)
+        drawSea(G.pal || PALETTES[0], seaT * 55, false);
+        if (ph !== "intro" && ph !== "done" && ph !== "vote") {
+          var bw = 140, hx = W / 2 - bw / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx - 2, 6, bw + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#3a5a3a"; roundRect(hx, 8, bw * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
+          text("THE ENGLISH MERCHANTMAN", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
+        if (ph !== "done") drawShip(mx2, H * 0.18, 1.7, { rot: Math.PI, flag: "#c8c8d0", hull: "#5a4326", deck: "#75603e", sail: "#f0e7cf", dmg: max - hp });
+        drawBalls(balls);
+        drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
+        drawParts(); drawHUD();
+        if (ph === "intro") prompt.render();
+        if (ph === "fight" && t < 3.2) { ctx.globalAlpha = clamp(3.2 - t, 0, 1); text("Hold FIRE to rake her — dodge her swivel shot — force her to strike.", W / 2, H * 0.52, 14, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        if (ph === "vote") {
+          var w = clamp(W * 0.82, 300, 470);
+          panel(W / 2, H * 0.42, w, 150);
+          text("SHE STRIKES HER COLORS", W / 2, H * 0.42 - 44, 20, "#8fd6a0", "center", "bold");
+          wrapText("The men gather at the mast. Hornigold's caution cost them prizes like this one — and they look to you now. How do you take her?", W / 2, H * 0.42 - 16, w - 50, 17, 12.5, "#f4e7c9");
+          var by0 = H * 0.42 + 40, bh = 34, bwid = w - 40;
+          if (uiButton(W / 2 - bwid / 2, by0, bwid, bh, "⚖ " + CHOICES[0].l, { size: 11.5, color: "#2c5e38" })) elect(0);
+          if (uiButton(W / 2 - bwid / 2, by0 + bh + 8, bwid, bh, "💰 " + CHOICES[1].l, { size: 11.5, color: "#6a4a1e" })) elect(1);
+        }
+        if (ph === "done") {
+          var w2 = clamp(W * 0.8, 280, 460);
+          panel(W / 2, H / 2, w2, 168);
+          text(resultTitle, W / 2, H / 2 - 56, 21, "#ffd24a", "center", "bold");
+          wrapText(resultLine, W / 2, H / 2 - 26, w2 - 50, 18, 13, "#cdeccf");
+          text("+" + loot + " gold   ·   you are captain now", W / 2, H / 2 + 46, 13, "#e0b25c", "center", "bold");
+          text("tap to take the account north", W / 2, H / 2 + 70, 11.5, "rgba(244,231,201,.6)");
+        }
+      }
+    };
+  }
+
   function drawDiver(x, y) {
     ctx.save(); ctx.translate(x, y);
     ctx.fillStyle = "rgba(0,0,0,.15)"; ctx.beginPath(); ctx.ellipse(0, 20, 14, 5, 0, 0, 7); ctx.fill();
