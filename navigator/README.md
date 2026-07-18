@@ -49,6 +49,16 @@ Small whirlpools start appearing from Long Island Sound onward — a force field
 
 The old version put breaching sharks everywhere, and playtesters hated it. Now real sharks only show up in two places: **slow, readable patrols** during the Wreck Diver dive, and **the open-sea route** of the three "hunting ground" missions (Carolina through Long Island) — the fork warns you first, so choosing the open sea is choosing sharks. Where they do appear, the stalk telegraphs longer, you can shoot the fin before it ever leaps, and the leap itself is slower and shorter-range. Everywhere else, what used to be a shark fin is now a harmless jellyfish bloom.
 
+## Combat: chains, grazes, and the Powder Blast
+
+Every fight in the game now runs a skill loop on top of it:
+
+- **🔥 Combo Chain.** Land hits without getting tagged and a chain climbs — every **fifth** link pays a **PLUNDER bonus** (gold + score, with a popup) and the counter heats up white → gold → orange → red. Take a hit and the chain snaps back to zero. The tension is keeping it alive.
+- **✦ Graze.** An enemy cannonball that whistles past by a hair — close but no hit — rewards you and charges your blast meter. Sailing *into* the fire, and threading it, is worth points.
+- **⚡ Powder Blast.** Grazes and combos fill a meter at the bottom of the screen. When it's full, press **Q** (or tap the ⚡ button on touch) to unleash a **screen-clearing broadside**: it sweeps away every shot coming at you and lands a free hit on **every** enemy on the board, plus a breath of invincibility. Save it for when the fire gets thick — or spend it to punch through a boss.
+
+It all interlocks: hit → chain climbs → dodge close → charge → blast to survive → keep the chain going. Works in ship battles, boss fights, the chase, and open-sea sail legs alike.
+
 ## How it plays
 
 - **Steer the whole sea.** Full 2D helm: left/right AND forward/back (arrow keys, WASD, drag, or the on-screen buttons — SPACE fires). Steering is eased — a quick tap is a small precise nudge, holding crosses at full speed, and letting go stops fast.

@@ -95,6 +95,7 @@
     else if (k === "arrowup" || k === "w") input.up = true;
     else if (k === "arrowdown" || k === "s") input.down = true;
     else if (k === " " || k === "spacebar" || k === "enter") { if (!input.fire) input.firePressed = true; input.fire = true; }
+    else if (k === "q" || k === "e") { if (G && (G.special || 0) >= 1) G.blastReq = true; }
     else if (k === "escape" || k === "p") { togglePause(); }
     if (["arrowleft", "arrowright", "arrowup", "arrowdown", " ", "spacebar"].indexOf(k) >= 0) e.preventDefault();
   }
@@ -129,6 +130,8 @@
   holdBtn("btn-left", "left");
   holdBtn("btn-right", "right");
   holdBtn("btn-fire", "fire");
+  var blastBtn = document.getElementById("btn-blast");
+  if (blastBtn) blastBtn.addEventListener("pointerdown", function (e) { e.preventDefault(); if (G && (G.special || 0) >= 1) G.blastReq = true; });
 
   function consumeFire() { var f = input.firePressed; input.firePressed = false; return f; }
   function consumeTap() { var p = input.pPressed || input.firePressed; input.pPressed = false; input.firePressed = false; return p; }
@@ -238,6 +241,7 @@
   // damage(1)), and culls anything off-screen. Replaces six near-identical loops.
   function stepBalls(balls, dt, targets, ship) {
     targets = targets || [];
+    fireBlast(balls, targets, ship);   // set off a charged Powder Blast, if requested this frame
     for (var bi = balls.length - 1; bi >= 0; bi--) {
       var b = balls[bi];
       b.y += b.vy * dt; if (b.vx) b.x += b.vx * dt;
@@ -246,12 +250,17 @@
         for (var ti = 0; ti < targets.length; ti++) {
           var tg = targets[ti];
           if (Math.hypot(b.x - tg.x, b.y - tg.y) < (tg.r != null ? tg.r : 24) + (b.hr != null ? b.hr : 6)) {
-            hit = true; tg.onHit(b); break;
+            hit = true; tg.onHit(b);
+            comboHit(b.x, b.y); addScore(comboMult());   // the chain climbs and pays a small rising trickle
+            break;
           }
         }
       } else if (ship) {
-        if (Math.hypot(b.x - ship.x, b.y - ship.y) < (ship.r != null ? ship.r : 18)) {
+        var sr = ship.r != null ? ship.r : 18, d = Math.hypot(b.x - ship.x, b.y - ship.y);
+        if (d < sr) {
           hit = true; (ship.onHit || function () { damage(1); })(b);
+        } else if (d < sr + 22) {
+          grazeBall(b);   // whistled past by a hair — a graze charges the blast
         }
       }
       if (hit || b.y < -40 || b.y > H + 40) balls.splice(bi, 1);
@@ -609,6 +618,7 @@
       score: 0, gold: 0, hull: maxH, maxHull: maxH, mode: runMode, unlockedInsane: false,
       seq: [], seqIndex: -1, progress: 0, mIndex: startM, mFrac: 0, startMission: startM,
       pal: choice(runMode === "insane" ? PALETTES_INSANE : PALETTES), shipX: 0.5, shipY: 0.7, route: "", iframes: 0, coinStreak: 0,
+      combo: 0, comboT: 0, comboBest: 0, comboPop: 0, special: 0, blastReq: false, blastReady: false, blastFx: 0, taughtCombo: false,
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false, cargo: 0,
@@ -692,6 +702,8 @@
   function damage(n) {
     if (G.iframes > 0 || G.ended) return;    // a hit buys a breath of grace
     G.hull -= n; G.iframes = 0.7; G.coinStreak = 0; redFlash = 0.15;
+    comboBreak();                                        // a hit snaps the chain
+    G.special = Math.max(0, (G.special || 0) - 0.25); if (G.special < 1) G.blastReady = false;
     SFX.hit(); shake(6 + n * 2);
     spawn(G.shipX * W, shipYPx() - 50, { vy: -55, life: 1.0, r: 15, c: "#ff8a7a", shape: "txt", txt: "-" + n + " ♥" });
     if (G.hull <= 0) { G.hull = 0; endRun(false, true); }
@@ -739,6 +751,103 @@
   }
   var shakeAmt = 0;
   function shake(a) { shakeAmt = Math.max(shakeAmt, a); }
+
+  // ==================================================================
+  // COMBO CHAIN + POWDER BLAST — a skill loop that rides on top of every
+  // fight. Land hits without getting tagged and the chain climbs, paying
+  // an escalating plunder bonus every fifth link; dodge shots by a hair to
+  // charge the BLAST — a screen-clearing broadside you set off (Q / ⚡) when
+  // the fire gets thick. It all funnels through stepBalls + damage, so it
+  // lights up every combat scene at once. Getting hit snaps the chain.
+  // ==================================================================
+  var COMBO_WINDOW = 2.4;   // seconds after the last hit before the chain cools
+  function comboColor() {
+    var c = G ? G.combo : 0;
+    return c >= 24 ? "#ff5a4a" : c >= 16 ? "#ff9a3c" : c >= 8 ? "#ffd24a" : "#f4e7c9";
+  }
+  function comboMult() { return 1 + Math.min(5, Math.floor((G.combo || 0) / 4)); }   // +1 score per hit at x1, up to +6
+  // every enemy hit: the chain climbs, the window refreshes, each rung of
+  // five pays plunder and tops up the blast.
+  function comboHit(x, y) {
+    G.combo++; G.comboT = COMBO_WINDOW; G.comboPop = 1;
+    if (G.combo > (G.comboBest || 0)) G.comboBest = G.combo;
+    charge(0.05);
+    if (G.combo === 3 && !G.taughtCombo) { G.taughtCombo = true; toast("🔥 CHAIN! keep hitting — don't get tagged"); }
+    if (G.combo % 5 === 0) {
+      var tier = G.combo / 5, bonus = 10 * tier;
+      addScore(bonus * 2); addGold(bonus); charge(0.15); SFX.win();
+      spawn(x != null ? x : W / 2, (y != null ? y : H * 0.4) - 24, { vy: -60, life: 1.1, r: 16, c: comboColor(), shape: "txt", txt: "x" + G.combo + "  PLUNDER +" + bonus + "🪙" });
+    }
+  }
+  function comboBreak() { if (G) { G.combo = 0; G.comboT = 0; } }
+  function charge(a) {
+    if (!G) return;
+    G.special = clamp((G.special || 0) + a, 0, 1);
+    if (G.special >= 1 && !G.blastReady) { G.blastReady = true; SFX.good(); toast("⚡ BLAST READY — press Q / tap ⚡"); }
+  }
+  // a near-miss: an enemy shot that whistles past within a hair. Charges the
+  // blast and keeps the chain warm — the reward for sailing into the teeth.
+  function grazeBall(b) {
+    if (b.grazed || !G) return;
+    b.grazed = true; charge(0.08); addScore(2);
+    if (G.comboT > 0) G.comboT = Math.min(COMBO_WINDOW, G.comboT + 0.5);
+    spawn(b.x, b.y, { vy: -30, life: 0.5, r: 11, c: "#bfe6ff", shape: "txt", txt: "✦" });
+    SFX.point();
+  }
+  // set off the blast: sweep the shots coming at you, land one free hit on
+  // every live target, buy a breath of grace. Consumed once per press.
+  function fireBlast(balls, targets, ship) {
+    if (!G || !G.blastReq) return;
+    G.blastReq = false;
+    if ((G.special || 0) < 1 || !ship) return;
+    G.special = 0; G.blastReady = false; G.blastFx = 0.5; G.iframes = Math.max(G.iframes, 0.6);
+    SFX.fire(); SFX.win(); shake(15);
+    for (var i = balls.length - 1; i >= 0; i--) { if (!balls[i].own) { splash(balls[i].x, balls[i].y, 4, "#bfe6ff"); balls.splice(i, 1); } }
+    var fake = { x: ship.x, y: (ship.y || 0) - 40, own: 1, blast: 1 };
+    for (var ti = 0; ti < targets.length; ti++) { try { targets[ti].onHit(fake); } catch (e) {} }
+    for (var k = 0; k < 26; k++) spawn(ship.x, ship.y, { vx: rand(-260, 260), vy: rand(-260, 60), g: 220, life: rand(0.4, 0.8), r: rand(2, 4), c: choice(["#ffd24a", "#bfe6ff", "#fff", "#ffcf6a"]) });
+  }
+  // combo/blast timers tick from the main loop so every scene shares them
+  function updateCombo(dt) {
+    if (!G) return;
+    if (G.comboT > 0) { G.comboT -= dt; if (G.comboT <= 0) comboBreak(); }
+    if (G.comboPop > 0) G.comboPop = Math.max(0, G.comboPop - dt * 3);
+    if (G.blastFx > 0) G.blastFx -= dt;
+    var bb = typeof document !== "undefined" && document.getElementById("btn-blast");
+    if (bb) bb.classList.toggle("ready", (G.special || 0) >= 1);
+  }
+  // the combo/blast HUD overlay — drawn by drawHUD, so it shows in combat only
+  function drawComboHUD() {
+    if (!G) return;
+    var pad = 12;
+    if (G.combo >= 2) {
+      var pop = 1 + (G.comboPop || 0) * 0.55, sz = 19 * pop, cy = 70;
+      ctx.textAlign = "right"; ctx.font = "bold " + sz.toFixed(1) + "px Georgia, serif";
+      ctx.fillStyle = comboColor(); ctx.fillText("🔥 x" + G.combo, W - pad, cy);
+      ctx.textAlign = "left";
+      var cw = 74, cx = W - pad - cw;
+      ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(cx, cy + 6, cw, 3);
+      ctx.fillStyle = comboColor(); ctx.fillRect(cx, cy + 6, cw * clamp(G.comboT / COMBO_WINDOW, 0, 1), 3);
+    }
+    var full = (G.special || 0) >= 1;
+    if ((G.special || 0) > 0.001 || full) {
+      var sw = clamp(W * 0.3, 120, 240), sx = (W - sw) / 2, sy = H - 24;
+      ctx.fillStyle = "rgba(11,22,32,.5)"; roundRect(sx - 3, sy - 3, sw + 6, 12, 6); ctx.fill();
+      ctx.fillStyle = full ? "#ffd24a" : "rgba(191,230,255,.9)";
+      roundRect(sx, sy, sw * clamp(G.special || 0, 0, 1), 6, 3); ctx.fill();
+      if (full) {
+        ctx.globalAlpha = 0.6 + 0.4 * (0.5 + 0.5 * Math.sin(seaT * 8));
+        text("⚡ BLAST READY " + (isTouch ? "— tap ⚡" : "— press Q"), W / 2, sy - 8, 11, "#ffe1b0", "center", "bold");
+        ctx.globalAlpha = 1;
+      } else {
+        text("⚡", sx - 14, sy + 6, 11, "rgba(244,231,201,.55)", "center");
+      }
+    }
+    if (G.blastFx > 0) {
+      ctx.fillStyle = "rgba(255,225,150," + clamp(G.blastFx * 0.6, 0, 0.4) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
 
   // ---------------------------------------------------------------- sea + ambient life
   var seaT = 0, coast = [], gulls = [];
@@ -1035,6 +1144,7 @@
       ctx.fillRect(bx + pm * pipW + 1, by + bh + 4, pipW - 2, 2);
     }
     text("M" + (curPos + 1) + " · " + missionName(), W / 2, by + bh + 26, 11.5, "rgba(244,231,201,.85)", "center");
+    drawComboHUD();
   }
 
   // ==================================================================
@@ -1047,6 +1157,7 @@
   var fadeT = 0, fadeDir = 0, pendingScene = null;
   var FADE_LEN = 0.55;
   function setScene(s, instant) {
+    if (G) G.blastReq = false;   // a blast queued at the end of one scene never carries into the next
     if (instant || !scene) { scene = s; if (s.enter) s.enter(); fadeT = scene ? 0.999 : 0; fadeDir = -1; return; }
     pendingScene = s; fadeDir = 1;
   }
@@ -4320,6 +4431,7 @@
       stepFade(dt);
       updateTimers(dt);
       if (G && G.iframes > 0) G.iframes -= dt;
+      updateCombo(dt);
       // the outgoing scene freezes while fading out — no double-advances, no
       // gameplay happening under a black screen
       if (scene && scene.update && !pendingScene) scene.update(dt);
@@ -4348,7 +4460,12 @@
   // ---------------------------------------------------------------- debug API (inert unless the page sets __FS_DEBUG)
   if (window.__FS_DEBUG) {
     window.__fsAPI = {
-      state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), shipX: +Number(G.shipX || 0).toFixed(3), shipY: +Number(G.shipY || 0).toFixed(3), mode: G.mode, won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared } : null; },
+      state: function () { return G ? { beat: G.curBeat, score: G.score, gold: G.gold, hull: G.hull, maxHull: G.maxHull, prog: +Number(G.progress || 0).toFixed(2), mIndex: G.mIndex, mFrac: +Number(G.mFrac || 0).toFixed(3), shipX: +Number(G.shipX || 0).toFixed(3), shipY: +Number(G.shipY || 0).toFixed(3), mode: G.mode, won: G.won, capped: G.capped, rank: G.rank, bank: SAVE.bank, events: G.events, route: G.route, bossBeaten: G.bossBeaten, stormCleared: G.stormCleared, combo: G.combo, comboBest: G.comboBest, special: +Number(G.special || 0).toFixed(2), blastReady: (G.special || 0) >= 1 } : null; },
+      combo: function () { return G ? { combo: G.combo, best: G.comboBest, comboT: +Number(G.comboT || 0).toFixed(2), special: +Number(G.special || 0).toFixed(2), ready: (G.special || 0) >= 1, ships: G.shipsBeaten } : null; },
+      charge: function (v) { if (G) { G.special = clamp(v == null ? 1 : v, 0, 1); if (G.special >= 1) G.blastReady = true; } return G ? G.special : 0; },
+      blast: function () { if (G) G.blastReq = true; },
+      simHits: function (n) { for (var i = 0; i < (n || 1); i++) { comboHit(W / 2, H / 2); addScore(comboMult()); } return { combo: G.combo, special: +Number(G.special).toFixed(2) }; },
+      simStep: function () { var landed = 0; var balls = [{ x: 100, y: 100, vy: 0, own: 1 }]; var before = G.combo; stepBalls(balls, 0.016, [{ x: 100, y: 100, r: 30, onHit: function () { landed++; } }], null); return { onHitRan: landed, comboDelta: G.combo - before, culled: balls.length === 0 }; },
       start: function (fromMission) { startRun(fromMission); flushFade(); },
       skip: function () { flushFade(); advance(); flushFade(); },
       toStorm: function () { flushFade(); for (var i = G.seq.length - 1; i >= 0; i--) if (G.seq[i].kind === "storm") { G.seqIndex = i - 1; advance(); flushFade(); return; } },
