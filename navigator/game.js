@@ -618,7 +618,7 @@
       score: 0, gold: 0, hull: maxH, maxHull: maxH, mode: runMode, unlockedInsane: false,
       seq: [], seqIndex: -1, progress: 0, mIndex: startM, mFrac: 0, startMission: startM,
       pal: choice(runMode === "insane" ? PALETTES_INSANE : PALETTES), shipX: 0.5, shipY: 0.7, route: "", iframes: 0, coinStreak: 0,
-      combo: 0, comboT: 0, comboBest: 0, comboPop: 0, special: 0, blastReq: false, blastReady: false, blastFx: 0, taughtCombo: false,
+      combo: 0, comboT: 0, comboBest: 0, comboPop: 0, comboGold: 0, special: 0, blastReq: false, blastReady: false, blastFx: 0, taughtCombo: false,
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false, cargo: 0,
@@ -768,15 +768,20 @@
   function comboMult() { return 1 + Math.min(5, Math.floor((G.combo || 0) / 4)); }   // +1 score per hit at x1, up to +6
   // every enemy hit: the chain climbs, the window refreshes, each rung of
   // five pays plunder and tops up the blast.
+  var COMBO_GOLD_CAP = 300;   // combo-milestone gold is capped per run so a long chain can't farm the bank
   function comboHit(x, y) {
+    if (!G) return;
     G.combo++; G.comboT = COMBO_WINDOW; G.comboPop = 1;
     if (G.combo > (G.comboBest || 0)) G.comboBest = G.combo;
     charge(0.05);
     if (G.combo === 3 && !G.taughtCombo) { G.taughtCombo = true; toast("🔥 CHAIN! keep hitting — don't get tagged"); }
     if (G.combo % 5 === 0) {
       var tier = G.combo / 5, bonus = 10 * tier;
-      addScore(bonus * 2); addGold(bonus); charge(0.15); SFX.win();
-      spawn(x != null ? x : W / 2, (y != null ? y : H * 0.4) - 24, { vy: -60, life: 1.1, r: 16, c: comboColor(), shape: "txt", txt: "x" + G.combo + "  PLUNDER +" + bonus + "🪙" });
+      addScore(bonus * 2); charge(0.15); SFX.win();
+      // gold is the banked currency — reward it, but cap the run's combo gold
+      var gold = clamp(COMBO_GOLD_CAP - (G.comboGold || 0), 0, bonus);
+      G.comboGold = (G.comboGold || 0) + gold; addGold(gold);
+      spawn(x != null ? x : W / 2, (y != null ? y : H * 0.4) - 24, { vy: -60, life: 1.1, r: 16, c: comboColor(), shape: "txt", txt: "x" + G.combo + "  PLUNDER" + (gold > 0 ? " +" + gold + "🪙" : " +" + (bonus * 2)) });
     }
   }
   function comboBreak() { if (G) { G.combo = 0; G.comboT = 0; } }
