@@ -1744,7 +1744,7 @@
         var drafting = inLane(px);
         gap = clamp(gap + (drafting ? d.gain : -d.slip) * dt, 0, 1);
         if (drafting) addScore(4 * dt);
-        if (gap >= 1) { phase = "board"; SFX.good(); toast("SHE'S IN REACH — pull up alongside her!"); return; }
+        if (gap >= 1) { phase = "board"; objs = []; SFX.good(); toast("SHE'S IN REACH — pull up alongside her!"); return; }   // she stops throwing wake as you overhaul her (no frozen debris)
 
         // wind gusts lean in before they shove you off her wake
         gustT -= dt;
