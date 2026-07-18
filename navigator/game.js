@@ -1688,99 +1688,90 @@
   // back ahead. Fail to catch her by the end of day three and she's gone:
   // the day restarts and the score pays for it. Doing nothing now fails.
   function ChaseScene() {
+    // A PURSUIT, not a gun duel — no cannons at all. She runs ahead and weaves;
+    // you ride the bright slipstream lane behind her stern to CLOSE THE GAP,
+    // dodging the debris and kegs she throws in her wake. When the gap closes
+    // she's in reach — steer UP alongside her broadside and grapple across.
     var DAYS = [
-      { label: "DAY ONE — DAWN",   pal: PALETTES[0], bandHalf: 0.30, wakeHalf: 120, dur: 16, close: 0.055, drift: 0.028, spread: false, kegs: false },
-      { label: "DAY TWO — NOON",   pal: PALETTES[1], bandHalf: 0.23, wakeHalf: 100, dur: 17, close: 0.055, drift: 0.034, spread: true,  kegs: false },
-      { label: "DAY THREE — NIGHT", pal: PALETTES[4], bandHalf: 0.17, wakeHalf: 86,  dur: 18, close: 0.055, drift: 0.042, spread: true,  kegs: true }
+      { label: "DAY ONE — DAWN",    pal: PALETTES[0], lane: 150, gain: 0.115, slip: 0.05,  dur: 15, weave: 40, debrisT: 1.4, kegs: false },
+      { label: "DAY TWO — NOON",    pal: PALETTES[1], lane: 126, gain: 0.115, slip: 0.06,  dur: 16, weave: 56, debrisT: 1.15, kegs: false },
+      { label: "DAY THREE — NIGHT", pal: PALETTES[4], lane: 104, gain: 0.115, slip: 0.075, dur: 17, weave: 74, debrisT: 0.95, kegs: true }
     ];
-    var day = 0, t = 0, dayT = 0, balls = [], objs = [], spawnT = 1.0, fireT = rand(1.6, 2.6), kegT = rand(3, 5), fireGun = gunner();
-    var dist = 0.3;                       // 0 = two miles off her stern, 1 = alongside
-    var whX = W * 0.5, whDir = 1;         // she actively sails, she doesn't just bob
+    var day = 0, t = 0, dayT = 0, objs = [], spawnT = 1.2, kegT = rand(3, 5);
+    var gap = 0.25;                       // 0 = two miles astern, 1 = right on her stern
+    var whX = W * 0.5, whDir = 1, whY = H * 0.13;
     var gust = null, gustT = rand(6, 9);
-    var grapple = null;                    // {taps, t} — the boarding flurry
-    var retries = 0;
-    var done = false;
+    var phase = "chase";                   // "chase" (close the gap) → "board" (pull alongside)
+    var board = 0, grapple = null, retries = 0, done = false, forceWin = false;
+    var WHR = 2.0;                          // she's drawn large — clearly the ship you're catching
+    function inLane(px) { return Math.abs(px - whX) < DAYS[day].lane; }
+    function boardHer() {
+      done = true; SAVE.whydahTaken = true; persist(); addScore(140); SFX.win();
+      setScene(Prompt("BOARDED!", "Three days on her stern, then up alongside her rail in a flurry of grapples. Bellamy took her as his own — the Whydah Gally, forty guns.", advance, "+140 · your ship, from here on"));
+    }
     return {
-      debugWin: function () { dist = 1; grapple = { taps: 5, t: 3, need: 5 }; },
-      enter: function () { document.body.classList.add("playing"); G.pal = DAYS[0].pal; G.shipY = 0.5; toast(DAYS[0].label); if (chance(0.5)) spawnGull(); },
+      debugWin: function () { forceWin = true; },
+      enter: function () { document.body.classList.add("playing"); G.pal = DAYS[0].pal; G.shipY = 0.62; toast(DAYS[0].label); if (chance(0.5)) spawnGull(); },
       update: function (dt) {
         if (done) return;
+        if (forceWin) { boardHer(); return; }
         seaT += dt; t += dt; updateGulls(dt);
         var d = DAYS[day];
+        if (window.__FS_DEBUG) { window.__chase = { whX: whX, gap: +gap.toFixed(3), phase: phase, board: +board.toFixed(2), lane: d.lane }; }
+        helm(dt, 1, 0.5, false);
         var px = G.shipX * W, py = shipYPx();
-        // ------ the grapple flurry: she's alongside, tap fast or lose her
-        if (grapple) {
-          grapple.t -= dt;
-          if (consumeTap()) { grapple.taps++; SFX.hit(); shake(3); splash(px + rand(-20, 20), py - 30, 4); }
-          if (grapple.taps >= grapple.need) {
-            done = true; SAVE.whydahTaken = true; persist(); addScore(120); SFX.win();
-            setScene(Prompt("BOARDED!", "Three days on her stern and a flurry of grapples across her rail. Bellamy took her as his own — the Whydah Gally, forty guns.", advance, "+120 · your ship, from here on"));
-            return;
-          }
-          if (grapple.t <= 0) { grapple = null; dist = 0.8; toast("The grapples fall short — she pulls ahead!"); SFX.bad(); }
-          return;
-        }
-        helm(dt, 1, 0.4, false);
-        // ------ she sails: weaves across the water, quicker each day
-        whX += whDir * (34 + day * 12) * dt;
+        // she sails on, weaving across the water, quicker and wilder each day
+        whX += whDir * d.weave * dt;
         if (whX < W * 0.2) whDir = 1;
         if (whX > W * 0.8) whDir = -1;
-        if (chance(0.004 + day * 0.002)) whDir *= -1;   // and sometimes she tacks without warning
-        // ------ the wake pocket: fore-aft band AND behind her stern
-        var bandLo = clamp(0.5 - d.bandHalf, 0, 1), bandHi = clamp(0.5 + d.bandHalf, 0, 1);
-        var inBand = G.shipY >= bandLo && G.shipY <= bandHi;
-        var inWake = Math.abs(px - whX) < d.wakeHalf;
-        var closing = inBand && inWake;
-        dist = clamp(dist + (closing ? d.close : -d.drift) * dt, 0, 1);
-        if (closing) addScore(3 * dt);
-        if (dist >= 1) { grapple = { taps: 0, need: 5, t: 3.0 }; SFX.good(); return; }
-        // ------ stern-chasers: aimed shots, and a spread from day two on
-        if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
-        fireT -= dt;
-        if (fireT <= 0) {
-          fireT = Math.max(1.1, rand(2.0, 3.0) - day * 0.35);
-          var aim = clamp((px - whX) * 0.55, -140, 140);
-          balls.push({ x: whX, y: 26, vy: 235 + day * 20, vx: aim, own: 0 });
-          if (d.spread) { balls.push({ x: whX, y: 26, vy: 225 + day * 20, vx: aim - 80, own: 0 }); balls.push({ x: whX, y: 26, vy: 225 + day * 20, vx: aim + 80, own: 0 }); }
-          SFX.fire(); smoke(whX, 30, 2);
+        if (chance(0.004 + day * 0.002)) whDir *= -1;
+
+        // ---- PHASE 2: she slows and you overhaul her — she drops back into your
+        // own waters so you can pull up on her beam. Match her lane and draw even.
+        if (phase === "board") {
+          whY = lerp(whY, H * (Y_LO + 0.02), 1.4 * dt);   // she falls back to the top of your reachable band
+          var beside = inLane(px) && (py - whY) < 120;      // you're up alongside her, in her lane
+          if (beside) {
+            board = clamp(board + 0.55 * dt, 0, 1);
+            if (!grapple) grapple = 1;
+            if (chance(12 * dt)) spawn(whX + (px < whX ? 30 : -30), whY + rand(-20, 20), { vx: (px < whX ? 60 : -60), vy: rand(-20, 20), life: 0.4, r: 2, c: "#e0b25c" });
+          } else { board = clamp(board - 0.35 * dt, 0, 1); }
+          if (board >= 1) { boardHer(); return; }
+          return;
         }
-        // ------ powder kegs dropped in her own wake on the last night
-        if (d.kegs) {
-          kegT -= dt;
-          if (kegT <= 0) { kegT = rand(2.6, 4.2); objs.push({ kind: "keg", x: clamp(whX + rand(-d.wakeHalf * 0.7, d.wakeHalf * 0.7), 30, W - 30), y: 40, sp: rand(120, 150), r: 13, a: 0, spin: rand(-1, 1) }); }
-        }
-        // ------ wind gusts lean in before they shove
+
+        // ---- PHASE 1: ride her slipstream to close the gap
+        var drafting = inLane(px);
+        gap = clamp(gap + (drafting ? d.gain : -d.slip) * dt, 0, 1);
+        if (drafting) addScore(4 * dt);
+        if (gap >= 1) { phase = "board"; SFX.good(); toast("SHE'S IN REACH — pull up alongside her!"); return; }
+
+        // wind gusts lean in before they shove you off her wake
         gustT -= dt;
         if (!gust && gustT <= 0) { gust = { push: chance(0.5) ? 0.26 : -0.26, warn: 0.8 + warnBonus() * 0.3, t: 1.4 }; gustT = rand(7, 10); }
-        if (gust) {
-          if (gust.warn > 0) gust.warn -= dt;
-          else { G.shipX = clamp(G.shipX + gust.push * dt, steerLo(), steerHi()); gust.t -= dt; if (gust.t <= 0) gust = null; }
-        }
-        // ------ wake debris
+        if (gust) { if (gust.warn > 0) gust.warn -= dt; else { G.shipX = clamp(G.shipX + gust.push * dt, steerLo(), steerHi()); gust.t -= dt; if (gust.t <= 0) gust = null; } }
+
+        // debris she throws in her wake — dodge it (steering, not shooting)
         spawnT -= dt;
-        if (spawnT <= 0) { spawnT = rand(0.9, 1.5) - day * 0.12; objs.push({ kind: "debris", x: clamp(whX + rand(-140, 140), 20, W - 20), y: 30, sp: rand(120, 170) + day * 15, r: rand(12, 18), a: 0, spin: rand(-1.5, 1.5) }); }
+        if (spawnT <= 0) { spawnT = rand(0.7, 1.2) * d.debrisT; objs.push({ kind: "debris", x: clamp(whX + rand(-150, 150), 20, W - 20), y: whY + 20, sp: rand(150, 200) + day * 15, r: rand(12, 18), a: 0, spin: rand(-1.5, 1.5) }); }
+        if (d.kegs) { kegT -= dt; if (kegT <= 0) { kegT = rand(2.8, 4.2); objs.push({ kind: "keg", x: clamp(whX + rand(-90, 90), 30, W - 30), y: whY + 20, sp: rand(150, 185), r: 13, a: 0, spin: rand(-1, 1) }); } }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i]; o.y += o.sp * dt; o.a += o.spin * dt;
           if (Math.hypot(o.x - px, o.y - py) < o.r + 16) {
-            if (o.kind === "keg") { damage(1); shake(14); splash(o.x, o.y, 14, "#ffcf6a"); dist = clamp(dist - 0.08, 0, 1); }
-            else { damage(1); splash(o.x, o.y, 8); dist = clamp(dist - 0.04, 0, 1); }
+            if (o.kind === "keg") { damage(1); shake(14); splash(o.x, o.y, 14, "#ffcf6a"); gap = clamp(gap - 0.1, 0, 1); }
+            else { damage(1); splash(o.x, o.y, 8); gap = clamp(gap - 0.05, 0, 1); }
             objs.splice(i, 1); continue;
           }
           if (o.y > H + 40) objs.splice(i, 1);
         }
-        var chaseTargets = [];
-        objs.forEach(function (o2) { chaseTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function (b) { addScore(o2.kind === "keg" ? 8 : 4); splash(o2.x, o2.y, o2.kind === "keg" ? 12 : 6, o2.kind === "keg" ? "#ffcf6a" : undefined); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1); } }); });
-        stepBalls(balls, dt, chaseTargets, { x: px, y: py, r: 18, onHit: function () { damage(1); dist = clamp(dist - 0.05, 0, 1); } });
-        // ------ the days turn; run out of them and she's away
-        if (dayT >= 0) dayT += dt;
+        // the days turn; run out of them without catching her and she's away
+        dayT += dt;
         if (dayT >= d.dur) {
           dayT = 0; day++;
           if (day >= DAYS.length) {
             day = DAYS.length - 1; retries++;
-            addScore(-40); dist = 0.45; objs = []; balls = []; grapple = null;
-            G.pal = DAYS[day].pal;
-            toast("SHE SLIPPED AWAY IN THE DARK — run her down again! (−40)");
-            SFX.lose();
+            addScore(-40); gap = clamp(gap - 0.35, 0, 1); objs = [];
+            G.pal = DAYS[day].pal; toast("SHE SLIPPED AHEAD IN THE DARK — run her down again! (−40)"); SFX.lose();
             return;
           }
           G.pal = DAYS[day].pal; toast(DAYS[day].label);
@@ -1788,49 +1779,58 @@
       },
       render: function () {
         drawSea(G.pal, seaT * 70, false);
-        var d = DAYS[day];
-        // the wake pocket: the fore-aft band tinted only behind her stern
-        var bandLoPx = (Y_LO + clamp(0.5 - d.bandHalf, 0, 1) * Y_SPAN) * H, bandHiPx = (Y_LO + clamp(0.5 + d.bandHalf, 0, 1) * Y_SPAN) * H;
-        ctx.fillStyle = "rgba(224,178,92,.07)"; ctx.fillRect(0, bandLoPx, W, bandHiPx - bandLoPx);
-        ctx.fillStyle = "rgba(224,178,92,.16)"; ctx.fillRect(whX - d.wakeHalf, bandLoPx, d.wakeHalf * 2, bandHiPx - bandLoPx);
-        // her churned wake trailing down the screen
-        ctx.fillStyle = "rgba(223,241,244,.10)";
-        ctx.beginPath(); ctx.moveTo(whX - 14, H * 0.14); ctx.lineTo(whX + 14, H * 0.14); ctx.lineTo(whX + d.wakeHalf * 0.8, H); ctx.lineTo(whX - d.wakeHalf * 0.8, H); ctx.closePath(); ctx.fill();
-        drawShip(whX, H * 0.12, 1.5, { flag: "#111", hull: "#3a2818", sail: "#f3ead2", wake: true });
+        var d = DAYS[day], px = G.shipX * W, py = shipYPx(), drafting = inLane(px);
+        // ---- the SLIPSTREAM lane: a bright glowing channel from her stern to you.
+        // This is the whole game — ride it to gain. It pulses green when you're in it.
+        var laneW = d.lane, top = whY + 26;
+        var g = ctx.createLinearGradient(0, top, 0, H);
+        var lit = (phase === "chase" && drafting);
+        g.addColorStop(0, lit ? "rgba(143,214,160,.34)" : "rgba(224,178,92,.28)");
+        g.addColorStop(1, lit ? "rgba(143,214,160,.05)" : "rgba(224,178,92,.04)");
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(whX - 20, top); ctx.lineTo(whX + 20, top); ctx.lineTo(whX + laneW, H); ctx.lineTo(whX - laneW, H); ctx.closePath(); ctx.fill();
+        // dashed edges so the lane reads as a channel to stay inside
+        ctx.strokeStyle = lit ? "rgba(143,214,160,.8)" : "rgba(224,178,92,.7)"; ctx.lineWidth = 2.5; ctx.setLineDash([10, 9]);
+        ctx.beginPath(); ctx.moveTo(whX - 20, top); ctx.lineTo(whX - laneW, H); ctx.moveTo(whX + 20, top); ctx.lineTo(whX + laneW, H); ctx.stroke(); ctx.setLineDash([]);
+        // debris/kegs
         for (var i = 0; i < objs.length; i++) {
           var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
           if (o.kind === "keg") { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-9, -12, 18, 24); ctx.strokeStyle = "#3a2414"; ctx.lineWidth = 2; ctx.strokeRect(-9, -12, 18, 24); ctx.strokeStyle = "#c9962e"; ctx.beginPath(); ctx.moveTo(-9, -4); ctx.lineTo(9, -4); ctx.moveTo(-9, 4); ctx.lineTo(9, 4); ctx.stroke(); }
           else { ctx.fillStyle = "#8a5a34"; blob(o.r); }
           ctx.restore();
         }
-        drawBalls(balls);
-        drawShip(G.shipX * W, shipYPx(), 1.5, playerShipOpts());
+        // the Whydah — drawn LARGE so she's obviously the ship you're running down
+        drawShip(whX, whY, WHR, { flag: "#111", hull: "#3a2818", deck: "#5a4326", sail: "#f3ead2", wake: true });
+        // grapple lines when you're pulling alongside
+        if (phase === "board" && grapple) {
+          ctx.strokeStyle = "rgba(224,178,92,.85)"; ctx.lineWidth = 2;
+          for (var gl = 0; gl < 3; gl++) { ctx.beginPath(); ctx.moveTo(px, py - 10 + gl * 12); ctx.lineTo(whX, whY + 20 + gl * 8); ctx.stroke(); }
+        }
+        drawShip(px, py, 1.6, playerShipOpts());
         drawParts();
         drawHUD();
-        // the chase meter: how close to her stern you are
-        var mw = clamp(W * 0.5, 180, 380), mx = (W - mw) / 2, my2 = 58;
-        ctx.fillStyle = "rgba(11,22,32,.55)"; roundRect(mx - 4, my2 - 4, mw + 8, 16, 8); ctx.fill();
-        ctx.fillStyle = "rgba(244,231,201,.2)"; roundRect(mx, my2, mw, 8, 4); ctx.fill();
-        ctx.fillStyle = dist > 0.75 ? "#8fd6a0" : "#e0b25c"; roundRect(mx, my2, mw * dist, 8, 4); ctx.fill();
-        drawShip(mx + mw * dist, my2 + 4, 0.42, { wake: false, flag: "#111", dmg: 0 });
-        text("CLOSING ON HER STERN", mx + mw / 2, my2 + 22, 10.5, "rgba(244,231,201,.8)", "center", "bold");
-        text(d.label + (retries ? "  ·  attempt " + (retries + 1) : ""), W / 2, H * 0.22, 14, "#ffd24a", "center", "bold");
-        var inPocket = G.shipY >= clamp(0.5 - d.bandHalf, 0, 1) && G.shipY <= clamp(0.5 + d.bandHalf, 0, 1) && Math.abs(G.shipX * W - whX) < d.wakeHalf;
-        if (!inPocket && t > 2.4 && !grapple) {
-          ctx.globalAlpha = 0.55 + 0.45 * Math.sin(seaT * 8);
-          text("GET IN HER WAKE — you're losing her!", W / 2, H * 0.32, 14, "#ff8a7a", "center", "bold");
-          ctx.globalAlpha = 1;
+        // ---- the big, unmistakable objective gauge
+        var mw = clamp(W * 0.56, 220, 420), mx = (W - mw) / 2, my2 = 56;
+        ctx.fillStyle = "rgba(11,22,32,.6)"; roundRect(mx - 5, my2 - 5, mw + 10, 20, 9); ctx.fill();
+        ctx.fillStyle = "rgba(244,231,201,.18)"; roundRect(mx, my2, mw, 10, 5); ctx.fill();
+        var barCol = phase === "board" ? "#8fd6a0" : (drafting ? "#8fd6a0" : "#e0b25c");
+        ctx.fillStyle = barCol; roundRect(mx, my2, mw * (phase === "board" ? 1 : gap), 10, 5); ctx.fill();
+        text(phase === "board" ? "IN REACH — GET ALONGSIDE" : "CLOSE THE GAP", mx + mw / 2, my2 + 27, 11.5, "#f4e7c9", "center", "bold");
+        text(d.label + (retries ? "  ·  attempt " + (retries + 1) : ""), W / 2, H * 0.24, 14, "#ffd24a", "center", "bold");
+        // ---- live coaching so the objective is never a mystery
+        if (phase === "chase") {
+          if (!drafting) { ctx.globalAlpha = 0.55 + 0.45 * Math.sin(seaT * 8); text("◀ STEER INTO HER WAKE — the glowing lane ▶", W / 2, H * 0.34, 15, "#ff8a7a", "center", "bold"); ctx.globalAlpha = 1; }
+          else { text("GAINING ON HER! hold the lane", W / 2, H * 0.34, 14, "#8fd6a0", "center", "bold"); }
+        } else {
+          panel(W / 2, H * 0.5, clamp(W * 0.7, 250, 420), 96);
+          text("PULL UP ALONGSIDE HER!", W / 2, H * 0.5 - 16, 20, "#8fd6a0", "center", "bold");
+          text("steer UP into her wake lane, right off her beam", W / 2, H * 0.5 + 12, 13, "#f4e7c9", "center", "bold");
+          var bw2 = clamp(W * 0.5, 200, 340);
+          ctx.fillStyle = "rgba(244,231,201,.2)"; roundRect(W / 2 - bw2 / 2, H * 0.5 + 26, bw2, 8, 4); ctx.fill();
+          ctx.fillStyle = "#e0b25c"; roundRect(W / 2 - bw2 / 2, H * 0.5 + 26, bw2 * board, 8, 4); ctx.fill();
         }
-        if (gust && gust.warn > 0) text("💨 WIND RISING " + (gust.push > 0 ? "→" : "←") + " — brace the wheel!", W / 2, H * 0.38, 14, "#bfe0ff", "center", "bold");
-        if (grapple) {
-          var gw = clamp(W * 0.7, 240, 400);
-          panel(W / 2, H / 2, gw, 150);
-          text("SHE'S ALONGSIDE!", W / 2, H / 2 - 38, 22, "#8fd6a0", "center", "bold");
-          text("TAP! Throw the grapples — " + grapple.taps + " / " + grapple.need, W / 2, H / 2 - 4, 15, "#f4e7c9", "center", "bold");
-          ctx.fillStyle = "rgba(244,231,201,.2)"; roundRect(W / 2 - gw / 2 + 30, H / 2 + 20, gw - 60, 10, 5); ctx.fill();
-          ctx.fillStyle = grapple.t < 1 ? "#e05c5c" : "#e0b25c"; roundRect(W / 2 - gw / 2 + 30, H / 2 + 20, (gw - 60) * clamp(grapple.t / 3, 0, 1), 10, 5); ctx.fill();
-        }
-        if (t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Hold her wake — the gold pocket behind her stern — to close the distance.", W / 2, H * 0.5, 15, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        if (gust && gust.warn > 0) text("💨 WIND RISING " + (gust.push > 0 ? "→" : "←") + " — brace the wheel!", W / 2, H * 0.4, 14, "#bfe0ff", "center", "bold");
+        if (t < 3) { ctx.globalAlpha = clamp(3 - t, 0, 1); text("Run her down — ride the glowing wake lane to close in. No cannons; this is a chase.", W / 2, H * 0.62, 14, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
       }
     };
   }
@@ -1892,6 +1892,12 @@
       else if (o.sub === "dory") { addGold(10); addScore(5); SFX.coin(); coinBurst(o.x, o.y); }
       else if (o.sub === "crate") { addGold(20); addScore(15); SFX.win(); coinBurst(o.x, o.y); coinBurst(o.x, o.y); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#f7d84a", shape: "txt", txt: "📦 +20 🪙" }); }
       else if (o.sub === "bottle") { addScore(20); SFX.good(); coinBurst(o.x, o.y); spawn(o.x, o.y - 16, { vy: -46, life: 0.9, r: 12, c: "#bfe6ff", shape: "txt", txt: "+20" }); }
+      // the treasure tiers — pearls, gems, silver bars, and the great chest.
+      // Rarer as they get richer; each has its own look, colour, and payout.
+      else if (o.sub === "pearl") { addGold(18); addScore(12); SFX.coin(); coinBurst(o.x, o.y); spawn(o.x, o.y - 16, { vy: -48, life: 0.9, r: 12, c: "#eaf6ff", shape: "txt", txt: "🦪 +18 🪙" }); }
+      else if (o.sub === "gem") { addGold(30); addScore(22); SFX.win(); coinBurst(o.x, o.y); for (var gp = 0; gp < 10; gp++) spawn(o.x, o.y, { vx: rand(-70, 70), vy: rand(-110, -20), g: 220, life: rand(0.4, 0.8), r: rand(2, 3.5), c: o.gemc || "#e05c9c" }); spawn(o.x, o.y - 18, { vy: -52, life: 1.0, r: 14, c: o.gemc || "#e05c9c", shape: "txt", txt: "💎 +30 🪙" }); }
+      else if (o.sub === "ingot") { addGold(40); addScore(26); SFX.win(); coinBurst(o.x, o.y); coinBurst(o.x, o.y); spawn(o.x, o.y - 18, { vy: -52, life: 1.0, r: 14, c: "#dfe7ee", shape: "txt", txt: "🥈 +40 🪙" }); }
+      else if (o.sub === "chest") { addGold(70); addScore(50); SFX.win(); toast("💰 TREASURE CHEST! +70 🪙"); for (var cp = 0; cp < 20; cp++) spawn(o.x, o.y, { vx: rand(-140, 140), vy: rand(-170, -20), g: 240, life: rand(0.5, 1.1), r: rand(2, 4.5), c: choice(["#f7d84a", "#ffcf6a", "#fff", "#e0b25c"]) }); spawn(o.x, o.y - 22, { vy: -56, life: 1.2, r: 17, c: "#f7d84a", shape: "txt", txt: "💰 +70 🪙" }); }
       else if (o.sub === "wind") { addScore(8); SFX.good(); if (legDone < 0) t += 0.6; }
       else if (o.sub === "heart") {
         if (G.hull < G.maxHull) { repair(1); toast("❤ +1 heart"); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#ff8a7a", shape: "txt", txt: "+1 ♥" }); }
@@ -1926,15 +1932,22 @@
         pickupT -= dt;
         if (pickupT <= 0 && t < legTime - 1.2 && legDone < 0) {
           pickupT = rand(0.5, 1.0) / diff().pickup;
-          var picks = ["coin", "coin", "coin", "coin", "crate", "bottle", "wind"];
+          // common coins, then a spread of richer treasure that gets rarer as it
+          // gets more valuable: crate/bottle/pearl (common-ish), gem/ingot (rarer),
+          // chest (rare jackpot). Sea route runs a little richer than the shore.
+          var picks = ["coin", "coin", "coin", "coin", "crate", "bottle", "pearl", "wind"];
           if (shore) picks.push("dory", "crate", "barrel");
-          if (sea) picks.push("coin", "coin", "crate");
+          if (sea) picks.push("coin", "coin", "crate", "pearl");
+          if (chance(0.35)) picks.push("gem");
+          if (chance(0.22)) picks.push("ingot");
+          if (chance(0.10)) picks.push("chest");
           // hearts drift by when you're hurt — the easier the mode, the likelier;
           // when you're desperate they show up in any mode
           if (G.hull < G.maxHull) for (var hw = 0; hw < diff().heart; hw++) picks.push("heart");   // easy 2 / hard 1 / extreme+insane 0 drifting hearts
           if (G.hull <= 2) picks.push("heart", "barrel");   // but when you're desperate, one shows in any mode
           var pk = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(135, 190) * spMul / ease };
-          if (pk.sub === "crate") { pk.r = 18; }
+          if (pk.sub === "crate" || pk.sub === "chest") { pk.r = 18; }
+          if (pk.sub === "gem") { pk.gemc = choice(["#e05c9c", "#5cc7e0", "#7ae05c", "#e0b25c", "#b06ce0"]); }
           if (pk.sub === "coin" && chaos === "gigacoins") { pk.r = 26; pk.giga = true; }
           if (chaos === "gravity") pk.drift2 = rand(-55, 55);
           pk.x = rand(0.12, 0.88) * W; pk.y = -40; pk.a = 0; pk.spin = rand(-2, 2);
@@ -2121,6 +2134,10 @@
             else if (o.sub === "heart") { var hs = o.r * 0.9; ctx.fillStyle = "#e05c5c"; ctx.beginPath(); ctx.moveTo(0, hs * 0.75); ctx.bezierCurveTo(hs, 0, hs * 0.55, -hs, 0, -hs * 0.35); ctx.bezierCurveTo(-hs * 0.55, -hs, -hs, 0, 0, hs * 0.75); ctx.closePath(); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.arc(-hs * 0.3, -hs * 0.28, hs * 0.16, 0, 7); ctx.fill(); }
             else if (o.sub === "crate") { ctx.fillStyle = "#a9743a"; ctx.fillRect(-o.r, -o.r, o.r * 2, o.r * 2); ctx.strokeStyle = "#5a3a1e"; ctx.lineWidth = 2.5; ctx.strokeRect(-o.r, -o.r, o.r * 2, o.r * 2); ctx.beginPath(); ctx.moveTo(-o.r, -o.r); ctx.lineTo(o.r, o.r); ctx.moveTo(o.r, -o.r); ctx.lineTo(-o.r, o.r); ctx.stroke(); ctx.fillStyle = "#f7d84a"; ctx.font = "bold 11px serif"; ctx.textAlign = "center"; ctx.fillText("🪙", 0, 4); ctx.textAlign = "left"; }
             else if (o.sub === "bottle") { ctx.fillStyle = "#5a9a6a"; ctx.beginPath(); ctx.ellipse(0, 2, o.r * 0.5, o.r * 0.85, 0, 0, 7); ctx.fill(); ctx.fillStyle = "#3a2a1a"; ctx.fillRect(-o.r * 0.16, -o.r, o.r * 0.32, o.r * 0.6); ctx.fillStyle = "rgba(240,235,210,.85)"; ctx.fillRect(-o.r * 0.34, -o.r * 0.1, o.r * 0.68, o.r * 0.5); }
+            else if (o.sub === "pearl") { var pr = o.r * 0.72; ctx.fillStyle = "#eef6fb"; ctx.beginPath(); ctx.arc(0, 0, pr, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(200,225,240,.6)"; ctx.beginPath(); ctx.arc(pr * 0.28, pr * 0.28, pr * 0.55, 0, 7); ctx.fill(); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-pr * 0.3, -pr * 0.32, pr * 0.28, 0, 7); ctx.fill(); }
+            else if (o.sub === "gem") { var gc = o.gemc || "#e05c9c", gr = o.r * 0.9; ctx.fillStyle = gc; ctx.beginPath(); ctx.moveTo(0, -gr); ctx.lineTo(gr * 0.85, -gr * 0.2); ctx.lineTo(0, gr); ctx.lineTo(-gr * 0.85, -gr * 0.2); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-gr * 0.85, -gr * 0.2); ctx.lineTo(gr * 0.85, -gr * 0.2); ctx.moveTo(0, -gr); ctx.lineTo(0, gr); ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.moveTo(0, -gr); ctx.lineTo(gr * 0.4, -gr * 0.2); ctx.lineTo(0, -gr * 0.2); ctx.closePath(); ctx.fill(); }
+            else if (o.sub === "ingot") { ctx.fillStyle = "#d7dee6"; ctx.beginPath(); ctx.moveTo(-o.r, o.r * 0.45); ctx.lineTo(o.r, o.r * 0.45); ctx.lineTo(o.r * 0.7, -o.r * 0.45); ctx.lineTo(-o.r * 0.7, -o.r * 0.45); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#9aa6b2"; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.fillRect(-o.r * 0.55, -o.r * 0.28, o.r * 1.1, o.r * 0.16); }
+            else if (o.sub === "chest") { ctx.fillStyle = "#7a4a24"; ctx.fillRect(-o.r, -o.r * 0.3, o.r * 2, o.r * 1.1); ctx.fillStyle = "#8a5a2e"; ctx.beginPath(); ctx.moveTo(-o.r, -o.r * 0.3); ctx.quadraticCurveTo(0, -o.r * 1.1, o.r, -o.r * 0.3); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#e0b25c"; ctx.lineWidth = 2.5; ctx.strokeRect(-o.r, -o.r * 0.3, o.r * 2, o.r * 1.1); ctx.fillStyle = "#f7d84a"; ctx.fillRect(-o.r * 0.18, -o.r * 0.05, o.r * 0.36, o.r * 0.45); ctx.strokeStyle = "#e0b25c"; ctx.beginPath(); ctx.moveTo(-o.r, 0); ctx.lineTo(o.r, 0); ctx.stroke(); }
             else { ctx.fillStyle = "#8a5a34"; ctx.fillRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); ctx.strokeStyle = "#5a3a22"; ctx.lineWidth = 2; ctx.strokeRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); }
           }
           ctx.restore();
