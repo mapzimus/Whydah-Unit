@@ -1931,8 +1931,8 @@
           if (sea) picks.push("coin", "coin", "crate");
           // hearts drift by when you're hurt — the easier the mode, the likelier;
           // when you're desperate they show up in any mode
-          if (G.hull < G.maxHull) for (var hw = 0; hw <= diff().heart; hw++) picks.push("heart");
-          if (G.hull <= 2) picks.push("heart", "barrel");
+          if (G.hull < G.maxHull) for (var hw = 0; hw < diff().heart; hw++) picks.push("heart");   // easy 2 / hard 1 / extreme+insane 0 drifting hearts
+          if (G.hull <= 2) picks.push("heart", "barrel");   // but when you're desperate, one shows in any mode
           var pk = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(135, 190) * spMul / ease };
           if (pk.sub === "crate") { pk.r = 18; }
           if (pk.sub === "coin" && chaos === "gigacoins") { pk.r = 26; pk.giga = true; }
