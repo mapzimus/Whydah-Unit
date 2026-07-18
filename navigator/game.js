@@ -621,14 +621,18 @@
     var usedEventIds = [];
     G.seq = [];
     // the run's mission list: INSANE sails the whole multiverse (extra mythic
-    // legs included); every other mode sails only the historical ladder
+    // legs included); every other mode sails only the historical ladder. This
+    // is the FULL campaign for the mode (numbering/pips/progress context) — a
+    // resumed run still shows "M9 of 10", not "M1 of 2".
     G.runMissions = [];
     for (var rm = 0; rm < MISSIONS.length; rm++) {
       if (MISSIONS[rm].insaneOnly && runMode !== "insane") continue;
-      if (rm >= startM) G.runMissions.push(rm);
+      G.runMissions.push(rm);
     }
-    for (var ri = 0; ri < G.runMissions.length; ri++) {
-      var mi = G.runMissions[ri];
+    // but only build beats from the resume point forward
+    var buildFrom = G.runMissions.filter(function (m) { return m >= startM; });
+    for (var ri = 0; ri < buildFrom.length; ri++) {
+      var mi = buildFrom[ri];
       var msn = MISSIONS[mi];
       G.seq.push({ kind: "missionIntro", m: mi });
 
@@ -677,7 +681,7 @@
         G.seq.push({ kind: sig, m: mi });
       }
 
-      if (ri < G.runMissions.length - 1) G.seq.push({ kind: "port", m: mi });
+      if (ri < buildFrom.length - 1) G.seq.push({ kind: "port", m: mi });
     }
     stampMissionBeats();
   }
