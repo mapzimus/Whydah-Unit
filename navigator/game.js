@@ -1471,7 +1471,7 @@
   function ElectionScene() {
     var phase = "intro", prompt = null, t = 0, balls = [], fireGun = gunner();
     var hp = Math.max(4, Math.round(7 * diff().hp)), max = hp;   // a light merchant — the gentle first fight
-    var mx2 = W * 0.5, mdir = 1, fireT = 2.2, struck = 0;
+    var mx2 = W * 0.5, mdir = 1, fireT = 2.2;
     var picked = -1, resultTitle = "", resultLine = "", loot = 0;
     var CHOICES = [
       { l: "Spare her crew — a berth for any who'll join, plunder split even", gold: 40, score: 70,
@@ -1513,26 +1513,27 @@
         stepBalls(balls, dt, [{ x: mx2, y: H * 0.18, r: 22, onHit: function (b) {
           hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
           if (hp <= 0 && phase === "fight") {
-            phase = "vote"; struck = 1; SFX.win(); shake(10);
+            phase = "vote"; balls = []; SFX.win(); shake(10);   // clear her in-flight shot so nothing hangs under the vote panel
             for (var k = 0; k < 22; k++) spawn(mx2, H * 0.18, { vx: rand(-130, 130), vy: rand(-160, 40), g: 260, life: rand(0.6, 1.2), r: rand(2, 4), c: choice(["#f7d84a", "#e08c6a", "#fff"]) });
           }
         } }], { x: px, y: py, r: 18 });
       },
       render: function () {
+        var ph = phase;   // snapshot: a vote click flips phase mid-render, so branch on the phase we entered with (no one-frame panel overlap)
         drawSea(G.pal || PALETTES[0], seaT * 55, false);
-        if (phase !== "intro" && phase !== "done" && phase !== "vote") {
+        if (ph !== "intro" && ph !== "done" && ph !== "vote") {
           var bw = 140, hx = W / 2 - bw / 2;
           ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx - 2, 6, bw + 4, 12, 5); ctx.fill();
           ctx.fillStyle = "#3a5a3a"; roundRect(hx, 8, bw * clamp(hp / max, 0, 1), 8, 4); ctx.fill();
           text("THE ENGLISH MERCHANTMAN", W / 2, 32, 11, "#cdeccf", "center", "bold");
         }
-        if (phase !== "done") drawShip(mx2, H * 0.18, 1.7, { rot: Math.PI, flag: "#c8c8d0", hull: "#5a4326", deck: "#75603e", sail: "#f0e7cf", dmg: max - hp });
+        if (ph !== "done") drawShip(mx2, H * 0.18, 1.7, { rot: Math.PI, flag: "#c8c8d0", hull: "#5a4326", deck: "#75603e", sail: "#f0e7cf", dmg: max - hp });
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
-        if (phase === "intro") prompt.render();
-        if (phase === "fight" && t < 3.2) { ctx.globalAlpha = clamp(3.2 - t, 0, 1); text("Hold FIRE to rake her — dodge her swivel shot — force her to strike.", W / 2, H * 0.52, 14, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
-        if (phase === "vote") {
+        if (ph === "intro") prompt.render();
+        if (ph === "fight" && t < 3.2) { ctx.globalAlpha = clamp(3.2 - t, 0, 1); text("Hold FIRE to rake her — dodge her swivel shot — force her to strike.", W / 2, H * 0.52, 14, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
+        if (ph === "vote") {
           var w = clamp(W * 0.82, 300, 470);
           panel(W / 2, H * 0.42, w, 150);
           text("SHE STRIKES HER COLORS", W / 2, H * 0.42 - 44, 20, "#8fd6a0", "center", "bold");
@@ -1541,7 +1542,7 @@
           if (uiButton(W / 2 - bwid / 2, by0, bwid, bh, "⚖ " + CHOICES[0].l, { size: 11.5, color: "#2c5e38" })) elect(0);
           if (uiButton(W / 2 - bwid / 2, by0 + bh + 8, bwid, bh, "💰 " + CHOICES[1].l, { size: 11.5, color: "#6a4a1e" })) elect(1);
         }
-        if (phase === "done") {
+        if (ph === "done") {
           var w2 = clamp(W * 0.8, 280, 460);
           panel(W / 2, H / 2, w2, 168);
           text(resultTitle, W / 2, H / 2 - 56, 21, "#ffd24a", "center", "bold");
