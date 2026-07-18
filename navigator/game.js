@@ -2991,23 +2991,38 @@
   function updateTimers(dt) { for (var i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { var f = timers[i].fn; timers.splice(i, 1); f(); } } }
 
   // ---------------------------------------------------------------- STORM finale
+  // v9 rebuild: the nor'easter now comes in four named phases that escalate —
+  // THE SQUALL LINE (learn the wheel in the wreckage) → THE TEETH (forked
+  // lightning, real gusts, the first rogue waves) → THE EYE (a false calm, one
+  // breath and a barrel) → THE STORM WALL (wave sets, triple lightning, a
+  // wandering storm eddy that drags you off your line). Harder, longer, and it
+  // finally feels like the sea that sank her.
   function StormScene() {
     var phase = "intro", prompt = null, chosen = false;
-    // the storm's own beat position within its mission, so progress moves
-    // continuously through it instead of jumping beat-to-beat
     var beatInfo = G.seq[G.seqIndex] || { m: G.mIndex, mBeatIdx: 0, mBeatCount: 1 };
-    // Goody Hallett's curse, set (or lifted) back at Cape Cod: blessed shortens
-    // the storm; cursed brings the rogue waves in faster, but surviving it
-    // breaks the curse for a bonus
+    // Goody Hallett's curse, set (or lifted) back at Cape Cod
     var blessed = consumeMod("blessed"), cursed = consumeMod("cursed");
-    var t = 0, survive = (rand(28, 34) - (G.mods.warned ? 4 : 0)) * diff().storm * (blessed ? 0.9 : 1), objs = [], balls = [], spawnT = 0, lightning = 0, waveT = rand(2.5, 4) * (cursed ? 0.6 : 1), bigWave = null;
-    var bolt = null, boltT = rand(3, 5);       // targeted lightning: a marked column, then the strike
-    var gust = null, gustT = rand(5, 8);       // wind gusts that shove the ship sideways
-    var barrelT = rand(8, 10);                 // a rare mercy in the wreckage
-    var braceT = 0, fireGun = gunner();        // brace = a fresh tap inside the wave window
-    var warnLen = 1.4 + warnBonus();
-    // "make for port" still passes the Old Sow guarding the harbor mouth —
-    // both endings reach it, only "turn and fight" adds the boss first
+    var D = diff().storm, warnedEase = G.mods.warned ? 0.9 : 1;
+    // the phase timeline — durations scale with difficulty and the curse
+    var PH = [
+      { key: "squall", name: "THE SQUALL LINE", sub: "Wreckage on the water",   dur: rand(9, 11) * D * warnedEase },
+      { key: "teeth",  name: "THE TEETH",       sub: "The wind finds its edge", dur: rand(10, 12) * D * warnedEase },
+      { key: "eye",    name: "THE EYE",         sub: "Too quiet",               dur: rand(4, 5) },
+      { key: "wall",   name: "THE STORM WALL",  sub: "Hold on. Hold ON.",       dur: rand(11, 13) * D * (cursed ? 1.15 : 1) }
+    ];
+    if (blessed) PH[3].dur *= 0.82;
+    var survive = 0; for (var pi = 0; pi < PH.length; pi++) survive += PH[pi].dur;
+    var t = 0, phIdx = 0, phBannerT = 2.4, curKey = "squall";
+    var objs = [], balls = [], spawnT = 0, lightning = 0;
+    var bolts = [], boltT = rand(2.5, 4);      // targeted lightning: 1–3 marked columns
+    var gust = null, gustT = rand(4, 6);
+    var barrelT = rand(7, 9);
+    var braceT = 0, fireGun = gunner();
+    var waveSet = null, waveT = rand(3, 4.5) * (cursed ? 0.7 : 1);   // a set of 1–3 rogue waves
+    var eddy = null;                            // the wandering storm whirlpool, phase 4 only
+    var eyeGiven = false;
+    var warnLen = 1.35 + warnBonus();
+    function phaseAt(tt) { var acc = 0; for (var i = 0; i < PH.length; i++) { acc += PH[i].dur; if (tt < acc) return i; } return PH.length - 1; }
     function goPort() {
       for (var oi = G.seqIndex; oi < G.seq.length; oi++) if (G.seq[oi].kind === "oldsow") { G.seqIndex = oi - 1; advance(); return; }
       endRun(true, false);
@@ -3016,7 +3031,7 @@
       debugWin: function () { phase = "play"; t = survive; },
       enter: function () {
         G.preStormScore = G.score; G.reachedStorm = true;
-        prompt = Prompt("THE NOR'EASTER", "Cape Cod. The same storm that sank the real Whydah on April 26, 1717. Dodge the wreckage and the lightning. Tap to brace for the great waves. Fight the wind. Hold on.", function () { phase = "play"; }, "⚓ FROM THE RECORD");
+        prompt = Prompt("THE NOR'EASTER", "Cape Cod, April 26, 1717 — the storm that sank the real Whydah. It comes in waves: the squall, the teeth, a lying calm, and the wall. Dodge the wreckage, fight the wheel through the gusts, and TAP to brace when the rogue waves rear up. Live through all four.", function () { phase = "play"; }, "⚓ FROM THE RECORD");
       },
       update: function (dt) {
         seaT += dt;
@@ -3029,40 +3044,72 @@
         }
         t += dt;
         G.stormT = clamp(t / survive, 0, 1);
-        var fury = G.stormT;                   // the storm builds as it goes
+        var fury = G.stormT;
         G.mIndex = beatInfo.m; G.mFrac = clamp((beatInfo.mBeatIdx + fury) / beatInfo.mBeatCount, 0, 1); setProgress();
+        // phase bookkeeping
+        var np = phaseAt(t);
+        if (np !== phIdx) { phIdx = np; curKey = PH[phIdx].key; phBannerT = 2.4; SFX.thunder(); shake(6); if (curKey === "wall") eddy = null; }
+        if (phBannerT > 0) phBannerT -= dt;
+        var eye = curKey === "eye", wall = curKey === "wall";
+        // intensity ramps within teeth/wall and eases to nothing in the eye
+        var intensity = eye ? 0.12 : (curKey === "squall" ? 0.55 : (curKey === "teeth" ? 0.9 : 1.25)) + fury * 0.3;
+
         helm(dt, 1, 0.4);
-        G.shipX += Math.sin(t * 1.3) * 0.12 * dt;      // the sea itself works the wheel
+        G.shipX += Math.sin(t * 1.3) * (eye ? 0.03 : 0.12) * dt;
         if (gust) {
-          if (gust.warn > 0) gust.warn -= dt;          // the sails lean before the shove lands
+          if (gust.warn > 0) gust.warn -= dt;
           else { G.shipX += gust.push * dt; gust.t -= dt; if (gust.t <= 0) gust = null; }
+        }
+        // the storm eddy: only in the wall, wanders slowly, drags you toward it
+        if (wall && !eddy) eddy = { x: rand(0.3, 0.7) * W, y: H * rand(0.42, 0.6), R: Math.min(W, H) * 0.34, k: 0.5, vx: rand(-24, 24) };
+        if (eddy) {
+          eddy.x += eddy.vx * dt; if (eddy.x < W * 0.24 || eddy.x > W * 0.76) eddy.vx *= -1;
+          applyWhirlpool(dt, eddy, G.shipX * W, shipYPx());
         }
         G.shipX = clamp(G.shipX, 0.06, 0.94);
         var shipPX = G.shipX * W, shipPY = shipYPx();
-        if (input.firePressed) braceT = 0.5;           // only a fresh tap braces — holding won't
+        if (input.firePressed) braceT = 0.5;
         if (braceT > 0) braceT -= dt;
         if (fireGun(dt)) { playerShot(shipPX, shipPY - 20, -430).forEach(function (nb) { balls.push(nb); }); SFX.fire(); }
+
         if (lightning > 0) lightning -= dt;
-        if (chance(0.006)) { lightning = 0.12; SFX.thunder(); }
-        // targeted strike: the sky marks a column, then the bolt comes down
+        if (!eye && chance(0.006)) { lightning = 0.12; SFX.thunder(); }
+        // targeted strikes: teeth throws 2 columns, the wall throws 3
         boltT -= dt;
-        if (!bolt && boltT <= 0) { bolt = { x: clamp(shipPX + rand(-W * 0.12, W * 0.12), W * 0.1, W * 0.9), warn: 0.9 + warnBonus() * 0.3, w: 54 }; }
-        if (bolt) {
-          bolt.warn -= dt;
-          if (bolt.warn <= 0) {
-            lightning = 0.16; SFX.thunder(); shake(10);
-            for (var lb = 0; lb < 14; lb++) spawn(bolt.x + rand(-10, 10), rand(0, H * 0.8), { vx: rand(-30, 30), vy: rand(60, 160), g: 0, life: 0.3, r: rand(1, 3), c: "#fff" });
-            if (Math.abs(shipPX - bolt.x) < bolt.w / 2 + 14) damage(1);
-            bolt = null; boltT = rand(3.5, 6) - fury * 1.5;
+        if (!eye && bolts.length === 0 && boltT <= 0) {
+          var n = wall ? 3 : (curKey === "teeth" ? 2 : 1);
+          for (var bi = 0; bi < n; bi++) {
+            var bx = bi === 0 ? clamp(shipPX + rand(-W * 0.1, W * 0.1), W * 0.1, W * 0.9) : clamp(rand(W * 0.1, W * 0.9), W * 0.1, W * 0.9);
+            bolts.push({ x: bx, warn: (0.85 - fury * 0.2) + warnBonus() * 0.3, w: 52, hit: false });
+          }
+          boltT = rand(3.2, 5.2) - fury * 1.6;
+        }
+        for (var k = bolts.length - 1; k >= 0; k--) {
+          var bt = bolts[k]; bt.warn -= dt;
+          if (bt.warn <= 0) {
+            lightning = 0.16; SFX.thunder(); shake(9);
+            for (var lb = 0; lb < 12; lb++) spawn(bt.x + rand(-10, 10), rand(0, H * 0.8), { vx: rand(-30, 30), vy: rand(60, 160), g: 0, life: 0.3, r: rand(1, 3), c: "#fff" });
+            if (Math.abs(shipPX - bt.x) < bt.w / 2 + 14) { if (chance(stormShrug() * 0.5)) toast("🪣 The rig holds!"); else damage(1); }
+            bolts.splice(k, 1);
           }
         }
-        // wind gust with a lean-in warning
+        // gusts: stronger and longer as the storm builds; the wall throws crosswinds
         gustT -= dt;
-        if (!gust && gustT <= 0) { gust = { push: chance(0.5) ? 0.28 : -0.28, t: 1.6, warn: 0.8 + warnBonus() * 0.3 }; gustT = rand(6, 9); }
+        if (!eye && !gust && gustT <= 0) {
+          var mag = 0.26 + intensity * 0.1;
+          gust = { push: (chance(0.5) ? 1 : -1) * mag, t: wall ? 2.0 : 1.5, warn: (0.75 - fury * 0.2) + warnBonus() * 0.3 };
+          gustT = rand(5, 8) - intensity;
+        }
+        // wreckage
         spawnT -= dt;
-        if (spawnT <= 0) { spawnT = rand(0.22, 0.5) * (1 - fury * 0.35) * narrowEase() * diff().spawn; objs.push({ x: rand(0.08, 0.92) * W, y: -30, r: rand(15, 24), sp: (rand(240, 330) + fury * 60) / Math.max(1, narrowEase() * 0.85), a: 0, spin: rand(-3, 3), sub: choice(["rock", "wood", "wood"]), hp: 1 }); }
+        if (!eye && spawnT <= 0) {
+          spawnT = rand(0.24, 0.52) / intensity * narrowEase() * diff().spawn;
+          objs.push({ x: rand(0.08, 0.92) * W, y: -30, r: rand(15, 24), sp: (rand(230, 320) + intensity * 70) / Math.max(1, narrowEase() * 0.85), a: 0, spin: rand(-3, 3), sub: choice(["rock", "wood", "wood"]), hp: 1 });
+        }
+        // barrels: the eye guarantees one, otherwise they're a rare mercy
         barrelT -= dt;
-        if (barrelT <= 0) { barrelT = rand(8, 10); objs.push({ x: rand(0.1, 0.9) * W, y: -30, r: 15, sp: rand(200, 260), a: 0, spin: rand(-1, 1), sub: "barrel" }); }
+        if (eye && !eyeGiven) { eyeGiven = true; repair(1); objs.push({ x: rand(0.3, 0.7) * W, y: -30, r: 15, sp: 180, a: 0, spin: rand(-1, 1), sub: "barrel" }); toast("🚢 The eye. Catch your breath — and a barrel."); }
+        if (!eye && barrelT <= 0) { barrelT = rand(8, 11); objs.push({ x: rand(0.1, 0.9) * W, y: -30, r: 15, sp: rand(200, 260), a: 0, spin: rand(-1, 1), sub: "barrel" }); }
         for (var i = objs.length - 1; i >= 0; i--) {
           var o = objs[i]; o.y += o.sp * dt; o.a += o.spin * dt;
           if (Math.hypot(o.x - shipPX, o.y - shipPY) < o.r + 15) {
@@ -3079,59 +3126,85 @@
           if (o.y > H + 40) objs.splice(i, 1);
         }
         var stormTargets = [];
-        for (var oi = 0; oi < objs.length; oi++) {
-          var ob = objs[oi];
-          if (ob.sub === "barrel") continue;   // don't blow up the mercy
+        for (var oj = 0; oj < objs.length; oj++) {
+          var ob = objs[oj];
+          if (ob.sub === "barrel") continue;
           (function (o2) { stormTargets.push({ x: o2.x, y: o2.y, r: o2.r, onHit: function () {
             addScore(5); SFX.point(); splash(o2.x, o2.y, 10); var idx = objs.indexOf(o2); if (idx >= 0) objs.splice(idx, 1);
           } }); })(ob);
         }
         stepBalls(balls, dt, stormTargets);
+        // rogue waves now come in SETS: 1 in the squall, 2 in the teeth, up to 3 in the wall
         waveT -= dt;
-        if (!bigWave && waveT <= 0) bigWave = { warn: warnLen, hit: false };
-        if (bigWave) {
-          bigWave.warn -= dt;
-          if (bigWave.warn <= 0 && !bigWave.hit) {
-            bigWave.hit = true;
-            if (braceT <= 0) { if (chance(stormShrug())) { shake(8); toast("🪣 The pumps hold!"); } else { damage(2); shake(16); } }
+        if (!eye && !waveSet && waveT <= 0) {
+          var count = wall ? (chance(0.5) ? 3 : 2) : (curKey === "teeth" ? 2 : 1);
+          waveSet = { left: count, total: count, warn: warnLen, hit: false };
+        }
+        if (waveSet) {
+          waveSet.warn -= dt;
+          if (waveSet.warn <= 0 && !waveSet.hit) {
+            waveSet.hit = true;
+            if (braceT <= 0) { if (chance(stormShrug())) { shake(8); toast("🪣 The pumps hold!"); } else { damage(wall ? 2 : 1); shake(16); } }
             else { addScore(20); shake(8); }
-            bigWave = null; waveT = rand(4, 6.5);
+            waveSet.left--;
+            if (waveSet.left > 0) { waveSet.hit = false; waveSet.warn = 0.75 + warnBonus() * 0.2; }   // the next wave in the set, fast
+            else { waveSet = null; waveT = rand(4, 6.5) - intensity; }
           }
         }
-        if (chance(0.5)) spawn(rand(0, W), rand(H * 0.2, H), { vx: rand(-40, 40), vy: rand(80, 160), g: 0, life: 0.5, r: rand(1, 2.5), c: "rgba(220,235,240,.7)" });
+        if (!eye && chance(0.5)) spawn(rand(0, W), rand(H * 0.2, H), { vx: rand(-40, 40), vy: rand(80, 160), g: 0, life: 0.5, r: rand(1, 2.5), c: "rgba(220,235,240,.7)" });
         if (t >= survive) {
           phase = "won"; G.stormCleared = true; repair(2); SFX.win();
           if (cursed) { addScore(80); toast("THE CURSE IS BROKEN"); }
-        }   // the crew patches her up in the calm
+        }
       },
       render: function () {
-        drawSea(STORM_PAL, seaT * 90, true);
-        ctx.strokeStyle = "rgba(200,220,230,.35)"; ctx.lineWidth = 1;
-        for (var r = 0; r < 60; r++) { var rx = (r * 173 + (seaT * 900) % W) % W; var ry = (r * 271 + (seaT * 1400) % H) % H; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 6, ry + 16); ctx.stroke(); }
-        if (bolt) {
+        var eye = curKey === "eye";
+        drawSea(STORM_PAL, seaT * (eye ? 40 : 90), true);
+        // rain — thinner in the eye
+        ctx.strokeStyle = "rgba(200,220,230," + (eye ? 0.14 : 0.35) + ")"; ctx.lineWidth = 1;
+        var rn = eye ? 22 : 60;
+        for (var r = 0; r < rn; r++) { var rx = (r * 173 + (seaT * 900) % W) % W; var ry = (r * 271 + (seaT * 1400) % H) % H; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 6, ry + 16); ctx.stroke(); }
+        if (eddy) drawWhirlpool(eddy);
+        for (var bk = 0; bk < bolts.length; bk++) {
+          var bt = bolts[bk];
           ctx.fillStyle = "rgba(255,240,150," + (0.12 + 0.14 * Math.sin(seaT * 24)) + ")";
-          ctx.fillRect(bolt.x - bolt.w / 2, 0, bolt.w, H);
-          text("⚡", bolt.x, H * 0.2, 26, "#ffd24a", "center", "bold");
+          ctx.fillRect(bt.x - bt.w / 2, 0, bt.w, H);
+          text("⚡", bt.x, H * 0.2, 26, "#ffd24a", "center", "bold");
         }
         for (var i = 0; i < objs.length; i++) { var o = objs[i]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a); if (o.sub === "rock") { ctx.fillStyle = "#4a4740"; blob(o.r); } else if (o.sub === "barrel") { ctx.fillStyle = "#8a5a34"; ctx.fillRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); ctx.strokeStyle = "#8fd6a0"; ctx.lineWidth = 2; ctx.strokeRect(-o.r * 0.7, -o.r, o.r * 1.4, o.r * 2); } else { ctx.fillStyle = "#6b4a2a"; ctx.fillRect(-o.r, -5, o.r * 2, 10); } ctx.restore(); }
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
+        // progress bar, split into phase ticks
         var sw = clamp(W * 0.6, 200, 400), sx = (W - sw) / 2, sy = H - 28;
         text("HOLD ON", W / 2, sy - 10, 13, "#f4e7c9", "center", "bold");
         ctx.fillStyle = "rgba(0,0,0,.5)"; roundRect(sx - 3, sy - 3, sw + 6, 12, 6); ctx.fill();
-        ctx.fillStyle = "#e0b25c"; roundRect(sx, sy, sw * clamp(t / survive, 0, 1), 6, 3); ctx.fill();
-        if (gust) {
-          if (gust.warn > 0) text("💨 WIND RISING " + (gust.push > 0 ? "→" : "←") + " — get ready!", W / 2, H * 0.34, 16, "#bfe0ff", "center", "bold");
-          else text("💨 GUST! Fight the wheel " + (gust.push > 0 ? "←" : "→"), W / 2, H * 0.34, 17, "#bfe0ff", "center", "bold");
+        ctx.fillStyle = eye ? "#7fb7c9" : "#e0b25c"; roundRect(sx, sy, sw * clamp(t / survive, 0, 1), 6, 3); ctx.fill();
+        var acc = 0; for (var pt = 0; pt < PH.length - 1; pt++) { acc += PH[pt].dur; var tickX = sx + sw * (acc / survive); ctx.fillStyle = "rgba(10,16,22,.8)"; ctx.fillRect(tickX - 1, sy - 1, 2, 8); }
+        // phase banner
+        if (phBannerT > 0 && phase === "play") {
+          var al = clamp(phBannerT / 0.6, 0, 1);
+          ctx.globalAlpha = al;
+          text(PH[phIdx].name, W / 2, H * 0.24, clamp(W * 0.055, 20, 30), eye ? "#9fd6e2" : "#ffd7a0", "center", "bold");
+          text(PH[phIdx].sub, W / 2, H * 0.24 + 26, 13, "rgba(244,231,201,.8)", "center");
+          ctx.globalAlpha = 1;
         }
-        if (bigWave && phase === "play") { ctx.fillStyle = "rgba(150,52,40," + (0.3 + 0.3 * Math.sin(seaT * 20)) + ")"; ctx.fillRect(0, 0, W, H); text("ROGUE WAVE — TAP SPACE or 🔥 to brace!", W / 2, H * 0.5, clamp(W * 0.045, 15, 23), "#ffe1b0", "center", "bold"); }
+        if (gust) {
+          if (gust.warn > 0) text("💨 WIND RISING " + (gust.push > 0 ? "→" : "←") + " — get ready!", W / 2, H * 0.36, 16, "#bfe0ff", "center", "bold");
+          else text("💨 GUST! Fight the wheel " + (gust.push > 0 ? "←" : "→"), W / 2, H * 0.36, 17, "#bfe0ff", "center", "bold");
+        }
+        if (eddy && phBannerT <= 0) text("🌀 THE SEA OPENS — row clear of the pull!", W / 2, H * 0.42, 14, "#a9d4e0", "center", "bold");
+        if (waveSet && phase === "play") {
+          ctx.fillStyle = "rgba(150,52,40," + (0.3 + 0.3 * Math.sin(seaT * 20)) + ")"; ctx.fillRect(0, 0, W, H);
+          var lbl = waveSet.total > 1 ? ("ROGUE WAVE SET — " + (waveSet.total - waveSet.left + 1) + "/" + waveSet.total + " — TAP to brace!") : "ROGUE WAVE — TAP SPACE or 🔥 to brace!";
+          text(lbl, W / 2, H * 0.5, clamp(W * 0.042, 14, 22), "#ffe1b0", "center", "bold");
+        }
         if (lightning > 0) { ctx.fillStyle = "rgba(255,255,255," + lightning * 3 + ")"; ctx.fillRect(0, 0, W, H); }
         if (phase === "intro") prompt.render();
         if (phase === "won") {
           var w = clamp(W * 0.84, 290, 470); panel(W / 2, H / 2, w, 210);
           text("THE STORM BREAKS!", W / 2, H / 2 - 68, 24, "#8fd6a0", "center", "bold");
-          wrapText("You beat the storm the real Whydah could not. The win is yours and the crew patches her up. But something followed you out of the dark. Something with three heads.", W / 2, H / 2 - 40, w - 44, 19, 13.5, "#f4e7c9");
+          wrapText("All four walls of it, and you're still afloat — further than the real Whydah ever got. The win is yours and the crew patches her up. But something followed you out of the dark. Something with three heads.", W / 2, H / 2 - 40, w - 44, 19, 13.5, "#f4e7c9");
           var bw = (w - 60) / 2, by = H / 2 + 30;
           if (!chosen && uiButton(W / 2 - w / 2 + 20, by, bw, 46, "⚓ MAKE FOR PORT", { size: 13.5, color: "#2c5e38" })) { chosen = true; goPort(); return; }
           if (!chosen && uiButton(W / 2 + 10, by, bw, 46, "🐍 TURN AND FIGHT", { size: 13.5, color: "#96341f" })) { chosen = true; advance(); return; }
@@ -3140,7 +3213,6 @@
       }
     };
   }
-
   // ---------------------------------------------------------------- BOSS: the grandfather serpent
   // Three heads, one grudge. Only shows itself to crews that beat the storm.
   function BossScene() {
