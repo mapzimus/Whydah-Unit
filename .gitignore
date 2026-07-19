@@ -40,6 +40,12 @@
 !photo/
 !photo/**
 
+# Classroom games hub + Parrot Flip
+!games/
+!games/**
+!parrot-flip/
+!parrot-flip/**
+
 # Stable route for the live unit dashboard
 !unit/
 !unit/**
