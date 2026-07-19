@@ -1,8 +1,8 @@
-# Grog Flip
+# Parrot Flip
 
 A pirate-themed bottle-flip party game for [WhydahStory](https://whydahstory.com). Same Matter.js physics and rules as the original Flip Game — reskinned for the Whydah classroom: amber grog bottle, ship-deck table, crew colors, and WhydahStory navy/gold palette.
 
-**Play:** https://whydahstory.com/grog-flip/
+**Play:** https://whydahstory.com/parrot-flip/
 
 ## Play locally
 
