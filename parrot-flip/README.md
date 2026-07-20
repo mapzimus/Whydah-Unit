@@ -1,24 +1,37 @@
 # Parrot Flip
 
-A pirate-themed bottle-flip party game for [WhydahStory](https://whydahstory.com). Same Matter.js physics and rules as the original Flip Game — reskinned for the Whydah classroom: amber grog bottle, ship-deck table, crew colors, and WhydahStory navy/gold palette.
+A pirate-parrot flip party game for [WhydahStory](https://whydahstory.com).
+Pick a Caribbean macaw (eye patch mandatory), flick it sky-high, and land it
+on its feet. Same Matter.js flick physics and rules as the original Flip Game.
 
 **Play:** https://whydahstory.com/parrot-flip/
 
 ## Play locally
 
-No build step. Open `index.html` (or serve the folder statically).
+No build step. Serve the folder statically and open it:
 
 ```
 npx serve .
 ```
 
-## What’s the same
+## The birds
 
-- Flick physics (`js/physics.js`), scoring, lives, streaks, ON FIRE, AI, practice mode
-- Vanilla JS + Canvas + vendored Matter.js — no npm bundler
+The parrot art is a **hand-authored SVG macaw** (side profile: hooked ivory
+beak, white facial patch, golden wing band, long graduated tail, grey feet —
+and the pirate eye patch every bird must wear). It lives entirely inside
+`js/renderer.js`, baked per player color at runtime into cached images — no
+asset files, still fully offline.
 
-## What’s pirate
+`js/renderer.js` is synced from the upstream game at
+[mapzimus/flipgame](https://github.com/mapzimus/flipgame) → `parrot-flip/`
+(art build v6). If the birds get another glow-up there, copy that one file
+over, bump `?v=` in `index.html` and `CACHE_NAME` in `service-worker.js`,
+and re-test. The rest of this folder (physics feel wiring, impact sounds,
+pirate menu copy) is WhydahStory's own and is NOT auto-synced.
 
-- UI copy, grog color names, amber bottle + cork, night-sea / deck backdrop, site colors
+## What's pirate here
 
-Ported from [mapzimus/flipgame](https://github.com/mapzimus/flipgame).
+- Menu copy: Cast Off, Port → Starboard, Calm seas / Rough seas / Gale,
+  Landlubber / Sailor / Pirate
+- Winner is crowned **Captain**
+- Night-sea / ship-deck backdrop, WhydahStory navy/gold palette

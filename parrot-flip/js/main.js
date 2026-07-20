@@ -350,6 +350,9 @@
   function startGame(defs, dir, opts) {
     opts = opts || {};
     Renderer.init(canvas);
+    // Bake the SVG parrot sprites for every color in this game up front so
+    // the first flick never shows the loading placeholder.
+    if (Renderer.preloadParrots) Renderer.preloadParrots(defs.map((d) => d.color).filter(Boolean));
     resize();   // sets DPR transform + renderer logical dims (must run after init)
     Physics.init(window.innerWidth, window.innerHeight);  // logical coords
     Physics.setFeel(opts.feel || 'standard');
