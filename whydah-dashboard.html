@@ -1164,8 +1164,30 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
   main > section[id].active > h2 { animation: none !important; }
   .accordion-body[hidden] { display: block !important; }
 }
+
+/* ===== Game Gate (teacher-controlled classroom unlock) ===== */
+.gate-hidden { display: none !important; }
+.games-locked-chip { display:inline-block; color:#b79a5e; font-style:italic; opacity:.9; }
+#game-gate .gate-status { font-family:'IM Fell English SC',Georgia,serif; margin:.4em 0 1em; padding:.5em .9em; border-radius:6px; border:1px solid #6b4f2c; background:#ede1c5; color:#2a1d0f; display:inline-block; }
+#game-gate .gate-status.ok { border-color:#3f7d52; }
+#game-gate .gate-status.bad { border-color:#a23b2f; color:#7a2318; }
+#game-gate .gate-grid { display:flex; flex-direction:column; gap:.5em; max-width:30em; }
+#game-gate .gate-row { display:flex; align-items:center; gap:.8em; padding:.55em .8em; border:1px solid #c9a55f; border-radius:8px; background:#fbf3df; color:#2a1d0f; }
+#game-gate .gate-name { font-weight:700; flex:1; }
+#game-gate .gate-pill { font-size:.8em; padding:.15em .6em; border-radius:999px; background:#ded0ad; color:#4a3a1c; min-width:4em; text-align:center; }
+#game-gate .gate-pill.open { background:#3f7d52; color:#fff; }
+#game-gate .gate-pill.locked { background:#7c5a2e; color:#fff; }
+#game-gate .gate-toggle { min-width:5.5em; padding:.4em .9em; border-radius:6px; border:0; font-weight:700; cursor:pointer; font-family:'IM Fell English SC',Georgia,serif; }
+#game-gate .gate-toggle.is-locked { background:#3f7d52; color:#fff; }
+#game-gate .gate-toggle.is-open { background:#7c5a2e; color:#fff; }
+#game-gate .gate-toggle[disabled] { opacity:.5; cursor:default; }
+#game-gate .gate-bulk-btn { margin-right:.6em; padding:.45em 1em; border-radius:6px; border:1px solid #c9a55f; background:#c9a55f; color:#2c1810; font-weight:700; cursor:pointer; font-family:'IM Fell English SC',Georgia,serif; }
+#game-gate .gate-bulk-btn:hover { background:#e7c877; }
+#game-gate .gate-bulk-btn[disabled] { opacity:.5; cursor:default; }
+#game-gate .gate-linklike { background:none; border:0; color:#8a5a2b; text-decoration:underline; cursor:pointer; font:inherit; padding:0; }
 </style>
 <script src="day-config.js" defer></script>
+<script src="/games-gate.js" defer></script>
 </head>
 <body>
 <div id="today-banner"></div>
@@ -1212,14 +1234,16 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
     <li class="nav-group">
       <span class="nav-group-label">Games</span>
       <ul>
-        <li><a href="navigator/" target="_blank" rel="noopener">&#9875; Navigator Game</a></li>
-        <li><a href="black-sam/" target="_blank" rel="noopener">&#127988;&#8205;&#9760;&#65039; Black Sam: the Game</a></li>
-        <li><a href="parrot-flip/" target="_blank" rel="noopener">&#129437; Parrot Flip</a></li>
+        <li class="gate-hidden" data-game-link="navigator"><a href="navigator/" target="_blank" rel="noopener">&#9875; Navigator Game</a></li>
+        <li class="gate-hidden" data-game-link="black-sam"><a href="black-sam/" target="_blank" rel="noopener">&#127988;&#8205;&#9760;&#65039; Black Sam: the Game</a></li>
+        <li class="gate-hidden" data-game-link="parrot-flip"><a href="parrot-flip/" target="_blank" rel="noopener">&#129437; Parrot Flip</a></li>
+        <li data-games-locked-note><span class="games-locked-chip">&#128274; Games open in class</span></li>
       </ul>
     </li>
     <li class="nav-group" data-audience="admin">
       <span class="nav-group-label">Captain's Cabin</span>
       <ul>
+        <li data-audience="admin"><a href="#game-gate" data-admin-link="true">Game Gate</a></li>
         <li data-audience="admin"><a href="#unit-plan" data-admin-link="true">Unit Plan</a></li>
         <li data-audience="admin"><a href="#voyage-journal" data-admin-link="true">Voyage Journal</a></li>
         <li data-audience="admin"><a href="#source-links" data-admin-link="true">Sources &amp; Bibliography</a></li>
@@ -1313,7 +1337,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <div class="games-promo">
 <h3 style="margin-top:0;">Earn the wheel</h3>
 <p>Three games sail on this ship. <strong>Navigator</strong> hands you a real compass and a heading to hold. <strong>Black Sam</strong> drops you into 1717 to make the calls the crew made. <strong>Parrot Flip</strong> is the crew's parlor game — flick a pirate macaw and land it on its feet. Your choices steer the voyage.</p>
-<p class="games-promo-links"><a href="navigator/" target="_blank" rel="noopener">&#9875; Play Navigator</a> <a href="black-sam/" target="_blank" rel="noopener">&#127988;&#8205;&#9760;&#65039; Play Black Sam</a> <a href="parrot-flip/" target="_blank" rel="noopener">&#129437; Play Parrot Flip</a></p>
+<p class="games-promo-links"><a class="gate-hidden" data-game-link="navigator" href="navigator/" target="_blank" rel="noopener">&#9875; Play Navigator</a> <a class="gate-hidden" data-game-link="black-sam" href="black-sam/" target="_blank" rel="noopener">&#127988;&#8205;&#9760;&#65039; Play Black Sam</a> <a class="gate-hidden" data-game-link="parrot-flip" href="parrot-flip/" target="_blank" rel="noopener">&#129437; Play Parrot Flip</a> <span data-games-locked-note class="games-locked-chip">&#128274; Your teacher opens the games during class</span></p>
 </div>
 </section>
 
@@ -2727,6 +2751,20 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <h3 style="margin-top:0;">The Showcase</h3>
 <p>Thursday August 6 is the public Showcase. Final projects get presented to families, faculty, and visitors. Voyage Journals lay open on tables for everyone to flip through. This is the public reveal of five weeks of work: the moment your chosen voice gets heard.</p>
 </div>
+</section>
+
+<section id="game-gate" data-folio="xiii" data-audience="admin">
+<h2>Game Gate</h2>
+<p class="meta">Open the crew games for the class, then lock them when you're done. This flips a live switch in the ship's log (Supabase) &mdash; every student device unlocks or re-locks within a few seconds. Students <strong>cannot</strong> open the games themselves; only this panel can, and only with the gate passcode.</p>
+<div id="gate-conn" class="gate-status">Checking the ship's log&hellip;</div>
+<div id="gate-grid" class="gate-grid"><!-- rows injected by the gate script --></div>
+<p class="gate-bulk">
+  <button type="button" id="gate-open-all" class="gate-bulk-btn">Open all</button>
+  <button type="button" id="gate-lock-all" class="gate-bulk-btn">Lock all</button>
+</p>
+<p class="meta">Teacher preview (ignores the gate): <a href="navigator/" target="_blank" rel="noopener">Navigator</a> &middot; <a href="black-sam/" target="_blank" rel="noopener">Black Sam</a> &middot; <a href="parrot-flip/" target="_blank" rel="noopener">Parrot Flip</a></p>
+<p class="meta">The first toggle each session asks for the <strong>gate passcode</strong> (stored only in the database, never on this page). <button type="button" id="gate-forget" class="gate-linklike">Forget the passcode on this device</button></p>
+<p class="meta">Note: this is a classroom-management gate, not hard security &mdash; a student who already knows a game's direct URL and has the passcode could still reach it. It stops casual wandering into the games between activities.</p>
 </section>
 
 <section id="unit-plan" data-folio="xiii" data-audience="admin">
@@ -4153,6 +4191,111 @@ document.addEventListener('DOMContentLoaded', function() {
       var markup = wrap.getAttribute('data-embed');
       if (!markup) return;
       wrap.innerHTML = markup; // data-embed holds a single trusted <iframe> string
+    });
+  });
+});
+</script>
+<script>
+/* ===== Game Gate wiring =====
+   Reads the live gate (window.WhydahGate from /games-gate.js) and:
+   1. shows/hides the student-facing game links + "opens in class" note, and
+   2. drives the teacher panel in the Captain's Cabin (behind the LEAP4ED wall).
+   Runs on DOMContentLoaded so the deferred gate script has already executed. */
+document.addEventListener('DOMContentLoaded', function () {
+  var G = window.WhydahGate;
+  if (!G) return;
+  var PASS_KEY = 'whydah-gate-pass-v1';
+
+  // 1. Student-facing links: a game link shows only when its gate is open.
+  function applyLinks(state) {
+    document.querySelectorAll('[data-game-link]').forEach(function (el) {
+      var slug = el.getAttribute('data-game-link');
+      el.classList.toggle('gate-hidden', state[slug] !== true);
+    });
+    var anyOpen = G.GAMES.some(function (s) { return state[s] === true; });
+    document.querySelectorAll('[data-games-locked-note]').forEach(function (el) {
+      el.classList.toggle('gate-hidden', anyOpen);
+    });
+  }
+
+  // 2. Teacher panel.
+  var grid = document.getElementById('gate-grid');
+  var rows = {};
+  if (grid) {
+    G.GAMES.forEach(function (slug) {
+      var row = document.createElement('div'); row.className = 'gate-row';
+      var name = document.createElement('span'); name.className = 'gate-name';
+      name.textContent = G.NAMES[slug] || slug;
+      var pill = document.createElement('span'); pill.className = 'gate-pill'; pill.textContent = '…';
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'gate-toggle';
+      btn.textContent = 'Open';
+      btn.addEventListener('click', function () { doSet(slug, !(G.getState()[slug] === true)); });
+      row.appendChild(name); row.appendChild(pill); row.appendChild(btn);
+      grid.appendChild(row);
+      rows[slug] = { pill: pill, btn: btn };
+    });
+  }
+
+  function getPass() {
+    var p = localStorage.getItem(PASS_KEY);
+    if (!p) {
+      p = window.prompt('Teacher gate passcode:');
+      if (p) { p = p.trim(); localStorage.setItem(PASS_KEY, p); }
+    }
+    return p;
+  }
+  function onErr(err) {
+    setBusy(false);
+    if (err && err.status === 403) {
+      localStorage.removeItem(PASS_KEY);
+      window.alert('That gate passcode was refused. Try the toggle again.');
+    } else {
+      window.alert('Couldn’t reach the ship’s log. Check the connection and try again.');
+    }
+  }
+  function setBusy(b) {
+    Object.keys(rows).forEach(function (s) { rows[s].btn.disabled = b; });
+    ['gate-open-all', 'gate-lock-all'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.disabled = b;
+    });
+  }
+  function doSet(slug, unlocked) {
+    var p = getPass(); if (!p) return;
+    setBusy(true);
+    G.setGate(slug, unlocked, p).then(function () { setBusy(false); }).catch(onErr);
+  }
+  function bulk(unlocked) {
+    var p = getPass(); if (!p) return;
+    setBusy(true);
+    Promise.all(G.GAMES.map(function (s) { return G.setGate(s, unlocked, p); }))
+      .then(function () { setBusy(false); }).catch(onErr);
+  }
+  var openAll = document.getElementById('gate-open-all');
+  var lockAll = document.getElementById('gate-lock-all');
+  if (openAll) openAll.addEventListener('click', function () { bulk(true); });
+  if (lockAll) lockAll.addEventListener('click', function () { bulk(false); });
+  var forget = document.getElementById('gate-forget');
+  if (forget) forget.addEventListener('click', function () {
+    localStorage.removeItem(PASS_KEY);
+    window.alert('Passcode forgotten on this device.');
+  });
+
+  // 3. Live updates.
+  G.onChange(function (state, ok) {
+    applyLinks(state);
+    var conn = document.getElementById('gate-conn');
+    if (conn) {
+      conn.textContent = ok ? 'Live — connected to the ship’s log.'
+                            : 'Can’t reach the ship’s log — students stay locked.';
+      conn.className = 'gate-status ' + (ok ? 'ok' : 'bad');
+    }
+    Object.keys(rows).forEach(function (slug) {
+      var known = Object.prototype.hasOwnProperty.call(state, slug);
+      var open = state[slug] === true;
+      rows[slug].pill.textContent = !known ? '…' : (open ? 'Open' : 'Locked');
+      rows[slug].pill.className = 'gate-pill' + (!known ? '' : (open ? ' open' : ' locked'));
+      rows[slug].btn.textContent = open ? 'Lock' : 'Open';
+      rows[slug].btn.className = 'gate-toggle ' + (open ? 'is-open' : 'is-locked');
     });
   });
 });

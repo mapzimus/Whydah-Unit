@@ -46,6 +46,9 @@
 !parrot-flip/
 !parrot-flip/**
 
+# Shared teacher-controlled game lock (loaded by the games + dashboard)
+!games-gate.js
+
 # Stable route for the live unit dashboard
 !unit/
 !unit/**
