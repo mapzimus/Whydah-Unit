@@ -1,7 +1,7 @@
 // service-worker.js — offline cache for Parrot Flip.
 // Network-first for HTML/JS/CSS so deploys reach phones immediately;
 // cache-first only for images/vendored assets. Bump CACHE_NAME per release.
-const CACHE_NAME = 'parrot-flip-v2';
+const CACHE_NAME = 'parrot-flip-v3';
 
 const PRECACHE_URLS = [
   './',
