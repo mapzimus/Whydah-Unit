@@ -2,7 +2,7 @@
 // Bump CACHE_NAME on every release so stale caches are purged and users get
 // the fresh build. All paths are RELATIVE so they resolve under /flipgame/
 // on GitHub Pages (the SW lives at repo root → scope is /flipgame/).
-const CACHE_NAME = 'parrot-flip-v4';
+const CACHE_NAME = 'parrot-flip-v5';
 
 const PRECACHE_URLS = [
   './',
@@ -46,36 +46,27 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// HTML/navigation is network-first so the main game URL updates as soon as a
-// deploy finishes. Other assets stay stale-while-revalidate for fast offline
-// starts, with query-string asset bumps pulling the matching release files.
+// Network-first for everything, always: a live classroom needs today's real
+// code, not whatever got cached (possibly incomplete — precache tolerates
+// partial failures, see above) during some earlier install. The cache is only
+// an OFFLINE FALLBACK, never served ahead of a working network fetch — that
+// stale-while-revalidate used to serve a cached JS file instantly against a
+// freshly fetched HTML page, which could mismatch and crash the game (shows
+// as the black window.onerror overlay) until someone manually cleared site data.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const req = event.request;
   const isPage = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').includes('text/html');
 
-  if (isPage) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) =>
-        fetch(req).then((res) => {
-          if (res && res.status === 200) cache.put(req, res.clone());
-          return res;
-        }).catch(() => cache.match(req).then((cached) => cached || cache.match('./')))
-      )
-    );
-    return;
-  }
-
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
-      cache.match(req).then((cached) => {
-        const fromNetwork = fetch(req).then((res) => {
-          if (res && res.status === 200) cache.put(req, res.clone());
-          return res;
-        }).catch(() => cached);          // offline → fall back to whatever we cached
-        return cached || fromNetwork;    // instant if cached, else wait for network
-      })
+      fetch(req).then((res) => {
+        if (res && res.status === 200) cache.put(req, res.clone());
+        return res;
+      }).catch(() =>
+        cache.match(req).then((cached) => cached || (isPage ? cache.match('./') : undefined))
+      )
     )
   );
 });
