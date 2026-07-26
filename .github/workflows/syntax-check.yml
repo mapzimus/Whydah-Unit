@@ -1,0 +1,60 @@
+name: Syntax check
+
+# A black-screened game in front of a class is the worst way to find a typo.
+# This parses every published .js file on each push so a syntax error fails
+# here instead of on a Chromebook in period 3.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Parse every tracked JavaScript file
+        run: |
+          fail=0
+          # service workers and game code are plain browser scripts, so a plain
+          # --check is the right test: it catches syntax errors without needing
+          # a bundler, a module system, or any dependencies.
+          for f in $(git ls-files '*.js'); do
+            if node --check "$f" 2>/dev/null; then
+              echo "ok    $f"
+            else
+              echo "FAIL  $f"
+              node --check "$f" || true
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Check every game page still references its script
+        run: |
+          fail=0
+          for page in navigator/index.html black-sam/index.html parrot-flip/index.html; do
+            [ -f "$page" ] || { echo "MISSING $page"; fail=1; continue; }
+            # pull each local src="..." out of the page and confirm the file exists
+            for src in $(grep -o 'src="[^"]*\.js[^"]*"' "$page" | sed 's/src="//;s/"//' | sed 's/?.*//'); do
+              case "$src" in
+                http*) continue ;;                       # external, not ours to verify
+                /*)   target=".${src}" ;;                # root-relative, e.g. /games-gate.js
+                *)    target="$(dirname "$page")/${src}" ;;
+              esac
+              if [ -f "$target" ]; then
+                echo "ok    $page -> $src"
+              else
+                echo "FAIL  $page -> $src (expected $target)"
+                fail=1
+              fi
+            done
+          done
+          exit $fail

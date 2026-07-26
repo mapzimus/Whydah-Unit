@@ -2143,7 +2143,7 @@
             if (sd < o.R && sd > 1) {
               var pull = o.k * (1 - sd / o.R);
               G.shipX += (sdx / sd) * pull * dt;
-              G.shipX = clamp(G.shipX, 0.06, 0.94);
+              G.shipX = clamp(G.shipX, steerLo(), steerHi());   // same lane limits the whirlpool respects
             }
             if (sd < 28) { damage(1); shake(14); splash(shipPX, shipPY, 12); objs.splice(i, 1); continue; }
             if (o.y > H + 80) { addScore(20); SFX.point(); objs.splice(i, 1); }
@@ -3344,7 +3344,10 @@
         if (phase === "intro") { prompt.update(dt); return; }
         if (phase === "won") {
           if (chosen) return;
-          if (input.leftPressed || input.firePressed) { input.firePressed = false; chosen = true; goPort(); return; }
+          // Deliberately NOT bound to fire/space. Space means "continue" on every
+          // other screen, so binding it here would let a player mashing through
+          // text silently pick port and never see the serpent they just earned.
+          if (input.leftPressed) { chosen = true; goPort(); return; }
           if (input.rightPressed) { chosen = true; advance(); return; }
           return;
         }
@@ -3514,7 +3517,7 @@
           var bw = (w - 60) / 2, by = H / 2 + 30;
           if (!chosen && uiButton(W / 2 - w / 2 + 20, by, bw, 46, "⚓ MAKE FOR PORT", { size: 13.5, color: "#2c5e38" })) { chosen = true; goPort(); return; }
           if (!chosen && uiButton(W / 2 + 10, by, bw, 46, "🐍 TURN AND FIGHT", { size: 13.5, color: "#96341f" })) { chosen = true; advance(); return; }
-          text("← port keeps the win  ·  → risks gold for glory", W / 2, H / 2 + 94, 10.5, "rgba(244,231,201,.6)");
+          text("tap a button, or press ← / →   ·   port keeps the win, the fight risks it", W / 2, H / 2 + 94, 10.5, "rgba(244,231,201,.6)");
         }
       }
     };
@@ -4623,11 +4626,16 @@
     if (!paused) {
       stepFade(dt);
       updateTimers(dt);
-      if (G && G.iframes > 0) G.iframes -= dt;
-      updateCombo(dt);
       // the outgoing scene freezes while fading out — no double-advances, no
-      // gameplay happening under a black screen
-      if (scene && scene.update && !pendingScene) scene.update(dt);
+      // gameplay happening under a black screen. The fake-death gag paints the
+      // same kind of black screen, so it freezes play by the same rule: the
+      // ship, the hazards, the grace timer and the combo clock all hold still
+      // until the joke lands.
+      if (fakeDeathT <= 0) {
+        if (G && G.iframes > 0) G.iframes -= dt;
+        updateCombo(dt);
+        if (scene && scene.update && !pendingScene) scene.update(dt);
+      }
       updateParts(dt);
       tickBGM();
     }

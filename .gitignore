@@ -52,3 +52,7 @@
 # Stable route for the live unit dashboard
 !unit/
 !unit/**
+
+# CI (not published by Pages — GitHub reads it from the repo)
+!.github/
+!.github/**
