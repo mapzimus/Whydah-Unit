@@ -3,7 +3,8 @@
 
    HOW TO USE (teacher notes):
    - Normally touch nothing. The banner picks today's entry by date (Eastern time).
-   - To FORCE one day for everyone: set WHYDAH_FORCE to a day number, push both repos.
+   - To FORCE one day for everyone: set WHYDAH_FORCE to a day number and push.
+     (whydahstory.com is the only site now — the maxwellhowegis.com mirror is retired.)
    - To override on THIS DEVICE only: Crew Quarters > Teacher Toolkit > Banner Control.
 */
 
@@ -35,8 +36,12 @@ window.WHYDAH_DAYS = [
 (function () {
   'use strict';
 
-  var OVERRIDE_KEY = 'whydah-banner-override-v1';
+  var OVERRIDE_KEY = 'whydah-banner-override-v2';
   var POINTS_KEY = 'whydah-crew-points-v1';
+
+  /* One-time cleanup (2026-07-26): retire the old override key so any device
+     still pinned to Day 9/12 from the mirror era snaps back to Automatic. */
+  try { localStorage.removeItem('whydah-banner-override-v1'); } catch (_) {}
 
   function todayET() {
     try {

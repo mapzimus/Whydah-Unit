@@ -1,4 +1,4 @@
-# Whitelist approach ? ignore everything by default, then unignore what should be public
+# Whitelist approach — ignore everything by default, then unignore what should be public
 *
 
 # Files to publish on GitHub Pages
@@ -53,14 +53,14 @@
 !unit/
 !unit/**
 
-# CI (not published by Pages ? GitHub reads it from the repo)
-!.github/
-!.github/**
-
 # Final-two-weeks student pages (added 2026-07-26)
 !choose-your-project.html
 !map-studio.html
 
-# Vendored libraries (Leaflet - kept same-origin for school wifi filters)
+# Vendored libraries (Leaflet — kept same-origin for school wifi filters)
 !vendor/
 !vendor/**
+
+# CI (not published by Pages — GitHub reads it from the repo)
+!.github/
+!.github/**

@@ -4,8 +4,8 @@
 <script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WhydahStory — Pirate History, Navigation &amp; Classroom Curriculum</title>
-<meta name="description" content="Explore the documented story of Sam Bellamy and the Whydah, a middle-school navigation curriculum, and original classroom games.">
+<title>WhydahStory — Crew Deck</title>
+<meta name="description" content="The Whydah crew deck: today's mission, your final project, classroom games, and the story of Sam Bellamy and the Whydah.">
 <meta name="theme-color" content="#142333">
 <meta property="og:type" content="website">
 <meta property="og:title" content="WhydahStory — History, navigation, and classroom games">
@@ -15,31 +15,72 @@
 <link rel="canonical" href="https://whydahstory.com/">
 <link rel="icon" type="image/png" sizes="32x32" href="pics/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<script src="day-config.js?v=20260727" defer></script>
 <style>
 :root{--ink:#18212a;--paper:#f4efe3;--navy:#142f4b;--rust:#9b4529;--gold:#c59a4a;--line:rgba(20,47,75,.22);--serif:Georgia,'Times New Roman',serif;--sans:'Segoe UI',system-ui,sans-serif}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55}a{color:inherit}.wrap{width:min(calc(100% - 40px),1120px);margin:auto}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:23px 0;border-bottom:1px solid var(--line)}.brand{font:700 19px var(--serif);text-decoration:none;letter-spacing:.02em}.nav-links{display:flex;gap:18px;font-size:13px}.nav-links a{text-decoration:none}.nav-links a:hover{text-decoration:underline}.hero{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr);gap:clamp(40px,7vw,90px);align-items:center;padding:clamp(68px,10vw,120px) 0 80px}.eyebrow{margin:0 0 18px;color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.hero h1{margin:0;font:700 clamp(48px,7.5vw,88px)/.94 var(--serif);letter-spacing:-.045em;color:var(--navy)}.lede{max-width:680px;margin:26px 0 0;font-size:clamp(18px,2.2vw,23px);color:#39434b}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 21px;border:1px solid var(--navy);text-decoration:none;font-weight:700}.button.primary{background:var(--navy);color:white}.button:hover{transform:translateY(-1px)}.hero-image{position:relative;min-height:520px;background:url('pics/black-sam-bellamy-feature.jpg') center/cover;border:1px solid var(--line);box-shadow:18px 18px 0 rgba(155,69,41,.14)}.hero-image::after{content:'Samuel Bellamy, the Whydah, and the Atlantic world of 1717';position:absolute;left:0;right:0;bottom:0;padding:54px 20px 18px;color:white;font:italic 15px var(--serif);background:linear-gradient(transparent,rgba(10,20,30,.86))}.section{padding:76px 0;border-top:1px solid var(--line)}.section-head{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:end;margin-bottom:34px}.section h2{margin:0;color:var(--navy);font:700 clamp(34px,5vw,54px)/1 var(--serif);letter-spacing:-.025em}.section-intro{margin:0;color:#4b5358}.path-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.path-grid.two-up{grid-template-columns:repeat(2,minmax(0,1fr))}.path-card{display:flex;min-height:300px;flex-direction:column;padding:28px;border:1px solid var(--line);background:rgba(255,255,255,.42);text-decoration:none;transition:transform .15s ease,background .15s ease}.path-card:hover{transform:translateY(-3px);background:white}.path-number{color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.14em}.path-card h3{margin:42px 0 13px;color:var(--navy);font:700 29px/1.05 var(--serif)}.path-card p{margin:0;color:#4a5258}.path-link{margin-top:auto;padding-top:32px;font-weight:750;color:var(--rust)}.method{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);gap:60px;padding:42px;border-left:4px solid var(--gold);background:#e8e0cf}.method h2{font-size:34px}.method p{margin:0}.method p+p{margin-top:13px}.footer{display:flex;justify-content:space-between;gap:24px;padding:32px 0 48px;border-top:1px solid var(--line);font-size:13px;color:#565c60}.footer a{color:var(--navy)}
-@media(max-width:800px){.hero,.section-head,.method{grid-template-columns:1fr}.hero-image{min-height:380px;order:-1}.path-grid{grid-template-columns:1fr}.path-card{min-height:230px}.method{gap:24px}.nav-links a:nth-child(2){display:none}}
-@media(max-width:480px){.wrap{width:min(calc(100% - 28px),1120px)}.hero{padding-top:44px}.hero-image{min-height:300px;box-shadow:10px 10px 0 rgba(155,69,41,.14)}.site-nav{align-items:flex-start}.nav-links{gap:10px}.footer{flex-direction:column}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.button:hover,.path-card:hover{transform:none}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55}a{color:inherit}
+.wrap{width:min(calc(100% - 32px),980px);margin:auto}
+.site-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font:700 19px var(--serif);text-decoration:none;letter-spacing:.02em}
+.countdown{font-size:13px;font-weight:700;color:var(--rust)}
+.hero{padding:34px 0 8px;text-align:center}
+.hero h1{margin:0;font:700 clamp(38px,8vw,64px)/1 var(--serif);letter-spacing:-.03em;color:var(--navy)}
+.hero p{max-width:560px;margin:14px auto 0;font-size:clamp(15px,2vw,18px);color:#39434b}
+.deck{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:30px 0 10px}
+.card{display:flex;flex-direction:column;gap:8px;padding:22px;border:1px solid var(--line);background:rgba(255,255,255,.5);text-decoration:none;transition:transform .15s ease,background .15s ease;min-height:150px}
+.card:hover{transform:translateY(-3px);background:white}
+.card .k{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--rust);text-transform:uppercase}
+.card h2{margin:0;color:var(--navy);font:700 clamp(22px,3.4vw,30px)/1.05 var(--serif)}
+.card p{margin:0;font-size:14.5px;color:#4a5258}
+.card .go{margin-top:auto;padding-top:12px;font-weight:750;color:var(--rust)}
+.card.feature{grid-column:1 / -1;border-left:5px solid var(--gold);background:#e8e0cf;min-height:0}
+.card.feature h2{font-size:clamp(26px,4.5vw,38px)}
+.card.feature .due{display:inline-block;margin-left:8px;padding:2px 9px;background:var(--rust);color:#f4efe3;font:800 11px var(--sans);letter-spacing:.08em;border-radius:2px;vertical-align:middle}
+.footer{padding:26px 0 44px;margin-top:34px;border-top:1px solid var(--line);font-size:12.5px;color:#565c60}
+.footer .row{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}
+.footer a{color:var(--navy)}
+@media(max-width:640px){.deck{grid-template-columns:1fr}.card{min-height:0}}
+@media(prefers-reduced-motion:reduce){.card:hover{transform:none}}
 </style>
 </head>
 <body>
-<header class="wrap site-nav"><a class="brand" href="/">WhydahStory</a><nav class="nav-links" aria-label="Primary"><a href="/unit/">Explore</a><a href="/curriculum-guide.html">Curriculum</a></nav></header>
-<main>
-  <section class="wrap hero">
-    <div><p class="eyebrow">History · navigation · classroom inquiry</p><h1>Navigate the story, not the legend.</h1><p class="lede">A source-conscious look at Sam Bellamy, the Whydah, and the people caught in the Atlantic world of 1717, built alongside a middle-school curriculum and original navigation games.</p><div class="hero-actions"><a class="button primary" href="/unit/">Explore the story</a><a class="button" href="/curriculum-guide.html">Teacher curriculum</a></div></div>
-    <div class="hero-image" role="img" aria-label="Historical portrait of Samuel Bellamy"></div>
+<div id="today-banner"></div>
+<header class="wrap site-nav"><a class="brand" href="/">WhydahStory</a><span class="countdown" id="showcase-countdown"></span></header>
+<main class="wrap">
+  <section class="hero">
+    <h1>Welcome aboard, crew.</h1>
+    <p>Everything for the voyage is below. The red banner up top always takes you to today's mission.</p>
   </section>
-
-  <section class="section" id="start"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Choose a course</p><h2>Two ways aboard</h2></div><p class="section-intro">WhydahStory separates the public story from the classroom materials so visitors can get where they need to go without opening the working teacher dashboard first.</p></div>
-    <div class="path-grid two-up">
-      <a class="path-card" href="/unit/"><span class="path-number">01 · STORY</span><h3>Explore the Story</h3><p>Meet the people, follow the timeline, examine maps and artifacts, and see which claims are documented, contested, or mythologized.</p><span class="path-link">Open the story →</span></a>
-      <a class="path-card" href="/curriculum-guide.html"><span class="path-number">02 · TEACH</span><h3>Teacher Curriculum</h3><p>A five-week, project-based middle-school unit connecting historical inquiry, primary sources, navigation, geography, and student choice.</p><span class="path-link">View the curriculum →</span></a>
-    </div>
-  </div></section>
-
-  <section class="section"><div class="wrap method"><h2>Evidence has a confidence level.</h2><div><p>The surviving record is incomplete, and pirate stories are unusually good at turning repetition into “fact.” The project labels major claims as documented, contested, or mythologized and explains why.</p><p>It also treats the Whydah’s history honestly: before pirates captured it, the ship was built for the transatlantic slave trade. That history is part of the story, not a footnote.</p></div></div></section>
+  <section class="deck">
+    <a class="card feature" href="/choose-your-project.html">
+      <span class="k">This week's big job</span>
+      <h2>🧭 Choose Your Project <span class="due">DUE THURSDAY</span></h2>
+      <p>Pick what YOU are making for the Showcase — a story map, a poster, a model, a comic, a video, and more. See the menu, then commit on Thursday.</p>
+      <span class="go">See the project menu →</span>
+    </a>
+    <a class="card" href="/map-studio.html">
+      <span class="k">New tool</span>
+      <h2>🗺️ Map Studio</h2>
+      <p>Make your own map of the Whydah's voyage — drop pins, draw the route, measure distances, even on the real 1717 chart.</p>
+      <span class="go">Open the studio →</span>
+    </a>
+    <a class="card" href="/games/">
+      <span class="k">Play</span>
+      <h2>🏴‍☠️ Games</h2>
+      <p>Whydah's Voyage, Black Sam, and Parrot Flip — built for this crew.</p>
+      <span class="go">To the games →</span>
+    </a>
+    <a class="card" href="/unit/">
+      <span class="k">Dig deeper</span>
+      <h2>📜 The Story</h2>
+      <p>The people, the timeline, the maps, the artifacts — and which claims are documented, contested, or mythologized.</p>
+      <span class="go">Explore the story →</span>
+    </a>
+  </section>
 </main>
-<footer class="wrap footer"><span>Built for a Summer 2026 middle-school program in Salem, Massachusetts.</span><span><a href="/games/">Classroom games</a> · <a href="https://maxwellhowegis.com/about/">About Maxwell Howe</a></span></footer>
+<footer class="wrap footer">
+  <span>Built for a Summer 2026 middle-school program in Salem, Massachusetts. Before pirates captured it, the Whydah was built for the transatlantic slave trade — that history is part of the story, not a footnote.</span>
+  <div class="row">For teachers: <a href="/curriculum-guide.html">Curriculum guide</a> · <a href="/unit-at-a-glance.html">Unit at a glance</a> · <a href="/handouts.html">Handouts</a> · <a href="/flythrough.html">3D flythrough</a> · <a href="/photo/">Photo unit</a> · <a href="https://maxwellhowegis.com/about/">About Maxwell Howe</a></div>
+</footer>
 </body>
 </html>

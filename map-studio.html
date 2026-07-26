@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map Studio · Navigating Piracy</title>
+<meta name="description" content="Build your own map of the Whydah story: drop pins, draw the route, measure the distance — on a modern map or the real 1717 chart. No account needed.">
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js"></script>
+<style>
+  :root{
+    --ink:#12222B; --ink2:#1C3743; --parch:#F3E8CE; --parch2:#EAD9B4;
+    --brass:#A9781F; --brassl:#D8B25A; --ox:#8C2C1E; --inktx:#2B2114; --muted:#6E5B3C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{background:var(--parch); color:var(--inktx); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; line-height:1.45; display:flex; flex-direction:column;}
+  .hero{background:var(--ink); color:var(--parch); padding:.85em 1em .7em; text-align:center;}
+  .hero h1{font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.2em,3.2vw,1.7em); display:inline;}
+  .hero .sub{color:#C7BCA0; font-style:italic; font-size:.85em; display:block;}
+  .toolbar{display:flex; flex-wrap:wrap; gap:.4em; align-items:center; justify-content:center; background:var(--parch2); border-bottom:2px solid var(--brass); padding:.5em .6em;}
+  .tbtn{background:#FBF4E2; border:1.5px solid var(--brass); color:var(--inktx); font-weight:700; font-size:.92em; padding:.5em .8em; border-radius:8px; cursor:pointer;}
+  .tbtn:hover{background:var(--brassl);}
+  .tbtn.on{background:var(--ox); color:var(--parch); border-color:var(--ox);}
+  .tbtn.danger{border-color:var(--ox); color:var(--ox);}
+  .tbtn.danger:hover{background:var(--ox); color:var(--parch);}
+  .stat{font-size:.88em; font-weight:700; color:var(--ink2); background:#FBF4E2; border:1.5px dashed var(--brass); border-radius:8px; padding:.45em .7em;}
+  #map{flex:1; min-height:340px; background:#cfe3ec;}
+  .notice{position:absolute; z-index:1200; left:50%; transform:translateX(-50%); top:.6em; max-width:min(92vw,560px); background:var(--ox); color:var(--parch); font-size:.9em; font-weight:600; padding:.6em .9em; border-radius:8px; display:none; box-shadow:0 3px 10px rgba(0,0,0,.3);}
+  .notice button{float:right; margin-left:.8em; background:none; border:1px solid var(--parch); color:var(--parch); border-radius:6px; cursor:pointer; font-weight:700;}
+  .mapwrap{position:relative; flex:1; display:flex;}
+  .foot{background:var(--ink); color:#C7BCA0; text-align:center; padding:.55em 1em; font-size:.82em;}
+  .foot a{color:var(--brassl);}
+  .hint{font-size:.85em; color:var(--muted); font-style:italic; text-align:center; padding:.3em .8em; background:var(--parch);}
+  .leaflet-popup-content{font-family:"Segoe UI",system-ui,sans-serif;}
+  .leaflet-popup-content b{color:var(--ox);}
+  .pbtn{display:inline-block; margin:.35em .35em 0 0; padding:.3em .6em; border:1.5px solid var(--brass); border-radius:6px; background:#FBF4E2; font-weight:700; font-size:.85em; cursor:pointer;}
+  @media (max-width:560px){ .toolbar{gap:.3em;} .tbtn{font-size:.85em; padding:.45em .6em;} .stat{font-size:.8em;} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>🗺️ Map Studio</h1>
+  <span class="sub">Your map. Your pins. Your story. Everything saves on this device — no account, no login.</span>
+</header>
+
+<div class="toolbar" role="toolbar" aria-label="Map tools">
+  <button class="tbtn" id="mode-world" title="Modern world map">🌍 World</button>
+  <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart">📜 1717 Chart</button>
+  <span style="width:.6em"></span>
+  <button class="tbtn" id="tool-pin">📌 Pin</button>
+  <button class="tbtn" id="tool-route">✏️ Route</button>
+  <button class="tbtn" id="tool-undo">↩ Undo</button>
+  <button class="tbtn" id="tool-voyage">⚓ Whydah's voyage</button>
+  <button class="tbtn" id="tool-export">💾 Download</button>
+  <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
+  <span class="stat" id="stat">0 pins · route 0 nm</span>
+</div>
+<div class="hint" id="hint">Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship's track leg by leg.</div>
+
+<div class="mapwrap">
+  <div class="notice" id="notice"><button onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
+  <div id="map"></div>
+</div>
+
+<footer class="foot">
+  Building the story-map format? You want 8–10 pins, each in your person's voice. <a href="choose-your-project.html">The project menu →</a> · <a href="/">⚓ Crew deck</a>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  L.Icon.Default.imagePath = 'vendor/leaflet/images/';
+
+  var SAVE_KEY = 'whydah-map-studio-v1';
+
+  /* ---------- The Whydah's documented voyage, 1715–1984 ---------- */
+  var VOYAGE = [
+    { n: 1, ll: [51.507, -0.128],  t: 'London, 1715',        d: 'The Whydah Gally is built — as a slave ship. Fast, armed, made to carry people as cargo. That is the honest start of her story.' },
+    { n: 2, ll: [6.367, 2.083],    t: 'Ouidah, West Africa',  d: 'The port she was named for. Here enslaved people were forced aboard for the Middle Passage. Say her name and you say this place.' },
+    { n: 3, ll: [17.97, -76.87],   t: 'Caribbean, 1716–17',   d: 'Sugar, silver, and set routes. Bellamy’s crew hunts these waters — more than 50 ships in about a year.' },
+    { n: 4, ll: [19.9, -73.9],     t: 'Windward Passage',     d: 'The door between Cuba and Hispaniola. After a three-day chase near here (Feb 1717), Bellamy’s crew takes the Whydah herself.' },
+    { n: 5, ll: [33.9, -76.5],     t: 'North for the Carolinas', d: 'The run north along the coast, taking prizes. No GPS — heading, speed, time. Dead reckoning, and its growing error.' },
+    { n: 6, ll: [41.891, -69.957], t: 'Wrecked · 26 April 1717', d: 'A nor’easter off Cape Cod. The Whydah breaks apart near Wellfleet. 102 dead are buried by the town. The sea keeps her.' },
+    { n: 7, ll: [41.93, -69.98],   t: 'Southack’s mark, May 1717', d: 'Mapmaker Cyprian Southack arrives too late to salvage — but marks the wreck on his chart, in his own hand. The mark outlives everyone.' },
+    { n: 8, ll: [42.522, -70.895], t: 'Salem · found again',  d: '1984: Barry Clifford reads Southack’s 267-year-old mark and finds her. The bell proves it: THE WHYDAH GALLY 1716. You met the finds at Real Pirates.' }
+  ];
+  var VOYAGE_LINE = VOYAGE.map(function (w) { return w.ll; });
+
+  /* ---------- Basemaps (several hosts — if school wifi blocks one, try another) ---------- */
+  var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Imagery © Esri' });
+  var osm  = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
+  var carto = L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap · © CARTO' });
+
+  /* ---------- Two canvases: the world (tiles) and the 1717 chart (image, works with NO internet) ---------- */
+  var CHART_URL = 'pics/southack-1717-chart-clean.jpg';
+  var CHART_W = 1600, CHART_H = 1200; /* aspect placeholder; fixed on image load */
+  var chartBounds = [[0, 0], [CHART_H, CHART_W]];
+
+  var map = null;                           /* rebuilt per mode — Leaflet can't hot-swap CRS */
+  var mode = 'world';                       /* 'world' | 'chart' */
+  var chartImg = null;
+
+  /* per-mode student work */
+  var work = { world: { pins: [], route: [] }, chart: { pins: [], route: [] } };
+  var pinLayer = null;
+  var routeLine = null;
+  var voyageLayer = null;
+  var voyageOn = false;
+  var tool = 'pin';
+  var tileFailures = 0;
+
+  function notice(msg) {
+    document.getElementById('notice-text').textContent = msg;
+    document.getElementById('notice').style.display = 'block';
+  }
+
+  [esri, osm, carto].forEach(function (l) {
+    l.on('tileerror', function () {
+      tileFailures++;
+      if (tileFailures === 8) {
+        notice('Map tiles aren’t loading — the wifi may be blocking them. Try the layer switcher (top right) for a different map, or tap 📜 1717 Chart: it lives on this site and always works.');
+      }
+    });
+  });
+
+  function freshMap(crs) {
+    /* Leaflet can't change CRS on a live map — tear down and rebuild */
+    if (map) { try { map.remove(); } catch (_) {} }
+    detachPins();
+    routeLine = null;
+    voyageLayer = null;
+    chartImg = null;
+    map = L.map('map', { zoomControl: true, worldCopyJump: crs !== L.CRS.Simple, crs: crs });
+    pinLayer = L.layerGroup().addTo(map);
+    map.on('click', onMapClick);
+    return map;
+  }
+
+  function detachPins() {
+    /* live markers survive as plain data so they can rehydrate later */
+    ['world', 'chart'].forEach(function (k) {
+      work[k].pins = work[k].pins.map(function (m) {
+        if (m instanceof L.Marker) { var ll = m.getLatLng(); return { lat: ll.lat, lng: ll.lng, label: m._label || '' }; }
+        return m;
+      });
+    });
+  }
+
+  function enterWorld() {
+    saveNow();
+    mode = 'world';
+    freshMap(L.CRS.EPSG3857);
+    map.setMinZoom(2); map.setMaxZoom(19);
+    esri.addTo(map);
+    L.control.layers({ 'Satellite (Esri)': esri, 'Streets (OSM)': osm, 'Light (Carto)': carto }, null, { position: 'topright' }).addTo(map);
+    map.setView([32, -55], 3);
+    restoreWork();
+    if (voyageOn) { voyageOn = false; showVoyage(); }
+    setModeButtons();
+    document.getElementById('hint').textContent = 'Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship’s track leg by leg.';
+  }
+
+  function enterChart() {
+    saveNow();
+    mode = 'chart';
+    freshMap(L.CRS.Simple);
+    map.setMinZoom(-2); map.setMaxZoom(3);
+    chartImg = L.imageOverlay(CHART_URL, chartBounds).addTo(map);
+    map.fitBounds(chartBounds);
+    restoreWork();
+    setModeButtons();
+    document.getElementById('hint').textContent = 'This is Cyprian Southack’s real 1717 chart — the one whose wreck mark found the Whydah 267 years later. Pin your finds on it like a marine archaeologist.';
+  }
+
+  function setModeButtons() {
+    document.getElementById('mode-world').classList.toggle('on', mode === 'world');
+    document.getElementById('mode-chart').classList.toggle('on', mode === 'chart');
+    document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
+  }
+
+  /* ---------- Pins ---------- */
+  function addPin(latlng, label, skipSave) {
+    var m = L.marker(latlng, { draggable: true }).addTo(pinLayer);
+    m._label = label;
+    bindPinPopup(m);
+    m.on('dragend', saveNow);
+    work[mode].pins.push(m);
+    if (!skipSave) saveNow();
+    updateStat();
+    return m;
+  }
+  function bindPinPopup(m) {
+    var div = document.createElement('div');
+    div.innerHTML = '<b>' + escapeHtml(m._label || 'My pin') + '</b><br>';
+    var rn = document.createElement('span'); rn.className = 'pbtn'; rn.textContent = '✏️ Rename';
+    var del = document.createElement('span'); del.className = 'pbtn'; del.textContent = '🗑 Remove';
+    rn.onclick = function () {
+      var v = window.prompt('New label for this pin:', m._label || '');
+      if (v !== null && v.trim()) { m._label = v.trim(); bindPinPopup(m); m.openPopup(); saveNow(); }
+    };
+    del.onclick = function () {
+      pinLayer.removeLayer(m);
+      var arr = work[mode].pins; var i = arr.indexOf(m); if (i > -1) arr.splice(i, 1);
+      saveNow(); updateStat();
+    };
+    div.appendChild(rn); div.appendChild(del);
+    m.bindPopup(div);
+  }
+  function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  /* ---------- Route ---------- */
+  function addRoutePoint(latlng, skipSave) {
+    work[mode].route.push(latlng);
+    drawRoute();
+    if (!skipSave) saveNow();
+  }
+  function drawRoute() {
+    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+    var pts = work[mode].route;
+    if (pts.length > 0) {
+      routeLine = L.polyline(pts, { color: '#8C2C1E', weight: 4, dashArray: '8 6' }).addTo(map);
+    }
+    updateStat();
+  }
+  function routeDistanceNm() {
+    if (mode !== 'world') return null; /* the 1717 chart has no honest scale — that's a lesson in itself */
+    var pts = work.world.route, m = 0;
+    for (var i = 1; i < pts.length; i++) m += L.latLng(pts[i - 1]).distanceTo(L.latLng(pts[i]));
+    return m / 1852;
+  }
+  function updateStat() {
+    var nPins = work[mode].pins.length;
+    var s = nPins + ' pin' + (nPins === 1 ? '' : 's');
+    var nm = routeDistanceNm();
+    if (nm !== null) s += ' · route ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
+    else if (work[mode].route.length) s += ' · route: ' + work[mode].route.length + ' point' + (work[mode].route.length === 1 ? '' : 's') + ' (no scale on a 1717 chart!)';
+    document.getElementById('stat').textContent = s;
+  }
+
+  /* ---------- The Whydah's voyage overlay (world mode) ---------- */
+  function showVoyage() {
+    if (voyageLayer) return;
+    voyageLayer = L.layerGroup();
+    L.polyline(VOYAGE_LINE, { color: '#1C3743', weight: 3, opacity: .85 }).addTo(voyageLayer);
+    VOYAGE.forEach(function (w) {
+      var icon = L.divIcon({ className: '', html: '<div style="background:#1C3743;color:#D8B25A;font:700 12px Georgia,serif;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #D8B25A;box-shadow:0 1px 4px rgba(0,0,0,.5)">' + w.n + '</div>', iconSize: [22, 22], iconAnchor: [11, 11] });
+      L.marker(w.ll, { icon: icon }).bindPopup('<b>' + w.n + ' · ' + w.t + '</b><br>' + w.d).addTo(voyageLayer);
+    });
+    voyageLayer.addTo(map);
+    voyageOn = true;
+    document.getElementById('tool-voyage').classList.add('on');
+  }
+  function hideVoyage() {
+    if (voyageLayer) { map.removeLayer(voyageLayer); voyageLayer = null; }
+    voyageOn = false;
+    document.getElementById('tool-voyage').classList.remove('on');
+  }
+
+  /* ---------- Save / restore (this device) ---------- */
+  function serialize() {
+    var out = {};
+    ['world', 'chart'].forEach(function (k) {
+      out[k] = {
+        pins: work[k].pins.map(function (m) {
+          if (m instanceof L.Marker) { var ll = m.getLatLng(); return { lat: ll.lat, lng: ll.lng, label: m._label || '' }; }
+          return { lat: m.lat, lng: m.lng, label: m.label || '' };
+        }),
+        route: work[k].route.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; })
+      };
+    });
+    return out;
+  }
+  function saveNow() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); } catch (_) {}
+  }
+  var savedData = null;
+  try { savedData = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) {}
+  if (savedData) {
+    ['world', 'chart'].forEach(function (k) {
+      if (!savedData[k]) return;
+      work[k].pins = savedData[k].pins || [];   /* raw objects until that mode opens */
+      work[k].route = (savedData[k].route || []).map(function (a) { return L.latLng(a[0], a[1]); });
+    });
+  }
+  function restoreWork() {
+    /* raw saved pin objects -> live markers, once, when their mode first opens */
+    var pins = work[mode].pins;
+    work[mode].pins = [];
+    pins.forEach(function (p) {
+      if (p instanceof L.Marker) { p.addTo(pinLayer); work[mode].pins.push(p); }
+      else addPin([p.lat, p.lng], p.label, true);
+    });
+    drawRoute();
+    updateStat();
+  }
+
+  /* ---------- Toolbar wiring ---------- */
+  function setTool(t) {
+    tool = t;
+    document.getElementById('tool-pin').classList.toggle('on', t === 'pin');
+    document.getElementById('tool-route').classList.toggle('on', t === 'route');
+  }
+  document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
+  document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
+  document.getElementById('tool-pin').onclick = function () { setTool('pin'); };
+  document.getElementById('tool-route').onclick = function () { setTool('route'); };
+  document.getElementById('tool-undo').onclick = function () {
+    if (tool === 'route' && work[mode].route.length) { work[mode].route.pop(); drawRoute(); saveNow(); return; }
+    var arr = work[mode].pins;
+    if (arr.length) { pinLayer.removeLayer(arr.pop()); saveNow(); updateStat(); }
+  };
+  document.getElementById('tool-voyage').onclick = function () { voyageOn ? hideVoyage() : showVoyage(); };
+  document.getElementById('tool-clear').onclick = function () {
+    if (!window.confirm('Clear ALL your pins and routes on this device? This cannot be undone.')) return;
+    work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
+    work[mode] = { pins: [], route: [] };
+    drawRoute(); saveNow(); updateStat();
+  };
+  document.getElementById('tool-export').onclick = function () {
+    var d = serialize();
+    var gj = { type: 'FeatureCollection', features: [] };
+    ['world', 'chart'].forEach(function (k) {
+      d[k].pins.forEach(function (p) {
+        gj.features.push({ type: 'Feature', properties: { label: p.label, canvas: k }, geometry: { type: 'Point', coordinates: [p.lng, p.lat] } });
+      });
+      if (d[k].route.length > 1) {
+        gj.features.push({ type: 'Feature', properties: { name: 'route', canvas: k }, geometry: { type: 'LineString', coordinates: d[k].route.map(function (a) { return [a[1], a[0]]; }) } });
+      }
+    });
+    var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'my-whydah-map.geojson';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    notice('Downloaded! That file is real GIS data — the same format professionals use. Keep it: it’s your project backup.');
+  };
+
+  function onMapClick(e) {
+    if (tool === 'pin') {
+      var label = window.prompt('Label this pin (who / what / when):', '');
+      if (label === null) return;
+      addPin(e.latlng, label.trim() || 'My pin');
+    } else if (tool === 'route') {
+      addRoutePoint(e.latlng);
+    }
+  }
+
+  /* fix chart bounds to the real image aspect once it loads */
+  var probe = new Image();
+  probe.onload = function () {
+    CHART_W = probe.naturalWidth; CHART_H = probe.naturalHeight;
+    chartBounds = [[0, 0], [CHART_H, CHART_W]];
+    if (mode === 'chart' && chartImg) { chartImg.setBounds(chartBounds); map.fitBounds(chartBounds); }
+  };
+  probe.src = CHART_URL;
+
+  /* go */
+  setTool('pin');
+  enterWorld();
+})();
+</script>
+
+</body>
+</html>
