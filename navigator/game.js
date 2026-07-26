@@ -742,7 +742,7 @@
     SFX.hit(); shake(6 + n * 2);
     spawn(G.shipX * W, shipYPx() - 50, { vy: -55, life: 1.0, r: 15, c: "#ff8a7a", shape: "txt", txt: "-" + n + " ♥" });
     if (G.hull <= 0) { G.hull = 0; endRun(false, true); }
-    else if (insane() && fakeDeathT <= 0 && chance(0.05)) { fakeDeathT = 1.6; SFX.lose(); }
+    else if (insane() && fakeDeathT <= 0 && chance(0.05)) { fakeDeathT = 3; SFX.lose(); }
   }
   function repair(n) { G.hull = clamp(G.hull + n, 0, G.maxHull); }
   // little banner queue for "your upgrade just did something" moments
@@ -4841,13 +4841,17 @@
     if (!paused && shakeAmt > 0) { ctx.translate(rand(-shakeAmt, shakeAmt), rand(-shakeAmt, shakeAmt)); shakeAmt = Math.max(0, shakeAmt - dt * 40); }
     if (scene && scene.render) scene.render();
     if (!paused && redFlash > 0) { redFlash -= dt; ctx.fillStyle = "rgba(200,40,30," + clamp(redFlash * 2.2, 0, 0.33) + ")"; ctx.fillRect(0, 0, W, H); }
+    // The gag runs FAKE_DEATH seconds end to end; the last FAKE_REVEAL of it is
+    // the punchline. The reveal was 0.3s, which is ~9 frames on a 30fps
+    // Chromebook — long enough to flash, not long enough to read.
     if (!paused && fakeDeathT > 0) {
+      var FAKE_REVEAL = 0.9;
       fakeDeathT -= dt;
-      if (fakeDeathT > 0.3) {
+      if (fakeDeathT > FAKE_REVEAL) {
         ctx.fillStyle = "rgba(10,14,18,.92)"; ctx.fillRect(0, 0, W, H);
         text("☠ YOUR SHIP WENT DOWN", W / 2, H / 2 - 10, 24, "#e08c6a", "center", "bold");
       } else if (fakeDeathT > 0) {
-        ctx.fillStyle = "rgba(10,14,18," + clamp(fakeDeathT / 0.3, 0, 0.92) + ")"; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(10,14,18," + clamp(fakeDeathT / FAKE_REVEAL, 0, 0.92) + ")"; ctx.fillRect(0, 0, W, H);
         text("JUST KIDDING 🦜", W / 2, H / 2 - 10, 26, "#8fd6a0", "center", "bold");
       }
     }
