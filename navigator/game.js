@@ -519,13 +519,13 @@
     { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "The Haunted Piano Sound",
       sub: "The Ghost Light",
       obj: "A light burns where no ship should be. Keep clear of it.",
-      decor: "sounds", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: true, waterspout: 0, icy: true, mooncusser: false },
+      decor: "sounds", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: true, waterspout: 0, icy: true, mooncusser: false, siren: 0.6 },
       slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "palatine", battleTier: 3, routeVariant: false },
     { id: "capecod",     name: "Cape Cod",              nameInsane: "Cape Absurdity",
       sub: "Hallett's Curse",
       obj: "The King's ships bar the last passage north.",
       objInsane: "The last landfall before the run to Maine. Something wants to play.",
-      decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
+      decor: "cape", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0.5, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false, siren: 0.4 },
       slots: { event: [0, 1], mini: [0, 0], battle: 0 }, signature: "blockade", sigInsane: "serpent", battleTier: 3, routeVariant: false },
     // the multiverse runs longer than history: two mythic legs exist only in INSANE
     { id: "locker",      name: "The Locker",            nameInsane: "Davy Jones' Locker", insaneOnly: true,
@@ -707,6 +707,8 @@
   function addScore(n) { G.score += n; if (G.score < 0) G.score = 0; }
   function addGold(n) { G.gold += n; if (G.gold < 0) G.gold = 0; }
   var redFlash = 0;
+  // fake death screen: insane mode only, ~5% chance on a hit that leaves you alive
+  var fakeDeathT = 0;
   function damage(n) {
     if (G.iframes > 0 || G.ended) return;    // a hit buys a breath of grace
     G.hull -= n; G.iframes = gameMode() === "easy" ? 1.05 : 0.7; G.coinStreak = 0; redFlash = 0.15;   // easy gets a longer breath of grace
@@ -715,6 +717,7 @@
     SFX.hit(); shake(6 + n * 2);
     spawn(G.shipX * W, shipYPx() - 50, { vy: -55, life: 1.0, r: 15, c: "#ff8a7a", shape: "txt", txt: "-" + n + " ♥" });
     if (G.hull <= 0) { G.hull = 0; endRun(false, true); }
+    else if (insane() && fakeDeathT <= 0 && chance(0.05)) { fakeDeathT = 1.6; SFX.lose(); }
   }
   function repair(n) { G.hull = clamp(G.hull + n, 0, G.maxHull); }
   // little banner queue for "your upgrade just did something" moments
@@ -1972,6 +1975,8 @@
     var waterspoutDone = false, wspout = null;
     var whirlAt = (lm.whirlpool > 0 && chance(lm.whirlpool) && legTime > 5) ? rand(2, legTime - 3) : -1;
     var whirlDone = false;
+    var sirenAt = (lm.siren > 0 && chance(lm.siren) && legTime > 6) ? rand(3, legTime - 3) : -1;
+    var sirenDone = false;
     // end-of-leg wind-down: spawns stop early, leftover pickups sweep to the
     // ship, hazards fade out, a LEG CLEAR banner shows, THEN the scene fades —
     // no more hard cuts with coins still on screen
@@ -2097,6 +2102,12 @@
           whirlDone = true;
           objs.push({ kind: "whirlpool", x: rand(W * 0.3, W * 0.7), y: -110, R: clamp(W * 0.22, 90, 170), k: 0.5, sp: 42 });
         }
+        // siren shoals: a glowing rock on one edge that pulls you sideways
+        if (sirenAt > 0 && !sirenDone && t >= sirenAt) {
+          sirenDone = true;
+          var side = chance(0.5) ? 0 : 1;
+          objs.push({ kind: "siren", x: side ? W * 0.92 : W * 0.08, y: -60, sp: 55, R: clamp(W * 0.32, 120, 220), k: 0.35, side: side, singT: 0 });
+        }
         // the narrows: a wall of land with one gap — thread the needle. On the
         // mooncusser coast, a second false-lit gap tries to lure you onto the rocks.
         if (narrowsAt > 0 && !narrowsDone && t >= narrowsAt) {
@@ -2124,6 +2135,18 @@
             var sucked = applyWhirlpool(dt, o, shipPX, shipPY);
             if (sucked) { damage(1); shake(12); objs.splice(i, 1); continue; }
             if (o.y - o.R > H) { objs.splice(i, 1); continue; }
+            continue;
+          }
+          if (o.kind === "siren") {
+            o.y += o.sp * dt; o.singT += dt;
+            var sdx = o.x - shipPX, sdy = o.y - shipPY, sd = Math.hypot(sdx, sdy);
+            if (sd < o.R && sd > 1) {
+              var pull = o.k * (1 - sd / o.R);
+              G.shipX += (sdx / sd) * pull * dt;
+              G.shipX = clamp(G.shipX, 0.06, 0.94);
+            }
+            if (sd < 28) { damage(1); shake(14); splash(shipPX, shipPY, 12); objs.splice(i, 1); continue; }
+            if (o.y > H + 80) { addScore(20); SFX.point(); objs.splice(i, 1); }
             continue;
           }
           if (o.kind === "shark") {
@@ -2191,6 +2214,18 @@
           var o = objs[i];
           ctx.globalAlpha = o.fade != null ? clamp(o.fade, 0, 1) : 1;   // wind-down fade-out
           if (o.kind === "whirlpool") { drawWhirlpool(o); continue; }
+          if (o.kind === "siren") {
+            var spulse = 0.5 + 0.5 * Math.sin(o.singT * 3);
+            var sR = o.R * spulse * 0.4;
+            ctx.strokeStyle = "rgba(180,140,255," + (0.08 + 0.07 * spulse) + ")"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(o.x, o.y, sR, 0, 7); ctx.stroke();
+            ctx.beginPath(); ctx.arc(o.x, o.y, sR * 0.6, 0, 7); ctx.stroke();
+            ctx.fillStyle = "#5a4a6e"; ctx.beginPath(); ctx.ellipse(o.x, o.y, 18, 12, 0, 0, 7); ctx.fill();
+            ctx.fillStyle = "#8a6aaa"; ctx.beginPath(); ctx.ellipse(o.x, o.y - 4, 12, 8, 0, 0, 7); ctx.fill();
+            ctx.fillStyle = "rgba(255,220,255," + (0.5 + 0.5 * spulse) + ")";
+            ctx.beginPath(); ctx.arc(o.x, o.y - 12, 4 + 2 * spulse, 0, 7); ctx.fill();
+            continue;
+          }
           if (o.kind === "fin") { drawJelly(o.x, o.y); continue; }
           if (o.kind === "shark") {
             if (o.phase === "stalk") {
@@ -2258,6 +2293,13 @@
           text(no.falseGap != null ? "NARROWS — one light lies. Follow the steady flame." : "NARROWS AHEAD — find the gap!", W / 2, H * 0.42, 15, "#ffd24a", "center", "bold");
           text("▼", ngx, Math.max(no.y + 74, 90), 20, "#ffd24a", "center", "bold");
         }
+        for (var sn = 0; sn < objs.length; sn++) if (objs[sn].kind === "siren" && objs[sn].y > 0 && objs[sn].y < H) {
+          var so = objs[sn], spls = 0.5 + 0.5 * Math.sin(so.singT * 5);
+          ctx.globalAlpha = 0.5 + 0.5 * spls;
+          text("🧜 SIREN SHOAL — steer away from the song!", W / 2, H * 0.38, 15, "#c9a0ff", "center", "bold");
+          text(so.side ? "◀ row left" : "row right ▶", W / 2, H * 0.38 + 20, 13, "#c9a0ff", "center", "bold");
+          ctx.globalAlpha = 1;
+        }
         if (t < 2.0) { ctx.globalAlpha = clamp(2.0 - t, 0, 1); text(missionName() + ". Coins feed the war chest. Shoot or dodge the rest.", W / 2, H * 0.5, 16, "#f4e7c9", "center", "bold"); ctx.globalAlpha = 1; }
         if (legDone >= 0) {
           ctx.globalAlpha = clamp(legDone * 4, 0, 1);
@@ -2277,7 +2319,16 @@
     ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(-38, -9); ctx.lineTo(-34, 4); ctx.closePath(); ctx.fill(); // tail
     ctx.fillStyle = "#dfe9ee"; ctx.beginPath(); ctx.ellipse(4, 5, 18, 4.5, 0, 0, 7); ctx.fill();               // belly
     ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(17, -3, 2.2, 0, 7); ctx.fill();
-    if (insane()) { ctx.fillStyle = "#111"; ctx.fillRect(11, -6, 12, 5); ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(12, -5, 4, 2); }   // multiverse sharks wear shades
+    if (insane()) {
+      ctx.fillStyle = "#111"; ctx.fillRect(11, -6, 12, 5); ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(12, -5, 4, 2);   // shades
+      // boxing gloves — the kids asked for it
+      ctx.fillStyle = "#e03030"; ctx.beginPath(); ctx.arc(-20, 8, 7, 0, 7); ctx.fill();
+      ctx.fillStyle = "#c02020"; ctx.beginPath(); ctx.arc(-20, 8, 4.5, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-20, 1); ctx.lineTo(-20, -2); ctx.stroke();
+      ctx.fillStyle = "#e03030"; ctx.beginPath(); ctx.arc(22, 8, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = "#c02020"; ctx.beginPath(); ctx.arc(22, 8, 3.5, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(22, 2); ctx.lineTo(22, -1); ctx.stroke();
+    }
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(20, 4); ctx.lineTo(24, 6); ctx.moveTo(17, 6); ctx.lineTo(21, 8); ctx.stroke(); // teeth-ish
     ctx.restore();
@@ -3293,7 +3344,7 @@
         if (phase === "intro") { prompt.update(dt); return; }
         if (phase === "won") {
           if (chosen) return;
-          if (input.leftPressed) { chosen = true; goPort(); return; }
+          if (input.leftPressed || input.firePressed) { input.firePressed = false; chosen = true; goPort(); return; }
           if (input.rightPressed) { chosen = true; advance(); return; }
           return;
         }
@@ -4578,11 +4629,22 @@
       // gameplay happening under a black screen
       if (scene && scene.update && !pendingScene) scene.update(dt);
       updateParts(dt);
+      tickBGM();
     }
     ctx.save();
     if (!paused && shakeAmt > 0) { ctx.translate(rand(-shakeAmt, shakeAmt), rand(-shakeAmt, shakeAmt)); shakeAmt = Math.max(0, shakeAmt - dt * 40); }
     if (scene && scene.render) scene.render();
     if (!paused && redFlash > 0) { redFlash -= dt; ctx.fillStyle = "rgba(200,40,30," + clamp(redFlash * 2.2, 0, 0.33) + ")"; ctx.fillRect(0, 0, W, H); }
+    if (!paused && fakeDeathT > 0) {
+      fakeDeathT -= dt;
+      if (fakeDeathT > 0.3) {
+        ctx.fillStyle = "rgba(10,14,18,.92)"; ctx.fillRect(0, 0, W, H);
+        text("☠ YOUR SHIP WENT DOWN", W / 2, H / 2 - 10, 24, "#e08c6a", "center", "bold");
+      } else if (fakeDeathT > 0) {
+        ctx.fillStyle = "rgba(10,14,18," + clamp(fakeDeathT / 0.3, 0, 0.92) + ")"; ctx.fillRect(0, 0, W, H);
+        text("JUST KIDDING 🦜", W / 2, H / 2 - 10, 26, "#8fd6a0", "center", "bold");
+      }
+    }
     drawFade();
     drawToasts(paused ? 0 : dt);
     if (paused) drawPauseOverlay();
@@ -4591,8 +4653,38 @@
     requestAnimationFrame(loop);
   }
 
+  // ---------------------------------------------------------------- background music
+  // A procedural ambient sea-drone: two detuned oscillators + a slow LFO
+  // on gain for a breathing swell. No external files. Respects the mute toggle.
+  var bgm = null;
+  function startBGM() {
+    if (bgm) return; var ac = audio(); if (!ac) return;
+    try {
+      var o1 = ac.createOscillator(), o2 = ac.createOscillator();
+      var g1 = ac.createGain(), g2 = ac.createGain(), master = ac.createGain();
+      o1.type = "sine"; o1.frequency.value = 65;
+      o2.type = "triangle"; o2.frequency.value = 97.5;
+      g1.gain.value = 0.045; g2.gain.value = 0.03; master.gain.value = 1;
+      o1.connect(g1); g1.connect(master);
+      o2.connect(g2); g2.connect(master);
+      master.connect(ac.destination);
+      o1.start(); o2.start();
+      bgm = { o1: o1, o2: o2, g1: g1, g2: g2, master: master };
+    } catch (e) {}
+  }
+  function stopBGM() {
+    if (!bgm) return;
+    try { bgm.o1.stop(); bgm.o2.stop(); } catch (e) {}
+    bgm = null;
+  }
+  function tickBGM() {
+    if (!bgm) return;
+    var swell = 0.6 + 0.4 * Math.sin(seaT * 0.4);
+    bgm.g1.gain.value = 0.045 * swell;
+    bgm.g2.gain.value = 0.03 * swell;
+  }
   var muteBtn = document.getElementById("btn-mute");
-  if (muteBtn) muteBtn.addEventListener("click", function () { muted = !muted; muteBtn.textContent = muted ? "🔇" : "🔊"; if (!muted) audio(); });
+  if (muteBtn) muteBtn.addEventListener("click", function () { muted = !muted; muteBtn.textContent = muted ? "🔇" : "🔊"; if (!muted) { audio(); startBGM(); } else stopBGM(); });
   var pauseBtn = document.getElementById("btn-pause");
   if (pauseBtn) pauseBtn.addEventListener("click", function () { togglePause(); });
 
