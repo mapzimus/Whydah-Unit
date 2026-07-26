@@ -415,6 +415,28 @@
     { id: "petrel",    w: 1, tag: "yarn",   t: "Mother Carey's chicken", b: "A storm petrel lands on the rail. Sailors say it carries the souls of drowned men. It stares at you.", fx: { s: 15 } },
     { id: "treasure",  w: 1, tag: "yarn",   t: "A map with an X", b: "Folded in a stolen coat: a map of the Maine islands with a cross in walnut ink. Probably nothing. Probably.", fx: { g: 60 } },
     { id: "warning",   w: 1, tag: "record", t: "The fisherman's warning", b: "An old dory man trades you cod and news. Weather is building to the northeast, he says. Big weather.", fx: { s: 10 }, mod: "warned" },
+    // ---- the 2026 expansion: more cards so two voyages in one class period
+    // don't deal the same hand. Weight 3 ≈ common, 2 ≈ uncommon, 1 ≈ rare.
+    { id: "quarter",   w: 2, tag: "record", t: "The quartermaster rules", b: "Two hands come to blows over a shirt. The quartermaster hears both, splits the difference, and it is over. On a pirate ship he answered to the crew, not to you.", fx: { s: 20 } },
+    { id: "carpenter", w: 3, tag: "record", t: "The carpenter's plug", b: "A shot hole below the waterline. The carpenter drives an oakum plug and shores it with a spar. He does not stop to explain.", fx: { h: 1, s: 10 } },
+    { id: "sailmaker", w: 3, tag: "",       t: "Mending the courses", b: "The sailmaker sits cross-legged on deck with a palm and needle, putting the mainsail back together. It takes him all day and she pulls better for it.", fx: { s: 15 } },
+    { id: "pressgang", w: 2, tag: "record", t: "He ran from the press gang", b: "A man rows out at night. The Navy took him once by force and he will not go back. He signs your articles before dawn.", fx: { s: 20 } },
+    { id: "logbook",   w: 3, tag: "record", t: "Keeping the log", b: "Course, speed, weather, and every sail sighted, written down twice a day. Dull work. It is also the only reason anyone knows where these ships went.", fx: { s: 12 } },
+    { id: "pitch",     w: 3, tag: "",       t: "Paying the seams", b: "Hot pitch into the deck seams to keep the sea out. The smell gets into your clothes and stays for a week.", fx: { h: 1 } },
+    { id: "slush",     w: 3, tag: "",       t: "The cook sells the slush", b: "Fat skimmed off the salt-beef coppers. The cook's own perk, sold ashore. Every crew grumbled about it. Every crew let him.", fx: { g: 12 } },
+    { id: "nightwatch",w: 3, tag: "",       t: "Middle watch", b: "Midnight to four. No wind worth the name, the ship talking to herself, and more stars than anybody ashore will ever see.", fx: { s: 12 } },
+    { id: "pilotfee",  w: 2, tag: "",       t: "A local pilot rows out", b: "He knows every bar and channel on this coast. He wants paying for it.", choice: [
+        { l: "Hire him (25 gold)", r: "He threads you through water you would have grounded in twice.", fx: { g: -25, s: 30 } },
+        { l: "Wave him off", r: "You feel your own way in. Slower, and the leadsman earns his supper.", fx: { s: -5 } } ] },
+    { id: "thief",     w: 2, tag: "record", t: "A thief among the crew", b: "Someone has been at another man's share. The articles are clear about this, and the articles were signed by every man aboard — including you.", choice: [
+        { l: "Put him ashore", r: "Marooned on a sandy key with a bottle and a pistol. Hard, and exactly what the articles said.", fx: { s: 25 } },
+        { l: "Let it pass", r: "You look the other way. The crew notices that the rules bend for some men.", fx: { s: -20, g: 10 } } ] },
+    { id: "sail_far",  w: 3, tag: "",       t: "A sail on the horizon", b: "Too far to tell what she is. She has not seen you yet.", choice: [
+        { l: "Give chase", r: "Four hours of hard sailing for a fishing ketch with nothing aboard but cod.", fx: { s: -10, g: 5 } },
+        { l: "Hold your course", r: "You let her go. Not every sail is worth the powder.", fx: { s: 10 } } ] },
+    { id: "swell",     w: 2, tag: "",       t: "Swell from nowhere", b: "Long, smooth rollers out of a calm sky. Somewhere over the horizon something enormous is happening.", fx: { s: 15 }, mod: "warned" },
+    { id: "boyking",   w: 1, tag: "record", t: "John King's mother", b: "The old hands tell it: the boy's mother begged him off the ship and he said he would harm himself before he left. His shoe and stocking came up with the wreck. He was about nine.", fx: { s: 25 } },
+    { id: "freedman",  w: 2, tag: "record", t: "A share is a share", b: "The loot is counted out on deck. A man who was property eighteen months ago takes the same share as the man beside him. Nobody remarks on it. That was the point.", fx: { s: 30, g: 10 } },
     // route-exclusive cards: only drawn after the fork, on the matching route
     { id: "sandbar",   w: 3, tag: "",       t: "Aground on a sandbar", route: "shore", b: "She shudders and stops. The tide is falling. Choose fast.", choice: [
         { l: "Kedge her off", r: "Hours of sweat on the capstan. You lose time, not cargo.", fx: { s: -15 } },
@@ -2333,7 +2355,7 @@
     ctx.beginPath(); ctx.moveTo(20, 4); ctx.lineTo(24, 6); ctx.moveTo(17, 6); ctx.lineTo(21, 8); ctx.stroke(); // teeth-ish
     ctx.restore();
   }
-  function drawNarrows(o) {
+  function drawNarrows(o, skipLights) {
     var gx = o.gap * W, half = o.gapW / 2, hh = 42;
     ctx.save();
     [[0, gx - half], [gx + half, W]].forEach(function (side) {
@@ -2344,21 +2366,43 @@
       ctx.lineTo(x1, o.y + hh); ctx.lineTo(x0, o.y + hh); ctx.closePath(); ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.fillRect(x0, o.y + hh - 8, x1 - x0, 8);   // surf line
     });
-    // the real gap: a steady lighthouse flame
+    ctx.restore();
+    if (!skipLights) drawNarrowLights(o);
+  }
+  // The lantern tell, split into its own pass so the Mooncusser can redraw it
+  // ON TOP of its fog mask. Before, the fog dimmed the lights to 30% at the
+  // distance where you still had time to steer, so the "read the flame" puzzle
+  // was really a coin flip until the wall was already on top of you.
+  function drawNarrowLights(o) {
+    var gx = o.gap * W, half = o.gapW / 2, hh = 42, ly = o.y - hh - 6;
+    // true gap: pale marker posts and a flame that never wavers. The halo
+    // breathes in SIZE, not brightness — it reads as "burning steady".
     ctx.fillStyle = "rgba(223,241,244,.5)";
     ctx.fillRect(gx - half + 4, o.y + hh - 4, 6, 4); ctx.fillRect(gx + half - 10, o.y + hh - 4, 6, 4);
-    ctx.fillStyle = "#ffe4a0"; ctx.beginPath(); ctx.arc(gx, o.y - hh - 6, 5, 0, 7); ctx.fill();
-    // the mooncusser's false gap: a decoy in the rocks, its wreckers' fire flickering
-    if (o.falseGap != null) {
-      var fgx = o.falseGap * W;
-      ctx.fillStyle = "rgba(120,80,40,.4)";
-      ctx.fillRect(fgx - half + 4, o.y + hh - 4, 6, 4); ctx.fillRect(fgx + half - 10, o.y + hh - 4, 6, 4);
-      var flick = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 17 + fgx));
-      ctx.globalAlpha = flick;
-      ctx.fillStyle = "#ff9a3a"; ctx.beginPath(); ctx.arc(fgx, o.y - hh - 6, 5, 0, 7); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-    ctx.restore();
+    var halo = 13 + 2 * Math.sin(seaT * 1.6);
+    var tg = ctx.createRadialGradient(gx, ly, 0, gx, ly, halo);
+    tg.addColorStop(0, "rgba(255,236,180,.85)"); tg.addColorStop(1, "rgba(255,228,160,0)");
+    ctx.fillStyle = tg; ctx.beginPath(); ctx.arc(gx, ly, halo, 0, 7); ctx.fill();
+    ctx.fillStyle = "#fff3cf"; ctx.beginPath(); ctx.arc(gx, ly, 5, 0, 7); ctx.fill();
+    if (o.falseGap != null) drawFalseLight(o, o.falseGap, 0);
+    if (o.falseGap2 != null) drawFalseLight(o, o.falseGap2, 1.7);   // was never drawn at all before
+  }
+  // A wreckers' lantern swung by hand: it GUTTERS — drops almost to nothing and
+  // comes back, about once a second. A light that visibly goes out is a tell a
+  // 13-year-old can read across a room on a 30fps Chromebook. The old version
+  // wobbled between 40% and 100% brightness at ~2.7Hz, which just looked lit.
+  function drawFalseLight(o, at, ph) {
+    var fgx = at * W, half = o.gapW / 2, hh = 42, ly = o.y - hh - 6;
+    ctx.fillStyle = "rgba(120,80,40,.4)";
+    ctx.fillRect(fgx - half + 4, o.y + hh - 4, 6, 4); ctx.fillRect(fgx + half - 10, o.y + hh - 4, 6, 4);
+    var s = Math.sin(seaT * 5.2 + ph + at * 3);
+    var gut = 0.06 + 0.94 * Math.pow(Math.max(0, s), 1.6);   // mostly dark, snapping bright
+    ctx.globalAlpha = gut;
+    var fg = ctx.createRadialGradient(fgx, ly, 0, fgx, ly, 11);
+    fg.addColorStop(0, "rgba(255,170,90,.8)"); fg.addColorStop(1, "rgba(255,154,58,0)");
+    ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(fgx, ly, 11, 0, 7); ctx.fill();
+    ctx.fillStyle = "#ff9a3a"; ctx.beginPath(); ctx.arc(fgx, ly, 5, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
   }
   function blob(r) { ctx.beginPath(); ctx.moveTo(r, 0); for (var a = 0; a <= 7; a += 0.7) { var rr = r * (0.8 + 0.2 * Math.sin(a * 3)); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); }
   // the passive "fin" hazard, reskinned: a harmless jellyfish bloom drifting
@@ -2400,6 +2444,10 @@
     var t = 0, applied = false, picked = -1, resultLine = "";
     if (!SAVE.seen) SAVE.seen = {};
     if (!SAVE.seen[ev.id]) { SAVE.seen[ev.id] = true; persist(); invalidateSeenCache(); }   // logged in the tales book
+    // per-RUN log for the voyage summary. G.events lists every card the run was
+    // built with, including ones a short voyage never reaches — the log has to
+    // show what actually happened, not what was dealt.
+    if (G) { if (!G.evSeen) G.evSeen = []; if (G.evSeen.indexOf(ev.id) < 0) G.evSeen.push(ev.id); }
     // the steady-hand bar: every plain event is now a timing check. Stop the
     // marker in the green and good news pays double / bad news is halved.
     var hasFx = !ev.choice && ev.fx && (ev.fx.s || ev.fx.g || ev.fx.h);
@@ -2868,8 +2916,8 @@
   function MooncusserScene() {
     var phase = "intro", prompt = null, t = 0, balls = [], fireGun = gunner();
     var walls = 0, WALLS = 3, wall = null, wallGapT = 1.4;
-    var batHp = Math.max(4, Math.round(6 * diff().hp)), batX = 0, batFireT = 2, batDead = false;
-    var done2 = false;
+    var batHp = Math.max(4, Math.round(6 * diff().hp)), batX = 0, batFireT = 4.5, batDead = false;
+    var done2 = false, missed = 0;
     var easyBoss = bossThreat() < 0.7;
     function nextWall() {
       var w = { kind: "narrows", gap: rand(0.25, 0.75), gapW: clamp(W * (easyBoss ? 0.37 : 0.3), 130, 250), y: -90, sp: easyBoss ? 104 : 118, r: 0 };
@@ -2891,8 +2939,11 @@
         helm(dt, 1, 0.5);
         var px = G.shipX * W, py = shipYPx();
         if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
-        // the shore battery: aimed shots from the dunes until it's silenced
-        if (!batDead) {
+        // The shore battery holds fire while a wall is in the reading window.
+        // Reading a flame and dodging an aimed shot are both fine on their own;
+        // stacked on the same two seconds they just make the flame unreadable.
+        var reading = !!wall && wall.y > H * 0.2 && wall.y < py + 40;
+        if (!batDead && !reading) {
           batFireT -= dt;
           if (batFireT <= 0) {
             batFireT = rand(2.2, 3.2) * diff().fire;
@@ -2904,14 +2955,25 @@
         // the gauntlet: one wall at a time, a breath between them
         if (!wall) {
           wallGapT -= dt;
-          if (wallGapT <= 0 && walls < WALLS) { wall = nextWall(); toast("NARROWS " + (walls + 1) + " OF " + WALLS); }
+          if (wallGapT <= 0 && walls < WALLS) {
+            wall = nextWall();
+            toast("NARROWS " + (walls + 1) + " OF " + WALLS);
+            if (walls === 0) toast("🔥 The true light BURNS STEADY. Theirs gutters.");
+          }
         } else {
           wall.y += wall.sp * dt;
           var gx = wall.gap * W, half = wall.gapW / 2;
           if (Math.abs(wall.y - py) < 34 && (px < gx - half + 12 || px > gx + half - 12)) {
-            splash(px, py, 12); damage(1); shake(14); wall = null; walls++; wallGapT = 1.6;
+            // Say WHY it went wrong. Steering for a wreckers' lantern and
+            // clipping honest rock are the same -1 heart, and a kid who isn't
+            // told which one they did has no way to get better at this.
+            var lured = (wall.falseGap != null && Math.abs(px - wall.falseGap * W) < half) ||
+                        (wall.falseGap2 != null && Math.abs(px - wall.falseGap2 * W) < half);
+            splash(px, py, 12); damage(1); shake(14);
+            toast(lured ? "🪔 You steered for the wreckers' light." : "🪨 Onto the rocks — find the steady flame.");
+            missed++; wall = null; walls++; wallGapT = 1.6;
           } else if (wall.y > H + 120) {
-            addScore(25); SFX.point(); wall = null; walls++; wallGapT = 1.6;
+            addScore(25); SFX.point(); toast("✅ You read the light. +25"); wall = null; walls++; wallGapT = 1.6;
           }
         }
         var mTargets = [];
@@ -2922,11 +2984,12 @@
         stepBalls(balls, dt, mTargets, { x: px, y: py, r: 18 });
         if (walls >= WALLS && !wall && !done2) {
           done2 = true; phase = "done"; addScore(60); SFX.win(); feat("mooncusser");
+          if (missed === 0) { addScore(75); addGold(30); feat("cleanlights"); toast("🕯 NOT ONE FALSE LIGHT FOOLED YOU  +75"); }
         }
       },
       render: function () {
         drawSea(G.pal, seaT * 55, false);
-        if (wall) drawNarrows(wall);
+        if (wall) drawNarrows(wall, true);   // geometry now; the lanterns go on after the fog
         // the battery on the dunes
         if (!batDead) {
           ctx.save(); ctx.translate(batX, 30);
@@ -2947,9 +3010,12 @@
         var mg = ctx.createRadialGradient(G.shipX * W, shipYPx(), maskR * 0.3, G.shipX * W, shipYPx(), maskR);
         mg.addColorStop(0, "rgba(8,12,18,0)"); mg.addColorStop(1, "rgba(8,12,18,.7)");
         ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
+        // lanterns last: the fog is atmosphere, but the puzzle has to stay legible
+        // through it or there is nothing to solve — only something to guess.
+        if (wall) drawNarrowLights(wall);
         drawHUD();
-        text("WALLS CLEARED " + walls + " / " + WALLS + (batDead ? "  ·  battery silenced" : ""), W / 2, H * 0.9, 12, "#cdeccf", "center", "bold");
-        if (wall && wall.y < H * 0.7) text("Follow the STEADY flame. Shoot the battery if you can.", W / 2, H * 0.42, 14, "#ffd24a", "center", "bold");
+        text("WALLS PASSED " + walls + " / " + WALLS + (batDead ? "  ·  battery silenced" : "") + (missed ? "  ·  " + missed + " light" + (missed === 1 ? "" : "s") + " fooled you" : ""), W / 2, H * 0.9, 12, "#cdeccf", "center", "bold");
+        if (wall && wall.y < H * 0.7) text(walls === 0 ? "Steer for the flame that never blinks." : "Follow the STEADY flame. Shoot the battery if you can.", W / 2, H * 0.42, 14, "#ffd24a", "center", "bold");
         if (phase === "intro") prompt.render();
         if (phase === "done") { var w = clamp(W * 0.76, 250, 420); panel(W / 2, H / 2, w, 130); text("THROUGH THE FALSE LIGHTS", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text("+60 points" + (batDead ? "   (+40 for the battery)" : ""), W / 2, H / 2 + 6, 15, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 38, 11.5, "rgba(244,231,201,.6)"); }
       }
@@ -4352,7 +4418,7 @@
       render: function () {
         drawSea(G.won ? PALETTES[2] : STORM_PAL, seaT * 40, !G.won);
         drawParts();
-        var w = clamp(W * 0.88, 300, 520), h = 330;
+        var w = clamp(W * 0.88, 300, 520), h = Math.min(382, H * 0.92);
         panel(W / 2, H / 2, w, h);
         var title = G.won ? (G.sunkAtBoss ? "⚓ THE SERPENT'S TOLL" : "⚓ VOYAGE COMPLETE") : (sunk ? "☠ YOUR SHIP WENT DOWN" : "☠ LOST TO THE STORM");
         text(title, W / 2, H / 2 - h / 2 + 38, G.sunkAtBoss ? 21 : 24, G.won ? "#8fd6a0" : "#e08c6a", "center", "bold");
@@ -4368,9 +4434,87 @@
         else if (G.won) text("Survivor bonus added. The cap is broken!", W / 2, H / 2 + 48, 12.5, "#8fd6a0");
         text("🪙 +" + (G.bankedGold || 0) + " banked   ·   Bank " + SAVE.bank + "   ·   Best " + SAVE.best, W / 2, H / 2 + 74, 13, "#f7d84a", "center", "bold");
         var bw = clamp(W * 0.34, 128, 168), by = H / 2 + h / 2 - 46;
+        var lw = clamp(W * 0.68, 250, 340);
+        if (uiButton(W / 2 - lw / 2, by - 50, lw, 42, "📜 THE SHIP'S LOG", { size: 14, color: "#4a3a5e" })) { setScene(VoyageLogScene()); return; }
         if (uiButton(W / 2 - bw - 8, by, bw, 42, "⚒ HARBOR", { size: 15, color: "#1f4a5e" })) setScene(HarborScene(true));
         if (uiButton(W / 2 + 8, by, bw, 42, "↺ SAIL AGAIN", { size: 15 })) startRun();
         if (t > 0.6 && consumeTap()) setScene(HarborScene(true));
+      }
+    };
+  }
+  // ---------------------------------------------------------------- THE SHIP'S LOG
+  // The end-of-voyage summary. Every card is tagged for where it came from, so
+  // the log can tell a class how much of their voyage was the actual historical
+  // record and how much was sailors' yarn — which is the whole point of the unit.
+  function eventById(id) {
+    for (var i = 0; i < EVENTS.length; i++) if (EVENTS[i].id === id) return EVENTS[i];
+    return HALLETT_EVENT.id === id ? HALLETT_EVENT : null;
+  }
+  function VoyageLogScene() {
+    var seen = [], recs = 0, yarns = 0;
+    var ids = (G && G.evSeen) || [];
+    for (var i = 0; i < ids.length; i++) {
+      var e = eventById(ids[i]);
+      if (!e) continue;
+      seen.push(e);
+      if (e.tag === "record") recs++;
+      else if (e.tag === "yarn") yarns++;
+    }
+    var far = missionName(), pos = runPos() + 1, total = runCount();
+    return {
+      noPause: true,
+      enter: function () { document.body.classList.remove("playing"); },
+      update: function (dt) { seaT += dt; updateGulls(dt); },
+      render: function () {
+        drawSea(G.won ? PALETTES[2] : STORM_PAL, seaT * 30, !G.won);
+        var w = clamp(W * 0.94, 300, 580), h = clamp(H * 0.9, 320, 640);
+        panel(W / 2, H / 2, w, h);
+        var top = H / 2 - h / 2, x0 = W / 2 - w / 2 + 22, cy = top + 34;
+        text("📜  THE SHIP'S LOG", W / 2, cy, 21, "#e0b25c", "center", "bold");
+        cy += 24;
+        text(DIFF[G.mode].label + "  ·  " + (G.rank || "—"), W / 2, cy, 12.5, "rgba(244,231,201,.75)", "center");
+        cy += 26;
+        ctx.strokeStyle = "rgba(224,178,92,.35)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x0, cy); ctx.lineTo(W / 2 + w / 2 - 22, cy); ctx.stroke();
+        cy += 20;
+        // the run, in numbers
+        var rows = [
+          ["Furthest landfall", far + "  (" + pos + " of " + total + ")"],
+          ["Final score", String(G.score)],
+          ["Gold banked", "🪙 " + (G.bankedGold || 0)],
+          ["Ships taken", String(G.shipsBeaten || 0)],
+          ["Best chain", (G.comboBest || 0) + "×"],
+          ["The nor'easter", G.stormCleared ? "weathered" : "not survived"]
+        ];
+        if (G.bossBeaten) rows.push(["The serpent", "three heads, all of them"]);
+        for (var r = 0; r < rows.length; r++) {
+          text(rows[r][0], x0, cy, 12, "rgba(244,231,201,.6)");
+          text(rows[r][1], W / 2 + w / 2 - 22, cy, 12.5, "#f4e7c9", "right", "bold");
+          cy += 19;
+        }
+        cy += 8;
+        ctx.beginPath(); ctx.moveTo(x0, cy); ctx.lineTo(W / 2 + w / 2 - 22, cy); ctx.stroke();
+        cy += 20;
+        if (!seen.length) {
+          text("No tales logged — this voyage was over quickly.", W / 2, cy + 6, 12, "rgba(244,231,201,.6)", "center");
+        } else {
+          text("WHAT HAPPENED OUT THERE", x0, cy, 11, "#c9a0ff", "left", "bold");
+          text(recs + " from the record  ·  " + yarns + " yarn" + (yarns === 1 ? "" : "s"), W / 2 + w / 2 - 22, cy, 11, "rgba(244,231,201,.6)", "right");
+          cy += 18;
+          var bottom = top + h - 66, fit = Math.max(1, Math.floor((bottom - cy) / 17));
+          for (var k = 0; k < seen.length && k < fit; k++) {
+            var ev = seen[k];
+            var icon = ev.tag === "record" ? "⚓" : (ev.tag === "yarn" ? "🌀" : "·");
+            var col = ev.tag === "record" ? "#8fd6a0" : (ev.tag === "yarn" ? "#c9a0ff" : "rgba(244,231,201,.8)");
+            text(icon, x0 + 2, cy, 11, col);
+            text(ev.t, x0 + 20, cy, 11.5, "#f4e7c9");
+            cy += 17;
+          }
+          if (seen.length > fit) text("+ " + (seen.length - fit) + " more in the tales book", x0 + 20, cy, 11, "rgba(244,231,201,.5)");
+        }
+        text("⚓ from the real record   ·   🌀 a sailor's yarn", W / 2, top + h - 40, 10, "rgba(244,231,201,.45)", "center");
+        var bw = clamp(W * 0.5, 180, 240);
+        if (uiButton(W / 2 - bw / 2, top + h - 30 + 2, bw, 24, "← BACK", { size: 12, color: "#1f4a5e" })) setScene(ResultScene(!G.won));
       }
     };
   }
@@ -4516,6 +4660,7 @@
     { id: "crimson", name: "The Crimson Corsair", desc: "Sink the Hunter's Flagship.", unlock: function () { return SAVE.feats && SAVE.feats.flagship; }, opts: { hull: "#5e1a1a", deck: "#7a2a2a", sail: "#e8c1ae", flag: "#c73a3a", trim: "#f7d84a" } },
     { id: "ghost",   name: "The Palatine",      desc: "Witness the ghost light — and keep your distance.", unlock: function () { return SAVE.feats && SAVE.feats.palatine; }, opts: { hull: "#241512", deck: "#3a2a24", sail: "rgba(255,220,180,.55)", flag: "#000" } },
     { id: "serpent", name: "The Serpent's Wake", desc: "Drive off the Cape Cod serpent.", unlock: function () { return SAVE.feats && SAVE.feats.serpent; }, opts: { hull: "#2f6b4a", deck: "#3c7f58", sail: "#d6ffd0", flag: "#245239" } },
+    { id: "lamp",    name: "The Lamplighter",   desc: "Run the Mooncusser's gauntlet without one false light fooling you.", unlock: function () { return SAVE.feats && SAVE.feats.cleanlights; }, opts: { hull: "#2b2a3a", deck: "#3d3b52", sail: "#f6efd8", flag: "#ffe4a0", trim: "#ffd24a" } },
     { id: "duck",    name: "The Rubber Ducky",  desc: "Speak the secret word.", unlock: function () { return SAVE.secretUnlock; }, opts: { hull: "#f7d84a", deck: "#ffe27a", sail: "#fff6d6", flag: "#e08c2a" } },
     { id: "goodboy", name: "The Good Boy",      desc: "Befriend PUGNAROK.", unlock: function () { return SAVE.feats && SAVE.feats.pugnarok; }, opts: { hull: "#c9905a", deck: "#e8c087", sail: "#fff3dc", flag: "#ff8a9a", trim: "#4a3020" } }
   ];
