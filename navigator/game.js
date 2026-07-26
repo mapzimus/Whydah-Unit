@@ -1379,8 +1379,10 @@
         text(SAVE.mode === "insane" ? "the multiverse is waiting. good luck." : ((SAVE.extremeWon || SAVE.secretUnlock) ? "difficulty" : "difficulty  ·  beat EXTREME to unlock 🌀 (or know the word)"), W / 2, my - 10, 10.5, "rgba(244,231,201,.6)");
         // resume the furthest voyage reached, or start fresh (with a prologue-skip toggle once it's been seen once)
         var curMode = insane() ? SAVE.furthestInsane : SAVE.furthest;
-        var canResume = curMode > 2;
-        var resumeY = my - 80;
+        // was `> 2`, so it stayed hidden until you'd already cleared three
+        // missions — most players never saw that the game remembers them at all
+        var canResume = curMode >= 2;
+        var resumeY = my - 86;
         if (canResume) {
           // outside INSANE the mythic-only legs don't exist: land the resume on
           // the next real mission, and number it by its place in THIS mode's run
@@ -1389,7 +1391,7 @@
           var resumeMsn = MISSIONS[resumeIdx], dispN = 0;
           for (var rq = 0; rq <= resumeIdx; rq++) if (insane() || !MISSIONS[rq].insaneOnly) dispN++;
           var rName = (insane() && resumeMsn.nameInsane) ? resumeMsn.nameInsane : resumeMsn.name;
-          if (uiButton(W / 2 - bw - 10, resumeY, bw * 2 + 20, 32, "↪ RESUME — M" + dispN + " " + rName, { size: 12.5, color: "#6a3f9e" })) { startRun(resumeIdx); }
+          if (uiButton(W / 2 - bw - 10, resumeY, bw * 2 + 20, 38, "▶ CONTINUE  ·  M" + dispN + " " + rName, { size: 13.5, color: "#7a4ab8" })) { startRun(resumeIdx); }
         }
         if (SAVE.prologueDone) {
           var toggleLbl = (skipPrologue ? "☑" : "☐") + " skip the prologue (+160 pts)";
@@ -4709,50 +4711,37 @@
   // earned since the last port banks the moment you arrive — dying later only
   // costs what you've made since. Buying Oak Timbers here helps immediately.
   var PORT_NAMES = ["Nassau", "Eleuthera", "Charles Town Lights", "Ocracoke", "Hampton Roads", "Montauk", "Block Island", "Provincetown", "Race Point"];
+  // A port call is a breath and a bank run, NOT a shop. Refitting mid-voyage
+  // let a good run snowball and made the Harbor pointless, and the kids asked
+  // for the old shape back: you spend at the Harbor, between voyages, and what
+  // you sail out with is what you finish the voyage with.
   function PortScene() {
     var mi = G.mIndex, portName = PORT_NAMES[clamp(mi, 0, PORT_NAMES.length - 1)];
-    var msg = "";
+    var sold = 0, banked = 0;
     return {
       noPause: true,
       enter: function () {
         document.body.classList.remove("playing");
-        if (G.cargo > 0) { G.gold += G.cargo; toast("📦 Cargo sold at " + portName + "! +" + G.cargo + " 🪙"); SFX.coin(); G.cargo = 0; }   // merchant cargo pays out here
-        if (G.gold > 0) { SAVE.bank += G.gold; G.gold = 0; persist(); }   // the purser banks the chest the moment you tie up
+        if (G.cargo > 0) { sold = G.cargo; G.gold += G.cargo; toast("📦 Cargo sold at " + portName + "! +" + G.cargo + " 🪙"); SFX.coin(); G.cargo = 0; }
+        if (G.gold > 0) { banked = G.gold; SAVE.bank += G.gold; G.gold = 0; persist(); }   // the purser banks the chest the moment you tie up
       },
       update: function (dt) { seaT += dt; updateGulls(dt); },
       render: function () {
         drawSea(PALETTES[2], seaT * 25, false);
         drawShip(W * 0.5, H * 0.87, 1.7, playerShipOpts({ dmg: 0 }));
-        var w = clamp(W * 0.92, 300, 560);
-        var rows = UPG.length, rowH = clamp(H * 0.068, 38, 48), cols = 1;
-        var h = 106 + rows * rowH;
-        if (h > H * 0.76) { h = H * 0.76; rowH = (h - 98) / rows; }
-        if (rowH < 30) { cols = 2; rows = Math.ceil(UPG.length / 2); rowH = clamp((H * 0.76 - 98) / rows, 30, 48); h = 102 + rows * rowH; }
-        var top = clamp(H * 0.05, 8, 36);
+        var w = clamp(W * 0.9, 300, 480), h = 226;
+        var top = clamp(H * 0.14, 12, 90);
         panel(W / 2, top + h / 2, w, h);
-        text("⚓  PUT IN AT " + portName.toUpperCase(), W / 2, top + 28, 18, "#e0b25c", "center", "bold");
-        text("Bank: 🪙 " + SAVE.bank + (msg ? "   " + msg : ""), W / 2, top + 49, 12.5, "#f7d84a", "center", "bold");
-        var colW = w / cols;
-        for (var i = 0; i < UPG.length; i++) {
-          var u = UPG[i], lvl = upgLvl(u.id), maxed = lvl >= u.max, cost = maxed ? 0 : u.cost[lvl];
-          var col = cols === 2 ? i % 2 : 0, rowIdx = cols === 2 ? Math.floor(i / 2) : i;
-          var rx = W / 2 - w / 2 + 16 + col * colW;
-          var ry = top + 64 + rowIdx * rowH;
-          text(u.icon + " " + u.name, rx + 4, ry + 14, cols === 2 ? 11.5 : 13, "#f4e7c9", "left", "bold");
-          for (var p = 0; p < u.max; p++) { ctx.fillStyle = p < lvl ? "#e0b25c" : "rgba(244,231,201,.2)"; ctx.beginPath(); ctx.arc(rx + 8 + p * 12, ry + 26, 4, 0, 7); ctx.fill(); }
-          var bw2 = cols === 2 ? 72 : 94, bh2 = rowH - 12;
-          var bx = rx + colW - bw2 - 24;
-          if (maxed) { uiButton(bx, ry, bw2, bh2, "MAXED", { disabled: true, size: 11 }); }
-          else if (uiButton(bx, ry, bw2, bh2, "🪙 " + cost, { size: cols === 2 ? 10.5 : 12, color: SAVE.bank >= cost ? "#2c5e38" : "#5a4030" })) {
-            if (SAVE.bank >= cost) {
-              SAVE.bank -= cost; SAVE.upg[u.id] = lvl + 1;
-              if (u.id === "hull") { G.maxHull++; G.hull++; }   // takes hold immediately, mid-voyage
-              persist(); SFX.buy(); msg = u.name + " improved!";
-            } else { msg = "Not enough gold."; SFX.bad(); }
-          }
-        }
-        var sy = top + h + 12;
-        if (sy + 44 > H) sy = H - 50;
+        text("⚓  PUT IN AT " + portName.toUpperCase(), W / 2, top + 34, 18, "#e0b25c", "center", "bold");
+        var cy = top + 74;
+        if (sold) { text("📦 Cargo sold", W / 2 - w / 2 + 26, cy, 13, "rgba(244,231,201,.75)"); text("+" + sold + " 🪙", W / 2 + w / 2 - 26, cy, 13.5, "#8fd6a0", "right", "bold"); cy += 24; }
+        text("🏦 Banked with the purser", W / 2 - w / 2 + 26, cy, 13, "rgba(244,231,201,.75)");
+        text("+" + banked + " 🪙", W / 2 + w / 2 - 26, cy, 13.5, "#f7d84a", "right", "bold"); cy += 24;
+        text("Bank total", W / 2 - w / 2 + 26, cy, 13, "rgba(244,231,201,.75)");
+        text("🪙 " + SAVE.bank, W / 2 + w / 2 - 26, cy, 13.5, "#f7d84a", "right", "bold"); cy += 30;
+        wrapText("Hull " + G.hull + " of " + G.maxHull + ". No refit out here — the chandlers are at the Harbor, and you go there when the voyage is over.", W / 2, cy, w - 52, 17, 12, "rgba(244,231,201,.6)");
+        var sy = top + h + 16;
+        if (sy + 44 > H) sy = H - 52;
         if (uiButton(W / 2 - 90, sy, 180, 42, "⚓ SAIL ON", { size: 15.5 })) advance();
       }
     };
