@@ -463,7 +463,10 @@
     { id: "luckwave",   w: 2, tag: "multi", ins: true, t: "A wave of impossible luck", b: "Every rope coils itself. Every knot unties on request. The bosun wins three card games in a row against himself and refuses to explain how.", fx: { s: 35 } },
     { id: "countcrab",  w: 1, tag: "multi", ins: true, t: "The counting crab", b: "A crab boards the ship and counts the cannonballs. It gets a different number every time. Every number is somehow correct.", fx: { s: 15 } },
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
-    { id: "pugcaptain", w: 1, tag: "multi", ins: true, t: "The pug takes the wheel", b: "For six glorious minutes the ship's pug is captain. It makes no orders, changes no headings, and is the best captain anyone has ever served under.", fx: { s: 20 } },
+    { id: "lobstercap", w: 1, tag: "multi", ins: true, t: "The lobster takes the wheel", b: "A lobster the size of a dinner table hauls itself up the side, takes the wheel in both claws, and holds a course better than anyone aboard. Nobody dares relieve it.", fx: { s: 20 } },
+    { id: "whalesong",  w: 2, tag: "multi", ins: true, t: "The whales are harmonizing", b: "Every whale within ten miles surfaces at once and holds a single low note for four minutes. The bosun bursts into tears and will not discuss it.", fx: { s: 25 } },
+    { id: "abduct",     w: 2, tag: "multi", ins: true, t: "They took the cook", b: "A green beam, a polite humming noise, and the cook is gone. He is returned nineteen minutes later with a new haircut and three recipes nobody has ever heard of.", fx: { s: 20, g: 10 } },
+    { id: "crablaw",    w: 2, tag: "multi", ins: true, t: "Everything is legally a crab", b: "A visiting delegation explains that given enough time, everything in the sea becomes a crab. They present diagrams. The diagrams are, unfortunately, convincing.", fx: { s: 20 } },
     { id: "duckdirect",w: 1, tag: "multi", ins: true, t: "A duck asks for directions", b: "A duck the size of a longboat paddles up alongside and asks, quite politely, if this is the way to Maine. The crew is too stunned to lie.", fx: { s: 15, g: 5 } },
     // the 2026 wave — the great meme reset, in period costume
     { id: "memereset",  w: 2, tag: "multi", ins: true, t: "THE GREAT MEME RESET", b: "A wave rolls through the multiverse and every joke on the ship resets to the classics. The bosun tells a knock-knock joke. It absolutely destroys the whole crew.", fx: { s: 30 } },
@@ -1071,7 +1074,9 @@
     if (extra) for (var k in extra) o[k] = extra[k];
     return o;
   }
-  function drawSerpent(seg, headOpen, flash) {
+  // headKind: "visitor" for the three-headed finale, otherwise the lobster.
+  // Defaults to lobster so the mini-boss and the Log's diorama need no changes.
+  function drawSerpent(seg, headOpen, flash, headKind) {
     ctx.save();
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     var rainbow = insane();   // multiverse serpents come in rainbow
@@ -1085,7 +1090,7 @@
     var hd = seg[0];
     if (rainbow) {
       if (hasMut("bighead")) { ctx.translate(hd.x, hd.y); ctx.scale(1.35, 1.35); ctx.translate(-hd.x, -hd.y); }
-      drawPugHead(hd.x, hd.y, headOpen, flash); ctx.restore(); return;
+      (headKind === "visitor" ? drawVisitorHead : drawClawHead)(hd.x, hd.y, headOpen, flash); ctx.restore(); return;
     }
     ctx.fillStyle = flash ? "#efffe9" : "#357a55";
     ctx.beginPath(); ctx.ellipse(hd.x, hd.y, 26, 20, 0, 0, 7); ctx.fill();
@@ -1097,23 +1102,48 @@
     ctx.moveTo(hd.x + 10, hd.y - 16); ctx.lineTo(hd.x + 16, hd.y - 28); ctx.stroke();
     ctx.restore();
   }
-  // the Sea Pug / Pugnarok head: a round fawn head, black-mask muzzle, floppy
-  // ears, huge eyes, pink tongue — insane mode's serpent/boss reskin
-  function drawPugHead(x, y, mouthOpen, flash) {
+  // Insane mode's serpent reskin. Was a pug; the kids voted it off the ship.
+  // Now the mini-boss is a lobster the size of a longboat and the three-headed
+  // finale is a trio of visitors leaning out of their saucer. Same silhouette
+  // budget as the old head so nothing about the fights needed retuning.
+  function drawClawHead(x, y, mouthOpen, flash) {
     ctx.save(); ctx.translate(x, y);
-    ctx.fillStyle = flash ? "#fff3dc" : "#e8c087";
-    ctx.beginPath(); ctx.ellipse(0, 0, 27, 23, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = "#c9905a";   // floppy ears
-    ctx.beginPath(); ctx.ellipse(-24, -6, 11, 16, -0.4, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(24, -6, 11, 16, 0.4, 0, 7); ctx.fill();
-    ctx.fillStyle = "#4a3020";   // black mask muzzle
-    ctx.beginPath(); ctx.ellipse(0, 8, 15, 11, 0, 0, 7); ctx.fill();
-    if (mouthOpen) { ctx.fillStyle = "#ff8a9a"; ctx.beginPath(); ctx.ellipse(0, 13, 8, 7, 0, 0, 7); ctx.fill(); }   // pink tongue
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-11, -3, 8, 0, 7); ctx.arc(11, -3, 8, 0, 7); ctx.fill();
-    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-10, -2, 4.5, 0, 7); ctx.arc(10, -2, 4.5, 0, 7); ctx.fill();
-    ctx.fillStyle = "#4a3020"; ctx.beginPath(); ctx.arc(0, 4, 3.5, 0, 7); ctx.fill();   // nose
-    ctx.strokeStyle = "#4a3020"; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(-6, 6); ctx.quadraticCurveTo(0, 12, 6, 6); ctx.stroke();   // wrinkly mouth line
+    ctx.fillStyle = flash ? "#ffd9c9" : "#c4402a";
+    ctx.beginPath(); ctx.ellipse(0, 0, 26, 21, 0, 0, 7); ctx.fill();                       // shell
+    ctx.fillStyle = flash ? "#ffe6da" : "#a83320";
+    ctx.beginPath(); ctx.ellipse(0, -12, 17, 9, 0, 0, 7); ctx.fill();                       // rostrum ridge
+    var gape = mouthOpen ? 9 : 3;
+    ctx.fillStyle = "#5c1710"; ctx.beginPath(); ctx.ellipse(0, 11, 13, gape, 0, 0, 7); ctx.fill();   // maw
+    if (mouthOpen) { ctx.fillStyle = "#ff9a8a"; ctx.beginPath(); ctx.ellipse(0, 13, 7, 4, 0, 0, 7); ctx.fill(); }
+    ctx.strokeStyle = "#7d2415"; ctx.lineWidth = 2.4;                                        // mandibles
+    ctx.beginPath(); ctx.moveTo(-11, 6); ctx.lineTo(-17, 15); ctx.moveTo(11, 6); ctx.lineTo(17, 15); ctx.stroke();
+    ctx.lineWidth = 2;                                                                       // antennae
+    ctx.beginPath(); ctx.moveTo(-9, -16); ctx.quadraticCurveTo(-22, -30, -30, -26); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9, -16); ctx.quadraticCurveTo(22, -30, 30, -26); ctx.stroke();
+    ctx.fillStyle = "#0f0f0f"; ctx.beginPath(); ctx.arc(-12, -6, 6.5, 0, 7); ctx.arc(12, -6, 6.5, 0, 7); ctx.fill();   // stalked eyes
+    ctx.fillStyle = "#ffd24a"; ctx.beginPath(); ctx.arc(-13, -7, 2.4, 0, 7); ctx.arc(11, -7, 2.4, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  function drawVisitorHead(x, y, mouthOpen, flash) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = flash ? "#e8fff2" : "#9fe8c0";
+    ctx.beginPath(); ctx.ellipse(0, 2, 21, 25, 0, 0, 7); ctx.fill();                        // the classic head
+    ctx.fillStyle = flash ? "#ffffff" : "#b8f2d2";
+    ctx.beginPath(); ctx.ellipse(0, -14, 15, 11, 0, 0, 7); ctx.fill();                       // cranium
+    ctx.fillStyle = "#0d0d14";                                                               // enormous black eyes
+    ctx.beginPath(); ctx.ellipse(-9, -1, 6.5, 10, 0.35, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, -1, 6.5, 10, -0.35, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.55)";
+    ctx.beginPath(); ctx.ellipse(-11, -4, 1.8, 3, 0.35, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(7, -4, 1.8, 3, -0.35, 0, 7); ctx.fill();
+    ctx.fillStyle = "#5aa87e";
+    if (mouthOpen) { ctx.beginPath(); ctx.ellipse(0, 16, 6, 5, 0, 0, 7); ctx.fill(); }
+    else { ctx.fillRect(-5, 15, 10, 2); }
+    ctx.strokeStyle = flash ? "#ffffff" : "#7fd6a8"; ctx.lineWidth = 2;                      // little antennae
+    ctx.beginPath(); ctx.moveTo(-7, -24); ctx.lineTo(-11, -33); ctx.moveTo(7, -24); ctx.lineTo(11, -33); ctx.stroke();
+    var bl = 0.4 + 0.6 * Math.abs(Math.sin(seaT * 6));
+    ctx.globalAlpha = bl; ctx.fillStyle = "#ff6a8a";
+    ctx.beginPath(); ctx.arc(-11, -33, 2.4, 0, 7); ctx.arc(11, -33, 2.4, 0, 7); ctx.fill();
     ctx.restore();
   }
   function drawFin(x, y, dir) {
@@ -2622,11 +2652,52 @@
     ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-12 * s, -13 * s, 2 * s, 0, 7); ctx.fill();
     ctx.restore();
   }
-  function drawToasterEnemy(x, y, s, opt) {
+  // ---- the nautical multiverse: things that at least live in the sea, plus
+  // visitors who clearly do not. Same draw contract as every skin: (x,y,s,opt).
+  function drawLobsterEnemy(x, y, s, opt) {
     ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
-    ctx.fillStyle = "#c7ccd1"; roundRect(-18 * s, -10 * s, 36 * s, 24 * s, 6 * s); ctx.fill();
-    ctx.fillStyle = "#d9a45c"; ctx.beginPath(); ctx.moveTo(-8 * s, -10 * s); ctx.lineTo(-8 * s, -22 * s); ctx.quadraticCurveTo(-2 * s, -28 * s, 4 * s, -22 * s); ctx.lineTo(4 * s, -10 * s); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "#8a8f94"; ctx.beginPath(); ctx.arc(10 * s, 4 * s, 3 * s, 0, 7); ctx.fill();
+    var claw = 1 + 0.12 * Math.sin(seaT * 4);   // the claws work, slowly, menacingly
+    ctx.fillStyle = "#c4402a";
+    ctx.beginPath(); ctx.ellipse(0, 2 * s, 17 * s, 12 * s, 0, 0, 7); ctx.fill();          // carapace
+    ctx.fillStyle = "#a83320";
+    for (var t2 = 0; t2 < 3; t2++) { ctx.beginPath(); ctx.ellipse(0, (10 + t2 * 5) * s, (13 - t2 * 3) * s, 3.5 * s, 0, 0, 7); ctx.fill(); }   // tail plates
+    ctx.fillStyle = "#d64a32";                                                              // claws
+    ctx.beginPath(); ctx.ellipse(-22 * s, -8 * s, 9 * s * claw, 6.5 * s, -0.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(22 * s, -8 * s, 9 * s * claw, 6.5 * s, 0.5, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#7d2415"; ctx.lineWidth = 1.6 * s;
+    ctx.beginPath(); ctx.moveTo(-22 * s, -12 * s); ctx.lineTo(-14 * s, -6 * s); ctx.moveTo(22 * s, -12 * s); ctx.lineTo(14 * s, -6 * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-5 * s, -10 * s); ctx.lineTo(-11 * s, -22 * s); ctx.moveTo(5 * s, -10 * s); ctx.lineTo(11 * s, -22 * s); ctx.stroke();   // antennae
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-5 * s, -7 * s, 2 * s, 0, 7); ctx.arc(5 * s, -7 * s, 2 * s, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  function drawWhaleEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#3f5c74";
+    ctx.beginPath(); ctx.ellipse(0, 0, 26 * s, 13 * s, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(24 * s, 0); ctx.lineTo(38 * s, -10 * s); ctx.lineTo(38 * s, 10 * s); ctx.closePath(); ctx.fill();   // flukes
+    ctx.fillStyle = "#8fa9bd"; ctx.beginPath(); ctx.ellipse(-4 * s, 7 * s, 18 * s, 5 * s, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#2c4356"; ctx.lineWidth = 1.4 * s;
+    for (var g2 = 0; g2 < 4; g2++) { ctx.beginPath(); ctx.moveTo((-14 + g2 * 5) * s, 4 * s); ctx.lineTo((-15 + g2 * 5) * s, 11 * s); ctx.stroke(); }   // throat pleats
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-17 * s, -3 * s, 2.2 * s, 0, 7); ctx.fill();
+    var sp = 0.5 + 0.5 * Math.sin(seaT * 2.2);                                              // the spout
+    ctx.globalAlpha = (opt.blink ? 0.35 : 1) * sp; ctx.strokeStyle = "rgba(210,235,245,.9)"; ctx.lineWidth = 2.5 * s;
+    ctx.beginPath(); ctx.moveTo(-6 * s, -12 * s); ctx.quadraticCurveTo(-9 * s, -26 * s, -2 * s, -30 * s); ctx.stroke();
+    ctx.restore();
+  }
+  function drawUfoEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    var beam = 0.25 + 0.25 * Math.sin(seaT * 3);
+    ctx.fillStyle = "rgba(150,255,190," + beam + ")";                                       // tractor beam
+    ctx.beginPath(); ctx.moveTo(-9 * s, 6 * s); ctx.lineTo(9 * s, 6 * s); ctx.lineTo(20 * s, 34 * s); ctx.lineTo(-20 * s, 34 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#9fe8c0"; ctx.beginPath(); ctx.ellipse(0, -7 * s, 11 * s, 9 * s, 0, Math.PI, 0); ctx.fill();   // dome
+    ctx.fillStyle = "#8a94a8"; ctx.beginPath(); ctx.ellipse(0, 0, 25 * s, 8 * s, 0, 0, 7); ctx.fill();               // saucer
+    ctx.fillStyle = "#5c6478"; ctx.beginPath(); ctx.ellipse(0, 2 * s, 25 * s, 5 * s, 0, 0, 7); ctx.fill();
+    for (var L = 0; L < 5; L++) {                                                            // running lights
+      var lx = (-16 + L * 8) * s, on = 0.35 + 0.65 * Math.abs(Math.sin(seaT * 5 + L));
+      ctx.globalAlpha = (opt.blink ? 0.35 : 1) * on;
+      ctx.fillStyle = ["#ff6a8a", "#ffd24a", "#6ad8ff", "#9fe8c0", "#c9a0ff"][L];
+      ctx.beginPath(); ctx.arc(lx, 1 * s, 2.4 * s, 0, 7); ctx.fill();
+    }
     ctx.restore();
   }
   function drawSnowmanEnemy(x, y, s, opt) {
@@ -2639,20 +2710,6 @@
     ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-3 * s * sk, -9 * s * sk, 1.6 * s, 0, 7); ctx.arc(3 * s * sk, -9 * s * sk, 1.6 * s, 0, 7); ctx.fill();
     ctx.restore();
   }
-  function drawGnomeEnemy(x, y, s, opt) {
-    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
-    ctx.fillStyle = "#3a6b4a"; ctx.beginPath(); ctx.moveTo(-11 * s, 11 * s); ctx.lineTo(11 * s, 11 * s); ctx.lineTo(0, -6 * s); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "#e8c2a0"; ctx.beginPath(); ctx.arc(0, -10 * s, 6.5 * s, 0, 7); ctx.fill();
-    ctx.fillStyle = "#c73a3a"; ctx.beginPath(); ctx.moveTo(-8 * s, -14 * s); ctx.lineTo(8 * s, -14 * s); ctx.lineTo(0, -28 * s); ctx.closePath(); ctx.fill();
-    ctx.restore();
-  }
-  function drawPianoEnemy(x, y, s, opt) {
-    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
-    ctx.fillStyle = "#1a1a1a"; roundRect(-20 * s, -12 * s, 40 * s, 24 * s, 4 * s); ctx.fill();
-    ctx.fillStyle = "#fff";
-    for (var k = -3; k <= 3; k++) ctx.fillRect(k * 5 * s - 2 * s, 2 * s, 4 * s, 8 * s);
-    ctx.restore();
-  }
   function drawCrabEnemy(x, y, s, opt) {
     ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
     ctx.fillStyle = "#c73a3a"; ctx.beginPath(); ctx.ellipse(0, 0, 18 * s, 12 * s, 0, 0, 7); ctx.fill();
@@ -2661,13 +2718,16 @@
     ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-4 * s, -2 * s, 1.6 * s, 0, 7); ctx.arc(4 * s, -2 * s, 1.6 * s, 0, 7); ctx.fill();
     ctx.restore();
   }
+  // The multiverse roster, now with both feet in the sea (and one visitor who
+  // has no feet at all). The kitchen appliances and the garden ornaments are
+  // gone — the kids wanted sea monsters, not a yard sale.
   var SKIN_ENEMIES = [
-    { id: "duck",     name: "The Colossal Rubber Duck",  draw: drawDuckEnemy,     projStyle: "quack",    deathLine: "It squeaks its last and drifts belly-up." },
-    { id: "toaster",  name: "A Belligerent Toaster",     draw: drawToasterEnemy,  projStyle: "toast",    deathLine: "It pops one final slice and goes dark." },
-    { id: "snowman",  name: "A Furious Snowman, Lost",   draw: drawSnowmanEnemy,  projStyle: "snowball", deathLine: "It melts into a very confused puddle." },
-    { id: "gnome",    name: "The Garden Gnome Flotilla", draw: drawGnomeEnemy,    projStyle: "ball",     deathLine: "The flotilla scatters, pointy hats and all." },
-    { id: "piano",    name: "A Haunted Grand Piano",     draw: drawPianoEnemy,    projStyle: "note",     deathLine: "It plays one last discordant chord and sinks." },
-    { id: "crab",     name: "Crab With A Sword",         draw: drawCrabEnemy,     projStyle: "bubble",   deathLine: "It scuttles off sideways, sword and all." }
+    { id: "lobster",  name: "The Lobster of Unusual Size", draw: drawLobsterEnemy, projStyle: "bubble",   deathLine: "It clacks once, with dignity, and sinks." },
+    { id: "whale",    name: "An Extremely Large Whale",    draw: drawWhaleEnemy,   projStyle: "snowball", deathLine: "It sounds one last time and is gone." },
+    { id: "ufo",      name: "Visitors From Somewhere Else", draw: drawUfoEnemy,    projStyle: "venom",    deathLine: "The saucer wobbles, apologizes in three languages, and leaves." },
+    { id: "duck",     name: "The Colossal Rubber Duck",    draw: drawDuckEnemy,    projStyle: "quack",    deathLine: "It squeaks its last and drifts belly-up." },
+    { id: "crab",     name: "Crab With A Sword",           draw: drawCrabEnemy,    projStyle: "bubble",   deathLine: "It scuttles off sideways, sword and all." },
+    { id: "snowman",  name: "A Furious Snowman, Lost",     draw: drawSnowmanEnemy, projStyle: "snowball", deathLine: "It melts into a very confused puddle." }
   ];
   function BattleScene() {
     G.battleNum++;
@@ -2829,7 +2889,7 @@
     return {
       enter: function () {
         prompt = insane()
-          ? Prompt("THE SEA PUG", "Somewhere between dimensions, the serpent legend turned into this. It just wants to play fetch. Dodge the tennis balls, then fire at its head.", function () { phase = "fight"; }, "🐶 MULTIVERSE")
+          ? Prompt("THE LOBSTER OF UNUSUAL SIZE", "Somewhere between dimensions the serpent legend came back with claws and a shell you could roof a house with. It is not hostile exactly. It is just extremely large and coming this way. Dodge what it throws, then fire at its head.", function () { phase = "fight"; }, "🦞 MULTIVERSE")
           : Prompt("A SEA SERPENT!", "Sailors in 1717 swore these waters hid monsters. This one is a sea story. Dodge the lunge and the spray it spits, then fire at its head.", function () { phase = "fight"; }, "🌀 SEA YARN");
       },
       update: function (dt) {
@@ -2877,14 +2937,14 @@
         stepBalls(balls, dt, [{ x: seg[0].x, y: seg[0].y, r: hasMut("bighead") ? 34 : 24, onHit: function () {
           hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
           if (hp <= 0) {
-            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14); feat(insane() ? "seapug" : "serpent");
+            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14); feat(insane() ? "bigclaw" : "serpent");
             for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
           }
         } }]);
       },
       render: function () {
         drawSea(G.pal, seaT * 50, false);
-        if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text(insane() ? "SEA PUG" : "SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
+        if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text(insane() ? "THE LOBSTER" : "SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
         drawSerpent(seg, headOpen, flashT > 0);
         for (var s2 = 0; s2 < spits.length; s2++) {
           if (insane()) { ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0.3, 2.2); ctx.stroke(); }
@@ -2895,7 +2955,7 @@
         drawParts(); drawHUD();
         if (headOpen && phase === "fight") text(insane() ? "BOOP IT!" : "FIRE!", seg[0].x, seg[0].y - 40, 16, "#ffd24a", "center", "bold");
         if (phase === "intro") prompt.render();
-        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text(insane() ? "The Sea Pug is befriended!" : "Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text(insane() ? "it follows at a respectful distance — tap to sail on" : "tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text(insane() ? "The Lobster yields!" : "Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text(insane() ? "it drifts off sideways, still dignified — tap to sail on" : "tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
     function moveHead(dt, tx, ty) {
@@ -3607,7 +3667,7 @@
       debugWin: function () { heads.forEach(function (h) { h.hp = 0; h.alive = false; }); phase = "dying"; dieT = 0; G.bossBeaten = true; addScore(300); addGold(200); },
       enter: function () {
         prompt = insane()
-          ? Prompt("PUGNAROK", "The legend of the grandfather serpent got lost somewhere in the multiverse and came back as this. Three heads. One very good boy. Send it back for belly rubs.", function () { phase = "fight"; }, "🐶 MULTIVERSE")
+          ? Prompt("THE VISITORS", "The grandfather serpent got lost somewhere in the multiverse and what came back is not from the sea at all. Three of them lean out of the saucer, blink those enormous eyes, and start the abduction beams. Send them home.", function () { phase = "fight"; }, "🛸 MULTIVERSE")
           : Prompt("THE GRANDFATHER SERPENT", "The old salts say the first one was a pup. This is what it ran home to. Three heads. One ship. Send it back to the deep.", function () { phase = "fight"; }, "🌀 SEA YARN");
       },
       update: function (dt) {
@@ -3678,7 +3738,7 @@
               h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
               for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
               if (aliveHeads().length === 0) {
-                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20); feat(insane() ? "pugnarok" : "boss");
+                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20); feat(insane() ? "visitors" : "boss");
                 for (var k3 = 0; k3 < 60; k3++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-220, 220), vy: rand(-260, 80), g: 240, life: rand(0.7, 1.8), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
               }
             }
@@ -3695,9 +3755,9 @@
             ctx.fillStyle = h3.alive ? "#2f6b4a" : "#333"; roundRect(bx2, 8, bw * clamp(h3.hp / h3.max, 0, 1), 6, 3); ctx.fill();
             if (insane() && hb !== 1) text("boy " + (hb + 1), h3.baseX * W, 24, 9.5, "#cdeccf", "center", "bold");   // the middle label would collide with the title
           }
-          text(insane() ? "PUGNAROK" : "THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
+          text(insane() ? "THE VISITORS" : "THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
         }
-        heads.forEach(function (h) { if (h.alive || h.seg[0].y < H + 240) drawSerpent(h.seg, h.open, h.flashT > 0); });
+        heads.forEach(function (h) { if (h.alive || h.seg[0].y < H + 240) drawSerpent(h.seg, h.open, h.flashT > 0, "visitor"); });
         for (var s2 = 0; s2 < spits.length; s2++) {
           if (insane()) { ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0.3, 2.2); ctx.stroke(); }
           else { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); }
@@ -4664,7 +4724,11 @@
     { id: "serpent", name: "The Serpent's Wake", desc: "Drive off the Cape Cod serpent.", unlock: function () { return SAVE.feats && SAVE.feats.serpent; }, opts: { hull: "#2f6b4a", deck: "#3c7f58", sail: "#d6ffd0", flag: "#245239" } },
     { id: "lamp",    name: "The Lamplighter",   desc: "Run the Mooncusser's gauntlet without one false light fooling you.", unlock: function () { return SAVE.feats && SAVE.feats.cleanlights; }, opts: { hull: "#2b2a3a", deck: "#3d3b52", sail: "#f6efd8", flag: "#ffe4a0", trim: "#ffd24a" } },
     { id: "duck",    name: "The Rubber Ducky",  desc: "Speak the secret word.", unlock: function () { return SAVE.secretUnlock; }, opts: { hull: "#f7d84a", deck: "#ffe27a", sail: "#fff6d6", flag: "#e08c2a" } },
-    { id: "goodboy", name: "The Good Boy",      desc: "Befriend PUGNAROK.", unlock: function () { return SAVE.feats && SAVE.feats.pugnarok; }, opts: { hull: "#c9905a", deck: "#e8c087", sail: "#fff3dc", flag: "#ff8a9a", trim: "#4a3020" } }
+    // Renamed when the pug left the multiverse. `pugnarok` is still honoured so
+    // anyone who earned this livery under the old boss keeps it — feats are
+    // one-way flags in localStorage and there is no migration step.
+    { id: "goodboy", name: "The Saucer",        desc: "See the Visitors home.", unlock: function () { return SAVE.feats && (SAVE.feats.visitors || SAVE.feats.pugnarok); }, opts: { hull: "#3a4a5e", deck: "#5c6478", sail: "#d8fbe8", flag: "#9fe8c0", trim: "#6ad8ff" } },
+    { id: "carapace", name: "The Carapace",     desc: "Best the Lobster of Unusual Size.", unlock: function () { return SAVE.feats && (SAVE.feats.bigclaw || SAVE.feats.seapug); }, opts: { hull: "#8f2f1e", deck: "#c4402a", sail: "#ffe0d2", flag: "#ff8a6a", trim: "#ffd24a" } }
   ];
   function currentSkin() {
     for (var i = 0; i < SHIP_SKINS.length; i++) if (SHIP_SKINS[i].id === SAVE.skin && SHIP_SKINS[i].unlock()) return SHIP_SKINS[i];
