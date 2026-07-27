@@ -1,947 +1,1102 @@
 /*
- * Captain Bellamy — ship management engine
+ * Black Sam — the voyage
  *
- * Day loop: (maybe event) → pick one order → resolve → night tick → check end.
- * Short text only. Crew moods + ship bars drive outcomes.
+ * One continuous action game. You sail, dive, chase and finally try to
+ * survive a nor'easter, in the order Bellamy actually lived it. Story is
+ * delivered between chapters in a card you can dismiss with one button;
+ * the history that matters lives on collectable logbook pages so nobody
+ * has to read to play.
+ *
+ * Between legs you put into port (see crew.js) to hire, promote and pick
+ * who sails. That is the only place management happens — during a leg the
+ * only verbs are steer and fire.
  */
 (function () {
   "use strict";
 
-  var SAVE_KEY = "blacksam.captain.v1";
+  var E = window.ENGINE;
+  var A = window.ART;
+  var CH = window.CHAPTERS;
+  var SAVE_KEY = "blacksam.voyage.v2";
 
-  var el = {
-    titleCard: document.getElementById("titleCard"),
-    gameCard: document.getElementById("gameCard"),
-    boardCard: document.getElementById("boardCard"),
-    startBtn: document.getElementById("startBtn"),
-    continueBtn: document.getElementById("continueBtn"),
-    boardBtn: document.getElementById("boardBtn"),
-    boardBackBtn: document.getElementById("boardBackBtn"),
-    boardClearBtn: document.getElementById("boardClearBtn"),
-    boardBody: document.getElementById("boardBody"),
-    boardTitle: document.getElementById("boardTitle"),
-    restartBtn: document.getElementById("restartBtn"),
-    muteBtn: document.getElementById("muteBtn"),
-    art: document.getElementById("sceneArt"),
-    phaseLabel: document.getElementById("phaseLabel"),
-    shipLabel: document.getElementById("shipLabel"),
-    dayLabel: document.getElementById("dayLabel"),
-    prompt: document.getElementById("prompt"),
-    log: document.getElementById("captainLog"),
-    actions: document.getElementById("actions"),
-    crewRow: document.getElementById("crewRow"),
-    footerNote: document.getElementById("footerNote"),
-    endingPanel: document.getElementById("endingPanel"),
-    bars: {
-      gold: document.getElementById("barGold"),
-      food: document.getElementById("barFood"),
-      morale: document.getElementById("barMorale"),
-      hull: document.getElementById("barHull"),
-      renown: document.getElementById("barRenown")
-    },
-    vals: {
-      gold: document.getElementById("valGold"),
-      food: document.getElementById("valFood"),
-      morale: document.getElementById("valMorale"),
-      hull: document.getElementById("valHull"),
-      renown: document.getElementById("valRenown")
-    }
-  };
+  var W = E.W, H = E.H;
+  var SEA_TOP = E.SEA_TOP, SEA_BOTTOM = E.SEA_BOTTOM;
 
-  var activeMinigame = null;
-  var lastRecorded = null;
-  var state = freshState();
-  var pendingAfterMinigame = null;
+  /* ---------- DOM ---------- */
 
-  function freshState() {
-    var C = window.CAMPAIGN;
-    var crew = (C.crew || []).map(function (c) {
-      return {
-        id: c.id,
-        name: c.name,
-        role: c.role,
-        skill: c.skill,
-        mood: c.mood,
-        tip: c.tip,
-        joinPhase: c.joinPhase || null,
-        leavePhase: c.leavePhase || null,
-        aboard: !c.joinPhase
-      };
-    });
+  var C = window.CREW;
+
+  var dom = {};
+  ["canvas", "stage", "titleScreen", "cardScreen", "logScreen", "crewScreen", "hudFire",
+   "startBtn", "continueBtn", "logBtn", "logBackBtn", "logList", "logCount",
+   "cardKicker", "cardTitle", "cardLine", "cardCue", "cardFact", "cardStats",
+   "cardBtn", "cardBtn2", "muteBtn", "pauseBtn",
+   "crewGold", "crewBerths", "crewStats", "crewHint", "crewList",
+   "crewGoBtn", "shareOutBtn"
+  ].forEach(function (id) { dom[id] = document.getElementById(id); });
+
+  var ctx = E.fit(dom.canvas);
+  E.bindInput(dom.canvas);
+  E.bindFireButton(dom.hudFire);
+
+  /* ---------- run state ---------- */
+
+  var screen = "title";      // title | card | play | log
+  var paused = false;
+  var run = null;            // whole-voyage state
+  var lvl = null;            // current chapter state
+  var clock = 0;
+
+  function freshRun() {
     return {
-      phase: C.startPhase,
-      day: 1,
-      phaseDay: 0,
-      ship: C.phases[C.startPhase].ship || "No ship yet",
-      stats: { gold: 6, food: 22, morale: 55, hull: 70, renown: 2 },
-      flags: {},
-      scores: {},
-      usedActions: {},
-      usedEvents: {},
-      log: [],
-      mode: "orders", // orders | event | ending | minigame
-      event: null,
-      sound: false,
-      recorded: false,
-      crew: crew
+      chapter: 0,
+      gold: 0,
+      goldEarned: 0,   // score counts every coin ever taken, spent or not
+      crew: 4,
+      hullMax: 6,
+      pages: [],
+      boarded: 0,
+      rescued: 0,
+      sunkBy: null,
+      officers: {},    // id -> { hired, level, mood }
+      berths: [],
+      best: loadBest(),
+      sound: run ? run.sound : false
     };
   }
 
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        chapter: run.chapter, gold: run.gold, goldEarned: run.goldEarned,
+        crew: run.crew, pages: run.pages, boarded: run.boarded,
+        rescued: run.rescued, officers: run.officers, berths: run.berths,
+        sharedThisPort: run.sharedThisPort, sound: run.sound, best: run.best
+      }));
+    } catch (e) { /* private browsing — the game still plays fine */ }
   }
-  function load() {
+  function loadSave() {
     try {
       var raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
-      var data = JSON.parse(raw);
-      if (data && data.phase && window.CAMPAIGN.phases[data.phase]) {
-        data.scores = data.scores || {};
-        data.flags = data.flags || {};
-        data.usedActions = data.usedActions || {};
-        data.usedEvents = data.usedEvents || {};
-        data.log = data.log || [];
-        return data;
-      }
-    } catch (e) { /* ignore */ }
-    return null;
+      var d = JSON.parse(raw);
+      if (!d || typeof d.chapter !== "number") return null;
+      if (d.chapter < 0 || d.chapter >= CH.length) return null;
+      return d;
+    } catch (e) { return null; }
   }
-  function clearSave() {
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+  function loadBest() {
+    try { return parseInt(localStorage.getItem(SAVE_KEY + ".best") || "0", 10) || 0; }
+    catch (e) { return 0; }
   }
-
-  function clamp(n, a, b) {
-    return Math.max(a, Math.min(b, n));
+  function saveBest(n) {
+    try { localStorage.setItem(SAVE_KEY + ".best", String(n)); } catch (e) { /* ignore */ }
   }
 
   function sfx(name) {
-    if (window.SFX && window.SFX[name]) window.SFX[name]();
+    if (window.SFX && window.SFX[name]) { try { window.SFX[name](); } catch (e) { /* ignore */ } }
   }
 
-  function setNote(t) {
-    if (el.footerNote) el.footerNote.textContent = t || "";
+  /* ---------- chapter setup ---------- */
+
+  function chapterDef() { return CH[run.chapter]; }
+
+  function baseHullMax() {
+    return Math.min(9, 6 + Math.floor(run.chapter / 2));
   }
 
-  function pushLog(line) {
-    if (!line) return;
-    state.log.unshift(line);
-    if (state.log.length > 6) state.log.length = 6;
-  }
-
-  function phase() {
-    return window.CAMPAIGN.phases[state.phase];
-  }
-
-  function crewById(id) {
-    for (var i = 0; i < state.crew.length; i++) {
-      if (state.crew[i].id === id) return state.crew[i];
-    }
-    return null;
-  }
-
-  function syncCrewAboard() {
-    var order = ["ashore", "florida", "hornigold", "captain", "whydah", "north", "storm"];
-    var idx = order.indexOf(state.phase);
-    state.crew.forEach(function (c) {
-      var joinIdx = c.joinPhase ? order.indexOf(c.joinPhase) : 0;
-      var leaveIdx = c.leavePhase ? order.indexOf(c.leavePhase) : 999;
-      c.aboard = idx >= joinIdx && idx < leaveIdx;
-    });
-  }
-
-  function applyEffects(effects) {
-    if (!effects) return [];
-    var bumped = [];
-    for (var k in effects) {
-      if (!Object.prototype.hasOwnProperty.call(effects, k)) continue;
-      if (typeof state.stats[k] === "number") {
-        state.stats[k] = clamp(state.stats[k] + effects[k], 0, k === "gold" || k === "renown" ? 99 : 100);
-        bumped.push(k);
-      }
-    }
-    return bumped;
-  }
-
-  function applyCrewBoost(boost) {
-    if (!boost) return;
-    for (var id in boost) {
-      if (!Object.prototype.hasOwnProperty.call(boost, id)) continue;
-      var c = crewById(id);
-      if (c && c.aboard) c.mood = clamp(c.mood + boost[id], 0, 100);
-    }
-  }
-
-  function meetsRequires(req) {
-    if (!req) return true;
-    for (var k in req) {
-      if (!Object.prototype.hasOwnProperty.call(req, k)) continue;
-      if ((state.stats[k] || 0) < req[k]) return false;
-    }
-    return true;
-  }
-
-  function avgCrewMood() {
-    var n = 0, t = 0;
-    state.crew.forEach(function (c) {
-      if (!c.aboard) return;
-      n++; t += c.mood;
-    });
-    return n ? Math.round(t / n) : 50;
-  }
-
-  function cancelMinigame() {
-    if (activeMinigame) {
-      activeMinigame.cancel();
-      activeMinigame = null;
-    }
-    pendingAfterMinigame = null;
-  }
-
-  /* ---------- Render ---------- */
-
-  function renderBars(bumpKeys) {
-    var caps = { gold: 99, food: 100, morale: 100, hull: 100, renown: 99 };
-    ["gold", "food", "morale", "hull", "renown"].forEach(function (k) {
-      var v = state.stats[k];
-      if (el.vals[k]) el.vals[k].textContent = v;
-      if (el.bars[k]) {
-        var pct = Math.round((v / caps[k]) * 100);
-        el.bars[k].style.width = clamp(pct, 0, 100) + "%";
-        el.bars[k].parentElement.classList.toggle("is-low", v <= 20);
-        el.bars[k].parentElement.classList.toggle("is-crit", v <= 8);
-      }
-    });
-    (bumpKeys || []).forEach(function (k) {
-      var node = el.vals[k];
-      if (!node) return;
-      node.classList.remove("bump");
-      void node.offsetWidth;
-      node.classList.add("bump");
-      setTimeout(function () { node.classList.remove("bump"); }, 320);
-    });
-  }
-
-  function renderArt(key) {
-    if (!el.art) return;
-    if (key && window.ART && window.ART[key]) {
-      el.art.innerHTML = window.ART[key]();
-      el.art.hidden = false;
-      el.art.classList.remove("art-reveal");
-      void el.art.offsetWidth;
-      el.art.classList.add("art-reveal");
-    } else {
-      el.art.hidden = true;
-      el.art.innerHTML = "";
-    }
-  }
-
-  function renderLog() {
-    if (!el.log) return;
-    if (!state.log.length) {
-      el.log.innerHTML = '<li class="log-empty">Orders appear here.</li>';
-      return;
-    }
-    el.log.innerHTML = state.log.map(function (line) {
-      return "<li>" + escapeHtml(line) + "</li>";
-    }).join("");
-  }
-
-  function renderCrew() {
-    if (!el.crewRow) return;
-    syncCrewAboard();
-    var html = "";
-    state.crew.forEach(function (c) {
-      if (!c.aboard) return;
-      var moodCls = c.mood >= 70 ? "mood-high" : c.mood <= 35 ? "mood-low" : "mood-mid";
-      html +=
-        '<button type="button" class="crew-chip ' + moodCls + '" data-crew="' + c.id + '" title="' +
-        escapeHtml(c.tip) + '">' +
-        '<span class="crew-name">' + escapeHtml(c.name) + "</span>" +
-        '<span class="crew-role">' + escapeHtml(c.role) + "</span>" +
-        '<span class="crew-mood">♥ ' + c.mood + "</span>" +
-        "</button>";
-    });
-    el.crewRow.innerHTML = html || '<p class="crew-empty">No crew aboard yet.</p>';
-    var chips = el.crewRow.querySelectorAll("[data-crew]");
-    for (var i = 0; i < chips.length; i++) {
-      chips[i].addEventListener("click", onCrewTap);
-    }
-  }
-
-  function onCrewTap(ev) {
-    if (state.mode !== "orders") return;
-    var id = ev.currentTarget.getAttribute("data-crew");
-    var c = crewById(id);
-    if (!c) return;
-    sfx("click");
-    // Quick crew orders — management without reading
-    var specials = {
-      williams: {
-        text: "Williams: recount the shares?",
-        choices: [
-          { text: "Do it", effects: { gold: -3, morale: 10 }, crewBoost: { williams: 8 }, log: "Shares feel fair again." },
-          { text: "Not now", effects: {}, log: "Williams nods and waits." }
-        ]
+  function startChapter() {
+    var def = chapterDef();
+    E.resetEffects();
+    var stats = C.computeStats(run);
+    run.hullMax = baseHullMax() + stats.hullBonus;
+    lvl = {
+      def: def,
+      stats: stats,
+      deeds: {
+        boards: 0, kills: 0, rescues: 0, pages: 0,
+        barrels: 0, pickups: 0, hits: 0, sank: false
       },
-      julian: {
-        text: "Julian: trim the sails his way?",
-        choices: [
-          { text: "Trust him", effects: { food: -1, hull: 4, renown: 1 }, crewBoost: { julian: 10 }, flag: "trustedJulian", log: "Smoother water. Faster miles." },
-          { text: "Hold course", effects: {}, log: "You keep the wheel." }
-        ]
-      },
-      davis: {
-        text: "Davis: patch the worst leak now?",
-        choices: [
-          { text: "Repair", effects: { hull: 10, food: -1 }, crewBoost: { davis: 10 }, log: "Fresh oakum. Hull sighs." },
-          { text: "Later", effects: { hull: -3 }, log: "The drip continues." }
-        ]
-      },
-      teach: {
-        text: "Teach: live powder drill?",
-        choices: [
-          { text: "Fire!", effects: { renown: 2, hull: -3, morale: -2 }, crewBoost: { teach: 12 }, flag: "drilled", log: "Boom. Ears ring. Guns ready." },
-          { text: "Save powder", effects: { morale: 2 }, crewBoost: { teach: -6 }, log: "Teach sulks with a fuse." }
-        ]
-      },
-      goat: {
-        text: "Bartholomew stares. He wants a chase.",
-        choices: [
-          {
-            text: "Chase!",
-            minigame: "goatchase",
-            onWin: { morale: 10, food: 1 },
-            onLose: { morale: 3, food: -1 }
-          },
-          { text: "Scratch his head", effects: { morale: 5 }, crewBoost: { goat: 6 }, log: "The goat forgives you. For now." }
-        ]
+      t: 0,
+      progress: 0,
+      ents: [],
+      balls: [],
+      timers: {},
+      pagesTaken: 0,
+      done: false,
+      failed: false,
+      goalToast: 3.4,
+      hintTimer: def.tutorial ? 7 : 0,
+      boss: null,
+      air: 100,
+      dashCd: 0,
+      braceCd: 0,
+      brace: 0,
+      combo: 0,
+      comboTimer: 0,
+      chapterGold: 0,
+      snapshot: {
+        gold: run.gold, goldEarned: run.goldEarned,
+        crew: run.crew, pages: run.pages.slice()
       }
     };
-    var evtdef = specials[id];
-    if (!evtdef) return;
-    state.mode = "event";
-    state.event = {
-      id: "crew_" + id,
-      art: phase().art,
-      text: evtdef.text,
-      choices: evtdef.choices
-    };
-    renderAll();
-  }
 
-  function availableActions() {
-    var list = window.CAMPAIGN.actions || [];
-    var out = [];
-    for (var i = 0; i < list.length; i++) {
-      var a = list[i];
-      if (a.phases && a.phases.indexOf(state.phase) === -1) continue;
-      if (a.once && state.usedActions[a.id]) continue;
-      out.push(a);
-    }
-    return out;
-  }
-
-  function renderActions() {
-    if (!el.actions) return;
-    el.actions.innerHTML = "";
-    el.actions.classList.remove("mg-active");
-
-    if (state.mode === "ending") {
-      renderEndingActions();
-      return;
-    }
-
-    if (state.mode === "event" && state.event) {
-      renderEventChoices(state.event);
-      return;
-    }
-
-    if (state.mode === "minigame") return;
-
-    var acts = availableActions();
-    var n = 0;
-    acts.forEach(function (a) {
-      var ok = meetsRequires(a.requires);
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "order-btn" + (ok ? "" : " is-locked");
-      btn.disabled = !ok;
-      n++;
-      var key = n <= 9 ? n : "";
-      btn.innerHTML =
-        (key ? '<span class="order-key" aria-hidden="true">' + key + "</span>" : "") +
-        '<span class="order-icon" aria-hidden="true">' + (a.icon || "•") + "</span>" +
-        '<span class="order-body"><span class="order-label">' + escapeHtml(a.label) + "</span>" +
-        '<span class="order-hint">' + escapeHtml(a.hint || "") + "</span></span>";
-      if (ok) {
-        btn.setAttribute("data-choice-key", String(key));
-        btn.addEventListener("click", function () {
-          sfx("click");
-          runAction(a);
-        });
-      } else {
-        btn.title = "Need better ship stats for this.";
-      }
-      el.actions.appendChild(btn);
+    (def.spawns || []).forEach(function (s, i) {
+      lvl.timers[i] = E.rand(0.4, s.every[1] * 0.6);
     });
 
-    // Escape hatch mid-campaign
-    if (state.phase === "captain" || state.phase === "whydah") {
-      var retire = document.createElement("button");
-      retire.type = "button";
-      retire.className = "order-btn order-soft";
-      retire.innerHTML = '<span class="order-body"><span class="order-label">Retire with your gold</span><span class="order-hint">Quit the pirate life.</span></span>';
-      retire.addEventListener("click", function () {
-        state.flags.retire = true;
-        endRun("farmer");
-      });
-      el.actions.appendChild(retire);
-    }
-    if (state.phase === "north") {
-      var stay = document.createElement("button");
-      stay.type = "button";
-      stay.className = "order-btn order-soft";
-      stay.innerHTML = '<span class="order-body"><span class="order-label">Turn south instead</span><span class="order-hint">Skip Cape Cod. Keep raiding.</span></span>';
-      stay.addEventListener("click", function () {
-        state.flags.staySouth = true;
-        endRun("caribbean");
-      });
-      el.actions.appendChild(stay);
-    }
-
-    setNote("Pick one order. Tap a crew face for a quick call.");
-  }
-
-  function renderEventChoices(ev) {
-    el.prompt.textContent = ev.text;
-    renderArt(ev.art || phase().art);
-    (ev.choices || []).forEach(function (ch, idx) {
-      var locked = false;
-      if (ch.requires && !meetsRequires(ch.requires)) locked = true;
-      if (ch.requiresCrew && (!crewById(ch.requiresCrew) || !crewById(ch.requiresCrew).aboard)) locked = true;
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "order-btn" + (locked ? " is-locked" : "");
-      btn.disabled = locked;
-      var num = idx + 1;
-      btn.innerHTML =
-        '<span class="order-key" aria-hidden="true">' + num + "</span>" +
-        '<span class="order-body"><span class="order-label">' + escapeHtml(ch.text) + "</span>" +
-        (ch.note ? '<span class="order-hint">' + escapeHtml(ch.note) + "</span>" : "") +
-        "</span>";
-      if (!locked) {
-        btn.setAttribute("data-choice-key", String(num));
-        btn.addEventListener("click", function () {
-          sfx("click");
-          resolveChoice(ch);
-        });
-      }
-      el.actions.appendChild(btn);
-    });
-    setNote("Decision time.");
-  }
-
-  function renderEndingActions() {
-    var again = document.createElement("button");
-    again.type = "button";
-    again.className = "order-btn";
-    again.innerHTML = '<span class="order-body"><span class="order-label">New voyage</span><span class="order-hint">Try different orders.</span></span>';
-    again.addEventListener("click", restart);
-    el.actions.appendChild(again);
-
-    var hof = document.createElement("button");
-    hof.type = "button";
-    hof.className = "order-btn order-soft";
-    hof.innerHTML = '<span class="order-body"><span class="order-label">Hall of Fame</span><span class="order-hint">See your legend score.</span></span>';
-    hof.addEventListener("click", openBoard);
-    el.actions.appendChild(hof);
-    setNote("Voyage over.");
-  }
-
-  function renderPrompt() {
-    if (state.mode === "ending") return;
-    if (state.mode === "event" && state.event) {
-      el.prompt.textContent = state.event.text;
-      return;
-    }
-    var intro = window.CAMPAIGN.intros[state.phase] || "";
-    var p = phase();
-    el.prompt.textContent = intro + (p.blurb ? " " + p.blurb : "");
-  }
-
-  function renderHeader() {
-    var p = phase();
-    if (el.phaseLabel) el.phaseLabel.textContent = p.title;
-    if (el.shipLabel) el.shipLabel.textContent = state.ship;
-    if (el.dayLabel) el.dayLabel.textContent = "Day " + state.day;
-  }
-
-  function renderAll(bumpKeys) {
-    if (el.gameCard) el.gameCard.classList.toggle("is-ending", state.mode === "ending");
-    renderHeader();
-    renderBars(bumpKeys);
-    renderCrew();
-    renderLog();
-    if (state.mode !== "ending") {
-      if (el.endingPanel) el.endingPanel.hidden = true;
-      renderArt((state.event && state.event.art) || phase().art);
-      renderPrompt();
-    }
-    renderActions();
-  }
-
-  /* ---------- Action / event resolution ---------- */
-
-  function runAction(a) {
-    if (state.mode !== "orders") return;
-    if (!meetsRequires(a.requires)) return;
-
-    if (a.minigame && Math.random() < (a.minigameChance == null ? 1 : a.minigameChance)) {
-      startMinigame(a.minigame, {
-        onWin: function () {
-          finishAction(a, true);
-        },
-        onLose: function () {
-          // Weaker payoff on a flub
-          var e = {};
-          var src = a.effects || {};
-          for (var k in src) {
-            if (Object.prototype.hasOwnProperty.call(src, k)) e[k] = src[k];
-          }
-          if (e.gold) e.gold = Math.max(1, Math.floor(e.gold / 2));
-          if (e.renown) e.renown = Math.max(0, e.renown - 1);
-          var weak = {
-            id: a.id,
-            effects: e,
-            crewBoost: a.crewBoost,
-            flag: a.flag,
-            once: a.once,
-            advance: a.advance,
-            forceAdvancePhase: a.forceAdvancePhase,
-            forceEnding: a.forceEnding,
-            log: (a.log || "Done.") + " (Rough work.)"
-          };
-          finishAction(weak, false);
-        }
-      }, a);
-      return;
-    }
-    finishAction(a, true);
-  }
-
-  function finishAction(a, success) {
-    var bumped = applyEffects(a.effects);
-    applyCrewBoost(a.crewBoost);
-    if (a.flag) state.flags[a.flag] = true;
-    if (a.once) state.usedActions[a.id] = true;
-    pushLog(a.log || "Order carried out.");
-    if (success) sfx("victory");
-    else sfx("loss");
-
-    var advance = a.advance == null ? 1 : a.advance;
-    if (a.forceAdvancePhase) {
-      nightTick(false);
-      advancePhase();
-    } else if (a.forceEnding) {
-      resolveStormEnding(success);
-      return;
-    } else {
-      nightTick(advance > 0);
-      if (advance > 0) maybeAdvancePhase();
-    }
-
-    if (checkFailEndings()) return;
-    maybeTriggerEvent();
-    save();
-    renderAll(bumped);
-  }
-
-  function resolveChoice(ch) {
-    if (ch.minigame) {
-      startMinigame(ch.minigame, {
-        onWin: function () {
-          state.flags._lastMgWin = true;
-          applyEffects(ch.onWin);
-          applyCrewBoost(ch.crewBoost);
-          if (ch.flag) state.flags[ch.flag] = true;
-          pushLog(ch.log || "Nice work.");
-          sfx("victory");
-          afterEvent(ch.advance == null ? 1 : ch.advance);
-        },
-        onLose: function () {
-          state.flags._lastMgWin = false;
-          applyEffects(ch.onLose);
-          pushLog("That went sideways.");
-          sfx("loss");
-          afterEvent(ch.advance == null ? 1 : ch.advance);
-        }
-      });
-      return;
-    }
-    var bumped = applyEffects(ch.effects);
-    applyCrewBoost(ch.crewBoost);
-    if (ch.flag) state.flags[ch.flag] = true;
-    pushLog(ch.log || "Decided.");
-    afterEvent(ch.advance == null ? 1 : ch.advance, bumped);
-  }
-
-  function afterEvent(advanceDays, bumped) {
-    var stormGate = state.flags._stormGate;
-    state.mode = "orders";
-    state.event = null;
-    if (stormGate) {
-      delete state.flags._stormGate;
-      resolveStormEnding(!!state.flags._lastMgWin);
-      return;
-    }
-    nightTick(advanceDays > 0);
-    if (advanceDays > 0) maybeAdvancePhase();
-    if (checkFailEndings()) return;
-    save();
-    renderAll(bumped || []);
-  }
-
-  function nightTick(advanceDay) {
-    // Passive drain — management pressure
-    if (advanceDay) {
-      state.day += 1;
-      state.phaseDay += 1;
-      state.stats.food = clamp(state.stats.food - 2, 0, 100);
-      // Hungry crew get grumpy
-      if (state.stats.food < 10) state.stats.morale = clamp(state.stats.morale - 6, 0, 100);
-      else state.stats.morale = clamp(state.stats.morale - 1, 0, 100);
-      // Happy crew patch small leaks; angry crew don't
-      var mood = avgCrewMood();
-      if (mood >= 70) state.stats.hull = clamp(state.stats.hull + 1, 0, 100);
-      else if (mood <= 35) state.stats.hull = clamp(state.stats.hull - 2, 0, 100);
-      // Sync morale toward crew average a bit
-      state.stats.morale = clamp(Math.round(state.stats.morale * 0.7 + mood * 0.3), 0, 100);
-    }
-  }
-
-  function maybeAdvancePhase() {
-    var p = phase();
-    if (!p) return;
-    if (p.final) {
-      // Storm can't wait forever — shove the player to the wheel.
-      if (state.phaseDay >= (p.days || 3) && !state.flags.stormTried && state.mode === "orders") {
-        state.mode = "event";
-        state.event = {
-          id: "storm_must_helm",
-          art: "storm",
-          text: "The sea won't wait. Take the wheel — now.",
-          choices: [
-            {
-              text: "Take the wheel",
-              minigame: "helm",
-              onWin: { renown: 5 },
-              onLose: { hull: -20, morale: -8 },
-              log: "Into the black water."
-            }
-          ]
-        };
-        // Mark so resolveChoice storm path still ends the run
-        state.flags._stormGate = true;
-      }
-      return;
-    }
-    if (state.phaseDay >= (p.days || 4)) advancePhase();
-  }
-
-  function advancePhase() {
-    var p = phase();
-    if (!p || !p.next) return;
-    state.phase = p.next;
-    state.phaseDay = 0;
-    var np = phase();
-    if (np.setShip) state.ship = np.setShip;
-    else if (np.ship) state.ship = np.ship;
-    syncCrewAboard();
-    // Boarding gifts
-    if (state.phase === "hornigold") {
-      state.stats.gold += 4;
-      state.stats.food += 6;
-      pushLog("Hornigold's crew takes you in.");
-    }
-    if (state.phase === "captain") {
-      state.stats.renown += 5;
-      state.stats.morale += 8;
-      pushLog("They cheer: Captain Bellamy!");
-    }
-    if (state.phase === "whydah") {
-      pushLog("Whydah sighted. Make your move.");
-    }
-    if (state.phase === "north") {
-      state.ship = "Whydah Gally";
-      state.stats.gold += 10;
-      pushLog("Holds full. Point her north.");
-    }
-    if (state.phase === "storm") {
-      pushLog("Wind screams. No more easy days.");
-      state.mode = "orders";
-    }
-    // Show phase blurb as a soft event once
-    state.mode = "event";
-    state.event = {
-      id: "phase_" + state.phase,
-      art: np.art,
-      text: (window.CAMPAIGN.intros[state.phase] || np.blurb),
-      choices: [
-        { text: "Aye", effects: {}, log: np.title + ".", advance: 0 }
-      ]
+    lvl.player = {
+      x: def.mode === "dive" ? 200 : 190,
+      y: (SEA_TOP + SEA_BOTTOM) / 2,
+      vx: 0, vy: 0,
+      hp: run.hullMax,
+      r: def.mode === "dive" ? 17 : 26,
+      inv: 1.2,
+      hit: 0,
+      reload: 0,
+      roll: 0
     };
-  }
 
-  function maybeTriggerEvent() {
-    if (state.mode !== "orders") return;
-    if (Math.random() > 0.42) return;
-    var pool = (window.CAMPAIGN.events || []).filter(function (ev) {
-      if (ev.phases && ev.phases.indexOf(state.phase) === -1) return false;
-      if (state.usedEvents[ev.id]) return false;
-      if (ev.requiresFlag && !state.flags[ev.requiresFlag]) return false;
-      if (typeof ev.when === "function" && !ev.when(state)) return false;
-      return true;
-    });
-    if (!pool.length) return;
-    var ev = pool[Math.floor(Math.random() * pool.length)];
-    state.usedEvents[ev.id] = true;
-    state.mode = "event";
-    state.event = ev;
-  }
-
-  function checkFailEndings() {
-    if (state.stats.morale <= 0) { endRun("mutiny"); return true; }
-    if (state.stats.hull <= 0) { endRun("sunk"); return true; }
-    if (state.stats.food <= 0 && state.stats.morale <= 15) { endRun("starve"); return true; }
-    // Random Navy catch if renown high and hull low in open water
-    if (!state.flags.caught && (state.phase === "captain" || state.phase === "north") &&
-        state.stats.renown >= 30 && state.stats.hull <= 15 && Math.random() < 0.15) {
-      state.flags.caught = true;
-      endRun("gallows");
-      return true;
-    }
-    return false;
-  }
-
-  function resolveStormEnding(success) {
-    state.flags.stormTried = true;
-    if (success) {
-      state.flags.stormHero = true;
-      state.stats.renown = clamp(state.stats.renown + 8, 0, 99);
-      state.stats.hull = clamp(state.stats.hull - 10, 0, 100);
-    } else {
-      state.stats.hull = clamp(state.stats.hull - 25, 0, 100);
-      state.stats.morale = clamp(state.stats.morale - 10, 0, 100);
-    }
-    // Pick best matching ending
-    var order = ["legend", "pilot", "survivor", "wreck"];
-    for (var i = 0; i < order.length; i++) {
-      var e = window.CAMPAIGN.endings[order[i]];
-      if (e && e.when(state)) {
-        endRun(order[i]);
-        return;
-      }
-    }
-    endRun("wreck");
-  }
-
-  function endRun(key) {
-    cancelMinigame();
-    var ending = window.CAMPAIGN.endings[key];
-    if (!ending) ending = window.CAMPAIGN.endings.wreck;
-    state.mode = "ending";
-    state.event = null;
-    state.endingId = ending.id;
-    state.endingKey = key;
-    sfx("bell");
-    renderArt(ending.art);
-    if (el.prompt) el.prompt.textContent = ending.title;
-    if (el.endingPanel) {
-      el.endingPanel.hidden = false;
-      el.endingPanel.innerHTML =
-        '<span class="ending-badge">' + escapeHtml(ending.badge) + "</span>" +
-        "<h2>" + escapeHtml(ending.title) + "</h2>" +
-        "<p>" + escapeHtml(ending.text) + "</p>" +
-        '<p class="epilogue">' + escapeHtml(ending.epilogue) + "</p>";
-      attachScore(ending);
-    }
-    pushLog(ending.title);
-    save();
-    renderAll([]);
-  }
-
-  function attachScore(ending) {
-    if (!window.SCOREBOARD || !el.endingPanel) return;
-    // Adapt stats for scoreboard (expects gold/crew/renown)
-    var scoreState = {
-      stats: {
-        gold: state.stats.gold,
-        crew: Math.round(avgCrewMood() / 5),
-        renown: state.stats.renown
-      },
-      scores: state.scores,
-      flags: state.flags
-    };
-    var panel = document.createElement("div");
-    panel.className = "score-wrap";
-    var endingId = ending.id;
-    var title = ending.title;
-    var scoreObj, rank, totalRuns, entryId, defaultName;
-    if (!state.recorded) {
-      var board = window.SCOREBOARD.loadBoard();
-      defaultName = board.lastName || "Black Sam";
-      var rec = window.SCOREBOARD.recordRun(scoreState, endingId, title, defaultName);
-      lastRecorded = rec;
-      scoreObj = rec.score; rank = rec.rank; totalRuns = rec.totalRuns; entryId = rec.entry.id;
-      state.recorded = true;
-      save();
-    } else {
-      scoreObj = window.SCOREBOARD.computeScore(scoreState, endingId);
-      rank = 0; totalRuns = 0;
-      defaultName = (lastRecorded && lastRecorded.entry && lastRecorded.entry.name) || "Black Sam";
-      entryId = lastRecorded && lastRecorded.entry && lastRecorded.entry.id;
-    }
-    panel.innerHTML = window.SCOREBOARD.scorePanelHtml(scoreObj, rank || 1, totalRuns || 1);
-    if (entryId) {
-      var nameRow = document.createElement("label");
-      nameRow.className = "score-name-row";
-      nameRow.innerHTML = "<span>Captain name:</span>";
-      var input = document.createElement("input");
-      input.className = "score-name-input";
-      input.type = "text";
-      input.maxLength = 24;
-      input.value = defaultName;
-      input.addEventListener("input", function () {
-        window.SCOREBOARD.updateEntryName(entryId, input.value.trim() || "Black Sam");
-      });
-      nameRow.appendChild(input);
-      panel.appendChild(nameRow);
-    }
-    el.endingPanel.appendChild(panel);
-  }
-
-  function startMinigame(name, handlers, actionRef) {
-    cancelMinigame();
-    var game = window.MINIGAMES && window.MINIGAMES[name];
-    if (!game) {
-      if (handlers && handlers.onWin) handlers.onWin();
-      return;
-    }
-    state.mode = "minigame";
-    el.actions.innerHTML = "";
-    el.actions.classList.add("mg-active");
-    el.prompt.textContent = "Your hands on the work — go!";
-    setNote("Mini-game");
-    pendingAfterMinigame = handlers;
-    var opts = {};
-    if (name === "helm") {
-      var julianHelp = !!state.flags.trustedJulian ||
-        (crewById("julian") && crewById("julian").aboard && crewById("julian").mood >= 60);
-      opts = { drift: julianHelp ? 0.65 : 1.15, duration: julianHelp ? 18 : 22 };
-    }
-    activeMinigame = game.mount(el.actions, opts, function (result) {
-      activeMinigame = null;
-      state.scores[name] = result.score || 0;
-      var h = pendingAfterMinigame;
-      pendingAfterMinigame = null;
-      state.mode = "orders";
-      if (result.success) {
-        if (h && h.onWin) h.onWin(result);
-      } else {
-        if (h && h.onLose) h.onLose(result);
-      }
-    }) || null;
-  }
-
-  /* ---------- Shell ---------- */
-
-  function startGame(fromSave) {
-    cancelMinigame();
-    if (!fromSave) {
-      var keep = state.sound;
-      state = freshState();
-      state.sound = keep;
-      pushLog("Voyage begins.");
-      // Opening beat
-      state.mode = "event";
-      state.event = {
-        id: "boot",
-        art: "shore",
-        text: "Cape Cod, 1715. Spanish gold sank off Florida. What's first?",
-        choices: [
-          { text: "Find Williams", effects: { renown: 1 }, log: "Williams shakes your hand. Partnership on.", flag: "metWilliams" },
-          { text: "See Maria first", effects: { morale: 8, renown: 1 }, log: "Orchard promise. Then the sea.", flag: "promisedMaria" },
-          { text: "Straight to a ship", effects: { gold: -2, food: 4 }, log: "You ship out hungry for silver." }
-        ]
+    if (def.boss) {
+      lvl.boss = {
+        kind: def.boss.kind,
+        x: W - 218, y: (SEA_TOP + SEA_BOTTOM) / 2 - 20,
+        vy: 34,
+        hp: def.boss.hp, maxHp: def.boss.hp,
+        r: 54, hit: 0, fire: 2.5, struck: false, sinking: 0
       };
-      save();
     }
-    if (el.titleCard) el.titleCard.hidden = true;
-    if (el.boardCard) el.boardCard.hidden = true;
-    if (el.gameCard) el.gameCard.hidden = false;
-    if (window.SFX && state.sound) window.SFX.startSea();
-    syncCrewAboard();
-    renderAll([]);
+
+    dom.hudFire.hidden = false;
+    dom.hudFire.textContent = def.mode === "dive" ? "DASH" : def.mode === "storm" ? "BRACE" : "FIRE";
+    screen = "play";
+    showOnly(null);
+    if (window.SFX && run.sound) window.SFX.startSea();
   }
 
-  function restart() {
-    cancelMinigame();
-    var keep = state.sound;
-    clearSave();
-    state = freshState();
-    state.sound = keep;
-    if (el.gameCard) el.gameCard.hidden = true;
-    if (el.boardCard) el.boardCard.hidden = true;
-    if (el.titleCard) el.titleCard.hidden = false;
+  /* ---------- spawning ---------- */
+
+  function spawnKind(kind) {
+    var def = lvl.def;
+    var y = E.rand(SEA_TOP + 34, SEA_BOTTOM - 22);
+    var x = W + 70;
+
+    switch (kind) {
+      case "merchant": case "sloop": case "navy": case "fishing": {
+        var hp = kind === "navy" ? 8 : kind === "merchant" ? 4 : kind === "sloop" ? 3 : 1;
+        var sp = kind === "navy" ? 58 : kind === "sloop" ? 118 : kind === "fishing" ? 70 : 74;
+        lvl.ents.push({
+          type: "ship", kind: kind, x: x, y: y,
+          vx: -sp, vy: E.rand(-8, 8),
+          hp: hp, maxHp: hp,
+          r: kind === "navy" ? 36 : kind === "sloop" ? 22 : kind === "fishing" ? 18 : 28,
+          fire: kind === "sloop" ? E.rand(1.4, 2.6) : kind === "navy" ? E.rand(1.8, 2.6) : 0,
+          struck: false, boardTimer: 0, sinking: 0, hit: 0, furl: 0
+        });
+        break;
+      }
+      case "coin": case "barrel": case "swimmer": case "page": case "silver": case "air":
+        lvl.ents.push({
+          type: "pickup", kind: kind, x: x, y: y,
+          vx: -(kind === "swimmer" ? 60 : 120), vy: 0,
+          r: kind === "page" ? 22 : 19, taken: false
+        });
+        break;
+      case "reef": case "urchin": case "shark":
+        lvl.ents.push({
+          type: "hazard", kind: kind, x: x, y: y,
+          vx: kind === "shark" ? -95 : -140, vy: 0,
+          r: kind === "reef" ? 22 : kind === "shark" ? 24 : 16
+        });
+        break;
+      case "wave": {
+        var gapY = E.rand(SEA_TOP + 70, SEA_BOTTOM - 60);
+        lvl.ents.push({
+          type: "wave", x: W + 60, gapY: gapY,
+          gapH: E.lerp(172, 118, lvl.progress),
+          vx: -E.lerp(150, 205, lvl.progress), hitOnce: false
+        });
+        break;
+      }
+      case "bolt":
+        lvl.ents.push({
+          type: "bolt", x: E.rand(120, W - 90), y: E.rand(SEA_TOP + 50, SEA_BOTTOM - 30),
+          r: 58, phase: "warn", timer: 1.15, flash: 1
+        });
+        break;
+    }
+  }
+
+  function updateSpawns(dt) {
+    var def = lvl.def;
+    (def.spawns || []).forEach(function (s, i) {
+      var from = s.from == null ? 0 : s.from;
+      var to = s.to == null ? 1 : s.to;
+      if (lvl.progress < from || lvl.progress > to) return;
+      // Fortune buys extra pages on the leg, not just faster pickups.
+      if (s.max && s.kind === "page" && lvl.pagesTaken >= s.max + Math.floor(lvl.stats.luck)) return;
+      lvl.timers[i] -= dt;
+      if (lvl.timers[i] > 0) return;
+      lvl.timers[i] = E.rand(s.every[0], s.every[1]);
+      var n = s.count ? E.randInt(s.count[0], s.count[1]) : 1;
+      for (var k = 0; k < n; k++) {
+        spawnKind(s.kind);
+        // Stagger a group so it arrives as a readable line, not a wall.
+        var last = lvl.ents[lvl.ents.length - 1];
+        if (last && k > 0) { last.x += k * E.rand(34, 60); last.y += E.rand(-26, 26); }
+      }
+    });
+  }
+
+  /* ---------- player ---------- */
+
+  function movePlayer(dt) {
+    var p = lvl.player;
+    var mode = lvl.def.mode;
+    var dive = mode === "dive";
+    var xMin = dive ? 70 : 100;
+    var xMax = dive ? W - 90 : 540;
+    var yMin = SEA_TOP + (dive ? 24 : 18);
+    var yMax = SEA_BOTTOM - (dive ? 10 : 16);
+    var speed = (dive ? 300 : mode === "storm" ? 320 : 270) * lvl.stats.speed;
+
+    if (E.Input.pointerActive) {
+      // Ship rides a little above the finger so a thumb never hides it.
+      var tx = E.clamp(E.Input.pointerX, xMin, xMax);
+      var ty = E.clamp(E.Input.pointerY - 34, yMin, yMax);
+      // Handling has to help drag-steering too, not just the keyboard.
+      var k = 1 - Math.pow(0.0016 / lvl.stats.speed, dt);
+      p.vx = (tx - p.x) / Math.max(dt, 0.0001) * 0.22;
+      p.vy = (ty - p.y) / Math.max(dt, 0.0001) * 0.22;
+      p.x = E.lerp(p.x, tx, k);
+      p.y = E.lerp(p.y, ty, k);
+    } else {
+      var ax = 0, ay = 0;
+      if (E.Input.left) ax -= 1;
+      if (E.Input.right) ax += 1;
+      if (E.Input.up) ay -= 1;
+      if (E.Input.down) ay += 1;
+      if (ax && ay) { ax *= 0.72; ay *= 0.72; }
+      p.vx = E.lerp(p.vx, ax * speed, 1 - Math.pow(0.002, dt));
+      p.vy = E.lerp(p.vy, ay * speed * 0.85, 1 - Math.pow(0.002, dt));
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
+
+    if (lvl.dashActive > 0) p.x += 260 * dt;
+
+    p.x = E.clamp(p.x, xMin, xMax);
+    p.y = E.clamp(p.y, yMin, yMax);
+    p.roll = E.lerp(p.roll, E.clamp(p.vy / 900, -0.16, 0.16), 1 - Math.pow(0.01, dt));
+
+    if (p.inv > 0) p.inv -= dt;
+    if (p.hit > 0) p.hit = Math.max(0, p.hit - dt * 4);
+  }
+
+  function fireCannon(spread) {
+    var p = lvl.player;
+    var s = E.depthScale(p.y);
+    var n = (spread ? (run.crew >= 9 ? 3 : 2) : 1) + (spread ? lvl.stats.volley : 0);
+    n = Math.min(4, n);
+    for (var i = 0; i < n; i++) {
+      lvl.balls.push({
+        x: p.x + 38 * s, y: p.y - 5 * s + (n > 1 ? (i - (n - 1) / 2) * 12 : 0),
+        vx: 620, vy: n > 1 ? (i - (n - 1) / 2) * 40 : 0,
+        r: 7, hostile: false, life: 1.6
+      });
+    }
+    E.burst(p.x + 42 * s, p.y - 5 * s, {
+      count: 8, angle: 0, spread: 0.5, speedMin: 60, speedMax: 200,
+      color: ["#fff0c4", "#e0a45a"], sizeMin: 2, sizeMax: 6, lifeMax: 0.35
+    });
+    E.addShake(2.2);
+    sfx("cannon");
+  }
+
+  function updateWeapons(dt) {
+    var mode = lvl.def.mode;
+    var p = lvl.player;
+
+    if (mode === "dive") {
+      lvl.dashCd = Math.max(0, lvl.dashCd - dt);
+      lvl.dashActive = Math.max(0, (lvl.dashActive || 0) - dt);
+      if (E.consumeFirePress() && lvl.dashCd <= 0) {
+        lvl.dashCd = 1.1;
+        lvl.dashActive = 0.26;
+        p.inv = Math.max(p.inv, 0.42);
+        sfx("clash");
+        E.burst(p.x - 18, p.y, { count: 14, color: ["#bff0f5", "#8fd8e6"], speedMax: 150, lifeMax: 0.5 });
+      }
+      return;
+    }
+
+    if (mode === "storm") {
+      lvl.braceCd = Math.max(0, lvl.braceCd - dt);
+      lvl.brace = Math.max(0, lvl.brace - dt);
+      if (E.consumeFirePress() && lvl.braceCd <= 0) {
+        lvl.braceCd = 3.2;
+        lvl.brace = 1.1;
+        p.inv = Math.max(p.inv, 1.1);
+        sfx("creak");
+        E.burst(p.x, p.y, { count: 18, color: ["#dff0f8", "#9fc6dc"], shape: "ring", sizeMax: 10, speedMax: 90, lifeMax: 0.6 });
+      }
+      return;
+    }
+
+    // Sail and chase: a slow auto-fire keeps one-thumb play viable, and
+    // holding FIRE gives the fast, aimed rate.
+    lvl.player.reload -= dt;
+    var holding = E.Input.fire;
+    var rate = (holding ? Math.max(0.19, 0.34 - run.crew * 0.008) : 0.85) * lvl.stats.reload;
+    if (lvl.player.reload <= 0) {
+      lvl.player.reload = rate;
+      fireCannon(holding && run.crew >= 6);
+    }
+    E.consumeFirePress();
+  }
+
+  /* ---------- damage + rewards ---------- */
+
+  function hurtPlayer(n, cause) {
+    var p = lvl.player;
+    if (p.inv > 0 || lvl.done) return;
+    p.hp -= n;
+    p.inv = 1.35;
+    p.hit = 1;
+    if (n > 0) lvl.deeds.hits++;
+    lvl.combo = 0;
+    lvl.comboTimer = 0;
+    E.addShake(11);
+    E.setFlash("#8f2f24", 0.22);
+    sfx("loss");
+    E.burst(p.x, p.y, { count: 20, color: ["#e8b45a", "#8f2f24", "#3a2a19"], speedMax: 220, sizeMax: 7 });
+    if (p.hp <= 0) {
+      p.hp = 0;
+      run.sunkBy = cause || "the sea";
+      loseChapter();
+    }
+  }
+
+  function bumpCombo() {
+    lvl.comboTimer = 5;
+    lvl.combo = Math.min(5, lvl.combo + 1);
+  }
+
+  function addGold(n, x, y) {
+    var mult = Math.max(1, lvl.combo);
+    var total = Math.round(n * mult * lvl.stats.plunder);
+    run.gold += total;
+    run.goldEarned += total;
+    lvl.chapterGold += total;
+    E.popup(x, y - 26, "+" + total, "#ffd88a");
+    sfx("coins");
+  }
+
+  function boardShip(s) {
+    var reward = { merchant: 26, sloop: 16, navy: 40, fishing: 8 }[s.kind] || 20;
+    var crewGain = (s.kind === "sloop" ? 0 : 1) + lvl.stats.handsPerBoard;
+    lvl.deeds.boards++;
+    bumpCombo();
+    addGold(reward, s.x, s.y);
+    if (crewGain) {
+      run.crew += crewGain;
+      E.popup(s.x, s.y - 52, "+" + crewGain + " crew", "#bfe3ff");
+    }
+    run.boarded++;
+    if (lvl.player.hp < run.hullMax && Math.random() < 0.4) {
+      lvl.player.hp++;
+      E.popup(s.x, s.y - 76, "+1 hull", "#9fe0a8");
+    }
+    E.addShake(6);
+    E.burst(s.x, s.y, {
+      count: 26, color: ["#ffd88a", "#e8b45a", "#fff3d0"],
+      speedMax: 260, sizeMax: 7, lifeMax: 1
+    });
+    s.dead = true;
+    sfx("victory");
+  }
+
+  function strikeShip(s) {
+    s.struck = true;
+    lvl.deeds.kills++;
+    s.boardTimer = 9;
+    s.vx *= 0.28;
+    s.fire = 0;
+    E.addShake(5);
+    E.burst(s.x, s.y - 20, {
+      count: 22, color: ["#e9dcc0", "#8a7a58", "#3a2a19"], speedMax: 200, sizeMax: 6
+    });
+    E.popup(s.x, s.y - 60, "BOARD HER!", "#ffe9a8");
+    sfx("clash");
+  }
+
+  /* ---------- entity update ---------- */
+
+  function updateEntities(dt) {
+    var p = lvl.player;
+    var mode = lvl.def.mode;
+
+    for (var i = lvl.ents.length - 1; i >= 0; i--) {
+      var e = lvl.ents[i];
+
+      if (e.type === "wave") {
+        e.x += e.vx * dt;
+        if (!e.hitOnce && Math.abs(p.x - e.x) < 36) {
+          var inGap = Math.abs(p.y - e.gapY) < e.gapH / 2 - 8;
+          if (!inGap) {
+            e.hitOnce = true;
+            hurtPlayer(lvl.brace > 0 ? 0 : 1, "the nor'easter");
+            if (lvl.brace > 0) E.popup(p.x, p.y - 40, "BRACED", "#9fe0a8");
+          } else if (!e.scored) {
+            e.scored = true;
+            bumpCombo();
+            addGold(6, p.x, p.y - 30);
+          }
+        }
+        if (e.x < -80) lvl.ents.splice(i, 1);
+        continue;
+      }
+
+      if (e.type === "bolt") {
+        e.timer -= dt;
+        if (e.phase === "warn" && e.timer <= 0) {
+          e.phase = "strike";
+          e.timer = 0.38;
+          e.flash = 1;
+          E.setFlash("#ffffff", 0.16);
+          E.addShake(9);
+          sfx("cannon");
+          if (Math.abs(p.x - e.x) < e.r && Math.abs(p.y - e.y) < e.r * 0.5) {
+            hurtPlayer(lvl.brace > 0 ? 0 : 1, "lightning");
+          }
+        } else if (e.phase === "strike") {
+          e.flash = Math.max(0, e.timer / 0.38);
+          if (e.timer <= 0) lvl.ents.splice(i, 1);
+        }
+        continue;
+      }
+
+      e.x += e.vx * dt;
+      e.y += (e.vy || 0) * dt;
+
+      if (e.type === "hazard") {
+        if (e.kind === "shark") {
+          // Sharks nose toward the diver — slow enough to outswim.
+          e.y += E.clamp(p.y - e.y, -1, 1) * 42 * dt;
+        }
+        if (E.overlaps(p, e)) {
+          hurtPlayer(1, e.kind === "reef" ? "a reef" : e.kind);
+          e.x -= 40;
+        }
+      }
+
+      if (e.type === "pickup") {
+        // Gentle magnetism: near misses still feel like a catch.
+        var dx = p.x - e.x, dy = p.y - e.y;
+        var d2 = dx * dx + dy * dy;
+        var reach = 90 * lvl.stats.magnet;
+        if (d2 < reach * reach) {
+          e.x += dx * 2.4 * dt;
+          e.y += dy * 2.4 * dt;
+        }
+        if (E.overlaps(p, e)) {
+          collect(e);
+          lvl.ents.splice(i, 1);
+          continue;
+        }
+      }
+
+      if (e.type === "ship") {
+        e.hit = Math.max(0, e.hit - dt * 4);
+        if (e.struck) {
+          e.furl = Math.min(1, e.furl + dt * 1.6);
+          e.boardTimer -= dt;
+          if (e.boardTimer < 3) e.sinking = Math.min(1, e.sinking + dt * 0.34);
+          if (Math.random() < dt * 6) {
+            E.spawnParticle({
+              x: e.x + E.rand(-20, 20), y: e.y - E.rand(0, 30),
+              vx: E.rand(-10, 10), vy: -E.rand(20, 50),
+              life: 0.9, size: E.rand(3, 8), grow: 6,
+              color: "rgba(60,50,42,0.6)"
+            });
+          }
+          if (E.overlaps(p, e)) { boardShip(e); }
+          if (e.boardTimer <= 0) e.dead = true;
+        } else {
+          if (e.fire > 0) {
+            e.fire -= dt;
+            if (e.fire <= 0 && e.x < W - 30 && e.x > p.x + 60) {
+              e.fire = e.kind === "navy" ? E.rand(2.2, 3) : E.rand(1.9, 3.1);
+              var shots = e.kind === "navy" ? 3 : 1;
+              for (var k = 0; k < shots; k++) {
+                var aim = (p.y - e.y) * 0.55 + (k - (shots - 1) / 2) * 46;
+                lvl.balls.push({
+                  x: e.x - 30, y: e.y - 4,
+                  vx: -300, vy: E.clamp(aim, -110, 110),
+                  r: 7, hostile: true, life: 3
+                });
+              }
+              E.burst(e.x - 32, e.y - 4, {
+                count: 6, angle: Math.PI, spread: 0.5, color: ["#fff0c4", "#c98a5d"],
+                speedMax: 140, lifeMax: 0.3
+              });
+              sfx("cannon");
+            }
+          }
+          if (E.overlaps(p, e)) {
+            // Ramming a healthy ship hurts you both.
+            e.hp -= 2;
+            e.hit = 1;
+            hurtPlayer(1, "a collision");
+            if (e.hp <= 0) strikeShip(e);
+          }
+        }
+      }
+
+      if (e.dead || e.x < -140 || (e.sinking >= 1)) lvl.ents.splice(i, 1);
+    }
+
+    /* cannonballs */
+    for (var b = lvl.balls.length - 1; b >= 0; b--) {
+      var ball = lvl.balls[b];
+      ball.x += ball.vx * dt;
+      ball.y += ball.vy * dt;
+      ball.life -= dt;
+      var gone = ball.life <= 0 || ball.x < -40 || ball.x > W + 60;
+
+      if (!ball.hostile) {
+        for (var j = 0; j < lvl.ents.length && !gone; j++) {
+          var target = lvl.ents[j];
+          if (target.type !== "ship" || target.struck) continue;
+          if (!E.overlaps(ball, target)) continue;
+          target.hp -= 1;
+          target.hit = 1;
+          gone = true;
+          E.burst(ball.x, ball.y, { count: 8, color: ["#fff0c4", "#c9a25a"], speedMax: 160, lifeMax: 0.4 });
+          if (target.hp <= 0) strikeShip(target);
+        }
+        if (!gone && lvl.boss && !lvl.boss.struck && E.overlaps(ball, lvl.boss)) {
+          lvl.boss.hp -= 1;
+          lvl.boss.hit = 1;
+          gone = true;
+          E.addShake(2);
+          E.burst(ball.x, ball.y, { count: 10, color: ["#fff0c4", "#e9dcc0"], speedMax: 190, lifeMax: 0.45 });
+          if (lvl.boss.hp <= 0) strikeBoss();
+        }
+      } else if (E.overlaps(ball, lvl.player)) {
+        gone = true;
+        hurtPlayer(1, "cannon fire");
+      }
+
+      if (gone) lvl.balls.splice(b, 1);
+    }
+  }
+
+  function collect(e) {
+    var p = lvl.player;
+    lvl.deeds.pickups++;
+    switch (e.kind) {
+      case "coin": addGold(4 + lvl.stats.luck, e.x, e.y); break;
+      case "silver": addGold(7 + lvl.stats.luck, e.x, e.y); break;
+      case "barrel":
+        lvl.deeds.barrels++;
+        if (p.hp < run.hullMax) {
+          p.hp++;
+          E.popup(e.x, e.y - 24, "+1 hull", "#9fe0a8");
+        } else {
+          addGold(6, e.x, e.y);
+        }
+        sfx("dig");
+        break;
+      case "swimmer":
+        run.crew++;
+        run.rescued++;
+        lvl.deeds.rescues++;
+        bumpCombo();
+        E.popup(e.x, e.y - 24, "+1 crew", "#bfe3ff");
+        sfx("victory");
+        break;
+      case "air":
+        lvl.air = Math.min(100, lvl.air + 38);
+        E.popup(e.x, e.y - 24, "+ AIR", "#bff0f5");
+        sfx("dig");
+        break;
+      case "page":
+        takePage(e);
+        break;
+    }
+    E.burst(e.x, e.y, { count: 10, color: ["#ffd88a", "#fff3d0"], speedMax: 150, lifeMax: 0.5 });
+  }
+
+  function takePage(e) {
+    lvl.pagesTaken++;
+    lvl.deeds.pages++;
+    var pool = window.LOGBOOK.filter(function (f) { return run.pages.indexOf(f.id) === -1; });
+    if (pool.length) {
+      var fact = E.pick(pool);
+      run.pages.push(fact.id);
+      E.popup(e.x, e.y - 30, "LOGBOOK PAGE", "#ffe9a8");
+    } else {
+      addGold(12, e.x, e.y);
+    }
+    bumpCombo();
+    sfx("bell");
+  }
+
+  /* ---------- boss (the Whydah) ---------- */
+
+  function updateBoss(dt) {
+    var b = lvl.boss;
+    if (!b) return;
+    var p = lvl.player;
+    b.hit = Math.max(0, b.hit - dt * 4);
+
+    if (b.struck) {
+      b.furl = Math.min(1, (b.furl || 0) + dt * 0.9);
+      b.x -= 40 * dt;
+      if (E.overlaps(p, b)) {
+        run.boarded++;
+        run.crew += 6 + lvl.stats.handsPerBoard;
+        lvl.deeds.boards++;
+        bumpCombo();
+        addGold(240, b.x, b.y);
+        E.addShake(16);
+        E.setFlash("#ffd88a", 0.4);
+        E.burst(b.x, b.y, { count: 70, color: ["#ffd88a", "#e8b45a", "#fff3d0"], speedMax: 380, sizeMax: 9, lifeMax: 1.4 });
+        sfx("victory");
+        b.taken = true;
+        winChapter();
+      }
+      return;
+    }
+
+    // Past the scheduled length the gun crews grind her down on their own,
+    // so a cautious player can never stall the chase forever.
+    if (lvl.t > lvl.def.duration) {
+      b.grind = (b.grind || 0) + dt;
+      if (b.grind >= 2) {
+        b.grind = 0;
+        b.hp -= 1;
+        b.hit = 0.6;
+        if (b.hp <= 0) { strikeBoss(); return; }
+      }
+    }
+
+    b.y += b.vy * dt;
+    if (b.y < SEA_TOP + 60) { b.y = SEA_TOP + 60; b.vy = Math.abs(b.vy); }
+    if (b.y > SEA_BOTTOM - 40) { b.y = SEA_BOTTOM - 40; b.vy = -Math.abs(b.vy); }
+    b.x = E.lerp(b.x, W - 218 - Math.sin(lvl.t * 0.4) * 40, 1 - Math.pow(0.4, dt));
+
+    b.fire -= dt;
+    if (b.fire <= 0) {
+      b.fire = E.lerp(2.3, 1.35, 1 - b.hp / b.maxHp);
+      var shots = b.hp / b.maxHp < 0.5 ? 4 : 3;
+      for (var k = 0; k < shots; k++) {
+        lvl.balls.push({
+          x: b.x - 60, y: b.y - 6,
+          vx: -330, vy: (k - (shots - 1) / 2) * 58 + (p.y - b.y) * 0.25,
+          r: 7, hostile: true, life: 4
+        });
+      }
+      E.burst(b.x - 62, b.y - 6, {
+        count: 12, angle: Math.PI, spread: 0.6, color: ["#fff0c4", "#c98a5d"], speedMax: 180, lifeMax: 0.4
+      });
+      sfx("cannon");
+    }
+  }
+
+  function strikeBoss() {
+    var b = lvl.boss;
+    b.struck = true;
+    b.furl = 0;
+    E.addShake(20);
+    E.setFlash("#ffffff", 0.3);
+    E.popup(b.x, b.y - 90, "SHE STRIKES HER COLOURS", "#ffe9a8");
+    E.burst(b.x, b.y - 30, { count: 50, color: ["#e9dcc0", "#8a7a58", "#3a2a19"], speedMax: 300, sizeMax: 9, lifeMax: 1.2 });
+    sfx("bell");
+  }
+
+  /* ---------- mode extras ---------- */
+
+  function updateDive(dt) {
+    lvl.air -= dt * 3.4;
+    if (lvl.air <= 0) {
+      lvl.air = 0;
+      lvl.drown = (lvl.drown || 0) + dt;
+      if (lvl.drown >= 1.4) {
+        lvl.drown = 0;
+        lvl.player.inv = 0;
+        hurtPlayer(1, "no air");
+      }
+    }
+    if (Math.random() < dt * 8) {
+      E.spawnParticle({
+        x: lvl.player.x - 10, y: lvl.player.y - 6,
+        vx: E.rand(-8, 8), vy: -E.rand(30, 70),
+        life: 1.1, size: E.rand(1.5, 3.5), grow: 1.5,
+        color: "rgba(200,245,255,0.55)"
+      });
+    }
+  }
+
+  /* ---------- chapter flow ---------- */
+
+  function winChapter() {
+    if (lvl.done) return;
+    lvl.done = true;
+    lvl.endTimer = 1.5;
+    sfx("bell");
+  }
+
+  function loseChapter() {
+    if (lvl.done) return;
+    lvl.done = true;
+    lvl.failed = true;
+    lvl.deeds.sank = true;
+    lvl.endTimer = 1.8;
+    E.setFlash("#000000", 0.6);
+    E.burst(lvl.player.x, lvl.player.y, {
+      count: 50, color: ["#3a2a19", "#8f2f24", "#dff0f8"], speedMax: 340, sizeMax: 10, lifeMax: 1.4
+    });
+  }
+
+  function finishChapter() {
+    dom.hudFire.hidden = true;
+    if (lvl.failed) {
+      // The storm is the one place sinking is an ending, not a mistake.
+      if (lvl.def.final) { showEnding("wreck"); return; }
+      showCard({
+        kicker: "Chapter " + (run.chapter + 1),
+        title: "She's Beaten",
+        line: "The " + shipName() + " takes on more water than the crew can throw out. You wash up with nothing but the story.",
+        cue: "Lost to " + (run.sunkBy || "the sea") + ".",
+        primary: "Try this leg again",
+        onPrimary: function () {
+          run.gold = lvl.snapshot.gold;
+          run.goldEarned = lvl.snapshot.goldEarned;
+          run.crew = lvl.snapshot.crew;
+          run.pages = lvl.snapshot.pages.slice();
+          save();
+          startChapter();
+        },
+        secondary: "Give up the voyage",
+        onSecondary: goTitle
+      });
+      return;
+    }
+
+    var def = lvl.def;
+    if (def.final) { showEnding("legend"); return; }
+
+    var moodChanges = C.settleMood(run, lvl.deeds);
+    run.chapter++;
+    save();
+    showCard({
+      kicker: def.when,
+      title: def.title + " — done",
+      line: def.outro.line,
+      fact: def.outro.fact,
+      stats: [
+        ["Gold this leg", lvl.chapterGold],
+        ["Ships boarded", run.boarded],
+        ["Hands", run.crew]
+      ],
+      moods: moodChanges,
+      primary: "Into port",
+      onPrimary: showCrew
+    });
+  }
+
+  function shipName() {
+    return run.chapter >= 5 ? "Whydah" : run.chapter >= 2 ? "Marianne" : "sloop";
+  }
+
+  /* ---------- scoring + endings ---------- */
+
+  function finalScore() {
+    // Everything you ever took, so buying crew never costs you points.
+    return run.goldEarned
+      + run.crew * 18
+      + run.pages.length * 60
+      + run.boarded * 12
+      + run.rescued * 15;
+  }
+
+  function showEnding(kind) {
+    var score = finalScore();
+    var isBest = score > (run.best || 0);
+    if (isBest) { run.best = score; saveBest(score); }
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+
+    var body;
+    if (kind === "legend") {
+      body = {
+        kicker: "26 April 1717",
+        title: "You Beat the Bar",
+        line: "The Whydah scrapes over the sand and holds together. At first light there is a bluff, and a road, and someone standing on it.",
+        fact: "It did not happen. The real Whydah was driven onto the bar off Wellfleet that night and broke apart. About 145 men drowned; two survived. Bellamy was twenty-eight."
+      };
+    } else {
+      body = {
+        kicker: "26 April 1717",
+        title: "The Whydah Goes Down",
+        line: "The bar takes her. Masts come down in the dark, and four and a half tons of treasure go into the sand off Wellfleet.",
+        fact: "This is what really happened. In 1984 Barry Clifford found the wreck, and a bell reading “THE WHYDAH GALLY 1716” proved it — the only fully authenticated pirate shipwreck ever found."
+      };
+    }
+
+    showCard({
+      kicker: body.kicker,
+      title: body.title,
+      line: body.line,
+      fact: body.fact,
+      stats: [
+        ["Gold taken", run.goldEarned],
+        ["Hands", run.crew],
+        ["Ships boarded", run.boarded],
+        ["Logbook pages", run.pages.length + " / " + window.LOGBOOK.length],
+        [isBest ? "NEW BEST SCORE" : "Score", score]
+      ],
+      primary: "Sail again",
+      onPrimary: function () { run = freshRun(); showBrief(); },
+      secondary: "Read the logbook",
+      onSecondary: showLog
+    });
+  }
+
+  /* ---------- screens ---------- */
+
+  function showOnly(node) {
+    [dom.titleScreen, dom.cardScreen, dom.logScreen, dom.crewScreen].forEach(function (n) {
+      if (n) n.hidden = n !== node;
+    });
+    if (dom.pauseBtn) dom.pauseBtn.hidden = !!node;
+  }
+
+  function goTitle() {
+    screen = "title";
+    dom.hudFire.hidden = true;
+    lvl = null;
+    run = run || freshRun();
     refreshContinue();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    showOnly(dom.titleScreen);
   }
 
   function refreshContinue() {
-    var saved = load();
-    var mid = saved && saved.mode !== "ending" && saved.day > 1;
-    if (el.continueBtn) el.continueBtn.hidden = !mid;
-  }
-
-  function openBoard() {
-    cancelMinigame();
-    if (window.SCOREBOARD && el.boardBody) window.SCOREBOARD.renderInto(el.boardBody);
-    if (el.titleCard) el.titleCard.hidden = true;
-    if (el.gameCard) el.gameCard.hidden = true;
-    if (el.boardCard) el.boardCard.hidden = false;
-    if (el.boardTitle && el.boardTitle.focus) {
-      try { el.boardTitle.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+    var s = loadSave();
+    if (dom.continueBtn) {
+      dom.continueBtn.hidden = !s || s.chapter === 0;
+      if (s && s.chapter > 0) {
+        dom.continueBtn.textContent = "Continue — " + CH[s.chapter].title;
+      }
     }
   }
-  function closeBoard() {
-    if (el.boardCard) el.boardCard.hidden = true;
-    if (el.gameCard) el.gameCard.hidden = true;
-    if (el.titleCard) el.titleCard.hidden = false;
-    refreshContinue();
-  }
-  function clearBoard() {
-    if (!window.SCOREBOARD) return;
-    var ok = true;
-    try { ok = window.confirm("Erase the Hall of Fame?"); } catch (e) { /* ignore */ }
-    if (!ok) return;
-    window.SCOREBOARD.clear();
-    lastRecorded = null;
-    if (el.boardBody) window.SCOREBOARD.renderInto(el.boardBody);
+
+  var cardActions = { primary: null, secondary: null };
+
+  function showCard(opts) {
+    screen = "card";
+    dom.hudFire.hidden = true;
+    dom.cardKicker.textContent = opts.kicker || "";
+    dom.cardTitle.textContent = opts.title || "";
+    dom.cardLine.textContent = opts.line || "";
+    dom.cardCue.textContent = opts.cue || "";
+    dom.cardCue.hidden = !opts.cue;
+    if (opts.fact) {
+      dom.cardFact.hidden = false;
+      dom.cardFact.innerHTML = '<span class="fact-tag">True story</span>' + escapeHtml(opts.fact);
+    } else {
+      dom.cardFact.hidden = true;
+    }
+    if (opts.stats && opts.stats.length) {
+      dom.cardStats.hidden = false;
+      var html = opts.stats.map(function (row) {
+        return '<div class="stat"><dt>' + escapeHtml(row[0]) + "</dt><dd>" + escapeHtml(row[1]) + "</dd></div>";
+      }).join("");
+      // How the leg landed with the people who sailed it
+      if (opts.moods && opts.moods.length) {
+        html += '<div class="stat stat-moods"><dt>Crew mood</dt><dd>' +
+          opts.moods.map(function (m) {
+            var cls = m.delta > 0 ? "up" : m.delta < 0 ? "down" : "flat";
+            var arrow = m.delta > 0 ? "▲" : m.delta < 0 ? "▼" : "–";
+            return '<span class="mood-chip mood-' + cls + '">' +
+              escapeHtml(m.short) + " " + arrow + "</span>";
+          }).join("") + "</dd></div>";
+      }
+      dom.cardStats.innerHTML = html;
+    } else {
+      dom.cardStats.hidden = true;
+    }
+    dom.cardBtn.textContent = opts.primary || "Onward";
+    cardActions.primary = opts.onPrimary || goTitle;
+    if (opts.secondary) {
+      dom.cardBtn2.hidden = false;
+      dom.cardBtn2.textContent = opts.secondary;
+      cardActions.secondary = opts.onSecondary || goTitle;
+    } else {
+      dom.cardBtn2.hidden = true;
+      cardActions.secondary = null;
+    }
+    showOnly(dom.cardScreen);
+    dom.cardBtn.focus({ preventScroll: true });
   }
 
-  function refreshMute() {
-    if (!el.muteBtn) return;
-    el.muteBtn.textContent = state.sound ? "♫ Sound On" : "♪ Sound Off";
-    el.muteBtn.setAttribute("aria-pressed", state.sound ? "true" : "false");
+  function showBrief() {
+    var def = chapterDef();
+    showCard({
+      kicker: "Chapter " + (run.chapter + 1) + " · " + def.when,
+      title: def.title,
+      line: def.intro.line,
+      cue: def.intro.cue,
+      primary: "Cast off",
+      onPrimary: startChapter
+    });
   }
-  function toggleSound() {
-    state.sound = !state.sound;
-    if (window.SFX) {
-      window.SFX.setMuted(!state.sound);
-      if (state.sound) { window.SFX.startSea(); window.SFX.click(); }
+
+  /* ---------- port: the ship's company ---------- */
+
+  var portraitCache = {};
+
+  function portraitFor(def) {
+    if (!portraitCache[def.id]) portraitCache[def.id] = A.portrait(def.face, 96);
+    return portraitCache[def.id];
+  }
+
+  function showCrew() {
+    screen = "crew";
+    dom.hudFire.hidden = true;
+    renderCrew();
+    showOnly(dom.crewScreen);
+    dom.crewGoBtn.focus({ preventScroll: true });
+  }
+
+  function renderCrew() {
+    var berths = C.berthCount(run.chapter);
+    var stats = C.computeStats(run);
+    // Re-rendering after every tap must not throw the list back to the top.
+    var scrollAt = dom.crewList.scrollTop;
+
+    dom.crewGold.textContent = run.gold;
+    dom.crewBerths.textContent = run.berths.length + "/" + berths;
+
+    dom.crewStats.innerHTML = C.statBars(stats).map(function (b) {
+      return '<li class="stat-bar"><span class="stat-name">' + escapeHtml(b.label) + "</span>" +
+        '<span class="stat-track"><span class="stat-fill" style="width:' +
+        Math.round(b.frac * 100) + '%"></span></span></li>';
+    }).join("");
+
+    var available = C.ROSTER.filter(function (def) { return C.isAvailable(run, def); });
+
+    if (!available.length) {
+      dom.crewHint.textContent = "Nobody worth hiring in this port. Sail on.";
+      dom.crewList.innerHTML = "";
+    } else {
+      dom.crewHint.textContent = run.berths.length >= berths
+        ? "Every berth is full. Tap someone on deck to stand them down and swap."
+        : "Tap a card to send that hand on deck — only the crew on deck change how the ship sails.";
     }
-    refreshMute();
+
+    dom.crewList.innerHTML = available.map(function (def) {
+      var rec = run.officers[def.id];
+      var hired = !!(rec && rec.hired);
+      var deck = C.onDeck(run, def.id);
+      var promo = hired ? C.promoteCost(run, def) : null;
+      var full = run.berths.length >= berths;
+
+      var stars = "";
+      for (var i = 1; i <= 3; i++) {
+        stars += '<span class="star' + (hired && rec.level >= i ? " on" : "") + '">★</span>';
+      }
+
+      var actions = "";
+      if (!hired) {
+        actions = '<button type="button" class="crew-btn" data-act="hire" data-id="' + def.id + '"' +
+          (run.gold < def.cost ? " disabled" : "") + ">Recruit — " + def.cost + "</button>";
+      } else {
+        actions = '<button type="button" class="crew-btn' + (deck ? " is-on" : "") +
+          '" data-act="berth" data-id="' + def.id + '"' +
+          (!deck && full ? " disabled" : "") + ">" +
+          (deck ? "On deck ✓" : full ? "No berth free" : "Send on deck") + "</button>";
+        if (promo != null) {
+          actions += '<button type="button" class="crew-btn crew-btn-soft" data-act="promote" data-id="' + def.id + '"' +
+            (run.gold < promo ? " disabled" : "") + ">Promote — " + promo + "</button>";
+        }
+      }
+
+      var moodPct = hired ? rec.mood : 60;
+      var band = C.moodBand(moodPct);
+
+      return '<li class="crew-card' + (deck ? " is-deck" : "") + (hired ? "" : " is-unhired") + '">' +
+        '<img class="crew-face" src="' + portraitFor(def) + '" alt="" />' +
+        '<div class="crew-body">' +
+          '<h3>' + escapeHtml(def.short) + '<span class="crew-stars">' + stars + "</span></h3>" +
+          '<p class="crew-role">' + escapeHtml(def.role) + "</p>" +
+          '<p class="crew-effect">' + escapeHtml(def.effectText) + "</p>" +
+          (hired
+            ? '<p class="crew-mood mood-' + band + '"><span class="mood-dot"></span>' +
+              escapeHtml(C.moodLabel(moodPct)) + " · " + escapeHtml(def.likesText) + "</p>"
+            : '<p class="crew-blurb">' + escapeHtml(def.blurb) + "</p>") +
+          '<p class="crew-note">' + escapeHtml(def.note) + "</p>" +
+          '<div class="crew-btns">' + actions + "</div>" +
+        "</div></li>";
+    }).join("");
+
+    Array.prototype.forEach.call(dom.crewList.querySelectorAll("[data-act]"), function (btn) {
+      btn.addEventListener("click", onCrewAction);
+    });
+    dom.crewList.scrollTop = scrollAt;
+
+    dom.shareOutBtn.hidden = !Object.keys(run.officers).length;
+    dom.shareOutBtn.disabled = run.gold < C.SHARE_OUT_COST || !!run.sharedThisPort;
+    dom.shareOutBtn.textContent = run.sharedThisPort
+      ? "Plunder shared out ✓"
+      : "Share out the plunder — " + C.SHARE_OUT_COST;
+
+    dom.crewGoBtn.textContent = "Cast off: " + CH[run.chapter].title;
+  }
+
+  function onCrewAction(ev) {
+    var id = ev.currentTarget.getAttribute("data-id");
+    var act = ev.currentTarget.getAttribute("data-act");
+    var def = C.byId(id);
+    if (!def) return;
+    sfx("click");
+
+    if (act === "hire") {
+      if (run.gold < def.cost) return;
+      run.gold -= def.cost;
+      run.officers[id] = { hired: true, level: 1, mood: 62 };
+      // Hiring somebody only to leave them ashore is a confusing first move.
+      if (run.berths.length < C.berthCount(run.chapter)) run.berths.push(id);
+      sfx("coins");
+    } else if (act === "promote") {
+      var cost = C.promoteCost(run, def);
+      if (cost == null || run.gold < cost) return;
+      run.gold -= cost;
+      run.officers[id].level++;
+      sfx("victory");
+    } else if (act === "berth") {
+      var at = run.berths.indexOf(id);
+      if (at !== -1) run.berths.splice(at, 1);
+      else if (run.berths.length < C.berthCount(run.chapter)) run.berths.push(id);
+    }
+
     save();
+    renderCrew();
+  }
+
+  function showLog() {
+    screen = "log";
+    dom.hudFire.hidden = true;
+    var found = run ? run.pages : [];
+    dom.logCount.textContent = found.length + " of " + window.LOGBOOK.length + " pages recovered";
+    dom.logList.innerHTML = window.LOGBOOK.map(function (f) {
+      var have = found.indexOf(f.id) !== -1;
+      return '<li class="log-entry' + (have ? "" : " is-locked") + '">' +
+        "<h3>" + escapeHtml(have ? f.title : "Waterlogged page") + "</h3>" +
+        "<p>" + escapeHtml(have ? f.text : "Find this page floating on the voyage to read it.") + "</p></li>";
+    }).join("");
+    showOnly(dom.logScreen);
   }
 
   function escapeHtml(s) {
@@ -949,43 +1104,462 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  // Keys 1-9
-  document.addEventListener("keydown", function (e) {
-    if (e.defaultPrevented || e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
-    var key = e.key;
-    if (typeof key !== "string" || key.length !== 1 || key < "1" || key > "9") return;
-    var t = e.target;
-    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-    if (!el.gameCard || el.gameCard.hidden) return;
-    if (activeMinigame || (el.actions && el.actions.classList.contains("mg-active"))) return;
-    var btn = el.actions && el.actions.querySelector('[data-choice-key="' + key + '"]');
-    if (btn && !btn.disabled) {
+  /* ---------- draw ---------- */
+
+  function draw(dt) {
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+
+    if (!lvl) { drawIdleSea(); ctx.restore(); return; }
+
+    var def = lvl.def;
+    var th = A.theme(def.theme);
+    var storm = def.mode === "storm";
+
+    ctx.save();
+    E.applyShake(ctx);
+
+    A.drawSky(ctx, th, clock);
+    if (!th.underwater) A.drawClouds(ctx, clock * 60, storm);
+    if (def.land) {
+      A.drawLand(ctx, clock * 40, {
+        alpha: def.land.alpha * (0.5 + 0.5 * lvl.progress),
+        height: def.land.height
+      });
+    }
+    A.drawSea(ctx, th, clock * 60, clock, { swell: storm ? 2.4 : 1 });
+    if (def.mode === "dive") A.drawWreckScene(ctx, clock * 60, clock);
+
+    // Sort so ships further out are drawn behind nearer ones.
+    var drawList = lvl.ents.slice();
+    if (lvl.boss) drawList.push({ type: "boss", y: lvl.boss.y, ref: lvl.boss });
+    drawList.push({ type: "player", y: lvl.player.y });
+    drawList.sort(function (a, b) { return a.y - b.y; });
+
+    drawList.forEach(function (e) { drawEntity(e); });
+
+    lvl.balls.forEach(function (b) { A.drawCannonball(ctx, b); });
+
+    E.drawParticles(ctx);
+    if (storm) A.drawRain(ctx, clock, 1);
+    if (th.underwater) drawWaterTint();
+    E.drawPopups(ctx);
+    E.drawFlash(ctx);
+    ctx.restore();
+
+    drawHud();
+    ctx.restore();
+  }
+
+  function drawWaterTint() {
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = "#0a4655";
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  function drawEntity(e) {
+    var t = clock;
+    if (e.type === "player") { drawPlayer(); return; }
+    if (e.type === "boss") {
+      var b = e.ref;
+      A.drawShip(ctx, b.x, b.y, {
+        kind: b.kind, scale: E.depthScale(b.y) * 1.15, facing: -1, t: t,
+        bob: Math.sin(t * 1.3) * 4, hit: b.hit, sailFurl: b.furl || 0,
+        damage: 1 - b.hp / b.maxHp
+      });
+      return;
+    }
+
+    var s = E.depthScale(e.y);
+    switch (e.type) {
+      case "ship":
+        A.drawShip(ctx, e.x, e.y, {
+          kind: e.kind, scale: s, facing: -1, t: t,
+          bob: Math.sin(t * 2 + e.x * 0.01) * 2.5,
+          hit: e.hit, sailFurl: e.furl, sinking: e.sinking,
+          damage: 1 - e.hp / e.maxHp
+        });
+        if (e.struck) {
+          ctx.save();
+          ctx.globalAlpha = 0.45 + 0.35 * Math.sin(t * 8);
+          ctx.strokeStyle = "#ffe9a8";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(e.x, e.y + 6, e.r * s * 1.5, e.r * s * 0.7, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else if (e.hp < e.maxHp) {
+          drawTinyBar(e.x, e.y - 62 * s, 44 * s, e.hp / e.maxHp);
+        }
+        break;
+      case "pickup":
+        if (e.kind === "coin") A.drawCoin(ctx, e.x, e.y, s, t);
+        else if (e.kind === "silver") A.drawSilverBar(ctx, e.x, e.y, s * 1.45, t);
+        else if (e.kind === "barrel") A.drawBarrel(ctx, e.x, e.y, s, t);
+        else if (e.kind === "swimmer") A.drawSwimmer(ctx, e.x, e.y, s, t);
+        else if (e.kind === "air") A.drawAirBubble(ctx, e.x, e.y, s, t);
+        else if (e.kind === "page") A.drawLogbookPage(ctx, e.x, e.y, s * 1.15, t);
+        break;
+      case "hazard":
+        if (e.kind === "reef") A.drawReef(ctx, e.x, e.y, s, t);
+        else if (e.kind === "urchin") A.drawUrchin(ctx, e.x, e.y, s, t);
+        else if (e.kind === "shark") A.drawShark(ctx, e.x, e.y, s, t);
+        break;
+      case "wave":
+        A.drawWaveWall(ctx, e, t);
+        break;
+      case "bolt":
+        A.drawLightning(ctx, e, t);
+        break;
+    }
+  }
+
+  function drawPlayer() {
+    var p = lvl.player;
+    var s = E.depthScale(p.y);
+    var blink = p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0;
+    ctx.save();
+    if (blink) ctx.globalAlpha = 0.45;
+    if (lvl.def.mode === "dive") {
+      A.drawDiver(ctx, p.x, p.y, { scale: s * 1.7, t: clock, tilt: p.roll * 1.6, dash: lvl.dashActive || 0 });
+    } else {
+      A.drawShip(ctx, p.x, p.y, {
+        kind: "player", scale: s, facing: 1, t: clock,
+        bob: Math.sin(clock * 2.2) * 2.5, roll: p.roll, hit: p.hit,
+        damage: 1 - p.hp / run.hullMax
+      });
+    }
+    ctx.restore();
+    if (lvl.brace > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.5 * lvl.brace;
+      ctx.strokeStyle = "#9fe0a8";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, 52 * s, 30 * s, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawTinyBar(x, y, w, frac) {
+    ctx.save();
+    ctx.fillStyle = "rgba(6,14,20,0.7)";
+    ctx.fillRect(x - w / 2, y, w, 5);
+    ctx.fillStyle = frac > 0.5 ? "#9fe0a8" : frac > 0.25 ? "#e8b45a" : "#c9584a";
+    ctx.fillRect(x - w / 2, y, w * E.clamp(frac, 0, 1), 5);
+    ctx.restore();
+  }
+
+  function drawIdleSea() {
+    var th = A.theme("dawn");
+    A.drawSky(ctx, th, clock);
+    A.drawClouds(ctx, clock * 60, false);
+    A.drawLand(ctx, clock * 40, { alpha: 0.4 });
+    A.drawSea(ctx, th, clock * 60, clock, {});
+    A.drawShip(ctx, 300, 400, {
+      kind: "player", scale: 1.1, facing: 1, t: clock, bob: Math.sin(clock * 1.6) * 4
+    });
+  }
+
+  /* ---------- HUD ---------- */
+
+  function drawHud() {
+    var def = lvl.def;
+    ctx.save();
+    ctx.textBaseline = "middle";
+
+    // Top scrim so text stays readable over bright sky
+    var g = ctx.createLinearGradient(0, 0, 0, 78);
+    g.addColorStop(0, "rgba(5,12,18,0.72)");
+    g.addColorStop(1, "rgba(5,12,18,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, 78);
+
+    // Hull
+    var hx = 24;
+    for (var i = 0; i < run.hullMax; i++) {
+      var full = i < lvl.player.hp;
+      ctx.globalAlpha = full ? 1 : 0.25;
+      ctx.fillStyle = full ? (lvl.player.hp <= 2 ? "#e2705f" : "#e8b45a") : "#8fa3b0";
+      roundRect(hx + i * 17, 20, 12, 18, 3);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.font = "600 13px 'Source Sans 3', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(226,238,246,0.7)";
+    ctx.textAlign = "left";
+    ctx.fillText("HULL", 24, 48);
+
+    // Gold + crew
+    ctx.font = "700 26px 'Cinzel', Georgia, serif";
+    ctx.fillStyle = "#ffd88a";
+    ctx.textAlign = "left";
+    var gx = 24 + run.hullMax * 17 + 26;
+    ctx.fillText("◉ " + run.gold, gx, 28);
+    ctx.font = "600 13px 'Source Sans 3', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(226,238,246,0.7)";
+    ctx.fillText("GOLD", gx, 48);
+
+    ctx.font = "700 26px 'Cinzel', Georgia, serif";
+    ctx.fillStyle = "#bfe3ff";
+    ctx.fillText("⚑ " + run.crew, gx + 118, 28);
+    ctx.font = "600 13px 'Source Sans 3', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(226,238,246,0.7)";
+    ctx.fillText("CREW", gx + 118, 48);
+
+    // Progress / boss bar
+    // Keep clear of the pause/mute buttons pinned to the top-right corner.
+    var barW = 270, barX = W - barW - 108, barY = 22;
+    var frac, label;
+    if (lvl.boss) {
+      frac = 1 - lvl.boss.hp / lvl.boss.maxHp;
+      label = lvl.boss.struck ? "BOARD HER" : "WHYDAH'S RIGGING";
+    } else {
+      frac = lvl.progress;
+      label = def.title.toUpperCase();
+    }
+    ctx.fillStyle = "rgba(6,14,20,0.65)";
+    roundRect(barX, barY, barW, 12, 6);
+    ctx.fill();
+    var pg = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    pg.addColorStop(0, "#c9a25a");
+    pg.addColorStop(1, "#ffe9a8");
+    ctx.fillStyle = pg;
+    roundRect(barX, barY, Math.max(4, barW * E.clamp(frac, 0, 1)), 12, 6);
+    ctx.fill();
+    ctx.font = "600 12px 'Source Sans 3', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(226,238,246,0.75)";
+    ctx.textAlign = "right";
+    ctx.fillText(label, barX + barW, 48);
+
+    // Air (dive only)
+    if (def.mode === "dive") {
+      var ax = W / 2 - 90;
+      ctx.fillStyle = "rgba(6,14,20,0.7)";
+      roundRect(ax, H - 46, 180, 16, 8);
+      ctx.fill();
+      ctx.fillStyle = lvl.air < 30 ? "#e2705f" : "#8fe2f0";
+      roundRect(ax, H - 46, 180 * (lvl.air / 100), 16, 8);
+      ctx.fill();
+      ctx.font = "700 12px 'Source Sans 3', system-ui, sans-serif";
+      ctx.fillStyle = "#08202a";
+      ctx.textAlign = "center";
+      ctx.fillText("AIR", W / 2, H - 38);
+    }
+
+    // Combo
+    if (lvl.combo >= 2) {
+      ctx.textAlign = "center";
+      ctx.font = "700 34px 'Cinzel', Georgia, serif";
+      ctx.globalAlpha = E.clamp(lvl.comboTimer / 1.4, 0, 1);
+      ctx.fillStyle = "#ffd88a";
+      ctx.fillText("×" + lvl.combo, W - 60, 92);
+      ctx.font = "600 11px 'Source Sans 3', system-ui, sans-serif";
+      ctx.fillStyle = "rgba(226,238,246,0.75)";
+      ctx.fillText("PLUNDER", W - 60, 112);
+      ctx.globalAlpha = 1;
+    }
+
+    // Goal toast
+    if (lvl.goalToast > 0) {
+      ctx.globalAlpha = E.clamp(lvl.goalToast, 0, 1);
+      ctx.textAlign = "center";
+      ctx.font = "700 30px 'Cinzel', Georgia, serif";
+      ctx.fillStyle = "#f2e6cc";
+      ctx.strokeStyle = "rgba(5,12,18,0.85)";
+      ctx.lineWidth = 6;
+      ctx.strokeText(def.goal, W / 2, 120);
+      ctx.fillText(def.goal, W / 2, 120);
+      ctx.globalAlpha = 1;
+    }
+
+    // First-chapter control hints
+    if (lvl.hintTimer > 0) {
+      ctx.globalAlpha = E.clamp(lvl.hintTimer / 2, 0, 0.9);
+      ctx.textAlign = "center";
+      ctx.font = "600 18px 'Source Sans 3', system-ui, sans-serif";
+      ctx.fillStyle = "#e2eef6";
+      ctx.strokeStyle = "rgba(5,12,18,0.8)";
+      ctx.lineWidth = 5;
+      var hint = "Drag anywhere to steer  ·  arrow keys work too";
+      ctx.strokeText(hint, W / 2, H - 70);
+      ctx.fillText(hint, W / 2, H - 70);
+      ctx.globalAlpha = 1;
+    }
+
+    if (paused) {
+      ctx.fillStyle = "rgba(5,12,18,0.72)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+      ctx.font = "700 46px 'Cinzel', Georgia, serif";
+      ctx.fillStyle = "#f2e6cc";
+      ctx.fillText("Paused", W / 2, H / 2 - 10);
+      ctx.font = "600 18px 'Source Sans 3', system-ui, sans-serif";
+      ctx.fillStyle = "rgba(226,238,246,0.8)";
+      ctx.fillText("Tap the pause button or press P to sail on", W / 2, H / 2 + 34);
+    }
+
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  /* ---------- loop ---------- */
+
+  E.startLoop(function (dt) {
+    clock += dt;
+
+    if (screen === "play" && lvl && !paused) {
+      lvl.t += dt;
+
+      if (!lvl.done) {
+        if (lvl.boss) {
+          // The chase ends when the Whydah is boarded, not when time runs out.
+          lvl.progress = Math.min(0.99, lvl.t / lvl.def.duration);
+        } else {
+          lvl.progress = lvl.t / lvl.def.duration;
+          if (lvl.progress >= 1) winChapter();
+        }
+        movePlayer(dt);
+        updateWeapons(dt);
+        updateSpawns(dt);
+        updateEntities(dt);
+        if (lvl.boss) updateBoss(dt);
+        if (lvl.def.mode === "dive") updateDive(dt);
+      } else {
+        movePlayer(dt);
+        updateEntities(dt);
+        lvl.endTimer -= dt;
+        if (lvl.endTimer <= 0) { finishChapter(); }
+      }
+
+      lvl.goalToast = Math.max(0, lvl.goalToast - dt);
+      lvl.hintTimer = Math.max(0, lvl.hintTimer - dt);
+      if (lvl.comboTimer > 0) {
+        lvl.comboTimer -= dt;
+        if (lvl.comboTimer <= 0) lvl.combo = 0;
+      }
+    }
+
+    E.updateParticles(dt);
+    E.updatePopups(dt);
+    E.updateEffects(dt);
+    draw(dt);
+  });
+
+  /* ---------- wiring ---------- */
+
+  dom.startBtn.addEventListener("click", function () {
+    run = freshRun();
+    save();
+    showBrief();
+  });
+
+  dom.continueBtn.addEventListener("click", function () {
+    var s = loadSave();
+    run = freshRun();
+    if (s) {
+      run.chapter = s.chapter;
+      run.gold = s.gold || 0;
+      run.goldEarned = s.goldEarned || s.gold || 0;
+      run.crew = s.crew || 4;
+      run.pages = s.pages || [];
+      run.boarded = s.boarded || 0;
+      run.rescued = s.rescued || 0;
+      run.officers = s.officers || {};
+      run.berths = s.berths || [];
+      run.sharedThisPort = !!s.sharedThisPort;
+      run.sound = !!s.sound;
+    }
+    // Resuming drops you in port so you can see the company before sailing.
+    if (run.chapter > 0) showCrew(); else showBrief();
+  });
+
+  dom.logBtn.addEventListener("click", function () {
+    run = run || freshRun();
+    var s = loadSave();
+    if (s && s.pages && !run.pages.length) run.pages = s.pages;
+    showLog();
+  });
+  dom.logBackBtn.addEventListener("click", goTitle);
+
+  dom.crewGoBtn.addEventListener("click", function () {
+    run.sharedThisPort = false;
+    save();
+    showBrief();
+  });
+
+  dom.shareOutBtn.addEventListener("click", function () {
+    if (run.sharedThisPort) return;
+    if (!C.shareOut(run)) return;
+    run.sharedThisPort = true;
+    sfx("coins");
+    save();
+    renderCrew();
+  });
+
+  dom.cardBtn.addEventListener("click", function () {
+    if (cardActions.primary) cardActions.primary();
+  });
+  dom.cardBtn2.addEventListener("click", function () {
+    if (cardActions.secondary) cardActions.secondary();
+  });
+
+  dom.muteBtn.addEventListener("click", function () {
+    run = run || freshRun();
+    run.sound = !run.sound;
+    if (window.SFX) {
+      window.SFX.setMuted(!run.sound);
+      if (run.sound) { window.SFX.startSea(); window.SFX.click(); }
+    }
+    dom.muteBtn.textContent = run.sound ? "♫" : "♪";
+    dom.muteBtn.setAttribute("aria-label", run.sound ? "Sound on" : "Sound off");
+    save();
+  });
+
+  function togglePause() {
+    if (screen !== "play") return;
+    paused = !paused;
+    dom.pauseBtn.textContent = paused ? "▶" : "❚❚";
+  }
+  dom.pauseBtn.addEventListener("click", togglePause);
+
+  window.addEventListener("keydown", function (e) {
+    if (e.code === "KeyP" || e.code === "Escape") { togglePause(); }
+    if (e.code === "Enter" && screen === "card") {
       e.preventDefault();
-      btn.click();
+      if (cardActions.primary) cardActions.primary();
     }
   });
 
-  if (el.startBtn) el.startBtn.addEventListener("click", function () { startGame(false); });
-  if (el.continueBtn) el.continueBtn.addEventListener("click", function () {
-    var saved = load();
-    if (saved) {
-      state = saved;
-      if (window.SFX) window.SFX.setMuted(!state.sound);
-      refreshMute();
-      startGame(true);
-    } else startGame(false);
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && screen === "play") {
+      paused = true;
+      dom.pauseBtn.textContent = "▶";
+    }
   });
-  if (el.restartBtn) el.restartBtn.addEventListener("click", restart);
-  if (el.muteBtn) el.muteBtn.addEventListener("click", toggleSound);
-  if (el.boardBtn) el.boardBtn.addEventListener("click", openBoard);
-  if (el.boardBackBtn) el.boardBackBtn.addEventListener("click", closeBoard);
-  if (el.boardClearBtn) el.boardClearBtn.addEventListener("click", clearBoard);
 
   (function init() {
-    var saved = load();
-    if (saved && typeof saved.sound === "boolean") state.sound = saved.sound;
-    if (window.SFX) window.SFX.setMuted(!state.sound);
-    refreshMute();
-    refreshContinue();
+    run = freshRun();
+    var s = loadSave();
+    if (s) run.sound = !!s.sound;
+    if (window.SFX) window.SFX.setMuted(!run.sound);
+    dom.muteBtn.textContent = run.sound ? "♫" : "♪";
+    goTitle();
   })();
 })();
