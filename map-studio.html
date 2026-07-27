@@ -7,7 +7,9 @@
 <meta name="description" content="Build your own map of the Whydah story: drop pins, draw the route, measure the distance — on a modern map or the real 1717 chart. No account needed.">
 <script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
 <script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/maplibre/maplibre-gl.js"></script>
 <style>
   :root{
     --ink:#12222B; --ink2:#1C3743; --parch:#F3E8CE; --parch2:#EAD9B4;
@@ -60,6 +62,7 @@
   <button class="tbtn" id="mode-world" title="Modern world map">🌍 World</button>
   <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart">📜 1717 Chart</button>
   <button class="tbtn" id="mode-doors" title="Where the world's ships squeeze through">🚢 Chokepoints</button>
+  <button class="tbtn" id="mode-globe" title="The same ocean, as a planet">🌐 Globe</button>
   <span style="width:.6em"></span>
   <button class="tbtn" id="tool-pin">📌 Pin</button>
   <button class="tbtn" id="tool-route">✏️ Route</button>
@@ -83,6 +86,9 @@
   <button class="tbtn" id="jump-dover">Dover</button>
   <button class="tbtn" id="jump-goodhope">Good Hope</button>
   <button class="tbtn" id="jump-boston">Boston</button>
+  <span style="width:.6em"></span>
+  <button class="tbtn on" id="toggle-ports">⚓ Ports</button>
+  <button class="tbtn on" id="toggle-lanes">〰 Lanes</button>
   <span style="width:.6em"></span>
   <button class="tbtn" id="tool-pirate">🏴‍☠️ Park your pirate</button>
   <button class="tbtn" id="tool-lb">🏆 Leaderboard</button>
@@ -214,13 +220,25 @@
     document.getElementById('mode-world').classList.toggle('on', mode === 'world');
     document.getElementById('mode-chart').classList.toggle('on', mode === 'chart');
     document.getElementById('mode-doors').classList.toggle('on', mode === 'doors');
+    document.getElementById('mode-globe').classList.toggle('on', mode === 'globe');
     document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
-    var studio = (mode !== 'doors');
+    var studio = (mode !== 'doors' && mode !== 'globe');
     ['tool-pin', 'tool-route', 'tool-undo', 'tool-export', 'tool-clear'].forEach(function (id) {
       document.getElementById(id).style.display = studio ? '' : 'none';
     });
     document.getElementById('doors-bar').style.display = studio ? 'none' : 'flex';
     if (studio) document.getElementById('lb-panel').style.display = 'none';
+  }
+  function applyToggles() {
+    document.getElementById('toggle-ports').classList.toggle('on', showPorts);
+    document.getElementById('toggle-lanes').classList.toggle('on', showLanes);
+    if (mode === 'doors' && map) {
+      if (portLayer) { if (showPorts) portLayer.addTo(map); else map.removeLayer(portLayer); }
+      if (laneLayer) { if (showLanes) laneLayer.addTo(map); else map.removeLayer(laneLayer); }
+    } else if (mode === 'globe' && gmap) {
+      if (gmap.getLayer('lanes')) gmap.setLayoutProperty('lanes', 'visibility', showLanes ? 'visible' : 'none');
+      gPortEls.forEach(function (el) { el.style.display = showPorts ? '' : 'none'; });
+    }
   }
 
   /* ---------- Pins ---------- */
@@ -380,15 +398,28 @@
     { ll: [48.4,-125.8],  t: 'Seattle' }
   ];
   var trafficTimer = null, trafficLayer = null, ships = [], laneGeom = [];
+  var laneLayer = null, doorLayer = null, portLayer = null;      /* Leaflet togglable groups */
+  var gmap = null, gPortEls = [], gPirateMk = null;              /* globe (MapLibre) state */
+  var showPorts = true, showLanes = true;
+  /* pirate.ll is a plain [lat, lng] pair — both renderers understand it */
   var pirate = { armed: false, marker: null, ring: null, ll: null, count: 0, pts: 0, t0: 0, runEnd: 0, done: false };
   var RANGE_M = 200000; /* 200 km spotting range */
   var RUN_MS = 60000;   /* one 60-second voyage per park */
   var LB_KEY = 'whydah-doors-leaderboard-v1';
 
+  /* library-agnostic distance: [lat,lng] pairs → meters */
+  function haversineM(a, b) {
+    var R = 6371000, toR = Math.PI / 180;
+    var dLat = (b[0] - a[0]) * toR, dLng = (b[1] - a[1]) * toR;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(a[0] * toR) * Math.cos(b[0] * toR) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+
   function nearestDoorName(ll) {
     var best = null, bestD = Infinity;
     Object.keys(DOORS).forEach(function (k) {
-      var d = L.latLng(DOORS[k].ll).distanceTo(ll);
+      var d = haversineM(DOORS[k].ll, ll);
       if (d < bestD) { bestD = d; best = DOORS[k].t.split('·')[0].trim(); }
     });
     return bestD < 400000 ? 'near ' + best : 'open ocean';
@@ -431,10 +462,9 @@
 
   function buildLaneGeom() {
     laneGeom = LANES.map(function (lane) {
-      var lls = lane.pts.map(function (p) { return L.latLng(p[0], p[1]); });
       var cum = [0];
-      for (var i = 1; i < lls.length; i++) cum.push(cum[i - 1] + lls[i - 1].distanceTo(lls[i]));
-      return { lls: lls, cum: cum, len: cum[cum.length - 1] };
+      for (var i = 1; i < lane.pts.length; i++) cum.push(cum[i - 1] + haversineM(lane.pts[i - 1], lane.pts[i]));
+      return { lls: lane.pts, cum: cum, len: cum[cum.length - 1] };
     });
   }
   /* Ship classes: what your lookout is worth points for. */
@@ -453,45 +483,19 @@
     s.jLat = (Math.random() - 0.5) * 0.5;
     s.jLng = (Math.random() - 0.5) * 0.5;
     s.spotted = false;
-    s.mk.setStyle({ fillColor: s.type.fill });
+    if (s.mk) s.mk.setStyle({ fillColor: s.type.fill });
   }
   function makeShip(g, d) {
     var type = rollType();
-    var mk = L.circleMarker(g.lls[0], { radius: type.r, color: '#12222B', weight: 1, fillColor: type.fill, fillOpacity: .95 }).addTo(trafficLayer);
-    mk.bindPopup(type.pop);
-    var s = { g: g, d: d, dir: Math.random() < 0.5 ? 1 : -1, mk: mk, type: type };
+    var s = { g: g, d: d, dir: Math.random() < 0.5 ? 1 : -1, mk: null, type: type, pos: g.lls[0] };
+    if (mode === 'doors') {
+      s.mk = L.circleMarker(g.lls[0], { radius: type.r, color: '#12222B', weight: 1, fillColor: type.fill, fillOpacity: .95 }).addTo(trafficLayer);
+      s.mk.bindPopup(type.pop);
+    }
     outfit(s);
     ships.push(s);
   }
-
-  function lanePos(g, d) {
-    if (d <= 0) return g.lls[0];
-    if (d >= g.len) return g.lls[g.lls.length - 1];
-    for (var i = 1; i < g.cum.length; i++) {
-      if (d <= g.cum[i]) {
-        var f = (d - g.cum[i - 1]) / (g.cum[i] - g.cum[i - 1]);
-        var a = g.lls[i - 1], b = g.lls[i];
-        return L.latLng(a.lat + (b.lat - a.lat) * f, a.lng + (b.lng - a.lng) * f);
-      }
-    }
-    return g.lls[g.lls.length - 1];
-  }
-  function startTraffic() {
-    if (!laneGeom.length) buildLaneGeom();
-    trafficLayer = L.layerGroup().addTo(map);
-    /* faint lane lines so the roads are visible even with zero tiles */
-    laneGeom.forEach(function (g) { L.polyline(g.lls, { color: '#1C3743', weight: 1.5, opacity: .35, dashArray: '2 6' }).addTo(trafficLayer); });
-    Object.keys(DOORS).forEach(function (k) {
-      var w = DOORS[k];
-      var icon = L.divIcon({ className: '', html: '<div style="background:#8C2C1E;color:#F3E8CE;font:700 13px Georgia,serif;padding:2px 7px;border-radius:999px;border:2px solid #D8B25A;box-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;">🚪 ' + w.t.split('·')[0].trim() + '</div>', iconSize: null, iconAnchor: [10, 12] });
-      L.marker(w.ll, { icon: icon }).bindPopup('<b>' + w.t + '</b><br>' + w.d).addTo(trafficLayer);
-    });
-    /* Port markers — the spawn points */
-    PORTS.forEach(function (pt) {
-      var icon = L.divIcon({ className: '', html: '<div style="background:#1C3743;color:#F3E8CE;font:700 11px Georgia,serif;padding:1px 6px;border-radius:999px;border:1.5px solid #D8B25A;box-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;">⚓ ' + pt.t + '</div>', iconSize: null, iconAnchor: [8, 9] });
-      L.marker(pt.ll, { icon: icon }).bindPopup('<b>⚓ Port of ' + pt.t + '</b><br>Where voyages begin and end. Every ship you see left a port like this one — and is racing for the next.').addTo(trafficLayer);
-    });
-
+  function buildFleet() {
     ships = [];
     laneGeom.forEach(function (g, li) {
       /* base fleet: voyages already underway at load (random spots along the lane) */
@@ -503,15 +507,22 @@
       makeShip(rg, Math.random() * rg.len);
     }
     pirate.count = 0; pirate.pts = 0; pirate.t0 = Date.now();
-    trafficTimer = setInterval(tickTraffic, 100);
   }
-  function stopTraffic() {
-    if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }
-    trafficLayer = null; ships = [];
-    pirate.marker = null; pirate.ring = null; pirate.ll = null; pirate.armed = false;
+
+  function lanePos(g, d) {
+    if (d <= 0) return g.lls[0];
+    if (d >= g.len) return g.lls[g.lls.length - 1];
+    for (var i = 1; i < g.cum.length; i++) {
+      if (d <= g.cum[i]) {
+        var f = (d - g.cum[i - 1]) / (g.cum[i] - g.cum[i - 1]);
+        var a = g.lls[i - 1], b = g.lls[i];
+        return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+      }
+    }
+    return g.lls[g.lls.length - 1];
   }
-  function tickTraffic() {
-    if (mode !== 'doors' || !map) return;
+  /* shared physics + scoring; rendering happens per-mode after this runs */
+  function advanceShips() {
     ships.forEach(function (s) {
       s.d += s.v * s.dir;
       if (s.d >= s.g.len || s.d <= 0) {
@@ -520,35 +531,111 @@
         s.dir = Math.random() < 0.5 ? 1 : -1;
         s.d = s.dir === 1 ? 0 : s.g.len;
         outfit(s);
+        s.styleDirty = true;
       }
       var p0 = lanePos(s.g, s.d);
       /* lateral drift fades near the ports so arrivals look tidy */
       var edge = Math.min(s.d, s.g.len - s.d), fade = Math.min(1, edge / 300000);
-      var p = L.latLng(p0.lat + s.jLat * fade, p0.lng + s.jLng * fade);
-      s.mk.setLatLng(p);
-      if (pirate.ll && !pirate.done && !s.spotted && p.distanceTo(pirate.ll) < RANGE_M) {
+      s.pos = [p0[0] + s.jLat * fade, p0[1] + s.jLng * fade];
+      if (pirate.ll && !pirate.done && !s.spotted && haversineM(s.pos, pirate.ll) < RANGE_M) {
         s.spotted = true;
-        s.mk.setStyle({ fillColor: '#8C2C1E' });
+        s.styleDirty = true;
         pirate.count++;
         pirate.pts += s.type.pts;
       }
     });
-    if (pirate.ll && !pirate.done) {
-      var left = Math.max(0, Math.ceil((pirate.runEnd - Date.now()) / 1000));
-      if (left <= 0) { endRun(); return; }
-      document.getElementById('stat').textContent = '⏱ ' + left + 's · 🏴‍☠️ ' + pirate.count + ' ships · ' + pirate.pts + ' points' + (pirate.pts === 0 && left < 45 ? ' — try a door!' : '');
+  }
+  function updateRunStat() {
+    if (!(pirate.ll && !pirate.done)) return;
+    var left = Math.max(0, Math.ceil((pirate.runEnd - Date.now()) / 1000));
+    if (left <= 0) { endRun(); return; }
+    document.getElementById('stat').textContent = '⏱ ' + left + 's · 🏴‍☠️ ' + pirate.count + ' ships · ' + pirate.pts + ' points' + (pirate.pts === 0 && left < 45 ? ' — try a door!' : '');
+  }
+  function startTraffic() {
+    if (!laneGeom.length) buildLaneGeom();
+    trafficLayer = L.layerGroup().addTo(map);
+    /* togglable layers: lanes, doors, ports (ships + pirate live on trafficLayer itself) */
+    laneLayer = L.layerGroup(); doorLayer = L.layerGroup(); portLayer = L.layerGroup();
+    laneGeom.forEach(function (g) { L.polyline(g.lls, { color: '#1C3743', weight: 1.5, opacity: .35, dashArray: '2 6' }).addTo(laneLayer); });
+    Object.keys(DOORS).forEach(function (k) {
+      var w = DOORS[k];
+      var icon = L.divIcon({ className: '', html: '<div style="background:#8C2C1E;color:#F3E8CE;font:700 13px Georgia,serif;padding:2px 7px;border-radius:999px;border:2px solid #D8B25A;box-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;">🚪 ' + w.t.split('·')[0].trim() + '</div>', iconSize: null, iconAnchor: [10, 12] });
+      L.marker(w.ll, { icon: icon }).bindPopup('<b>' + w.t + '</b><br>' + w.d).addTo(doorLayer);
+    });
+    /* Port markers — the spawn points */
+    PORTS.forEach(function (pt) {
+      var icon = L.divIcon({ className: '', html: '<div style="background:#1C3743;color:#F3E8CE;font:700 11px Georgia,serif;padding:1px 6px;border-radius:999px;border:1.5px solid #D8B25A;box-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;">⚓ ' + pt.t + '</div>', iconSize: null, iconAnchor: [8, 9] });
+      L.marker(pt.ll, { icon: icon }).bindPopup('<b>⚓ Port of ' + pt.t + '</b><br>Where voyages begin and end. Every ship you see left a port like this one — and is racing for the next.').addTo(portLayer);
+    });
+    if (showLanes) laneLayer.addTo(map);
+    doorLayer.addTo(map);
+    if (showPorts) portLayer.addTo(map);
+
+    buildFleet();
+    trafficTimer = setInterval(tickTraffic, 100);
+  }
+  function stopTraffic() {
+    if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }
+    trafficLayer = null; laneLayer = null; doorLayer = null; portLayer = null; ships = [];
+    pirate.marker = null; pirate.ring = null; pirate.ll = null; pirate.armed = false;
+    if (gmap) { try { gmap.remove(); } catch (_) {} gmap = null; }
+    gPortEls = []; gPirateMk = null;
+  }
+  function tickTraffic() {
+    if (mode === 'doors' && map) {
+      advanceShips();
+      ships.forEach(function (s) {
+        s.mk.setLatLng(s.pos);
+        if (s.styleDirty) { s.mk.setStyle({ fillColor: s.spotted ? '#8C2C1E' : s.type.fill }); s.styleDirty = false; }
+      });
+      updateRunStat();
+    } else if (mode === 'globe' && gmap) {
+      advanceShips();
+      var src = gmap.getSource('ships');
+      if (src) src.setData(shipsGeojson());
+      updateRunStat();
     }
   }
-  function parkPirate(latlng) {
-    if (pirate.marker) { trafficLayer.removeLayer(pirate.marker); trafficLayer.removeLayer(pirate.ring); }
-    var icon = L.divIcon({ className: '', html: '<div style="font-size:26px; text-shadow:0 1px 4px rgba(0,0,0,.6);">🏴‍☠️</div>', iconSize: [28, 28], iconAnchor: [14, 14] });
-    pirate.marker = L.marker(latlng, { icon: icon }).addTo(trafficLayer);
-    pirate.ring = L.circle(latlng, { radius: RANGE_M, color: '#8C2C1E', weight: 2, dashArray: '6 6', fillColor: '#8C2C1E', fillOpacity: .07 }).addTo(trafficLayer);
-    pirate.ll = L.latLng(latlng);
+  function shipsGeojson() {
+    return { type: 'FeatureCollection', features: ships.map(function (s) {
+      return { type: 'Feature',
+               properties: { cls: s.type.key, spotted: s.spotted ? 1 : 0, r: s.type.r },
+               geometry: { type: 'Point', coordinates: [s.pos[1], s.pos[0]] } }; /* [lng,lat]! */
+    }) };
+  }
+  /* a 200 km circle as a polygon, for the globe's range ring */
+  function ringPolygon(lat, lng) {
+    var pts = [], toR = Math.PI / 180;
+    for (var i = 0; i <= 64; i++) {
+      var a = (i / 64) * 2 * Math.PI;
+      var dLat = (RANGE_M / 111320) * Math.cos(a);
+      var dLng = (RANGE_M / (111320 * Math.max(0.2, Math.cos(lat * toR)))) * Math.sin(a);
+      pts.push([lng + dLng, lat + dLat]);
+    }
+    return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [pts] } };
+  }
+  function parkPirate(latOrLatlng, lngMaybe) {
+    var lat = (typeof lngMaybe === 'number') ? latOrLatlng : latOrLatlng.lat;
+    var lng = (typeof lngMaybe === 'number') ? lngMaybe : latOrLatlng.lng;
+    pirate.ll = [lat, lng];
     pirate.count = 0; pirate.pts = 0; pirate.t0 = Date.now();
     pirate.runEnd = Date.now() + RUN_MS; pirate.done = false;
-    ships.forEach(function (s) { s.spotted = false; s.mk.setStyle({ fillColor: s.type.fill }); });
+    ships.forEach(function (s) { s.spotted = false; s.styleDirty = true; });
     pirate.armed = false;
+    if (mode === 'doors') {
+      if (pirate.marker) { map.removeLayer(pirate.marker); map.removeLayer(pirate.ring); }
+      var icon = L.divIcon({ className: '', html: '<div style="font-size:26px; text-shadow:0 1px 4px rgba(0,0,0,.6);">🏴‍☠️</div>', iconSize: [28, 28], iconAnchor: [14, 14] });
+      pirate.marker = L.marker([lat, lng], { icon: icon }).addTo(map);
+      pirate.ring = L.circle([lat, lng], { radius: RANGE_M, color: '#8C2C1E', weight: 2, dashArray: '6 6', fillColor: '#8C2C1E', fillOpacity: .07 }).addTo(map);
+    } else if (mode === 'globe' && gmap) {
+      if (gPirateMk) { gPirateMk.remove(); }
+      var el = document.createElement('div');
+      el.style.cssText = 'font-size:26px; text-shadow:0 1px 4px rgba(0,0,0,.6); cursor:default;';
+      el.textContent = '🏴‍☠️';
+      gPirateMk = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(gmap);
+      var ringSrc = gmap.getSource('pirate-ring');
+      if (ringSrc) ringSrc.setData(ringPolygon(lat, lng));
+    }
     document.getElementById('tool-pirate').classList.remove('on');
     document.getElementById('lb-panel').style.display = 'none';
     document.getElementById('hint').textContent = '⏱ 60-second voyage started! The dashed ring is how far your lookout can see. Every ship it touches scores — best haul goes on the 🏆 leaderboard.';
@@ -566,6 +653,114 @@
     setModeButtons();
     document.getElementById('hint').textContent = 'Ships ride real-world sea lanes: 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5. Watch where they bunch — those are the doors. Then 🏴‍☠️ park your pirate and see why Bellamy never chased.';
     document.getElementById('stat').textContent = 'tap any ship for its cargo · tap a 🚪 door for its story';
+  }
+
+  /* ---------- 🌐 Globe mode: the same ocean, as a planet (MapLibre GL, globe projection) ---------- */
+  function densify(coords, stepDeg) {
+    /* sparse lines cut chords through the globe — insert a vertex about every degree */
+    stepDeg = stepDeg || 1;
+    var out = [coords[0]];
+    for (var i = 1; i < coords.length; i++) {
+      var x0 = coords[i - 1][0], y0 = coords[i - 1][1], x1 = coords[i][0], y1 = coords[i][1];
+      var n = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) / stepDeg));
+      for (var k = 1; k <= n; k++) out.push([x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n]);
+    }
+    return out;
+  }
+  function enterGlobe(jumpKey) {
+    saveNow();
+    stopTraffic();
+    if (map) { try { map.remove(); } catch (_) {} map = null; }
+    detachPins();
+    mode = 'globe';
+    if (!laneGeom.length) buildLaneGeom();
+
+    var d = jumpKey && DOORS[jumpKey];
+    gmap = new maplibregl.Map({
+      container: 'map',
+      center: d ? [d.ll[1], d.ll[0]] : [-40, 25],
+      zoom: d ? Math.max(3, d.z - 2) : 1.6,
+      attributionControl: { compact: true },
+      style: {
+        version: 8,
+        projection: { type: 'globe' },
+        sky: { 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0] },
+        light: { anchor: 'map', intensity: 0.4 },
+        sources: {
+          osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                 tileSize: 256, maxzoom: 19,
+                 attribution: '© OpenStreetMap contributors' }
+        },
+        layers: [
+          { id: 'space', type: 'background', paint: { 'background-color': '#0A1520' } },
+          { id: 'osm', type: 'raster', source: 'osm' }
+        ]
+      }
+    });
+    gmap.addControl(new maplibregl.NavigationControl({ visualizePitch: false }));
+    gmap.on('error', function (e) { try { console.error('globe error:', e && e.error && e.error.message); } catch (_) {} });
+
+    /* build UI on style.load, not load — a blocked tile host must not freeze the game */
+    gmap.once('style.load', function () {
+      var laneFc = { type: 'FeatureCollection', features: LANES.map(function (lane) {
+        return { type: 'Feature', properties: {},
+                 geometry: { type: 'LineString', coordinates: densify(lane.pts.map(function (p) { return [p[1], p[0]]; })) } };
+      }) };
+      gmap.addSource('lanes', { type: 'geojson', data: laneFc });
+      gmap.addLayer({ id: 'lanes', type: 'line', source: 'lanes',
+        layout: { 'line-cap': 'round', 'line-join': 'round', visibility: showLanes ? 'visible' : 'none' },
+        paint: { 'line-color': '#D8B25A', 'line-width': 1.4, 'line-opacity': 0.55, 'line-dasharray': [1, 3] } });
+
+      gmap.addSource('pirate-ring', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      gmap.addLayer({ id: 'pirate-ring-fill', type: 'fill', source: 'pirate-ring',
+        paint: { 'fill-color': '#8C2C1E', 'fill-opacity': 0.08 } });
+      gmap.addLayer({ id: 'pirate-ring-line', type: 'line', source: 'pirate-ring',
+        paint: { 'line-color': '#8C2C1E', 'line-width': 2, 'line-dasharray': [2, 2] } });
+
+      gmap.addSource('ships', { type: 'geojson', data: shipsGeojson() });
+      gmap.addLayer({ id: 'ships', type: 'circle', source: 'ships',
+        paint: {
+          'circle-radius': ['+', ['get', 'r'], 0.5],
+          'circle-stroke-color': '#0A1520', 'circle-stroke-width': 1,
+          'circle-color': ['case', ['==', ['get', 'spotted'], 1], '#FF4B2E',
+            ['match', ['get', 'cls'], 'tanker', '#4FB3C9', 'treasure', '#C77DFF', '#FFD75E']]
+        } });
+
+      /* doors + ports as DOM markers (no glyph server needed — same-origin rule holds) */
+      Object.keys(DOORS).forEach(function (k) {
+        var w = DOORS[k];
+        var el = document.createElement('div');
+        el.style.cssText = 'background:#8C2C1E;color:#F3E8CE;font:700 12px Georgia,serif;padding:2px 7px;border-radius:999px;border:2px solid #D8B25A;box-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;cursor:pointer;';
+        el.textContent = '🚪 ' + w.t.split('·')[0].trim();
+        var mk = new maplibregl.Marker({ element: el }).setLngLat([w.ll[1], w.ll[0]])
+          .setPopup(new maplibregl.Popup({ offset: 14 }).setHTML('<b>' + w.t + '</b><br>' + w.d)).addTo(gmap);
+      });
+      PORTS.forEach(function (pt) {
+        var el = document.createElement('div');
+        el.style.cssText = 'background:#1C3743;color:#F3E8CE;font:700 10px Georgia,serif;padding:1px 6px;border-radius:999px;border:1.5px solid #D8B25A;box-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;cursor:pointer;' + (showPorts ? '' : 'display:none;');
+        el.textContent = '⚓ ' + pt.t;
+        var mk = new maplibregl.Marker({ element: el }).setLngLat([pt.ll[1], pt.ll[0]])
+          .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML('<b>⚓ Port of ' + pt.t + '</b><br>Where voyages begin and end.')).addTo(gmap);
+        gPortEls.push(el);
+      });
+
+      gmap.on('click', 'ships', function (e) {
+        e.preventDefault();
+        var cls = e.features[0].properties.cls;
+        var t = TYPES.filter(function (x) { return x.key === cls; })[0];
+        new maplibregl.Popup().setLngLat(e.lngLat).setHTML(t.pop).addTo(gmap);
+      });
+      gmap.on('click', function (e) {
+        if (e.defaultPrevented) return;
+        if (pirate.armed) parkPirate(e.lngLat.lat, e.lngLat.lng);
+      });
+    });
+
+    buildFleet();
+    trafficTimer = setInterval(tickTraffic, 100);
+    setModeButtons();
+    document.getElementById('hint').textContent = 'The same ocean as a planet — drag to spin it. 🟡 cargo = 1 · 🔵 tanker = 2 · 🟣 treasure = 5. The pirate game works up here too.';
+    document.getElementById('stat').textContent = 'spin the globe · the lanes hug the sphere for real';
   }
 
   /* ---------- Save / restore (this device) ---------- */
@@ -615,12 +810,20 @@
   document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
   document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
   document.getElementById('mode-doors').onclick = function () { if (mode !== 'doors') enterDoors(); };
-  document.getElementById('jump-all').onclick = function () { map.flyTo([22, 30], 2); };
+  document.getElementById('mode-globe').onclick = function () { if (mode !== 'globe') enterGlobe(); };
+  document.getElementById('jump-all').onclick = function () {
+    if (mode === 'globe' && gmap) gmap.flyTo({ center: [-40, 25], zoom: 1.6 });
+    else map.flyTo([22, 30], 2);
+  };
   ['suez', 'malacca', 'bab', 'panama', 'windward', 'florida', 'gibraltar', 'hormuz', 'dover', 'goodhope', 'boston'].forEach(function (k) {
     document.getElementById('jump-' + k).onclick = function () {
-      var d = DOORS[k]; map.flyTo(d.ll, d.z);
+      var d = DOORS[k];
+      if (mode === 'globe' && gmap) gmap.flyTo({ center: [d.ll[1], d.ll[0]], zoom: Math.max(3, d.z - 2) });
+      else map.flyTo(d.ll, d.z);
     };
   });
+  document.getElementById('toggle-ports').onclick = function () { showPorts = !showPorts; applyToggles(); };
+  document.getElementById('toggle-lanes').onclick = function () { showLanes = !showLanes; applyToggles(); };
   document.getElementById('tool-pirate').onclick = function () {
     pirate.armed = !pirate.armed;
     this.classList.toggle('on', pirate.armed);
@@ -690,17 +893,24 @@
 
   /* console debug handle (harmless in class; lets us sanity-check state) */
   window.WhydahMapState = function () {
-    var c = map ? map.getCenter() : null;
-    return { mode: mode, center: c ? [c.lat.toFixed(2), c.lng.toFixed(2)] : null, zoom: map ? map.getZoom() : null,
-             ships: ships.length, pirate: pirate.ll ? [pirate.ll.lat.toFixed(2), pirate.ll.lng.toFixed(2)] : null,
-             spotted: pirate.count, pts: pirate.pts };
+    var m = (mode === 'globe') ? gmap : map;
+    var c = m ? m.getCenter() : null;
+    return { mode: mode, center: c ? [c.lat.toFixed(2), c.lng.toFixed(2)] : null, zoom: m ? +m.getZoom().toFixed(1) : null,
+             ships: ships.length, pirate: pirate.ll ? [pirate.ll[0].toFixed(2), pirate.ll[1].toFixed(2)] : null,
+             spotted: pirate.count, pts: pirate.pts, showPorts: showPorts, showLanes: showLanes,
+             globe: gmap ? { styleLoaded: gmap.isStyleLoaded(), shipsSrc: !!gmap.getSource('ships'), loaded: gmap.loaded() } : null };
   };
 
   /* go */
   setTool('pin');
-  var doorParam = null;
-  try { doorParam = new URLSearchParams(window.location.search).get('door'); } catch (_) {}
-  if (doorParam !== null) enterDoors(DOORS[doorParam] ? doorParam : null);
+  applyToggles();
+  var doorParam = null, viewParam = null;
+  try {
+    var qs = new URLSearchParams(window.location.search);
+    doorParam = qs.get('door'); viewParam = qs.get('view');
+  } catch (_) {}
+  if (viewParam === 'globe') enterGlobe(doorParam && DOORS[doorParam] ? doorParam : null);
+  else if (doorParam !== null) enterDoors(DOORS[doorParam] ? doorParam : null);
   else enterWorld();
 })();
 </script>
