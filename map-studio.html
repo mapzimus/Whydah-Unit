@@ -67,6 +67,11 @@
   <button class="tbtn" id="jump-bab">Bab-el-Mandeb</button>
   <button class="tbtn" id="jump-panama">Panama</button>
   <button class="tbtn" id="jump-windward">Windward 1717</button>
+  <button class="tbtn" id="jump-florida">Florida</button>
+  <button class="tbtn" id="jump-gibraltar">Gibraltar</button>
+  <button class="tbtn" id="jump-hormuz">Hormuz</button>
+  <button class="tbtn" id="jump-dover">Dover</button>
+  <button class="tbtn" id="jump-goodhope">Good Hope</button>
   <button class="tbtn" id="jump-boston">Boston</button>
   <span style="width:.6em"></span>
   <button class="tbtn" id="tool-pirate">🏴‍☠️ Park your pirate</button>
@@ -285,16 +290,25 @@
     bab:      { ll: [12.6, 43.3],   z: 7, t: 'Bab-el-Mandeb',     d: 'The Red Sea’s narrow south door. Since 2023, attacks here have pushed many crews the long way around Africa — thousands of miles farther.' },
     panama:   { ll: [9.1, -79.7],   z: 8, t: 'Panama Canal',      d: 'A shortcut cut through a continent. A 2023–24 drought cut its daily traffic by about a third. Sailors still watch the sky here.' },
     windward: { ll: [19.9, -73.9],  z: 6, t: 'Windward Passage · 1717’s door', d: 'The gap between Cuba and Hispaniola. Bellamy’s crew took the Whydah herself near here after a three-day chase, Feb 1717.' },
-    boston:   { ll: [42.3, -70.6],  z: 8, t: 'Boston approach',   d: 'Your harbor’s door today. Every ship into Boston or Salem threads these narrow lanes past Cape Cod.' }
+    boston:   { ll: [42.3, -70.6],  z: 8, t: 'Boston approach',   d: 'Your harbor’s door today. Every ship into Boston or Salem threads these narrow lanes past Cape Cod.' },
+    gibraltar:{ ll: [35.95, -5.6],  z: 7, t: 'Strait of Gibraltar', d: 'The Atlantic’s door into the Mediterranean — 8 miles wide at the pinch. Corsairs hunted here for centuries.' },
+    hormuz:   { ll: [26.6, 56.5],   z: 7, t: 'Strait of Hormuz',  d: 'The Persian Gulf’s only exit. About a fifth of the world’s oil sails through this one bend. The most watched water on Earth.' },
+    dover:    { ll: [51.0, 1.4],    z: 7, t: 'Strait of Dover',   d: 'The busiest shipping lane in the world — hundreds of ships a day thread the 21-mile gap between England and France.' },
+    florida:  { ll: [23.9, -81.0],  z: 7, t: 'Straits of Florida', d: '1717’s treasure highway: the Gulf Stream door where Spanish silver fleets rode the current home. The 1715 fleet wrecked just north of here — the gold rush that made Bellamy a pirate.' },
+    goodhope: { ll: [-34.8, 19.0],  z: 6, t: 'Cape of Good Hope', d: 'Not a strait — a corner. When Suez or the Red Sea closes, the world’s ships come all the way down here, adding weeks.' }
   };
-  /* Simplified real-world lanes. Not live data — but the SHAPE is true: this is where ships actually go. */
+  /* Simplified real-world lanes. Not live data — but the SHAPE is true: this is where ships actually go.
+     Longitudes past 180 continue east (185 = -175) so Pacific lanes never wrap backwards across the map. */
   var LANES = [
-    { n: 16, pts: [[51,3],[49.6,-3],[48,-8],[43,-12],[36.2,-6.5],[37.5,9],[34,20],[31.6,31.5],[30.5,32.4],[29.5,32.7],[27,34.2],[20,38.5],[14.5,42.2],[12.6,43.3],[12.5,46],[11.5,52],[8,62],[6,74],[6,84],[5.5,95],[3.2,100],[1.4,103.2],[1.2,104.5],[4,108.5],[10,111],[16,113],[21,117.5],[26,122]] },
-    { n: 6,  pts: [[40.4,-73.6],[41.2,-69.2],[43,-60],[46,-48],[49,-30],[49.7,-8],[49.9,-2.5],[51,3]] },
-    { n: 6,  pts: [[35,140.5],[36,155],[37,175],[36,-165],[32,-140],[25,-120],[15,-100],[9.4,-79.9],[9.1,-79.5],[10,-78],[12.5,-76],[16,-74.6],[19.9,-73.9],[22.2,-72.8],[24,-74.5],[26.8,-77.5],[31,-79.2],[35,-75.2],[40.4,-73.6]] },
-    { n: 5,  pts: [[28,-92],[27.5,-88],[25.5,-84.5],[24,-82],[23.7,-79.8],[25,-78.6],[26.8,-77.5]] },
+    { n: 18, pts: [[51.2,2.2],[51.0,1.4],[50.2,-0.5],[49.8,-3],[49.3,-6.5],[48.3,-9],[44,-10.5],[39,-10.5],[36.5,-8],[35.95,-5.6],[36.5,-2],[37.2,3],[37.6,9.5],[36.5,14.5],[34.5,20],[33,26],[31.9,31.9],[30.5,32.4],[29.6,32.6],[27.8,33.8],[24,36.5],[20,38.5],[15.5,41.5],[12.6,43.3],[12.3,45],[12,48.5],[13,52.5],[11.5,58],[9,66],[7,74],[6,81],[5.8,88],[6,95],[4.5,98.5],[2.8,100.5],[1.4,103.0],[1.15,103.9],[1.4,105],[3,107.5],[6.5,109.5],[11,110.8],[15,111.8],[19,113.5],[22,116],[24.5,119.5],[27,122.5]] },
+    { n: 6,  pts: [[40.4,-73.6],[40.9,-70.5],[41.1,-68.5],[42.5,-63],[44.5,-56],[47,-45],[49,-30],[49.3,-15],[49.3,-6.5],[49.8,-3],[50.2,-0.5],[51.0,1.4],[51.2,2.2]] },
+    { n: 2,  pts: [[34.8,139.9],[34.5,150],[35,165],[35.5,179.9]] },
+    { n: 6,  pts: [[35.5,-179.9],[33,-150],[28,-138],[20,-128],[13,-113],[8.5,-103],[7.3,-98],[7.9,-89.5],[9.35,-79.95],[9.1,-79.5],[9.6,-78.5],[11,-77],[13,-74.5],[16,-74],[19.9,-73.9],[22.2,-72.8],[24.5,-74.2],[26.8,-77.5],[28.5,-79.8],[31,-79.2],[33.5,-77.5],[35.2,-75.4],[38,-74.5],[40.4,-73.6]] },
+    { n: 6,  pts: [[28.8,-94],[27.8,-90],[26,-86.5],[24.6,-83.5],[23.8,-81.5],[23.9,-80.5],[25,-79.6],[26.4,-79],[28.5,-80],[31,-80.3],[33.5,-77.5],[35.2,-75.4],[38,-74.5],[40.4,-73.6]] },
     { n: 4,  pts: [[40.8,-68.5],[41.6,-69.3],[42.1,-70.2],[42.34,-70.78]] },
-    { n: 5,  pts: [[-34.5,18],[-30,32],[-15,41],[-2,44],[8,50.5],[11.5,52]] }
+    { n: 6,  pts: [[-35.5,16],[-34.8,19],[-35.2,23],[-34,28],[-30,33.5],[-24,36.5],[-16,41.5],[-9,42],[-2,43.5],[5,48.5],[10.5,52.5],[13,52.5]] },
+    { n: 5,  pts: [[27.5,50.3],[26.5,52.5],[26.2,55],[26.6,56.5],[25.5,57.5],[24,59.5],[21.5,61.5],[16,59],[13,55],[13,52.5]] },
+    { n: 4,  pts: [[18.0,-64.5],[17.8,-68],[18.1,-71.5],[19.9,-73.9],[20.7,-74.6],[21.5,-76.5],[22.5,-78.5],[23.2,-80.2],[23.9,-80.9],[24.6,-82.5],[26,-86.5],[27.8,-90],[28.8,-94]] }
   ];
   var trafficTimer = null, trafficLayer = null, ships = [], laneGeom = [];
   var pirate = { armed: false, marker: null, ring: null, ll: null, count: 0, t0: 0 };
@@ -331,15 +345,26 @@
       L.marker(w.ll, { icon: icon }).bindPopup('<b>' + w.t + '</b><br>' + w.d).addTo(trafficLayer);
     });
     ships = [];
+    /* Ship classes: what your lookout is worth points for. */
+    var TYPES = [
+      { key: 'cargo',    pts: 1, r: 4, fill: '#D8B25A', vMin: 5000, vMax: 13000, pop: '⛵ A merchant ship — cargo on a schedule, riding the shortest safe road. <b>Worth 1.</b>' },
+      { key: 'tanker',   pts: 2, r: 6, fill: '#1C3743', vMin: 3500, vMax: 6500,  pop: '🛢️ A tanker — heavy, slow, and worth robbing. <b>Worth 2.</b>' },
+      { key: 'treasure', pts: 5, r: 5, fill: '#6B2D8C', vMin: 9000, vMax: 15000, pop: '💰 A treasure ship — rare, fast, and riding low in the water. <b>Worth 5!</b>' }
+    ];
+    ships = [];
+    var seed = 0;
     laneGeom.forEach(function (g, li) {
       var count = LANES[li].n;
       for (var i = 0; i < count; i++) {
-        var mk = L.circleMarker(g.lls[0], { radius: 4, color: '#12222B', weight: 1, fillColor: '#D8B25A', fillOpacity: .95 }).addTo(trafficLayer);
-        mk.bindPopup('A merchant ship. Cargo on a schedule, riding the shortest safe road.');
-        ships.push({ g: g, d: (g.len * i) / count, v: 5000 + Math.floor(9000 * ((i * 2654435761) % 97) / 97), mk: mk, spotted: false });
+        seed++;
+        var h = (seed * 2654435761) % 100;               /* deterministic spread — no Math.random needed */
+        var type = TYPES[h < 68 ? 0 : (h < 92 ? 1 : 2)]; /* ~68% cargo, ~24% tanker, ~8% treasure */
+        var mk = L.circleMarker(g.lls[0], { radius: type.r, color: '#12222B', weight: 1, fillColor: type.fill, fillOpacity: .95 }).addTo(trafficLayer);
+        mk.bindPopup(type.pop);
+        ships.push({ g: g, d: (g.len * i) / count, v: type.vMin + Math.floor((type.vMax - type.vMin) * ((seed * 40503) % 89) / 89), mk: mk, type: type, spotted: false });
       }
     });
-    pirate.count = 0; pirate.t0 = Date.now();
+    pirate.count = 0; pirate.pts = 0; pirate.t0 = Date.now();
     trafficTimer = setInterval(tickTraffic, 100);
   }
   function stopTraffic() {
@@ -351,18 +376,20 @@
     if (mode !== 'doors' || !map) return;
     ships.forEach(function (s) {
       s.d += s.v;
-      if (s.d >= s.g.len) { s.d = 0; s.spotted = false; s.mk.setStyle({ fillColor: '#D8B25A' }); }
+      if (s.d >= s.g.len) { s.d = 0; s.spotted = false; s.mk.setStyle({ fillColor: s.type.fill }); }
       var p = lanePos(s.g, s.d);
       s.mk.setLatLng(p);
       if (pirate.ll && !s.spotted && p.distanceTo(pirate.ll) < RANGE_M) {
         s.spotted = true;
         s.mk.setStyle({ fillColor: '#8C2C1E' });
         pirate.count++;
+        pirate.pts += s.type.pts;
       }
     });
     if (pirate.ll) {
       var mins = Math.max((Date.now() - pirate.t0) / 60000, 1 / 60);
-      document.getElementById('stat').textContent = '🏴‍☠️ ' + pirate.count + ' ships spotted · ' + (pirate.count / mins).toFixed(1) + ' per minute — ' + (pirate.count / mins >= 3 ? 'you found a door!' : 'try parking AT a door');
+      var ppm = pirate.pts / mins;
+      document.getElementById('stat').textContent = '🏴‍☠️ ' + pirate.count + ' ships · ' + pirate.pts + ' points · ' + ppm.toFixed(1) + ' pts/min — ' + (ppm >= 5 ? 'you found a door!' : 'try parking AT a door');
     }
   }
   function parkPirate(latlng) {
@@ -371,8 +398,8 @@
     pirate.marker = L.marker(latlng, { icon: icon }).addTo(trafficLayer);
     pirate.ring = L.circle(latlng, { radius: RANGE_M, color: '#8C2C1E', weight: 2, dashArray: '6 6', fillColor: '#8C2C1E', fillOpacity: .07 }).addTo(trafficLayer);
     pirate.ll = L.latLng(latlng);
-    pirate.count = 0; pirate.t0 = Date.now();
-    ships.forEach(function (s) { s.spotted = false; s.mk.setStyle({ fillColor: '#D8B25A' }); });
+    pirate.count = 0; pirate.pts = 0; pirate.t0 = Date.now();
+    ships.forEach(function (s) { s.spotted = false; s.mk.setStyle({ fillColor: s.type.fill }); });
     pirate.armed = false;
     document.getElementById('tool-pirate').classList.remove('on');
     document.getElementById('hint').textContent = 'Your sloop is anchored — the dashed ring is how far your lookout can see. Watch the counter, then re-park somewhere smarter. Open ocean vs. a door: feel the difference.';
@@ -388,8 +415,8 @@
     if (d) map.setView(d.ll, d.z); else map.setView([22, 30], 2);
     startTraffic();
     setModeButtons();
-    document.getElementById('hint').textContent = 'Every gold dot is a ship on a real-world shipping road (a sea lane). Watch where they bunch up — those are the doors. Then 🏴‍☠️ park your pirate and see why Bellamy never chased.';
-    document.getElementById('stat').textContent = 'ships move on their real roads · tap a 🚪 door for its story';
+    document.getElementById('hint').textContent = 'Ships ride real-world sea lanes: 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5. Watch where they bunch — those are the doors. Then 🏴‍☠️ park your pirate and see why Bellamy never chased.';
+    document.getElementById('stat').textContent = 'tap any ship for its cargo · tap a 🚪 door for its story';
   }
 
   /* ---------- Save / restore (this device) ---------- */
@@ -440,8 +467,8 @@
   document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
   document.getElementById('mode-doors').onclick = function () { if (mode !== 'doors') enterDoors(); };
   document.getElementById('jump-all').onclick = function () { map.flyTo([22, 30], 2); };
-  ['suez', 'malacca', 'bab', 'panama', 'windward', 'boston'].forEach(function (k) {
-    document.getElementById('jump-' + (k === 'bab' ? 'bab' : k)).onclick = function () {
+  ['suez', 'malacca', 'bab', 'panama', 'windward', 'florida', 'gibraltar', 'hormuz', 'dover', 'goodhope', 'boston'].forEach(function (k) {
+    document.getElementById('jump-' + k).onclick = function () {
       var d = DOORS[k]; map.flyTo(d.ll, d.z);
     };
   });
@@ -505,6 +532,14 @@
     if (mode === 'chart' && chartImg) { chartImg.setBounds(chartBounds); map.fitBounds(chartBounds); }
   };
   probe.src = CHART_URL;
+
+  /* console debug handle (harmless in class; lets us sanity-check state) */
+  window.WhydahMapState = function () {
+    var c = map ? map.getCenter() : null;
+    return { mode: mode, center: c ? [c.lat.toFixed(2), c.lng.toFixed(2)] : null, zoom: map ? map.getZoom() : null,
+             ships: ships.length, pirate: pirate.ll ? [pirate.ll.lat.toFixed(2), pirate.ll.lng.toFixed(2)] : null,
+             spotted: pirate.count, pts: pirate.pts };
+  };
 
   /* go */
   setTool('pin');
