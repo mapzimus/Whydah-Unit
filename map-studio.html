@@ -49,6 +49,7 @@
 <div class="toolbar" role="toolbar" aria-label="Map tools">
   <button class="tbtn" id="mode-world" title="Modern world map">🌍 World</button>
   <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart">📜 1717 Chart</button>
+  <button class="tbtn" id="mode-doors" title="Where the world's ships squeeze through">🚢 Chokepoints</button>
   <span style="width:.6em"></span>
   <button class="tbtn" id="tool-pin">📌 Pin</button>
   <button class="tbtn" id="tool-route">✏️ Route</button>
@@ -59,6 +60,17 @@
   <span class="stat" id="stat">0 pins · route 0 nm</span>
 </div>
 <div class="hint" id="hint">Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship's track leg by leg.</div>
+<div class="toolbar" id="doors-bar" style="display:none; border-bottom:2px solid var(--ox);">
+  <button class="tbtn" id="jump-all">🌍 Whole ocean</button>
+  <button class="tbtn" id="jump-suez">Suez</button>
+  <button class="tbtn" id="jump-malacca">Malacca</button>
+  <button class="tbtn" id="jump-bab">Bab-el-Mandeb</button>
+  <button class="tbtn" id="jump-panama">Panama</button>
+  <button class="tbtn" id="jump-windward">Windward 1717</button>
+  <button class="tbtn" id="jump-boston">Boston</button>
+  <span style="width:.6em"></span>
+  <button class="tbtn" id="tool-pirate">🏴‍☠️ Park your pirate</button>
+</div>
 
 <div class="mapwrap">
   <div class="notice" id="notice"><button onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
@@ -103,8 +115,8 @@
   var mode = 'world';                       /* 'world' | 'chart' */
   var chartImg = null;
 
-  /* per-mode student work */
-  var work = { world: { pins: [], route: [] }, chart: { pins: [], route: [] } };
+  /* per-mode student work (doors mode has no pins — it's for watching, not drawing) */
+  var work = { world: { pins: [], route: [] }, chart: { pins: [], route: [] }, doors: { pins: [], route: [] } };
   var pinLayer = null;
   var routeLine = null;
   var voyageLayer = null;
@@ -128,6 +140,7 @@
 
   function freshMap(crs) {
     /* Leaflet can't change CRS on a live map — tear down and rebuild */
+    stopTraffic();
     if (map) { try { map.remove(); } catch (_) {} }
     detachPins();
     routeLine = null;
@@ -178,7 +191,13 @@
   function setModeButtons() {
     document.getElementById('mode-world').classList.toggle('on', mode === 'world');
     document.getElementById('mode-chart').classList.toggle('on', mode === 'chart');
+    document.getElementById('mode-doors').classList.toggle('on', mode === 'doors');
     document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
+    var studio = (mode !== 'doors');
+    ['tool-pin', 'tool-route', 'tool-undo', 'tool-export', 'tool-clear'].forEach(function (id) {
+      document.getElementById(id).style.display = studio ? '' : 'none';
+    });
+    document.getElementById('doors-bar').style.display = studio ? 'none' : 'flex';
   }
 
   /* ---------- Pins ---------- */
@@ -259,6 +278,120 @@
     document.getElementById('tool-voyage').classList.remove('on');
   }
 
+  /* ---------- 🚢 Chokepoints mode: the doors, the traffic, and your pirate ---------- */
+  var DOORS = {
+    suez:     { ll: [30.5, 32.4],   z: 7, t: 'Suez Canal',        d: 'One canal through a desert. About 12% of everything the world trades squeezes through it.' },
+    malacca:  { ll: [2.5, 101.5],   z: 6, t: 'Strait of Malacca', d: 'About a third of global shipping rides this one strait past Singapore.' },
+    bab:      { ll: [12.6, 43.3],   z: 7, t: 'Bab-el-Mandeb',     d: 'The Red Sea’s narrow south door. Since 2023, attacks here have pushed many crews the long way around Africa — thousands of miles farther.' },
+    panama:   { ll: [9.1, -79.7],   z: 8, t: 'Panama Canal',      d: 'A shortcut cut through a continent. A 2023–24 drought cut its daily traffic by about a third. Sailors still watch the sky here.' },
+    windward: { ll: [19.9, -73.9],  z: 6, t: 'Windward Passage · 1717’s door', d: 'The gap between Cuba and Hispaniola. Bellamy’s crew took the Whydah herself near here after a three-day chase, Feb 1717.' },
+    boston:   { ll: [42.3, -70.6],  z: 8, t: 'Boston approach',   d: 'Your harbor’s door today. Every ship into Boston or Salem threads these narrow lanes past Cape Cod.' }
+  };
+  /* Simplified real-world lanes. Not live data — but the SHAPE is true: this is where ships actually go. */
+  var LANES = [
+    { n: 16, pts: [[51,3],[49.6,-3],[48,-8],[43,-12],[36.2,-6.5],[37.5,9],[34,20],[31.6,31.5],[30.5,32.4],[29.5,32.7],[27,34.2],[20,38.5],[14.5,42.2],[12.6,43.3],[12.5,46],[11.5,52],[8,62],[6,74],[6,84],[5.5,95],[3.2,100],[1.4,103.2],[1.2,104.5],[4,108.5],[10,111],[16,113],[21,117.5],[26,122]] },
+    { n: 6,  pts: [[40.4,-73.6],[41.2,-69.2],[43,-60],[46,-48],[49,-30],[49.7,-8],[49.9,-2.5],[51,3]] },
+    { n: 6,  pts: [[35,140.5],[36,155],[37,175],[36,-165],[32,-140],[25,-120],[15,-100],[9.4,-79.9],[9.1,-79.5],[10,-78],[12.5,-76],[16,-74.6],[19.9,-73.9],[22.2,-72.8],[24,-74.5],[26.8,-77.5],[31,-79.2],[35,-75.2],[40.4,-73.6]] },
+    { n: 5,  pts: [[28,-92],[27.5,-88],[25.5,-84.5],[24,-82],[23.7,-79.8],[25,-78.6],[26.8,-77.5]] },
+    { n: 4,  pts: [[40.8,-68.5],[41.6,-69.3],[42.1,-70.2],[42.34,-70.78]] },
+    { n: 5,  pts: [[-34.5,18],[-30,32],[-15,41],[-2,44],[8,50.5],[11.5,52]] }
+  ];
+  var trafficTimer = null, trafficLayer = null, ships = [], laneGeom = [];
+  var pirate = { armed: false, marker: null, ring: null, ll: null, count: 0, t0: 0 };
+  var RANGE_M = 200000; /* 200 km spotting range */
+
+  function buildLaneGeom() {
+    laneGeom = LANES.map(function (lane) {
+      var lls = lane.pts.map(function (p) { return L.latLng(p[0], p[1]); });
+      var cum = [0];
+      for (var i = 1; i < lls.length; i++) cum.push(cum[i - 1] + lls[i - 1].distanceTo(lls[i]));
+      return { lls: lls, cum: cum, len: cum[cum.length - 1] };
+    });
+  }
+  function lanePos(g, d) {
+    if (d <= 0) return g.lls[0];
+    if (d >= g.len) return g.lls[g.lls.length - 1];
+    for (var i = 1; i < g.cum.length; i++) {
+      if (d <= g.cum[i]) {
+        var f = (d - g.cum[i - 1]) / (g.cum[i] - g.cum[i - 1]);
+        var a = g.lls[i - 1], b = g.lls[i];
+        return L.latLng(a.lat + (b.lat - a.lat) * f, a.lng + (b.lng - a.lng) * f);
+      }
+    }
+    return g.lls[g.lls.length - 1];
+  }
+  function startTraffic() {
+    if (!laneGeom.length) buildLaneGeom();
+    trafficLayer = L.layerGroup().addTo(map);
+    /* faint lane lines so the roads are visible even with zero tiles */
+    laneGeom.forEach(function (g) { L.polyline(g.lls, { color: '#1C3743', weight: 1.5, opacity: .35, dashArray: '2 6' }).addTo(trafficLayer); });
+    Object.keys(DOORS).forEach(function (k) {
+      var w = DOORS[k];
+      var icon = L.divIcon({ className: '', html: '<div style="background:#8C2C1E;color:#F3E8CE;font:700 13px Georgia,serif;padding:2px 7px;border-radius:999px;border:2px solid #D8B25A;box-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;">🚪 ' + w.t.split('·')[0].trim() + '</div>', iconSize: null, iconAnchor: [10, 12] });
+      L.marker(w.ll, { icon: icon }).bindPopup('<b>' + w.t + '</b><br>' + w.d).addTo(trafficLayer);
+    });
+    ships = [];
+    laneGeom.forEach(function (g, li) {
+      var count = LANES[li].n;
+      for (var i = 0; i < count; i++) {
+        var mk = L.circleMarker(g.lls[0], { radius: 4, color: '#12222B', weight: 1, fillColor: '#D8B25A', fillOpacity: .95 }).addTo(trafficLayer);
+        mk.bindPopup('A merchant ship. Cargo on a schedule, riding the shortest safe road.');
+        ships.push({ g: g, d: (g.len * i) / count, v: 5000 + Math.floor(9000 * ((i * 2654435761) % 97) / 97), mk: mk, spotted: false });
+      }
+    });
+    pirate.count = 0; pirate.t0 = Date.now();
+    trafficTimer = setInterval(tickTraffic, 100);
+  }
+  function stopTraffic() {
+    if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }
+    trafficLayer = null; ships = [];
+    pirate.marker = null; pirate.ring = null; pirate.ll = null; pirate.armed = false;
+  }
+  function tickTraffic() {
+    if (mode !== 'doors' || !map) return;
+    ships.forEach(function (s) {
+      s.d += s.v;
+      if (s.d >= s.g.len) { s.d = 0; s.spotted = false; s.mk.setStyle({ fillColor: '#D8B25A' }); }
+      var p = lanePos(s.g, s.d);
+      s.mk.setLatLng(p);
+      if (pirate.ll && !s.spotted && p.distanceTo(pirate.ll) < RANGE_M) {
+        s.spotted = true;
+        s.mk.setStyle({ fillColor: '#8C2C1E' });
+        pirate.count++;
+      }
+    });
+    if (pirate.ll) {
+      var mins = Math.max((Date.now() - pirate.t0) / 60000, 1 / 60);
+      document.getElementById('stat').textContent = '🏴‍☠️ ' + pirate.count + ' ships spotted · ' + (pirate.count / mins).toFixed(1) + ' per minute — ' + (pirate.count / mins >= 3 ? 'you found a door!' : 'try parking AT a door');
+    }
+  }
+  function parkPirate(latlng) {
+    if (pirate.marker) { trafficLayer.removeLayer(pirate.marker); trafficLayer.removeLayer(pirate.ring); }
+    var icon = L.divIcon({ className: '', html: '<div style="font-size:26px; text-shadow:0 1px 4px rgba(0,0,0,.6);">🏴‍☠️</div>', iconSize: [28, 28], iconAnchor: [14, 14] });
+    pirate.marker = L.marker(latlng, { icon: icon }).addTo(trafficLayer);
+    pirate.ring = L.circle(latlng, { radius: RANGE_M, color: '#8C2C1E', weight: 2, dashArray: '6 6', fillColor: '#8C2C1E', fillOpacity: .07 }).addTo(trafficLayer);
+    pirate.ll = L.latLng(latlng);
+    pirate.count = 0; pirate.t0 = Date.now();
+    ships.forEach(function (s) { s.spotted = false; s.mk.setStyle({ fillColor: '#D8B25A' }); });
+    pirate.armed = false;
+    document.getElementById('tool-pirate').classList.remove('on');
+    document.getElementById('hint').textContent = 'Your sloop is anchored — the dashed ring is how far your lookout can see. Watch the counter, then re-park somewhere smarter. Open ocean vs. a door: feel the difference.';
+  }
+  function enterDoors(jumpKey) {
+    saveNow();
+    mode = 'doors';
+    freshMap(L.CRS.EPSG3857);
+    map.setMinZoom(2); map.setMaxZoom(12);
+    carto.addTo(map);
+    L.control.layers({ 'Light (Carto)': carto, 'Satellite (Esri)': esri, 'Streets (OSM)': osm }, null, { position: 'topright' }).addTo(map);
+    var d = jumpKey && DOORS[jumpKey];
+    if (d) map.setView(d.ll, d.z); else map.setView([22, 30], 2);
+    startTraffic();
+    setModeButtons();
+    document.getElementById('hint').textContent = 'Every gold dot is a ship on a real-world shipping road (a sea lane). Watch where they bunch up — those are the doors. Then 🏴‍☠️ park your pirate and see why Bellamy never chased.';
+    document.getElementById('stat').textContent = 'ships move on their real roads · tap a 🚪 door for its story';
+  }
+
   /* ---------- Save / restore (this device) ---------- */
   function serialize() {
     var out = {};
@@ -305,6 +438,18 @@
   }
   document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
   document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
+  document.getElementById('mode-doors').onclick = function () { if (mode !== 'doors') enterDoors(); };
+  document.getElementById('jump-all').onclick = function () { map.flyTo([22, 30], 2); };
+  ['suez', 'malacca', 'bab', 'panama', 'windward', 'boston'].forEach(function (k) {
+    document.getElementById('jump-' + (k === 'bab' ? 'bab' : k)).onclick = function () {
+      var d = DOORS[k]; map.flyTo(d.ll, d.z);
+    };
+  });
+  document.getElementById('tool-pirate').onclick = function () {
+    pirate.armed = !pirate.armed;
+    this.classList.toggle('on', pirate.armed);
+    if (pirate.armed) document.getElementById('hint').textContent = 'Tap anywhere on the ocean to anchor your sloop. Pick your spot like it’s 1717: where MUST the ships pass?';
+  };
   document.getElementById('tool-pin').onclick = function () { setTool('pin'); };
   document.getElementById('tool-route').onclick = function () { setTool('route'); };
   document.getElementById('tool-undo').onclick = function () {
@@ -339,6 +484,10 @@
   };
 
   function onMapClick(e) {
+    if (mode === 'doors') {
+      if (pirate.armed) parkPirate(e.latlng);
+      return;
+    }
     if (tool === 'pin') {
       var label = window.prompt('Label this pin (who / what / when):', '');
       if (label === null) return;
@@ -359,7 +508,10 @@
 
   /* go */
   setTool('pin');
-  enterWorld();
+  var doorParam = null;
+  try { doorParam = new URLSearchParams(window.location.search).get('door'); } catch (_) {}
+  if (doorParam !== null) enterDoors(DOORS[doorParam] ? doorParam : null);
+  else enterWorld();
 })();
 </script>
 
