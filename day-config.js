@@ -20,10 +20,15 @@ window.WHYDAH_DAYS = [
   { day: 8,  date: '2026-07-20', title: 'The Vote',                   url: 'day8.html' },
   { day: 9,  date: '2026-07-21', title: 'Sign the Articles',          url: 'day9.html' },
   { day: 10, date: '2026-07-22', title: 'The Wreck',                  url: 'day10.html' },
+  { day: 12, date: '2026-07-22', title: 'Lost and Found',             url: 'day12.html' },
   { day: 11, date: '2026-07-23', title: 'Georges Island',             url: 'day11.html', kind: 'trip' },
-  { day: 12, date: '2026-07-27', title: 'Lost and Found',             url: 'day12.html' },
-  { day: 13, date: '2026-07-28', title: 'Chokepoints: Then and Now',  url: 'day13.html' },
-  { day: 14, date: '2026-07-29', title: 'Salem Then and Now',         url: 'day14.html' },
+  /* Week-3 crunch: Day 12 was pulled forward and taught Wed 7/22 (same slot
+     as Day 10's original date), before the Georges Island trip. Past dates
+     never drive the banner (it only matches today/future), so the duplicate
+     7/22 is harmless — kept for the record. */
+  { day: 13, date: '2026-07-27', title: 'Chokepoints: Then and Now',  url: 'day13.html' },
+  { day: 14, date: '2026-07-28', title: 'Salem Then and Now',         url: 'day14.html' },
+  { day: 14.5, date: '2026-07-29', title: 'Project Trial Run',        url: 'day14b.html', label: 'Trial Run Day' },
   { day: 15, date: '2026-07-30', title: 'Pitch Day',                  url: 'day15.html' },
   { day: 16, date: '2026-08-03', title: 'Synthesis Studio',           url: 'day16.html' },
   { day: 17, date: '2026-08-04', title: 'Build Day 1',                url: 'day17.html' },
@@ -75,7 +80,7 @@ window.WHYDAH_DAYS = [
   function pickBanner(days, today, force, override) {
     if (override === 'off') return { entry: null, mode: 'none' };
     if (override && override.indexOf('day') === 0) {
-      var n = parseInt(override.slice(3), 10);
+      var n = parseFloat(override.slice(3)); /* parseFloat: half-days like 14.5 exist */
       var e = byDay(n);
       if (e) return { entry: e, mode: 'today' };
     }
@@ -103,6 +108,12 @@ window.WHYDAH_DAYS = [
   var BANNER_STYLE = 'display:block; background:#8C2C1E; color:#F3E8CE; text-align:center; padding:0.85em 1em; font-weight:700; font-size:1.08em; text-decoration:none; letter-spacing:0.02em; border-bottom:2px solid #D8B25A;';
   var NEXT_STYLE = 'display:block; background:#1C3743; color:#C7BCA0; text-align:center; padding:0.7em 1em; font-weight:700; font-size:1em; text-decoration:none; letter-spacing:0.02em; border-bottom:2px solid #A9781F;';
 
+  /* "Day 14" normally; an entry can carry label: 'Trial Run Day' to opt out
+     of the Day-N scheme (used for inserted half-days). */
+  function dayLabel(entry) {
+    return entry.label ? entry.label : 'Day ' + entry.day;
+  }
+
   function prefixFor(entry) {
     if (entry.kind === 'trip') return '⚓ FIELD TRIP';
     if (entry.kind === 'showcase') return '🏴‍☠️ SHOWCASE DAY';
@@ -127,22 +138,22 @@ window.WHYDAH_DAYS = [
       if (onOwnPage(e)) {
         el = document.createElement('div');
         el.setAttribute('style', BANNER_STYLE);
-        el.textContent = '⚓ You’re aboard · Day ' + e.day + ': ' + e.title;
+        el.textContent = '⚓ You’re aboard · ' + dayLabel(e) + ': ' + e.title;
       } else if (e.url) {
         el = document.createElement('a');
         el.href = e.url;
         el.setAttribute('style', BANNER_STYLE);
-        el.innerHTML = prefixFor(e) + ' · Day ' + e.day + ': ' + e.title + ' · <u>tap here to start</u>';
+        el.innerHTML = prefixFor(e) + ' · ' + dayLabel(e) + ': ' + e.title + ' · <u>tap here to start</u>';
       } else {
         el = document.createElement('div');
         el.setAttribute('style', BANNER_STYLE);
-        el.textContent = prefixFor(e) + ' · Day ' + e.day + ': ' + e.title;
+        el.textContent = prefixFor(e) + ' · ' + dayLabel(e) + ': ' + e.title;
       }
     } else { /* next */
       el = document.createElement(e.url ? 'a' : 'div');
       if (e.url) el.href = e.url;
       el.setAttribute('style', NEXT_STYLE);
-      el.textContent = 'Next voyage · Day ' + e.day + ': ' + e.title + ' (' + prettyDate(e.date) + ')';
+      el.textContent = 'Next voyage · ' + dayLabel(e) + ': ' + e.title + ' (' + prettyDate(e.date) + ')';
     }
     slot.appendChild(el);
   }
@@ -177,7 +188,7 @@ window.WHYDAH_DAYS = [
     window.WHYDAH_DAYS.forEach(function (d) {
       var o = document.createElement('option');
       o.value = 'day' + d.day;
-      o.textContent = 'Day ' + d.day + ': ' + d.title + ' (' + d.date + ')';
+      o.textContent = dayLabel(d) + ': ' + d.title + ' (' + d.date + ')';
       select.appendChild(o);
     });
     var optOff = document.createElement('option');
@@ -190,7 +201,7 @@ window.WHYDAH_DAYS = [
     function refreshStatus() {
       if (!status) return;
       var pick = pickBanner(window.WHYDAH_DAYS, todayET(), window.WHYDAH_FORCE, getOverride());
-      var showing = pick.entry ? ('Day ' + pick.entry.day + ' (' + pick.mode + ')') : 'nothing';
+      var showing = pick.entry ? (dayLabel(pick.entry) + ' (' + pick.mode + ')') : 'nothing';
       var mode = getOverride() ? 'OVERRIDE: ' + getOverride() : 'AUTO';
       status.textContent = 'This device: ' + mode + ' · currently showing ' + showing + '.';
     }
