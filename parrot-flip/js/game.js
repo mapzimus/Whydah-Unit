@@ -138,6 +138,12 @@ const game = {
     this.fireCapped     = false;
     this.justEliminated = false;
     this.perfectLanding = result === 'MAKE' && !!meta.perfect;
+    // meta.wingBonus / meta.captainsCall are optional fields set only by the
+    // Whydah-Unit parrot port's landingMeta() — always undefined elsewhere,
+    // so wingBonusGain/captainsCallGain stay 0 and nothing below ever fires
+    // for the base bottle-flip game.
+    this.wingBonusGain    = 0;
+    this.captainsCallGain = 0;
 
     // ── Practice: just track stats, no lives/streak stakes ──────────────────
     if (this.practice) {
@@ -219,6 +225,23 @@ const game = {
         this.onFirePlayer  = player;
         this.onFireBonus   = 0;
         this.justIgnited   = true;
+      }
+      // Parrot-only bonuses — see the reset block above for why this is a
+      // no-op for every build except the Whydah-Unit port.
+      if (meta.wingBonus) {
+        const before = player.lives;
+        player.lives = Math.min(player.lives + 1, this.maxLives);
+        this.wingBonusGain = player.lives - before;
+      }
+      if (meta.captainsCall) {
+        // "The whole crew" includes the flipper themselves.
+        let gained = 0;
+        for (const other of this.activePlayers()) {
+          const before = other.lives;
+          other.lives = Math.min(other.lives + 1, this.maxLives);
+          if (other.lives > before) gained++;
+        }
+        this.captainsCallGain = gained;
       }
     } else {
       const before = player.lives;

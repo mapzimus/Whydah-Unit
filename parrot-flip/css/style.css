@@ -368,6 +368,20 @@ html, body {
   color: var(--text);
   text-shadow: 0 1px 8px rgba(0,0,0,0.6);
 }
+/* Parrot-only (Whydah-Unit port): applied by main.js only when a Captain's
+   Call turn is rolled — never toggled by the base bottle-flip game. */
+#turn-banner.captains-call {
+  color: var(--heat);
+  text-shadow: 0 0 12px rgba(255,179,0,0.7);
+  animation: captains-call-pulse 1.1s ease-in-out infinite;
+}
+@keyframes captains-call-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #turn-banner.captains-call { animation: none; }
+}
 
 #point-count {
   font-size: 1.4rem;

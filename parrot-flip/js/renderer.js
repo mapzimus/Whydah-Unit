@@ -77,6 +77,23 @@ const Renderer = (() => {
     }
   }
 
+  // Parrot-only (Whydah-Unit port): a puff of small white+player-color dots,
+  // reusing the same particle store/physics as spawnSplash/spawnFire — never
+  // called by anything in the base bottle-flip game.
+  function spawnFeathers(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 150,
+        vy: -Math.random() * 130 - 40,
+        life: 0.5 + Math.random() * 0.4,
+        maxLife: 0.9,
+        r: 2 + Math.random() * 2.5,
+        color: Math.random() > 0.4 ? color : '#f4efe3',
+      });
+    }
+  }
+
   function updateParticles(dt) {
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -354,6 +371,29 @@ const Renderer = (() => {
     ctx.restore();
   }
 
+  // ── Parrot-only bonus toast (Wing Flare / Captain's Call payout) ───────────
+  // Lives entirely outside the HTML #streak-banner's fixed priority chain (see
+  // main.js's onResult) — a separate canvas toast near the bottom, so it can
+  // never compete with or override the base game's own result messaging.
+  // `banner` is always undefined/null in the base game.
+  function drawBonusBanner(banner) {
+    if (!banner) return;
+    // Fades in over the first 0.25s, holds, fades out over the last 0.35s —
+    // dur is the banner's total lifetime (set by whoever spawned it), not a
+    // constant duplicated here.
+    const a = Math.min(1, banner.t / 0.35, (banner.dur - banner.t) / 0.25);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, a));
+    ctx.fillStyle = '#ffb300';
+    ctx.font = `800 ${Math.min(W * 0.052, 24)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#ffb300';
+    ctx.shadowBlur = 18;
+    ctx.fillText(banner.text, W / 2, H * 0.82);
+    ctx.restore();
+  }
+
   // ── "Make it or break it" intense overlay + sudden-death tag ─────────────────
   let clock = 0;
   function drawIntense(intense, suddenDeath, awaitingFlick) {
@@ -423,7 +463,7 @@ const Renderer = (() => {
   // ── Main frame ─────────────────────────────────────────────────────────────
   function frame(dt, state) {
     const { bottle, liquid, drag, groundY, result, resultAlpha, showGlow, isOnFire,
-            liquidColor, intense, suddenDeath, awaitingFlick, stake, skin } = state;
+            liquidColor, intense, suddenDeath, awaitingFlick, stake, skin, bonusBanner } = state;
     clock += dt;
     updateParticles(dt);
 
@@ -435,6 +475,7 @@ const Renderer = (() => {
     drawParticles();
     drawStake(stake);
     drawIntense(intense, suddenDeath, awaitingFlick);
+    drawBonusBanner(bonusBanner);
 
     if (result) {
       const color = result === 'MAKE' ? '#69f0ae' : '#ff5252';
@@ -442,5 +483,5 @@ const Renderer = (() => {
     }
   }
 
-  return { init, resize, frame, setReduceMotion, projectPoint, projectBottleCenter, bottleDrawScale };
+  return { init, resize, frame, setReduceMotion, projectPoint, projectBottleCenter, bottleDrawScale, spawnFeathers };
 })();
