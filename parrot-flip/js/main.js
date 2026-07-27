@@ -704,7 +704,12 @@
     if (recordsPanel) recordsPanel.innerHTML = Records.renderHtml();
     // First win unlocks the Parrot edition on this device; the per-player skin
     // picker then appears in setup. Re-render setup rows so it shows next time.
-    if (active.length && window.Skins && Records.unlockSkin('parrot')) {
+    // Skipped entirely when a skin is forced (the Whydah-Unit build): every
+    // player has been a parrot since flip one, there's no picker to reveal,
+    // and this toast used to fire anyway, congratulating the winner on
+    // "unlocking" a bird they already had and pointing at a picker that
+    // doesn't exist.
+    if (!FORCE_SKIN && active.length && window.Skins && Records.unlockSkin('parrot')) {
       showToast('🦜 Parrots unlocked! Pick them per player in setup.');
       try { renderFrom(readRows()); } catch (_) {}
     }
