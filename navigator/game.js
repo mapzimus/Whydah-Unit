@@ -293,11 +293,15 @@
   }
   // INSANE per-run mutators: persistent for the whole voyage, unlike consumeMod's one-shots
   function hasMut(id) { return !!(G && G.mutators && G.mutators.indexOf(id) >= 0); }
+  var MUTATOR_POOL = ["cheese", "gullswatch", "bighead", "bouncy", "pugrug", "confetti", "rubber"];
   var MUTATOR_LINES = {
     cheese: "🧀 coins are cheese wheels",
     gullswatch: "👀 the gulls are watching",
     bighead: "🗣 big head mode",
-    bouncy: "🎈 everything is bouncier"
+    bouncy: "🎈 everything is bouncier",
+    pugrug: "🐶🛏 pug in the rug — flying carpets!",
+    confetti: "🎊 hits explode into confetti",
+    rubber: "🦆 everything squeaks"
   };
   // one-shot G.mods flag: read then clear in one call so scenes never forget to reset a mod
   function consumeMod(name) {
@@ -464,6 +468,8 @@
     { id: "countcrab",  w: 1, tag: "multi", ins: true, t: "The counting crab", b: "A crab boards the ship and counts the cannonballs. It gets a different number every time. Every number is somehow correct.", fx: { s: 15 } },
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
     { id: "lobstercap", w: 1, tag: "multi", ins: true, t: "The lobster takes the wheel", b: "A lobster the size of a dinner table hauls itself up the side, takes the wheel in both claws, and holds a course better than anyone aboard. Nobody dares relieve it.", fx: { s: 20 } },
+    { id: "pugcaptain", w: 2, tag: "multi", ins: true, t: "The pug takes the wheel", b: "For six glorious minutes the ship's pug is captain. It makes no orders, changes no headings, and is the best captain anyone has ever served under.", fx: { s: 20 } },
+    { id: "pugrug",     w: 3, tag: "multi", ins: true, t: "A pug in the rug", b: "A flying carpet drifts past with a very good boy asleep in the middle of it. The crew salutes. The carpet salutes back. Nobody knows how.", fx: { s: 25, g: 15 } },
     { id: "whalesong",  w: 2, tag: "multi", ins: true, t: "The whales are harmonizing", b: "Every whale within ten miles surfaces at once and holds a single low note for four minutes. The bosun bursts into tears and will not discuss it.", fx: { s: 25 } },
     { id: "abduct",     w: 2, tag: "multi", ins: true, t: "They took the cook", b: "A green beam, a polite humming noise, and the cook is gone. He is returned nineteen minutes later with a new haircut and three recipes nobody has ever heard of.", fx: { s: 20, g: 10 } },
     { id: "crablaw",    w: 2, tag: "multi", ins: true, t: "Everything is legally a crab", b: "A visiting delegation explains that given enough time, everything in the sea becomes a crab. They present diagrams. The diagrams are, unfortunately, convincing.", fx: { s: 20 } },
@@ -655,8 +661,8 @@
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false, cargo: 0,
-      // INSANE: two per-run mutators, drawn fresh every voyage and announced on the first mission card
-      mutators: runMode === "insane" ? shuffle(["cheese", "gullswatch", "bighead", "bouncy"]).slice(0, 2) : []
+      // INSANE: three per-run mutators, drawn fresh every voyage and announced on the first mission card
+      mutators: runMode === "insane" ? shuffle(MUTATOR_POOL.slice()).slice(0, 3) : []
     };
     // Build the voyage mission by mission: an intro card, then sail legs with
     // that mission's random events/minis/battles spread through the gaps,
@@ -732,7 +738,7 @@
   function addScore(n) { G.score += n; if (G.score < 0) G.score = 0; }
   function addGold(n) { G.gold += n; if (G.gold < 0) G.gold = 0; }
   var redFlash = 0;
-  // fake death screen: insane mode only, ~5% chance on a hit that leaves you alive
+  // fake death screen: insane mode only, ~8% chance on a hit that leaves you alive
   var fakeDeathT = 0;
   function damage(n) {
     if (G.iframes > 0 || G.ended) return;    // a hit buys a breath of grace
@@ -742,7 +748,7 @@
     SFX.hit(); shake(6 + n * 2);
     spawn(G.shipX * W, shipYPx() - 50, { vy: -55, life: 1.0, r: 15, c: "#ff8a7a", shape: "txt", txt: "-" + n + " ♥" });
     if (G.hull <= 0) { G.hull = 0; endRun(false, true); }
-    else if (insane() && fakeDeathT <= 0 && chance(0.05)) { fakeDeathT = 3; SFX.lose(); }
+    else if (insane() && fakeDeathT <= 0 && chance(0.08)) { fakeDeathT = 3; SFX.lose(); }
   }
   function repair(n) { G.hull = clamp(G.hull + n, 0, G.maxHull); }
   // little banner queue for "your upgrade just did something" moments
@@ -1035,7 +1041,7 @@
     ctx.save(); ctx.translate(x, y); ctx.rotate(opt.rot || 0);
     if (opt.blink) ctx.globalAlpha = 0.35;
     if (opt.whydah) s *= 1.094;   // she's a bigger ship once you've boarded her
-    var bob = Math.sin(seaT * 2 + (opt.phase || 0)) * 2 * (hasMut("bouncy") ? 2.4 : 1);
+    var bob = Math.sin(seaT * 2 + (opt.phase || 0)) * 2 * (hasMut("bouncy") ? 2.4 : 1) * (hasMut("rubber") ? 1.8 : 1);
     ctx.translate(0, bob);
     if (opt.wake) { ctx.fillStyle = "rgba(223,241,244,.5)"; ctx.beginPath(); ctx.moveTo(-6 * s, 10 * s); ctx.lineTo(6 * s, 10 * s); ctx.lineTo(2 * s, 30 * s); ctx.lineTo(-2 * s, 30 * s); ctx.closePath(); ctx.fill(); }
     var hullC = opt.hull || "#5a3a22", deck = opt.deck || "#8a5a34";
@@ -1074,8 +1080,8 @@
     if (extra) for (var k in extra) o[k] = extra[k];
     return o;
   }
-  // headKind: "visitor" for the three-headed finale, otherwise the lobster.
-  // Defaults to lobster so the mini-boss and the Log's diorama need no changes.
+  // headKind: "pug" for INSANE (Sea Pug / PUGNAROK), otherwise the green serpent.
+  // Optional "visitor" / "claw" kept for dioramas and leftovers.
   function drawSerpent(seg, headOpen, flash, headKind) {
     ctx.save();
     ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -1090,7 +1096,11 @@
     var hd = seg[0];
     if (rainbow) {
       if (hasMut("bighead")) { ctx.translate(hd.x, hd.y); ctx.scale(1.35, 1.35); ctx.translate(-hd.x, -hd.y); }
-      (headKind === "visitor" ? drawVisitorHead : drawClawHead)(hd.x, hd.y, headOpen, flash); ctx.restore(); return;
+      var kind = headKind || "pug";
+      if (kind === "visitor") drawVisitorHead(hd.x, hd.y, headOpen, flash);
+      else if (kind === "claw") drawClawHead(hd.x, hd.y, headOpen, flash);
+      else drawPugHead(hd.x, hd.y, headOpen, flash);
+      ctx.restore(); return;
     }
     ctx.fillStyle = flash ? "#efffe9" : "#357a55";
     ctx.beginPath(); ctx.ellipse(hd.x, hd.y, 26, 20, 0, 0, 7); ctx.fill();
@@ -1102,10 +1112,44 @@
     ctx.moveTo(hd.x + 10, hd.y - 16); ctx.lineTo(hd.x + 16, hd.y - 28); ctx.stroke();
     ctx.restore();
   }
-  // Insane mode's serpent reskin. Was a pug; the kids voted it off the ship.
-  // Now the mini-boss is a lobster the size of a longboat and the three-headed
-  // finale is a trio of visitors leaning out of their saucer. Same silhouette
-  // budget as the old head so nothing about the fights needed retuning.
+  // the Sea Pug / Pugnarok head: a round fawn head, black-mask muzzle, floppy
+  // ears, huge eyes, pink tongue — the kids brought it back. Welcome home.
+  function drawPugHead(x, y, mouthOpen, flash) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = flash ? "#fff3dc" : "#e8c087";
+    ctx.beginPath(); ctx.ellipse(0, 0, 27, 23, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#c9905a";   // floppy ears
+    ctx.beginPath(); ctx.ellipse(-24, -6, 11, 16, -0.4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(24, -6, 11, 16, 0.4, 0, 7); ctx.fill();
+    ctx.fillStyle = "#4a3020";   // black mask muzzle
+    ctx.beginPath(); ctx.ellipse(0, 8, 15, 11, 0, 0, 7); ctx.fill();
+    if (mouthOpen) { ctx.fillStyle = "#ff8a9a"; ctx.beginPath(); ctx.ellipse(0, 13, 8, 7, 0, 0, 7); ctx.fill(); }   // pink tongue
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-11, -3, 8, 0, 7); ctx.arc(11, -3, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-10, -2, 4.5, 0, 7); ctx.arc(10, -2, 4.5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#4a3020"; ctx.beginPath(); ctx.arc(0, 4, 3.5, 0, 7); ctx.fill();   // nose
+    ctx.strokeStyle = "#4a3020"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-6, 6); ctx.quadraticCurveTo(0, 12, 6, 6); ctx.stroke();   // wrinkly mouth line
+    ctx.restore();
+  }
+  // Flying carpet with a very good boy aboard — the "pug in the rug" gag.
+  function drawPugRug(x, y, s, bob) {
+    s = s || 1; bob = bob || 0;
+    ctx.save(); ctx.translate(x, y + bob);
+    ctx.fillStyle = "#8b2e2e";
+    ctx.beginPath(); ctx.ellipse(0, 10 * s, 34 * s, 10 * s, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#c44a3a";
+    ctx.beginPath(); ctx.ellipse(0, 8 * s, 30 * s, 8 * s, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#f7d84a"; ctx.lineWidth = 2 * s;
+    ctx.beginPath(); ctx.ellipse(0, 8 * s, 24 * s, 5.5 * s, 0, 0, 7); ctx.stroke();
+    // tassels
+    ctx.strokeStyle = "#f7d84a"; ctx.lineWidth = 1.5 * s;
+    for (var t = -3; t <= 3; t++) {
+      ctx.beginPath(); ctx.moveTo(t * 7 * s, 16 * s); ctx.lineTo(t * 7 * s + (t < 0 ? -3 : 3) * s, 22 * s); ctx.stroke();
+    }
+    drawPugHead(0, -6 * s, false, false);
+    ctx.restore();
+  }
+  // Kept for the multiverse enemy roster / leftovers — lobster + visitor heads.
   function drawClawHead(x, y, mouthOpen, flash) {
     ctx.save(); ctx.translate(x, y);
     ctx.fillStyle = flash ? "#ffd9c9" : "#c4402a";
@@ -1320,7 +1364,7 @@
     return {
       enter: function () {
         document.body.classList.add("playing"); if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES);
-        // announce the run's two multiverse mutators on the very first mission card
+        // announce the run's multiverse mutators on the very first mission card
         if (mi === G.startMission && G.mutators && G.mutators.length) {
           toast("Today's multiverse: " + G.mutators.map(function (m) { return MUTATOR_LINES[m]; }).join("  ·  "));
         }
@@ -2007,7 +2051,7 @@
     var coinArcAt = chance(0.7) ? rand(2, Math.max(3, legTime * 0.5)) : -1;
     var slow = consumeMod("slow") ? 0.75 : 1;
     G.mods.fogNow = !!consumeMod("fog");
-    // insane mode: every leg spins the multiverse wheel
+    // insane mode: every leg spins the multiverse wheel — even more options now
     var CHAOS = {
       gravity:   "🌀 LOW GRAVITY — everything drifts!",
       speed:     "⚡ SPEED RUN!",
@@ -2017,12 +2061,17 @@
       disco:     "🪩 DISCO SEA!",
       upsidegulls: "🙃 UPSIDE-DOWN GULLS!",
       crablegally: "🦀 EVERYTHING IS LEGALLY A CRAB!",
-      suddennight: "🌙 SUDDEN NIGHT!"
+      suddennight: "🌙 SUDDEN NIGHT!",
+      pugrug:    "🐶🛏 PUG IN THE RUG — collect the flying carpets!",
+      spinship:  "🔄 THE SHIP WON'T STOP SPINNING!",
+      zoom:      "🔍 EVERYTHING IS HUGE!"
     };
-    var chaos = insane() ? choice(["gravity", "speed", "tiny", "gigacoins", "mirror", "disco", "upsidegulls", "crablegally", "suddennight"]) : null;
+    var chaosPool = ["gravity", "speed", "tiny", "gigacoins", "mirror", "disco", "upsidegulls", "crablegally", "suddennight", "pugrug", "spinship", "zoom"];
+    var chaos = insane() ? choice(chaosPool) : null;
     if (chaos === "speed") legTime *= 0.8;
-    var hitR = chaos === "tiny" ? 9 : 16, shipScale = chaos === "tiny" ? 1.1 : 1.6;
+    var hitR = chaos === "tiny" ? 9 : 16, shipScale = chaos === "tiny" ? 1.1 : (chaos === "zoom" ? 2.2 : 1.6);
     var spMul = chaos === "speed" ? 1.35 : 1, discoT = 0;
+    var rugT = (chaos === "pugrug" || hasMut("pugrug")) ? rand(1.2, 2.4) : (insane() && chance(0.35) ? rand(3, 5) : -1);
     // themed leg systems: a scripted waterspout and/or whirlpool, at most one
     // each per leg, plus a constant current push where the mission calls for it
     var waterspoutAt = (lm.waterspout > 0 && chance(lm.waterspout) && legTime > 6) ? rand(3, legTime - 2) : -1;
@@ -2050,6 +2099,7 @@
       else if (o.sub === "gem") { addGold(30); addScore(22); SFX.win(); coinBurst(o.x, o.y); for (var gp = 0; gp < 10; gp++) spawn(o.x, o.y, { vx: rand(-70, 70), vy: rand(-110, -20), g: 220, life: rand(0.4, 0.8), r: rand(2, 3.5), c: o.gemc || "#e05c9c" }); spawn(o.x, o.y - 18, { vy: -52, life: 1.0, r: 14, c: o.gemc || "#e05c9c", shape: "txt", txt: "💎 +30 🪙" }); }
       else if (o.sub === "ingot") { addGold(40); addScore(26); SFX.win(); coinBurst(o.x, o.y); coinBurst(o.x, o.y); spawn(o.x, o.y - 18, { vy: -52, life: 1.0, r: 14, c: "#dfe7ee", shape: "txt", txt: "🥈 +40 🪙" }); }
       else if (o.sub === "chest") { addGold(70); addScore(50); SFX.win(); toast("💰 TREASURE CHEST! +70 🪙"); for (var cp = 0; cp < 20; cp++) spawn(o.x, o.y, { vx: rand(-140, 140), vy: rand(-170, -20), g: 240, life: rand(0.5, 1.1), r: rand(2, 4.5), c: choice(["#f7d84a", "#ffcf6a", "#fff", "#e0b25c"]) }); spawn(o.x, o.y - 22, { vy: -56, life: 1.2, r: 17, c: "#f7d84a", shape: "txt", txt: "💰 +70 🪙" }); }
+      else if (o.sub === "pugrug") { addGold(25); addScore(40); SFX.win(); toast("🐶🛏 PUG IN THE RUG! +25 🪙"); for (var pr = 0; pr < 14; pr++) spawn(o.x, o.y, { vx: rand(-100, 100), vy: rand(-140, -20), g: 220, life: rand(0.4, 0.9), r: rand(2, 4), c: choice(["#c44a3a", "#f7d84a", "#e8c087", "#fff"]) }); spawn(o.x, o.y - 20, { vy: -52, life: 1.1, r: 16, c: "#ff8a9a", shape: "txt", txt: "🐶 +25" }); }
       else if (o.sub === "wind") { addScore(8); SFX.good(); if (legDone < 0) t += 0.6; }
       else if (o.sub === "heart") {
         if (G.hull < G.maxHull) { repair(1); toast("❤ +1 heart"); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#ff8a7a", shape: "txt", txt: "+1 ♥" }); }
@@ -2161,6 +2211,14 @@
           sirenDone = true;
           var side = chance(0.5) ? 0 : 1;
           objs.push({ kind: "siren", x: side ? W * 0.92 : W * 0.08, y: -60, sp: 55, R: clamp(W * 0.32, 120, 220), k: 0.35, side: side, singT: 0 });
+        }
+        // Pug in the rug: flying carpets with a very good boy aboard
+        if (rugT > 0 && legDone < 0 && t < legTime - 1.5) {
+          rugT -= dt;
+          if (rugT <= 0) {
+            rugT = (chaos === "pugrug" || hasMut("pugrug")) ? rand(2.2, 3.8) : rand(4.5, 7);
+            objs.push({ kind: "pickup", sub: "pugrug", r: 28, sp: rand(90, 130) * spMul, x: rand(0.15, 0.85) * W, y: -50, a: 0, spin: rand(-0.6, 0.6), drift2: rand(-40, 40) });
+          }
         }
         // the narrows: a wall of land with one gap — thread the needle. On the
         // mooncusser coast, a second false-lit gap tries to lure you onto the rocks.
@@ -2303,7 +2361,11 @@
           }
           if (o.kind === "narrows") { drawNarrows(o); continue; }
           if (o.kind === "hazard" && chaos === "crablegally") { drawCrabEnemy(o.x, o.y, o.r / 20, {}); continue; }
-          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
+          if (o.kind === "pickup" && o.sub === "pugrug") {
+            drawPugRug(o.x, o.y, 1.05, Math.sin(seaT * 3 + o.x * 0.01) * 4);
+            continue;
+          }
+          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a + (chaos === "spinship" && o.kind === "hazard" ? seaT * 2 : 0));
           if (o.kind === "hazard") {
             if (o.sub === "rock") { ctx.fillStyle = o.hp < 2 ? "#6e6a62" : "#5b5750"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.12)"; blob(o.r * 0.6); }
             else if (o.sub === "ice") { ctx.fillStyle = "#cfe9f2"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.5)"; blob(o.r * 0.5); }
@@ -2327,7 +2389,7 @@
         ctx.globalAlpha = 1;
         if (wspout) drawWaterspoutWarn(wspout);
         drawBalls(balls);
-        drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts());
+        drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts(chaos === "spinship" ? { rot: seaT * 3.5 } : null));
         drawParts();
         // fog: a radial lantern-circle mask instead of a flat haze; night: a warm glow around the ship
         if (lm.fog) {
@@ -2718,16 +2780,35 @@
     ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-4 * s, -2 * s, 1.6 * s, 0, 7); ctx.arc(4 * s, -2 * s, 1.6 * s, 0, 7); ctx.fill();
     ctx.restore();
   }
-  // The multiverse roster, now with both feet in the sea (and one visitor who
-  // has no feet at all). The kitchen appliances and the garden ornaments are
-  // gone — the kids wanted sea monsters, not a yard sale.
+  function drawPugEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    // a pug on a rug — the kids' favorite gag, promoted to a full enemy skin
+    ctx.fillStyle = "#8b2e2e"; ctx.beginPath(); ctx.ellipse(0, 14 * s, 28 * s, 8 * s, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#c44a3a"; ctx.beginPath(); ctx.ellipse(0, 12 * s, 24 * s, 6 * s, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#f7d84a"; ctx.lineWidth = 1.6 * s; ctx.beginPath(); ctx.ellipse(0, 12 * s, 18 * s, 4 * s, 0, 0, 7); ctx.stroke();
+    ctx.scale(s * 0.85, s * 0.85); drawPugHead(0, -2, false, !!opt.blink);
+    ctx.restore();
+  }
+  function drawToasterEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#c8d0d8"; ctx.fillRect(-18 * s, -10 * s, 36 * s, 24 * s);
+    ctx.fillStyle = "#8a94a0"; ctx.fillRect(-14 * s, -14 * s, 10 * s, 8 * s); ctx.fillRect(4 * s, -14 * s, 10 * s, 8 * s);
+    ctx.fillStyle = "#ff8a3a";
+    var toast = 0.5 + 0.5 * Math.sin(seaT * 6);
+    ctx.globalAlpha = (opt.blink ? 0.35 : 1) * toast;
+    ctx.fillRect(-12 * s, -22 * s, 8 * s, 10 * s); ctx.fillRect(4 * s, -20 * s, 8 * s, 8 * s);
+    ctx.restore();
+  }
+  // The multiverse roster: sea monsters, visitors, appliances, and the return of the pug.
   var SKIN_ENEMIES = [
+    { id: "pug",      name: "A Pug in the Rug",            draw: drawPugEnemy,     projStyle: "quack",    deathLine: "It sneezes once, proudly, and sails home on the carpet." },
     { id: "lobster",  name: "The Lobster of Unusual Size", draw: drawLobsterEnemy, projStyle: "bubble",   deathLine: "It clacks once, with dignity, and sinks." },
     { id: "whale",    name: "An Extremely Large Whale",    draw: drawWhaleEnemy,   projStyle: "snowball", deathLine: "It sounds one last time and is gone." },
     { id: "ufo",      name: "Visitors From Somewhere Else", draw: drawUfoEnemy,    projStyle: "venom",    deathLine: "The saucer wobbles, apologizes in three languages, and leaves." },
     { id: "duck",     name: "The Colossal Rubber Duck",    draw: drawDuckEnemy,    projStyle: "quack",    deathLine: "It squeaks its last and drifts belly-up." },
     { id: "crab",     name: "Crab With A Sword",           draw: drawCrabEnemy,    projStyle: "bubble",   deathLine: "It scuttles off sideways, sword and all." },
-    { id: "snowman",  name: "A Furious Snowman, Lost",     draw: drawSnowmanEnemy, projStyle: "snowball", deathLine: "It melts into a very confused puddle." }
+    { id: "snowman",  name: "A Furious Snowman, Lost",     draw: drawSnowmanEnemy, projStyle: "snowball", deathLine: "It melts into a very confused puddle." },
+    { id: "toaster",  name: "A Belligerent Toaster",       draw: drawToasterEnemy, projStyle: "note",     deathLine: "It pops one last slice and powers down." }
   ];
   function BattleScene() {
     G.battleNum++;
@@ -2755,7 +2836,7 @@
         if (enemy.x < W * 0.15 || enemy.x > W * 0.85) enemy.dir *= -1;
         enemy.fireT -= dt;
         if (enemy.fireT <= 0) { enemy.fireT = rand(type.fire[0], type.fire[1]) * diff().fire + fireMod; balls.push({ x: enemy.x, y: enemy.y + 18, vy: 300 + tier * 25, own: 0, style: funSkin ? funSkin.projStyle : undefined }); }
-        stepBalls(balls, dt, [{ x: enemy.x, y: enemy.y, r: 20, onHit: function (b) {
+        stepBalls(balls, dt, [{ x: enemy.x, y: enemy.y, r: (insane() ? 28 : 20) + (hasMut("bighead") ? 10 : 0), onHit: function (b) {
           var doubled = chance(shotBonus());
           if (doubled) toast("⛓ Chain shot strikes double!");
           var dmg = 1 + dmgBonus + (doubled ? 1 : 0);
@@ -2886,10 +2967,15 @@
     var max = Math.max(5, Math.round(8 * diff().hp)), hp = max;
     var t = 0, state = "weave", stateT = rand(1.2, 2.0), lungeX = 0, lungeY = H * 0.7, headOpen = false, flashT = 0, balls = [], spits = [], spitT = rand(1.5, 2.5) * diff().spit, fireGun = gunner();
     var baseY = H * 0.32, rearTime = 0.65 + warnBonus() * 0.3;
+    var hitR = hasMut("bighead") ? 42 : 34;   // generous — kids kept missing; bosses are meant to be shot
+    function confettiHit(x, y) {
+      if (!hasMut("confetti") && !insane()) return;
+      for (var k = 0; k < 10; k++) spawn(x, y, { vx: rand(-160, 160), vy: rand(-180, -20), g: 280, life: rand(0.4, 0.9), r: rand(2, 4), c: choice(["#ff6a8a", "#ffd24a", "#6ad8ff", "#9fe8c0", "#c9a0ff", "#fff"]) });
+    }
     return {
       enter: function () {
         prompt = insane()
-          ? Prompt("THE LOBSTER OF UNUSUAL SIZE", "Somewhere between dimensions the serpent legend came back with claws and a shell you could roof a house with. It is not hostile exactly. It is just extremely large and coming this way. Dodge what it throws, then fire at its head.", function () { phase = "fight"; }, "🦞 MULTIVERSE")
+          ? Prompt("THE SEA PUG", "It just wants to play fetch. Dodge the tennis balls, then BOOP that beautiful wrinkly face. The kids asked for this one back.", function () { phase = "fight"; }, "🐶 MULTIVERSE")
           : Prompt("A SEA SERPENT!", "Sailors in 1717 swore these waters hid monsters. This one is a sea story. Dodge the lunge and the spray it spits, then fire at its head.", function () { phase = "fight"; }, "🌀 SEA YARN");
       },
       update: function (dt) {
@@ -2934,18 +3020,34 @@
           if (Math.hypot(sv.x - shipPX, sv.y - shipPY) < 18) { spits.splice(si, 1); damage(1); continue; }
           if (sv.y > H + 30) spits.splice(si, 1);
         }
-        stepBalls(balls, dt, [{ x: seg[0].x, y: seg[0].y, r: hasMut("bighead") ? 34 : 24, onHit: function () {
-          hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0");
+        // Always shootable — head is a live target the whole fight, not only when rearing.
+        var serpentTargets = [{ x: seg[0].x, y: seg[0].y, r: hitR, onHit: function () {
+          hp--; flashT = 0.12; SFX.hit(); splash(seg[0].x, seg[0].y, 10, "#8fd6a0"); confettiHit(seg[0].x, seg[0].y);
           if (hp <= 0) {
-            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14); feat(insane() ? "bigclaw" : "serpent");
-            for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
+            phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14); feat(insane() ? "seapug" : "serpent");
+            for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4", "#ff8a9a"]) });
           }
-        } }]);
+        } }];
+        // Body segments also take chips — shoot the whole rainbow noodle.
+        if (insane()) {
+          for (var bi = 3; bi < seg.length; bi += 3) {
+            (function (s2) {
+              serpentTargets.push({ x: s2.x, y: s2.y, r: 18, onHit: function () {
+                hp--; flashT = 0.08; SFX.hit(); splash(s2.x, s2.y, 6, "#ffd24a"); confettiHit(s2.x, s2.y);
+                if (hp <= 0) {
+                  phase = "done"; addScore(150); addGold(100); G.serpentBeaten = true; SFX.win(); shake(14); feat("seapug");
+                  for (var k = 0; k < 50; k++) spawn(seg[0].x, seg[0].y, { vx: rand(-180, 180), vy: rand(-220, 80), g: 240, life: rand(0.6, 1.5), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#ff8a9a"]) });
+                }
+              } });
+            })(seg[bi]);
+          }
+        }
+        stepBalls(balls, dt, serpentTargets);
       },
       render: function () {
         drawSea(G.pal, seaT * 50, false);
-        if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text(insane() ? "THE LOBSTER" : "SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
-        drawSerpent(seg, headOpen, flashT > 0);
+        if (phase !== "intro") { var bw = 160, bx = W / 2 - bw / 2; ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill(); ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * (hp / max), 8, 4); ctx.fill(); text(insane() ? "SEA PUG" : "SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold"); }
+        drawSerpent(seg, headOpen, flashT > 0, "pug");
         for (var s2 = 0; s2 < spits.length; s2++) {
           if (insane()) { ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0.3, 2.2); ctx.stroke(); }
           else { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(143,214,160,.4)"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 10, 0, 7); ctx.fill(); }
@@ -2953,9 +3055,14 @@
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
-        if (headOpen && phase === "fight") text(insane() ? "BOOP IT!" : "FIRE!", seg[0].x, seg[0].y - 40, 16, "#ffd24a", "center", "bold");
+        if (phase === "fight") {
+          // Always cue FIRE so kids know the head is live — BOOP flashes louder when rearing.
+          text(insane() ? (headOpen ? "BOOP IT!" : "FIRE — shoot the pug!") : "FIRE!", seg[0].x, seg[0].y - 40, headOpen ? 16 : 13, "#ffd24a", "center", "bold");
+          ctx.strokeStyle = "rgba(255,210,74," + (0.35 + 0.35 * Math.abs(Math.sin(seaT * 8))) + ")"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(seg[0].x, seg[0].y, hitR, 0, 7); ctx.stroke();
+        }
         if (phase === "intro") prompt.render();
-        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text(insane() ? "The Lobster yields!" : "Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text(insane() ? "it drifts off sideways, still dignified — tap to sail on" : "tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "done") { var w = clamp(W * 0.72, 240, 400); panel(W / 2, H / 2, w, 126); text(insane() ? "The Sea Pug is befriended!" : "Serpent driven off!", W / 2, H / 2 - 24, 23, "#8fd6a0", "center", "bold"); text("+150 points   +100 gold", W / 2, H / 2 + 8, 17, "#e0b25c", "center", "bold"); text(insane() ? "it follows at a respectful distance — tap to sail on" : "tap to sail on", W / 2, H / 2 + 42, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
     function moveHead(dt, tx, ty) {
@@ -3095,7 +3202,7 @@
     return {
       debugWin: function () { nadoHp = 0; phase = "done"; addScore(120); addGold(60); },
       enter: function () {
-        prompt = Prompt("THE SHARKNADO", "A waterspout crossed the wrong shoal and picked up passengers. Nobody will believe the log entry. Dodge the marked splashes, shoot the sharks out of the air, and put shot into the eye when it opens.", function () { phase = "fight"; }, insane() ? "🤯 MULTIVERSE-ADJACENT, SOMEHOW REAL HERE" : "🌀 SEA YARN — THE TALLEST ONE IN THE BOOK");
+        prompt = Prompt("THE SHARKNADO", "A waterspout crossed the wrong shoal and picked up passengers. Nobody will believe the log entry. Dodge the marked splashes, shoot the sharks out of the air, and blast the column itself — the eye hits harder when it opens, but the whole spout takes shot.", function () { phase = "fight"; }, insane() ? "🤯 MULTIVERSE-ADJACENT, SOMEHOW REAL HERE" : "🌀 SEA YARN — THE TALLEST ONE IN THE BOOK");
       },
       update: function (dt) {
         seaT += dt; t += dt;
@@ -3120,7 +3227,7 @@
             var mx = clamp(px + rand(-W * 0.3, W * 0.3), W * 0.08, W * 0.92);
             marks.push({ x: mx, y: clamp(py + rand(-60, 60), H * 0.55, H * 0.92), warn: 1.05 + warnBonus() * 0.3 + v * 0.14 });
           }
-          eyeOpen = 1.6;   // between volleys the eye opens — that's your window
+          eyeOpen = 2.4;   // longer window — and the column itself is always shootable now
           SFX.thunder();
         }
         for (var mi2 = marks.length - 1; mi2 >= 0; mi2--) {
@@ -3145,11 +3252,15 @@
             var idx = flungs.indexOf(f2); if (idx >= 0) flungs.splice(idx, 1);
           } });
         });
-        if (eyeOpen > 0) nTargets.push({ x: nadoX, y: H * 0.3, r: 30, onHit: function (b) {
-          nadoHp--; splash(b.x, b.y, 10, "#cfe9f2"); SFX.hit(); shake(4);
+        // Column always takes shot. Eye open = double damage + bigger hitbox.
+        var eyeLive = eyeOpen > 0;
+        nTargets.push({ x: nadoX, y: H * 0.3, r: eyeLive ? 38 : 32, onHit: function (b) {
+          var dmg = eyeLive ? 2 : 1;
+          nadoHp -= dmg; splash(b.x, b.y, 10, eyeLive ? "#ffd24a" : "#cfe9f2"); SFX.hit(); shake(4);
+          if (eyeLive) toast("EYE SHOT!");
           if (nadoHp <= 0) {
             phase = "done"; addScore(120); addGold(60); SFX.win(); shake(16); feat("sharknado");
-            for (var k = 0; k < 40; k++) spawn(nadoX, H * 0.3, { vx: rand(-200, 200), vy: rand(-100, 240), g: 300, life: rand(0.6, 1.4), r: rand(2, 5), c: choice(["#cfe9f2", "#9fb6c9", "#fff"]) });
+            for (var k = 0; k < 40; k++) spawn(nadoX, H * 0.3, { vx: rand(-200, 200), vy: rand(-100, 240), g: 300, life: rand(0.6, 1.4), r: rand(2, 5), c: choice(["#cfe9f2", "#9fb6c9", "#fff", "#ffd24a"]) });
           }
         } });
         stepBalls(balls, dt, nTargets);
@@ -3171,11 +3282,12 @@
           ctx.scale(0.6, 0.6); ctx.rotate(Math.sin(ang) * 0.6);
           drawShark(0, 0, Math.cos(ang) >= 0 ? 1 : -1); ctx.restore();
         }
-        if (eyeOpen > 0 && phase === "fight") {
-          var ep = 0.5 + 0.5 * Math.sin(seaT * 10);
-          ctx.strokeStyle = "rgba(255,210,74," + ep + ")"; ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.arc(nadoX, H * 0.3, 30, 0, 7); ctx.stroke();
-          text("THE EYE — FIRE!", nadoX, H * 0.3 - 44, 14, "#ffd24a", "center", "bold");
+        if (phase === "fight") {
+          var ep = 0.35 + 0.35 * Math.sin(seaT * 10);
+          ctx.strokeStyle = eyeOpen > 0 ? ("rgba(255,210,74," + (0.5 + 0.5 * Math.abs(Math.sin(seaT * 10))) + ")") : ("rgba(200,230,255," + ep + ")");
+          ctx.lineWidth = eyeOpen > 0 ? 3 : 2;
+          ctx.beginPath(); ctx.arc(nadoX, H * 0.3, eyeOpen > 0 ? 38 : 32, 0, 7); ctx.stroke();
+          text(eyeOpen > 0 ? "THE EYE — FIRE!" : "SHOOT THE COLUMN!", nadoX, H * 0.3 - 44, 14, "#ffd24a", "center", "bold");
         }
         ctx.restore();
         // landing marks
@@ -3266,7 +3378,7 @@
           }
         }
         var shipY2 = ram ? ram.y : H * 0.2;
-        stepBalls(balls, dt, [{ x: fx2, y: shipY2, r: 24, onHit: function (b) {
+        stepBalls(balls, dt, [{ x: fx2, y: shipY2, r: insane() ? 30 : 24, onHit: function (b) {
           var doubled = chance(shotBonus());
           if (doubled) toast("⛓ Chain shot strikes double!");
           hp -= 1 + dmgBonus + (doubled ? 1 : 0);
@@ -3667,7 +3779,7 @@
       debugWin: function () { heads.forEach(function (h) { h.hp = 0; h.alive = false; }); phase = "dying"; dieT = 0; G.bossBeaten = true; addScore(300); addGold(200); },
       enter: function () {
         prompt = insane()
-          ? Prompt("THE VISITORS", "The grandfather serpent got lost somewhere in the multiverse and what came back is not from the sea at all. Three of them lean out of the saucer, blink those enormous eyes, and start the abduction beams. Send them home.", function () { phase = "fight"; }, "🛸 MULTIVERSE")
+          ? Prompt("PUGNAROK", "The legend of the grandfather serpent got lost somewhere in the multiverse and came back as this. Three heads. One very good boy. Send it back for belly rubs. Every head is shootable the whole fight — keep firing.", function () { phase = "fight"; }, "🐶 MULTIVERSE")
           : Prompt("THE GRANDFATHER SERPENT", "The old salts say the first one was a pup. This is what it ran home to. Three heads. One ship. Send it back to the deep.", function () { phase = "fight"; }, "🌀 SEA YARN");
       },
       update: function (dt) {
@@ -3730,19 +3842,40 @@
           if (sv.y > H + 30) spits.splice(si, 1);
         }
         var headTargets = [];
+        var bossHitR = hasMut("bighead") ? 42 : 34;
         heads.forEach(function (h2) {
           if (!h2.alive) return;
-          headTargets.push({ x: h2.seg[0].x, y: h2.seg[0].y, r: hasMut("bighead") ? 34 : 24, onHit: function () {
+          headTargets.push({ x: h2.seg[0].x, y: h2.seg[0].y, r: bossHitR, onHit: function () {
             h2.hp--; h2.flashT = 0.12; SFX.hit(); splash(h2.seg[0].x, h2.seg[0].y, 10, "#8fd6a0");
+            if (hasMut("confetti") || insane()) {
+              for (var cf = 0; cf < 8; cf++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, -10), g: 260, life: rand(0.3, 0.7), r: rand(2, 3.5), c: choice(["#ff6a8a", "#ffd24a", "#6ad8ff", "#fff"]) });
+            }
             if (h2.hp <= 0) {
               h2.alive = false; h2.open = false; addScore(80); SFX.win(); shake(10);
-              for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff"]) });
+              for (var k = 0; k < 20; k++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-140, 140), vy: rand(-160, 60), g: 240, life: rand(0.6, 1.2), r: rand(2, 5), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#ff8a9a"]) });
               if (aliveHeads().length === 0) {
-                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20); feat(insane() ? "visitors" : "boss");
-                for (var k3 = 0; k3 < 60; k3++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-220, 220), vy: rand(-260, 80), g: 240, life: rand(0.7, 1.8), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4"]) });
+                phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20); feat(insane() ? "pugnarok" : "boss");
+                for (var k3 = 0; k3 < 60; k3++) spawn(h2.seg[0].x, h2.seg[0].y, { vx: rand(-220, 220), vy: rand(-260, 80), g: 240, life: rand(0.7, 1.8), r: rand(2, 6), c: choice(["#8fd6a0", "#f7d84a", "#fff", "#dff1f4", "#ff8a9a"]) });
               }
             }
           } });
+          // Body chips on INSANE — the whole rainbow noodle is fair game.
+          if (insane()) {
+            for (var bi = 4; bi < h2.seg.length; bi += 4) {
+              (function (h3, s2) {
+                headTargets.push({ x: s2.x, y: s2.y, r: 16, onHit: function () {
+                  if (!h3.alive) return;
+                  h3.hp--; h3.flashT = 0.08; SFX.hit(); splash(s2.x, s2.y, 6, "#ffd24a");
+                  if (h3.hp <= 0) {
+                    h3.alive = false; h3.open = false; addScore(80); SFX.win(); shake(10);
+                    if (aliveHeads().length === 0) {
+                      phase = "dying"; dieT = 0; flashW = 0.4; G.bossBeaten = true; addScore(300); addGold(200); SFX.win(); shake(20); feat("pugnarok");
+                    }
+                  }
+                } });
+              })(h2, h2.seg[bi]);
+            }
+          }
         });
         stepBalls(balls, dt, headTargets);
       },
@@ -3755,9 +3888,9 @@
             ctx.fillStyle = h3.alive ? "#2f6b4a" : "#333"; roundRect(bx2, 8, bw * clamp(h3.hp / h3.max, 0, 1), 6, 3); ctx.fill();
             if (insane() && hb !== 1) text("boy " + (hb + 1), h3.baseX * W, 24, 9.5, "#cdeccf", "center", "bold");   // the middle label would collide with the title
           }
-          text(insane() ? "THE VISITORS" : "THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
+          text(insane() ? "PUGNAROK" : "THE GRANDFATHER SERPENT", W / 2, 32, 11, "#cdeccf", "center", "bold");
         }
-        heads.forEach(function (h) { if (h.alive || h.seg[0].y < H + 240) drawSerpent(h.seg, h.open, h.flashT > 0, "visitor"); });
+        heads.forEach(function (h) { if (h.alive || h.seg[0].y < H + 240) drawSerpent(h.seg, h.open, h.flashT > 0, "pug"); });
         for (var s2 = 0; s2 < spits.length; s2++) {
           if (insane()) { ctx.fillStyle = "#c6e84a"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 7, 0.3, 2.2); ctx.stroke(); }
           else { ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(spits[s2].x, spits[s2].y, 6, 0, 7); ctx.fill(); }
@@ -3765,7 +3898,14 @@
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
-        heads.forEach(function (h) { if (h.open && phase === "fight") text(insane() ? "BOOP IT!" : "FIRE!", h.seg[0].x, h.seg[0].y - 40, 15, "#ffd24a", "center", "bold"); });
+        heads.forEach(function (h) {
+          if (!h.alive || phase !== "fight") return;
+          text(insane() ? (h.open ? "BOOP IT!" : "FIRE!") : (h.open ? "FIRE!" : ""), h.seg[0].x, h.seg[0].y - 40, h.open ? 15 : 12, "#ffd24a", "center", "bold");
+          if (insane()) {
+            ctx.strokeStyle = "rgba(255,210,74," + (0.3 + 0.3 * Math.abs(Math.sin(seaT * 8 + h.ph))) + ")"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(h.seg[0].x, h.seg[0].y, hasMut("bighead") ? 42 : 34, 0, 7); ctx.stroke();
+          }
+        });
         if (flashW > 0) { ctx.fillStyle = "rgba(255,255,255," + flashW * 1.8 + ")"; ctx.fillRect(0, 0, W, H); }
         if (phase === "intro") prompt.render();
         if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 140); text(insane() ? "ALL THREE GOOD BOYS SATISFIED" : "THE DEEP TAKES IT BACK!", W / 2, H / 2 - 28, 21, "#8fd6a0", "center", "bold"); text(insane() ? "+300 points (belly rubs)   +200 gold" : "+300 points   +200 gold", W / 2, H / 2 + 6, 17, "#e0b25c", "center", "bold"); text("tap to make port", W / 2, H / 2 + 44, 11.5, "rgba(244,231,201,.6)"); }
@@ -3829,7 +3969,7 @@
           }
         }
         var tx = dash && dash.going ? dash.x : sx2, ty = dash && dash.going ? dash.y : H * 0.18;
-        stepBalls(balls, dt, [{ x: tx, y: ty, r: 20, onHit: function (b) {
+        stepBalls(balls, dt, [{ x: tx, y: ty, r: insane() ? 28 : 20, onHit: function (b) {
           hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
           if (hp <= 0) {
             phase = "done"; loot = randInt(40, 60); addGold(loot); addScore(80); G.shipsBeaten++; SFX.win(); shake(10); feat("sloopboss");
@@ -4016,7 +4156,7 @@
         var targets2 = [];
         ships.forEach(function (s3) {
           if (!s3.alive) return;
-          targets2.push({ x: s3.x, y: H * 0.16, r: 24, onHit: function (b) {
+          targets2.push({ x: s3.x, y: H * 0.16, r: insane() ? 30 : 24, onHit: function (b) {
             s3.hp--; splash(b.x, b.y, 8, "#e08c6a"); SFX.hit();
             if (s3.hp <= 0) {
               s3.alive = false; addScore(90); addGold(50); loot += 50; SFX.win(); shake(12);
@@ -4123,7 +4263,7 @@
           }
           toast("THE DROWNED SWIM IN SCHOOLS — find the gap!"); SFX.thunder();
         }
-        stepBalls(balls, dt, [{ x: jx, y: H * 0.17, r: hasMut("bighead") ? 36 : 28, onHit: function (b) {
+        stepBalls(balls, dt, [{ x: jx, y: H * 0.17, r: hasMut("bighead") ? 44 : 36, onHit: function (b) {
           hp--; splash(b.x, b.y, 10, "#8fd6a0"); SFX.hit(); shake(3);
           if (hp <= 0) {
             phase = "done"; addScore(200); addGold(120); SFX.win(); shake(18); feat("davyjones");
@@ -4152,6 +4292,11 @@
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-6, -13, 1.4, 0, 7); ctx.arc(6, -13, 1.4, 0, 7); ctx.fill();
         ctx.fillStyle = "#c9b26a"; ctx.fillRect(-34, 6, 12, 16);                                       // the ledger
         ctx.restore();
+        if (phase === "fight") {
+          ctx.strokeStyle = "rgba(255,210,74," + (0.35 + 0.35 * Math.abs(Math.sin(seaT * 8))) + ")"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(jx, H * 0.17, hasMut("bighead") ? 44 : 36, 0, 7); ctx.stroke();
+          text("FIRE!", jx, H * 0.17 - 52, 14, "#ffd24a", "center", "bold");
+        }
         if (phase !== "intro") {
           var bw3 = 160, hx3 = W / 2 - bw3 / 2;
           ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx3 - 2, 6, bw3 + 4, 12, 5); ctx.fill();
@@ -4234,7 +4379,7 @@
           if (applyWhirlpool(dt, whirl, px, py)) { damage(1); shake(12); whirl = null; whirlT = rand(8, 11); }
           else if (whirl.life <= 0) { whirl = null; whirlT = rand(8, 11); }
         }
-        stepBalls(balls, dt, [{ x: gx2, y: H * 0.16, r: hasMut("bighead") ? 40 : 30, onHit: function (b) {
+        stepBalls(balls, dt, [{ x: gx2, y: H * 0.16, r: hasMut("bighead") ? 48 : 38, onHit: function (b) {
           hp--; splash(b.x, b.y, 10, "#bfe8ff"); SFX.hit(); shake(3);
           if (hp <= 0) {
             phase = "done"; addScore(250); addGold(150); SFX.win(); shake(20); feat("poseidon");
@@ -4261,6 +4406,11 @@
         ctx.beginPath(); ctx.moveTo(30, 34); ctx.lineTo(30, -30); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(22, -18); ctx.lineTo(22, -32); ctx.moveTo(30, -22); ctx.lineTo(30, -36); ctx.moveTo(38, -18); ctx.lineTo(38, -32); ctx.stroke();
         ctx.restore();
+        if (phase === "fight") {
+          ctx.strokeStyle = "rgba(255,210,74," + (0.35 + 0.35 * Math.abs(Math.sin(seaT * 8))) + ")"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(gx2, H * 0.16, hasMut("bighead") ? 48 : 38, 0, 7); ctx.stroke();
+          text("FIRE!", gx2, H * 0.16 - 56, 14, "#ffd24a", "center", "bold");
+        }
         if (phase !== "intro") {
           var bw4 = 170, hx4 = W / 2 - bw4 / 2;
           ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(hx4 - 2, 6, bw4 + 4, 12, 5); ctx.fill();
@@ -4282,14 +4432,18 @@
   }
 
   // ---------------------------------------------------------------- KRAKEN (M2, Windward Passage)
-  // A yarn promoted into gameplay: telegraphed tentacles rise from below in
-  // random lanes; shoot the arms or keep clear, and outlast the encounter.
+  // A yarn promoted into gameplay: telegraphed tentacles rise from below, and
+  // a central beak/body sits up top so you can actually shoot the boss down
+  // (kids kept asking). Outlasting still works if you prefer to dodge.
   function KrakenScene() {
-    var phase = "intro", prompt = null, t = 0, dur = 20, balls = [], fireGun = gunner();
+    var phase = "intro", prompt = null, t = 0, dur = 22, balls = [], fireGun = gunner();
     var tentacles = [], spawnT = 1.2;
+    var bodyHp = Math.max(6, Math.round(10 * diff().hp)), bodyMax = bodyHp;
+    var bodyX = W * 0.5, bodyY = -40, bodyRisen = false;
+    var hitR = hasMut("bighead") ? 40 : 32;
     return {
-      debugWin: function () { t = dur; tentacles = []; },
-      enter: function () { prompt = Prompt("THE KRAKEN", "Sailors swore something vast slept in these straits. This one is a sea story — shoot the arms or keep clear, and outlast it.", function () { phase = "fight"; }, "🌀 SEA YARN"); },
+      debugWin: function () { bodyHp = 0; phase = "done"; addScore(90); addGold(40); feat("kraken"); },
+      enter: function () { prompt = Prompt("THE KRAKEN", "Sailors swore something vast slept in these straits. Shoot the arms, blast the beak when it rises, or keep clear and outlast it — your call.", function () { phase = "fight"; }, insane() ? "🌀 MULTIVERSE YARN" : "🌀 SEA YARN"); },
       update: function (dt) {
         seaT += dt;
         if (phase === "intro") { prompt.update(dt); return; }
@@ -4298,9 +4452,17 @@
         helm(dt, 1, 0.5);
         var px = G.shipX * W, py = shipYPx();
         if (fireGun(dt)) { playerShot(px, py - 20, -430).forEach(function (b) { balls.push(b); }); SFX.fire(); smoke(px, py - 18, 2); }
+        // The beak rises early and stays — this is the shootable boss body.
+        if (!bodyRisen) {
+          bodyY = lerp(bodyY, H * 0.2, clamp(2.2 * dt, 0, 1));
+          if (Math.abs(bodyY - H * 0.2) < 3) bodyRisen = true;
+        } else {
+          bodyX = W * 0.5 + Math.sin(t * 1.4) * W * 0.18;
+          bodyY = H * 0.2 + Math.sin(t * 2.1) * 10;
+        }
         spawnT -= dt;
-        if (spawnT <= 0 && tentacles.length < 2 && t < dur - 2) {
-          spawnT = rand(2.0, 3.0);
+        if (spawnT <= 0 && tentacles.length < 3 && t < dur - 2 && bodyHp > 0) {
+          spawnT = rand(1.6, 2.6);
           var lane = clamp(px + rand(-170, 170), W * 0.12, W * 0.88);
           tentacles.push({ x: lane, y: H + 80, target: H * rand(0.4, 0.55), state: "warn", warn: 0.9 + warnBonus() * 0.3, hold: 1.4, hp: 2 });
         }
@@ -4315,15 +4477,28 @@
           } else { tc.y += 160 * dt; if (tc.y > H + 150) { tentacles.splice(i, 1); continue; } }
         }
         var krakenTargets = [];
+        if (bodyHp > 0 && bodyY > 0) {
+          krakenTargets.push({ x: bodyX, y: bodyY, r: hitR, onHit: function () {
+            bodyHp--; splash(bodyX, bodyY, 12, "#3c7f58"); SFX.hit(); shake(5);
+            if (hasMut("confetti") || insane()) {
+              for (var cf = 0; cf < 8; cf++) spawn(bodyX, bodyY, { vx: rand(-120, 120), vy: rand(-140, -20), g: 240, life: 0.5, r: rand(2, 3.5), c: choice(["#8fd6a0", "#ffd24a", "#fff"]) });
+            }
+            if (bodyHp <= 0) {
+              phase = "done"; addScore(90); addGold(40); SFX.win(); shake(16); feat("kraken");
+              tentacles.forEach(function (tc2) { tc2.state = "sink"; });
+              for (var k = 0; k < 36; k++) spawn(bodyX, bodyY, { vx: rand(-200, 200), vy: rand(-220, 60), g: 260, life: rand(0.6, 1.4), r: rand(2, 6), c: choice(["#3c7f58", "#8fd6a0", "#f7d84a", "#fff"]) });
+            }
+          } });
+        }
         tentacles.forEach(function (tc2) {
           if (tc2.state !== "hold" && tc2.state !== "rise") return;
-          krakenTargets.push({ x: tc2.x, y: tc2.y, r: 24, onHit: function () {
+          krakenTargets.push({ x: tc2.x, y: tc2.y, r: 26, onHit: function () {
             tc2.hp--; splash(tc2.x, tc2.y, 8, "#3c7f58"); SFX.hit();
             if (tc2.hp <= 0) { addScore(35); addGold(10); SFX.win(); tc2.state = "sink"; tc2.hold = 0; }
           } });
         });
         stepBalls(balls, dt, krakenTargets);
-        if (t >= dur && tentacles.length === 0) { phase = "done"; addScore(60); SFX.win(); }
+        if (bodyHp > 0 && t >= dur && tentacles.length === 0) { phase = "done"; addScore(60); SFX.win(); }
       },
       render: function () {
         drawSea(G.pal, seaT * 55, false);
@@ -4339,12 +4514,32 @@
           for (var s = 0; s < 9; s++) seg.push({ x: tc.x + Math.sin(s * 0.6 + seaT * 3) * 12, y: tc.y + s * 22 });
           drawSerpent(seg, false, false);
         }
+        // The beak / body — a big shootable knot of tentacles at the top
+        if (bodyHp > 0 && bodyY > -20) {
+          ctx.save(); ctx.translate(bodyX, bodyY);
+          ctx.fillStyle = "#2f6b4a";
+          ctx.beginPath(); ctx.ellipse(0, 8, 34, 22, 0, 0, 7); ctx.fill();
+          ctx.fillStyle = "#1f4a35";
+          ctx.beginPath(); ctx.ellipse(0, 14, 18, 10, 0, 0, 7); ctx.fill();   // beak
+          ctx.fillStyle = "#f7d84a"; ctx.beginPath(); ctx.arc(-12, 0, 5, 0, 7); ctx.arc(12, 0, 5, 0, 7); ctx.fill();
+          ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-12, 0, 2.2, 0, 7); ctx.arc(12, 0, 2.2, 0, 7); ctx.fill();
+          ctx.restore();
+          if (phase === "fight") {
+            ctx.strokeStyle = "rgba(255,210,74," + (0.35 + 0.35 * Math.abs(Math.sin(seaT * 8))) + ")"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(bodyX, bodyY, hitR, 0, 7); ctx.stroke();
+            text("FIRE — shoot the beak!", bodyX, bodyY - 48, 13, "#ffd24a", "center", "bold");
+          }
+          var bw = 140, bx = W / 2 - bw / 2;
+          ctx.fillStyle = "rgba(0,0,0,.4)"; roundRect(bx - 2, 6, bw + 4, 12, 5); ctx.fill();
+          ctx.fillStyle = "#2f6b4a"; roundRect(bx, 8, bw * clamp(bodyHp / bodyMax, 0, 1), 8, 4); ctx.fill();
+          text("THE KRAKEN", W / 2, 32, 11, "#cdeccf", "center", "bold");
+        }
         drawBalls(balls);
         drawShip(G.shipX * W, shipYPx(), 1.6, playerShipOpts());
         drawParts(); drawHUD();
         if (phase === "intro") prompt.render();
-        if (phase === "fight" && t < 2.4) { ctx.globalAlpha = clamp(2.4 - t, 0, 1); text("Shoot the arms or keep clear. Outlast it.", W / 2, H * 0.5, 15, "#cdeccf", "center", "bold"); ctx.globalAlpha = 1; }
-        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 130); text("IT SLIPS BACK UNDER", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text("+60 points", W / 2, H / 2 + 6, 16, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 36, 11.5, "rgba(244,231,201,.6)"); }
+        if (phase === "fight" && t < 2.8) { ctx.globalAlpha = clamp(2.8 - t, 0, 1); text("Shoot the beak. Clip the arms. Or just outlast it.", W / 2, H * 0.55, 15, "#cdeccf", "center", "bold"); ctx.globalAlpha = 1; }
+        if (phase === "done") { var w = clamp(W * 0.78, 260, 430); panel(W / 2, H / 2, w, 130); text(bodyHp <= 0 ? "THE BEAK GOES UNDER!" : "IT SLIPS BACK UNDER", W / 2, H / 2 - 26, 19, "#8fd6a0", "center", "bold"); text(bodyHp <= 0 ? "+90 points   +40 gold" : "+60 points", W / 2, H / 2 + 6, 16, "#e0b25c", "center", "bold"); text("tap to sail on", W / 2, H / 2 + 36, 11.5, "rgba(244,231,201,.6)"); }
       }
     };
   }
@@ -4724,11 +4919,10 @@
     { id: "serpent", name: "The Serpent's Wake", desc: "Drive off the Cape Cod serpent.", unlock: function () { return SAVE.feats && SAVE.feats.serpent; }, opts: { hull: "#2f6b4a", deck: "#3c7f58", sail: "#d6ffd0", flag: "#245239" } },
     { id: "lamp",    name: "The Lamplighter",   desc: "Run the Mooncusser's gauntlet without one false light fooling you.", unlock: function () { return SAVE.feats && SAVE.feats.cleanlights; }, opts: { hull: "#2b2a3a", deck: "#3d3b52", sail: "#f6efd8", flag: "#ffe4a0", trim: "#ffd24a" } },
     { id: "duck",    name: "The Rubber Ducky",  desc: "Speak the secret word.", unlock: function () { return SAVE.secretUnlock; }, opts: { hull: "#f7d84a", deck: "#ffe27a", sail: "#fff6d6", flag: "#e08c2a" } },
-    // Renamed when the pug left the multiverse. `pugnarok` is still honoured so
-    // anyone who earned this livery under the old boss keeps it — feats are
-    // one-way flags in localStorage and there is no migration step.
-    { id: "goodboy", name: "The Saucer",        desc: "See the Visitors home.", unlock: function () { return SAVE.feats && (SAVE.feats.visitors || SAVE.feats.pugnarok); }, opts: { hull: "#3a4a5e", deck: "#5c6478", sail: "#d8fbe8", flag: "#9fe8c0", trim: "#6ad8ff" } },
-    { id: "carapace", name: "The Carapace",     desc: "Best the Lobster of Unusual Size.", unlock: function () { return SAVE.feats && (SAVE.feats.bigclaw || SAVE.feats.seapug); }, opts: { hull: "#8f2f1e", deck: "#c4402a", sail: "#ffe0d2", flag: "#ff8a6a", trim: "#ffd24a" } }
+    // Renamed briefly when the pug left; restored. `visitors` / `bigclaw` still unlock
+    // so anyone who earned the livery under the lobster/visitor era keeps it.
+    { id: "goodboy", name: "The Good Boy",      desc: "Befriend PUGNAROK.", unlock: function () { return SAVE.feats && (SAVE.feats.pugnarok || SAVE.feats.visitors); }, opts: { hull: "#c9905a", deck: "#e8c087", sail: "#fff3dc", flag: "#ff8a9a", trim: "#4a3020" } },
+    { id: "carapace", name: "The Carapace",     desc: "Best the Sea Pug (or the Lobster, once).", unlock: function () { return SAVE.feats && (SAVE.feats.seapug || SAVE.feats.bigclaw); }, opts: { hull: "#8f2f1e", deck: "#c4402a", sail: "#ffe0d2", flag: "#ff8a6a", trim: "#ffd24a" } }
   ];
   function currentSkin() {
     for (var i = 0; i < SHIP_SKINS.length; i++) if (SHIP_SKINS[i].id === SAVE.skin && SHIP_SKINS[i].unlock()) return SHIP_SKINS[i];
