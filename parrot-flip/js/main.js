@@ -315,16 +315,6 @@
   const RESULT_MS = 1500;
   const TURN_SECONDS = 10, FIRE_SECONDS = 4;   // flip clock (less when ON FIRE)
 
-  // ── Parrot-only gameplay layer (Whydah-Unit port) ──────────────────────────
-  // Everything below this line only ever runs when FLIP_FORCE_SKIN='parrot' is
-  // set (only true in this port's index.html). game.js's meta.wingBonus /
-  // meta.captainsCall are optional fields that stay undefined everywhere else,
-  // so the base bottle-flip game is byte-for-byte unaffected by any of it.
-  const WING_BONUS_SLOSH = 0.45;    // |liquid.slosh| at landing (max range ±1)
-  const CAPTAINS_CALL_CHANCE = 0.15; // rolled once per non-fire turn
-  let captainsCallActive = false;    // this turn is a Captain's Call (pre-roll)
-  let bonusBanner = null;            // { text, t } — a short canvas toast on a bonus payout
-
   // Per-turn flip clock — only for HUMAN turns (CPU flicks on its own ~1.1s).
   function startTurnTimer(seconds) {
     turnTimeLimit = turnTimeLeft = seconds;
@@ -357,17 +347,9 @@
   function clearTimers() { clearTimeout(aiTimer); clearTimeout(elimTimer); }
 
   function landingMeta(landingInfo = null) {
-    const meta = { perfect: !!(landingInfo && landingInfo.perfect) };
-    if (FORCE_SKIN === 'parrot') {
-      // Reward a hard, expressive flip that still lands clean — the wing was
-      // fully flared (high |slosh|) at the instant of landing. A pure READ of
-      // physics.js's existing liquid-pendulum state; nothing about the sim
-      // itself changes for this or any other skin.
-      const liquid = Physics.getLiquid();
-      meta.wingBonus = !!(liquid && Math.abs(liquid.slosh) >= WING_BONUS_SLOSH);
-      meta.captainsCall = captainsCallActive;
-    }
-    return meta;
+    return {
+      perfect: !!(landingInfo && landingInfo.perfect),
+    };
   }
 
   // CPU takes its turn: aim near the sweet-spot flick, with error set by difficulty.
@@ -461,7 +443,6 @@
           showGlow   = result === 'MAKE';
           const landingInfo = Physics.getLastLandingInfo();
           game.resolveFlip(result, landingMeta(landingInfo));
-          if (FORCE_SKIN === 'parrot') reactToLanding(result);
           break;
         }
       }
@@ -492,14 +473,6 @@
       }
     }
 
-    // Parrot-only bonus toast: counts down independently of game.state (a
-    // Captain's Call payout should keep fading even once the next turn's
-    // pass-card is already up). Always null in the base game.
-    if (bonusBanner) {
-      bonusBanner.t -= dt;
-      if (bonusBanner.t <= 0) bonusBanner = null;
-    }
-
     Renderer.frame(dt, {
       bottle:      Physics.getBottle(),
       liquid:      Physics.getLiquid(),
@@ -515,37 +488,7 @@
       suddenDeath: game.inSuddenDeath(),
       awaitingFlick: game.state === GAME_STATES.TURN_START || game.state === GAME_STATES.ON_FIRE,
       stake:       game.pointCount,
-      bonusBanner,
     });
-  }
-
-  // Parrot-only cosmetic + bonus-outcome reactions to a just-resolved landing.
-  // Called strictly AFTER game.resolveFlip — onResult (a synchronous state
-  // callback fired from inside resolveFlip) has already played the base
-  // 'make'/'miss'/'ignite'/'life' sfx and set the HTML streak banner, so this
-  // only ever layers extra flourish on top; it never races or replaces it.
-  function reactToLanding(result) {
-    const bottle = Physics.getBottle();
-    const groundY = Physics.getGroundY();
-    if (!bottle) return;
-    const { x, y } = Renderer.projectBottleCenter(bottle, groundY);
-    const color = game.currentPlayer()?.color || '#d6412c';
-
-    if (result === 'MAKE') {
-      Renderer.spawnFeathers(x, y - 30, 6, color);
-      Sound.play('squawk');
-    }
-
-    const lines = [];
-    if (game.wingBonusGain > 0) lines.push('🦜 WING FLARE! +1 life');
-    if (game.captainsCallGain > 0) {
-      lines.push(`🦜 CAPTAIN'S CALL — the crew gains ${game.captainsCallGain === 1 ? 'a life' : game.captainsCallGain + ' lives'}!`);
-    }
-    if (lines.length) {
-      Renderer.spawnFeathers(x, y - 30, 16, color);
-      Sound.play('life');
-      bonusBanner = { text: lines.join('   '), t: 1.6, dur: 1.6 };
-    }
   }
 
   // ── State callbacks ────────────────────────────────────────────────────────
@@ -557,16 +500,6 @@
     if (intenseTurn) Sound.play('tension');
     Input.enable();
     startTurnTimer(TURN_SECONDS);
-  }
-
-  // Parrot-only: overwrite the turn banner when this turn is a Captain's
-  // Call. A no-op (leaves the banner untouched) whenever captainsCallActive
-  // is false — which is always, outside the Whydah-Unit build.
-  function applyCaptainsCallBanner(p) {
-    turnBannerEl.classList.toggle('captains-call', captainsCallActive);
-    if (captainsCallActive) {
-      turnBannerEl.textContent = `🦜 CAPTAIN'S CALL — ${p.name}, land it for the crew!`;
-    }
   }
 
   // Big flavor-colored "PASS TO {name}" handoff card (a deferred-input gate).
@@ -594,8 +527,6 @@
     streakBannerEl.className = 'streak-banner';
 
     if (game.practice) {
-      captainsCallActive = false;
-      turnBannerEl.classList.remove('captains-call');
       turnBannerEl.textContent = '🎯 Practice';
       pointCountEl.textContent = '';
       Input.enable();
@@ -606,15 +537,8 @@
     intenseTurn = game.missWouldEliminate();   // make-it-or-break-it
     pointCountEl.textContent = '';   // stake shown big on the canvas (drawStake)
 
-    // Captain's Call: parrot-only, rolled fresh each normal turn — never on
-    // the game's opening flip, never during an ON FIRE run (onOnFire forces
-    // it off below).
-    captainsCallActive = FORCE_SKIN === 'parrot' && game.turnCounter > 0 &&
-      Math.random() < CAPTAINS_CALL_CHANCE;
-
     if (p.isAI) {
       turnBannerEl.textContent = `${p.name}'s turn · CPU`;
-      applyCaptainsCallBanner(p);
       if (intenseTurn) Sound.play('tension');
       Input.disable();
       flipHintEl.classList.add('hidden');
@@ -624,7 +548,6 @@
     }
 
     turnBannerEl.textContent = `${p.name}'s turn`;
-    applyCaptainsCallBanner(p);
     updateHUD();
     // "PASS TO {name}" handoff card — only with >2 players still alive (with 2
     // it's obvious whose turn it is). Defers input + flip clock + the tension
@@ -647,10 +570,6 @@
     passScreen.classList.add('hidden');
     Physics.resetBottle();
     flipHintEl.classList.remove('hidden');
-    // Captain's Call never applies on an ON FIRE bonus flip — keeps the two
-    // bonus systems from overlapping.
-    captainsCallActive = false;
-    turnBannerEl.classList.remove('captains-call');
 
     const p = game.currentPlayer();
     intenseTurn = game.missWouldEliminate();   // only in sudden death (ON FIRE miss is otherwise free)

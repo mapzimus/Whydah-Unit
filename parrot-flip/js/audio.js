@@ -62,12 +62,6 @@ const Sound = (() => {
       tone({ freq: 55,  type: 'sine', dur: 0.18, gain: 0.3, delay: 0.0 });
       tone({ freq: 55,  type: 'sine', dur: 0.18, gain: 0.3, delay: 0.45 });
     },
-    // Parrot-only (Whydah-Unit port): a bright two-note chirp layered on top
-    // of the base 'make' chime. Never triggered by anything in the base game.
-    squawk: () => {
-      tone({ freq: 1800, slideTo: 1200, type: 'square', dur: 0.05, gain: 0.14 });
-      tone({ freq: 2200, slideTo: 1500, type: 'square', dur: 0.06, gain: 0.10, delay: 0.05 });
-    },
   };
 
   // Haptic vibration patterns (ms) per event — no-op on devices without it
