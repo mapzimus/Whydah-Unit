@@ -66,7 +66,7 @@
 
   // ---------------------------------------------------------------- input
   var input = { left: false, right: false, up: false, down: false, fire: false, firePressed: false,
-                leftPressed: false, rightPressed: false,
+                leftPressed: false, rightPressed: false, upPressed: false,
                 px: 0, py: 0, pDown: false, pPressed: false };
 
   // the secret word: typing it on the title screen opens INSANE mode —
@@ -92,7 +92,7 @@
     }
     if (k === "arrowleft" || k === "a") { if (!input.left) input.leftPressed = true; input.left = true; }
     else if (k === "arrowright" || k === "d") { if (!input.right) input.rightPressed = true; input.right = true; }
-    else if (k === "arrowup" || k === "w") input.up = true;
+    else if (k === "arrowup" || k === "w") { if (!input.up) input.upPressed = true; input.up = true; }
     else if (k === "arrowdown" || k === "s") input.down = true;
     else if (k === " " || k === "spacebar" || k === "enter") { if (!input.fire) input.firePressed = true; input.fire = true; }
     else if (k === "q" || k === "e") { if (G && (G.special || 0) >= 1) G.blastReq = true; }
@@ -218,8 +218,10 @@
   // fire the player's guns: returns the balls to push (twin broadside at Long Nines II)
   function playerShot(x, y, vy) {
     var v = vy * ballSpeedMul();
-    if (twinShot()) return [{ x: x - 9, y: y, vy: v, own: 1 }, { x: x + 9, y: y, vy: v, own: 1 }];
-    return [{ x: x, y: y, vy: v, own: 1 }];
+    var style = (G && (G.chaosNow === "rainbowshot" || G.chaos2 === "rainbowshot")) ? "rainbow" : undefined;
+    function ball(bx) { var o = { x: bx, y: y, vy: v, own: 1 }; if (style) o.style = style; return o; }
+    if (twinShot()) return [ball(x - 9), ball(x + 9)];
+    return [ball(x)];
   }
   // hold-to-autofire: each scene makes a gunner and asks it every frame
   function gunner() {
@@ -286,6 +288,10 @@
         ctx.strokeStyle = "rgba(200,235,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.stroke();
       } else if (style === "venom") {
         ctx.fillStyle = "#8fd6a0"; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill();
+      } else if (style === "rainbow") {
+        ctx.fillStyle = "hsl(" + ((seaT * 220 + b.x + b.y) % 360) + ",85%,60%)";
+        ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.stroke();
       } else {
         ctx.fillStyle = b.own ? "#f4e7c9" : "#e08c6a"; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill();
       }
@@ -293,7 +299,7 @@
   }
   // INSANE per-run mutators: persistent for the whole voyage, unlike consumeMod's one-shots
   function hasMut(id) { return !!(G && G.mutators && G.mutators.indexOf(id) >= 0); }
-  var MUTATOR_POOL = ["cheese", "gullswatch", "bighead", "bouncy", "pugrug", "confetti", "rubber"];
+  var MUTATOR_POOL = ["cheese", "gullswatch", "bighead", "bouncy", "pugrug", "confetti", "rubber", "parrots", "squawk"];
   var MUTATOR_LINES = {
     cheese: "🧀 coins are cheese wheels",
     gullswatch: "👀 the gulls are watching",
@@ -301,7 +307,9 @@
     bouncy: "🎈 everything is bouncier",
     pugrug: "🐶🛏 pug in the rug — flying carpets!",
     confetti: "🎊 hits explode into confetti",
-    rubber: "🦆 everything squeaks"
+    rubber: "🦆 everything squeaks",
+    parrots: "🦜 the flock is all parrots now",
+    squawk: "📣 every hit comes with a SQUAWK"
   };
   // one-shot G.mods flag: read then clear in one call so scenes never forget to reset a mod
   function consumeMod(name) {
@@ -390,13 +398,16 @@
     { id: "freeprince",w: 1, tag: "yarn",   t: "The Free Prince", b: "They say Bellamy made a grand speech about robbing the rich. It comes from a book written years later. The crew likes the story anyway.", fx: { s: 20 } },
     { id: "navysail",  w: 2, tag: "record", t: "A King's ship on the horizon", b: "Man-of-war. Big guns. The crew waits on your word.", choice: [
         { l: "Fight her", r: "You turn to fight. Bold. Maybe too bold.", fx: { s: 30 }, mod: "navy" },
-        { l: "Run north", r: "You crowd on sail and slip away in the dark.", fx: { s: 10 } } ] },
+        { l: "Run north", r: "You crowd on sail and slip away in the dark.", fx: { s: 10 } },
+        { l: "Hail and bluff", r: "You fly false colors and wave. It works. Barely. The crew invents a new toast.", fx: { s: 20, g: 5 } } ] },
     { id: "scurvy",    w: 2, tag: "",       t: "Scurvy signs", b: "Gums bleeding. Old sailors know what comes next without fresh food.", choice: [
         { l: "Buy fresh stores (20 gold)", r: "Limes and greens from a fishing town. The crew mends.", fx: { g: -20 } },
-        { l: "Sail on", r: "You push on. Some of the crew get weaker.", fx: { h: -1 } } ] },
+        { l: "Sail on", r: "You push on. Some of the crew get weaker.", fx: { h: -1 } },
+        { l: "Raid a fruit boat", r: "Oranges for everyone. The merchant is furious. The gums improve.", fx: { s: 15, g: 10 } } ] },
     { id: "derelict",  w: 2, tag: "",       t: "A ghost ship drifts past", b: "Sails ragged. Nobody at the wheel. Nobody anywhere.", choice: [
         { l: "Board her", r: "You find a sea chest of coin. And a smell you will not forget.", fx: { g: 45, s: 10 } },
-        { l: "Let her pass", r: "Some doors are better left shut. The crew agrees.", fx: { s: 10 } } ] },
+        { l: "Let her pass", r: "Some doors are better left shut. The crew agrees.", fx: { s: 10 } },
+        { l: "Tow her for salvage", r: "Hours of work for a prize that barely pays. The crew mutters.", fx: { s: -5, g: 15 } } ] },
     { id: "leaks",     w: 3, tag: "",       t: "Working the pumps", b: "She takes water at the seams. All hands pump through the night.", fx: { s: -10 } },
     { id: "rats",      w: 3, tag: "",       t: "Rats in the bread room", b: "They got into the stores. The cook is furious.", fx: { g: -10 } },
     { id: "doldrums",  w: 3, tag: "",       t: "Dead calm", b: "No wind. The sails hang like laundry. You drift and wait.", fx: { s: -10 } },
@@ -461,25 +472,57 @@
     { id: "wigdolph",   w: 2, tag: "multi", ins: true, t: "A dolphin in a powdered wig", b: "It surfaces wearing a magistrate's wig and regards the crew with enormous disappointment. Three sailors apologize without knowing why.", fx: { s: 25, g: 10 } },
     { id: "biscuittax", w: 2, tag: "multi", ins: true, t: "THE SEAGULL TAX", b: "An extremely organized flock presents the ship with paperwork and levies one biscuit per crewman. No court in the multiverse will hear your case.", fx: { g: -25 } },
     { id: "upsidesea",  w: 2, tag: "multi", ins: true, t: "You drift through the Upside-Sea", b: "For one full watch the fish fly, the gulls swim, and the anchor floats. The less said about what the soup did, the better.", fx: { s: 30, h: -1 } },
-    { id: "politewhale", w: 2, tag: "multi", ins: true, t: "A very polite whale", b: "It surfaces alongside, says nothing, nods respectfully at each member of the crew in turn, and leaves. Everyone stands a little straighter.", fx: { s: 10 } },
+    { id: "politewhale", w: 2, tag: "multi", ins: true, t: "A very polite whale", b: "It surfaces alongside and regards the crew. It is waiting for a response.", choice: [
+        { l: "Nod back", r: "It nods to each hand in turn and leaves. Everyone stands a little straighter.", fx: { s: 20 } },
+        { l: "Offer tea", r: "It has none. You have none. The gesture is everything. +respect.", fx: { s: 25, g: -5 } },
+        { l: "Ask for directions", r: "It points north with an entire fluke. Accurate, if dramatic.", fx: { s: 15 } } ] },
     { id: "hydrate",   w: 2, tag: "multi", ins: true, t: "A giant emotional-support cup", b: "An enormous pastel tumbler drifts by, full of ice-cold fresh water. The crew is so hydrated. So, so hydrated.", fx: { h: 1 } },
     { id: "gymbird",    w: 2, tag: "multi", ins: true, t: "The bodybuilding albatross", b: "It refuses to fly with the flock. It stays on the bowsprit doing wing exercises with two pieces of driftwood. The crew is inspired.", fx: { s: 15 } },
     { id: "luckwave",   w: 2, tag: "multi", ins: true, t: "A wave of impossible luck", b: "Every rope coils itself. Every knot unties on request. The bosun wins three card games in a row against himself and refuses to explain how.", fx: { s: 35 } },
     { id: "countcrab",  w: 1, tag: "multi", ins: true, t: "The counting crab", b: "A crab boards the ship and counts the cannonballs. It gets a different number every time. Every number is somehow correct.", fx: { s: 15 } },
     { id: "lorefish",  w: 1, tag: "multi", ins: true, t: "The fish with lore", b: "A cod surfaces and explains its tragic backstory in full. It takes forty minutes. Honestly? Kind of fire.", fx: { s: 20, g: 5 } },
-    { id: "lobstercap", w: 1, tag: "multi", ins: true, t: "The lobster takes the wheel", b: "A lobster the size of a dinner table hauls itself up the side, takes the wheel in both claws, and holds a course better than anyone aboard. Nobody dares relieve it.", fx: { s: 20 } },
+    { id: "lobstercap", w: 2, tag: "multi", ins: true, t: "The lobster takes the wheel", b: "A lobster the size of a dinner table hauls itself up the side and reaches for the helm. The crew freezes.", choice: [
+        { l: "Let it steer", r: "It holds a course better than anyone aboard. Nobody dares relieve it.", fx: { s: 25 } },
+        { l: "Arm-wrestle it", r: "You lose. Honorably. It tips its claw and leaves a gold doubloon.", fx: { g: 15, s: 10 } },
+        { l: "Offer butter", r: "Deeply offensive. It leaves in a huff. The crew applauds your nerve.", fx: { s: 20 } } ] },
     { id: "pugcaptain", w: 2, tag: "multi", ins: true, t: "The pug takes the wheel", b: "For six glorious minutes the ship's pug is captain. It makes no orders, changes no headings, and is the best captain anyone has ever served under.", fx: { s: 20 } },
     { id: "pugrug",     w: 3, tag: "multi", ins: true, t: "A pug in the rug", b: "A flying carpet drifts past with a very good boy asleep in the middle of it. The crew salutes. The carpet salutes back. Nobody knows how.", fx: { s: 25, g: 15 } },
     { id: "whalesong",  w: 2, tag: "multi", ins: true, t: "The whales are harmonizing", b: "Every whale within ten miles surfaces at once and holds a single low note for four minutes. The bosun bursts into tears and will not discuss it.", fx: { s: 25 } },
     { id: "abduct",     w: 2, tag: "multi", ins: true, t: "They took the cook", b: "A green beam, a polite humming noise, and the cook is gone. He is returned nineteen minutes later with a new haircut and three recipes nobody has ever heard of.", fx: { s: 20, g: 10 } },
     { id: "crablaw",    w: 2, tag: "multi", ins: true, t: "Everything is legally a crab", b: "A visiting delegation explains that given enough time, everything in the sea becomes a crab. They present diagrams. The diagrams are, unfortunately, convincing.", fx: { s: 20 } },
-    { id: "duckdirect",w: 1, tag: "multi", ins: true, t: "A duck asks for directions", b: "A duck the size of a longboat paddles up alongside and asks, quite politely, if this is the way to Maine. The crew is too stunned to lie.", fx: { s: 15, g: 5 } },
+    { id: "duckdirect",w: 2, tag: "multi", ins: true, t: "A duck asks for directions", b: "A duck the size of a longboat paddles up alongside and asks, quite politely, if this is the way to Maine.", choice: [
+        { l: "Tell the truth", r: "Yes. It tips an invisible hat and paddles on. The crew is too stunned to lie next time.", fx: { s: 20, g: 5 } },
+        { l: "Send it south", r: "It somehow still arrives in Maine first. It leaves you a note. The note is judgmental.", fx: { s: 10 } },
+        { l: "Ask it to lead", r: "Worst navigator. Best moral support. You get there anyway.", fx: { s: 25 } } ] },
     // the 2026 wave — the great meme reset, in period costume
     { id: "memereset",  w: 2, tag: "multi", ins: true, t: "THE GREAT MEME RESET", b: "A wave rolls through the multiverse and every joke on the ship resets to the classics. The bosun tells a knock-knock joke. It absolutely destroys the whole crew.", fx: { s: 30 } },
     { id: "pbplease",   w: 2, tag: "multi", ins: true, t: "\"Peanut butter, please.\"", b: "A colossal, extremely polite grouper surfaces and asks for peanut butter. You have none. It says, \"Peanut butter, please,\" again, exactly as politely. This continues for one hour.", fx: { s: 20, g: -5 } },
     { id: "doomscroll", w: 2, tag: "multi", ins: true, t: "Doomscrolling the logbook", b: "The navigator has been re-reading the same three pages of the ship's log for four hours. 'One more entry,' he says. He does not mean it.", fx: { s: 15, h: -1 } },
     { id: "cityboy",    w: 2, tag: "multi", ins: true, t: "A city boy joins the crew", b: "He has never seen the sea. He calls the mast 'the big pole' and the anchor 'the heavy.' Somehow he is the best sailor aboard by Thursday.", fx: { s: 20, g: 5 } },
-    { id: "googoo",     w: 1, tag: "multi", ins: true, t: "The parrot regresses", b: "The ship's parrot, a decorated veteran of four voyages, abruptly switches to baby talk. 'Googoo gaga,' it announces, with the confidence of an admiral. The crew salutes.", fx: { s: 15 } },
+    { id: "googoo",     w: 2, tag: "multi", ins: true, t: "The parrot regresses", b: "The ship's parrot, a decorated veteran of four voyages, abruptly switches to baby talk. The crew waits on your ruling.", choice: [
+        { l: "Salute it", r: "'Googoo gaga,' it announces, with the confidence of an admiral. The crew salutes. Somehow this works.", fx: { s: 20 } },
+        { l: "Correct it", r: "You remind it of the Articles. It switches to Latin. Nobody asked for that.", fx: { s: 10, g: -5 } },
+        { l: "Promote it", r: "Acting Boatswain Squawk holds the post for six minutes. Best six minutes of the voyage.", fx: { s: 30, g: 10 } } ] },
+    { id: "parrotjury", w: 3, tag: "multi", ins: true, t: "A jury of parrots", b: "Twelve parrots land on the rail and declare themselves a court. They want a verdict on the last biscuit.", choice: [
+        { l: "Give them the biscuit", r: "Justice is served. The jury dissolves into feathers and crumbs.", fx: { g: -10, s: 25 } },
+        { l: "Argue jurisdiction", r: "You cite three maritime codes. They cite the Law of the Multiverse. You lose on a technicality.", fx: { s: 15 } },
+        { l: "Bribe the foreparrot", r: "One cracker, one hung jury. The biscuit is yours. The foreparrot owes you a favor.", fx: { g: -5, s: 20 } } ] },
+    { id: "pollywant",  w: 3, tag: "multi", ins: true, t: "Polly wants… what, exactly?", b: "A parrot the size of a topsail yard lands on the bowsprit and screams a demand. Nobody can agree what it said.", choice: [
+        { l: "Crackers", r: "Correct. It takes the whole barrel. The crew invents a new swear.", fx: { g: -15, s: 20 } },
+        { l: "Revenge", r: "Also correct, somehow. It flies off toward a King's ship and does not come back. Distant screaming.", fx: { s: 35 } },
+        { l: "A nap", r: "It curls up in the crow's nest and snores like a cannon. Best lookout of the voyage.", fx: { s: 15, h: 1 } } ] },
+    { id: "parrotmutiny", w: 2, tag: "multi", ins: true, t: "The parrots call a mutiny", b: "Every talking bird on the ship has signed Articles of Squawk. They demand equal shares and fewer bath days.", choice: [
+        { l: "Negotiate", r: "You grant one cracker per watch and veto power on sea shanties. Peace returns.", fx: { g: -10, s: 25 } },
+        { l: "Counter-mutiny", r: "The cats briefly take the quarterdeck. It does not go well for anyone.", fx: { h: -1, s: 15 } },
+        { l: "Join them", r: "You are briefly elected Pirate King of the Birds. Your reign lasts one biscuit.", fx: { s: 40, g: 5 } } ] },
+    { id: "lostpolly",  w: 2, tag: "multi", ins: true, t: "A lost parrot with a map", b: "It has a scrap of chart stuck to its foot and looks personally offended by longitude.", choice: [
+        { l: "Follow the map", r: "It leads you to a sandbar full of crackers. Weirdly profitable.", fx: { g: 25, s: 15 } },
+        { l: "Free the chart", r: "The chart is useless. The parrot is free. It names a sandbar after you.", fx: { s: 20 } },
+        { l: "Hire it", r: "Acting Navigator Polly. Gets you there sideways, but gets you there.", fx: { s: 30 } } ] },
+    { id: "crackerrain", w: 2, tag: "multi", ins: true, t: "It starts raining crackers", b: "From a clear sky. The bosun weeps with joy. The cook weeps with despair. Choose carefully.", choice: [
+        { l: "Open the holds", r: "You bank a fortune in dry goods. The decks are ankle-deep in saltines.", fx: { g: 40, s: 10 } },
+        { l: "Feed the flock", r: "Every bird within a league arrives. They sing your name for an hour.", fx: { s: 35 } },
+        { l: "Ignore it", r: "You pretend this is normal. It stops. Nobody believes you later.", fx: { s: 5 } } ] },
     { id: "talltales",  w: 2, tag: "multi", ins: true, t: "Tall tales about the captain", b: "The crew starts a game: the captain once rowed to Maine in one night. The captain counted every fish in the sea, twice. The captain's stare becalms storms. Points for the best one.", fx: { s: 25 } },
     // legends and myths, mission-weighted via m: so they surface near where they belong
     { id: "davyjones", w: 2, tag: "yarn", ins: true,   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
@@ -547,7 +590,7 @@
       obj: "Privateers are working these waters. Sink them before they sink you.",
       decor: "sounds", pal: null, legCount: 1, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: false, waterspout: 0, icy: true, mooncusser: false },
       slots: { event: [0, 1], mini: [0, 1], battle: 2 }, signature: "flagship", battleTier: 2, routeVariant: true },
-    { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "The Haunted Piano Sound",
+    { id: "rhodeisland", name: "Rhode Island Sound",    nameInsane: "Parrot Bay",
       sub: "The Ghost Light",
       obj: "A light burns where no ship should be. Keep clear of it.",
       decor: "sounds", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: true, waterspout: 0, icy: true, mooncusser: false, siren: 0.6 },
@@ -661,8 +704,8 @@
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false, cargo: 0,
-      // INSANE: three per-run mutators, drawn fresh every voyage and announced on the first mission card
-      mutators: runMode === "insane" ? shuffle(MUTATOR_POOL.slice()).slice(0, 3) : []
+      // INSANE: four per-run mutators, drawn fresh every voyage and announced on the first mission card
+      mutators: runMode === "insane" ? shuffle(MUTATOR_POOL.slice()).slice(0, 4) : []
     };
     // Build the voyage mission by mission: an intro card, then sail legs with
     // that mission's random events/minis/battles spread through the gaps,
@@ -687,6 +730,7 @@
 
       var randomBeats = [];
       var nEv = randInt(msn.slots.event[0], msn.slots.event[1]);
+      if (runMode === "insane" && msn.legCount > 0) nEv = Math.min(nEv + 1, msn.slots.event[1] + 1);   // one extra card in the multiverse
       if (nEv > 0) {
         var evs = pickEvents(nEv, G.route, usedEventIds, msn.id);
         evs.forEach(function (e) { usedEventIds.push(e.id); G.events.push(e.id); randomBeats.push({ kind: "event", ev: e, m: mi }); });
@@ -747,6 +791,7 @@
     G.special = Math.max(0, (G.special || 0) - (gameMode() === "easy" ? 0.12 : 0.25)); if (G.special < 1) G.blastReady = false;
     SFX.hit(); shake(6 + n * 2);
     spawn(G.shipX * W, shipYPx() - 50, { vy: -55, life: 1.0, r: 15, c: "#ff8a7a", shape: "txt", txt: "-" + n + " ♥" });
+    if (hasMut("squawk")) toast(choice(["🦜 SQUAWK!", "🦜 RAWWRK!", "🦜 PIECES OF EIGHT!", "🦜 WHO'S A GOOD SHIP?"]));
     if (G.hull <= 0) { G.hull = 0; endRun(false, true); }
     else if (insane() && fakeDeathT <= 0 && chance(0.08)) { fakeDeathT = 3; SFX.lose(); }
   }
@@ -913,27 +958,59 @@
       });
     }
   }
-  // gulls wheel over the open water to seaward — never over the shore on the left
+  // gulls (and, on INSANE, sometimes parrots) wheel over the open water
   var GULL_LO = 0.30, GULL_HI = 0.80;
   function spawnGull() {
-    if (gulls.length >= 4) return;   // they wheel forever now, so cap the flock
-    gulls.push({ x: rand(GULL_LO, GULL_HI) * W, y: rand(H * 0.05, H * 0.17), vx: (chance(0.5) ? 1 : -1) * rand(20, 40), ph: rand(0, 6), s: rand(0.7, 1.15) });
+    var cap = (hasMut("parrots") || (G && G.chaosNow === "parrotstorm") || (G && G.chaos2 === "parrotstorm")) ? 8 : 4;
+    if (gulls.length >= cap) return;
+    var isParrot = hasMut("parrots") || (G && (G.chaosNow === "parrotstorm" || G.chaos2 === "parrotstorm")) || (insane() && chance(0.2));
+    gulls.push({
+      x: rand(GULL_LO, GULL_HI) * W, y: rand(H * 0.05, H * 0.17),
+      vx: (chance(0.5) ? 1 : -1) * rand(20, 40), ph: rand(0, 6), s: rand(0.7, 1.15),
+      parrot: isParrot, hue: rand(0, 360)
+    });
   }
   function updateGulls(dt) {
-    if (gulls.length < 3 && chance(0.006)) spawnGull();
-    var watching = hasMut("gullswatch");
+    var want = (hasMut("parrots") || (G && (G.chaosNow === "parrotstorm" || G.chaos2 === "parrotstorm"))) ? 6 : 3;
+    if (gulls.length < want && chance(0.01)) spawnGull();
+    else if (gulls.length < 3 && chance(0.006)) spawnGull();
+    var watching = hasMut("gullswatch") || hasMut("parrots");
     for (var i = gulls.length - 1; i >= 0; i--) {
-      var g = gulls[i]; g.x += g.vx * dt; g.ph += dt * 9; g.y += Math.sin(g.ph * 0.3) * 6 * dt;
-      if (g.x < GULL_LO * W || g.x > GULL_HI * W) g.vx *= -1;   // wheel back over the water, don't drift onto land
-      if (watching && G) g.vx = lerp(g.vx, Math.sign(G.shipX * W - g.x) * 26, 0.4 * dt);   // they track the ship, unblinking
+      var g = gulls[i]; g.x += g.vx * dt; g.ph += dt * (g.parrot ? 12 : 9); g.y += Math.sin(g.ph * 0.3) * 6 * dt;
+      if (g.x < GULL_LO * W || g.x > GULL_HI * W) g.vx *= -1;
+      if (watching && G) g.vx = lerp(g.vx, Math.sign(G.shipX * W - g.x) * 26, 0.4 * dt);
     }
+  }
+  function drawParrotBird(g, flip) {
+    var f = Math.sin(g.ph) * 5 * g.s, s = 8 * g.s;
+    ctx.save(); ctx.translate(g.x, g.y);
+    if (flip < 0) ctx.scale(1, -1);
+    // body
+    ctx.fillStyle = "hsl(" + ((g.hue || 0) % 360) + ",75%,50%)";
+    ctx.beginPath(); ctx.ellipse(0, 2, 7 * g.s, 5 * g.s, 0, 0, 7); ctx.fill();
+    // head
+    ctx.fillStyle = "hsl(" + (((g.hue || 0) + 40) % 360) + ",70%,55%)";
+    ctx.beginPath(); ctx.arc(-6 * g.s, -2 * g.s, 4.5 * g.s, 0, 7); ctx.fill();
+    // beak
+    ctx.fillStyle = "#f0a030";
+    ctx.beginPath(); ctx.moveTo(-10 * g.s, -2 * g.s); ctx.lineTo(-15 * g.s, 0); ctx.lineTo(-10 * g.s, 1 * g.s); ctx.closePath(); ctx.fill();
+    // wing flap
+    ctx.strokeStyle = "hsl(" + (((g.hue || 0) + 80) % 360) + ",70%,40%)"; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(-2 * g.s, 0); ctx.quadraticCurveTo(2 * g.s, -6 * g.s + f, 10 * g.s, 0);
+    ctx.stroke();
+    // eye
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-7 * g.s, -3 * g.s, 1.2 * g.s, 0, 7); ctx.fill();
+    ctx.restore();
   }
   function drawGulls(pal) {
     ctx.strokeStyle = pal.sky[1] === "#141d30" ? "rgba(200,215,230,.7)" : "rgba(40,50,60,.75)";
     ctx.lineWidth = 2; ctx.lineCap = "round";
-    var flip = (G && G.gullFlip) ? -1 : 1;   // insane-mode chaos: they fly upside down
+    var flip = (G && G.gullFlip) ? -1 : 1;
     for (var i = 0; i < gulls.length; i++) {
-      var g = gulls[i], f = Math.sin(g.ph) * 4 * g.s, s = 7 * g.s;
+      var g = gulls[i];
+      if (g.parrot) { drawParrotBird(g, flip); continue; }
+      var f = Math.sin(g.ph) * 4 * g.s, s = 7 * g.s;
       ctx.beginPath();
       ctx.moveTo(g.x - s, g.y + f); ctx.quadraticCurveTo(g.x - s * 0.4, g.y - 3 * g.s * flip, g.x, g.y);
       ctx.quadraticCurveTo(g.x + s * 0.4, g.y - 3 * g.s * flip, g.x + s, g.y + f);
@@ -2051,7 +2128,7 @@
     var coinArcAt = chance(0.7) ? rand(2, Math.max(3, legTime * 0.5)) : -1;
     var slow = consumeMod("slow") ? 0.75 : 1;
     G.mods.fogNow = !!consumeMod("fog");
-    // insane mode: every leg spins the multiverse wheel — even more options now
+    // insane mode: every leg spins the multiverse wheel — sometimes twice
     var CHAOS = {
       gravity:   "🌀 LOW GRAVITY — everything drifts!",
       speed:     "⚡ SPEED RUN!",
@@ -2064,14 +2141,30 @@
       suddennight: "🌙 SUDDEN NIGHT!",
       pugrug:    "🐶🛏 PUG IN THE RUG — collect the flying carpets!",
       spinship:  "🔄 THE SHIP WON'T STOP SPINNING!",
-      zoom:      "🔍 EVERYTHING IS HUGE!"
+      zoom:      "🔍 EVERYTHING IS HUGE!",
+      parrotstorm: "🦜 PARROT STORM — the sky is full of them!",
+      crackerrain: "🍪 CRACKER RAIN — free snacks everywhere!",
+      rainbowshot: "🌈 RAINBOW BROADSIDE — every shot is a party!",
+      poltergeist: "👻 POLTERGEIST HELM — random nudges!"
     };
-    var chaosPool = ["gravity", "speed", "tiny", "gigacoins", "mirror", "disco", "upsidegulls", "crablegally", "suddennight", "pugrug", "spinship", "zoom"];
+    var chaosPool = ["gravity", "speed", "tiny", "gigacoins", "mirror", "disco", "upsidegulls", "crablegally", "suddennight", "pugrug", "spinship", "zoom", "parrotstorm", "crackerrain", "rainbowshot", "poltergeist"];
     var chaos = insane() ? choice(chaosPool) : null;
-    if (chaos === "speed") legTime *= 0.8;
-    var hitR = chaos === "tiny" ? 9 : 16, shipScale = chaos === "tiny" ? 1.1 : (chaos === "zoom" ? 2.2 : 1.6);
-    var spMul = chaos === "speed" ? 1.35 : 1, discoT = 0;
-    var rugT = (chaos === "pugrug" || hasMut("pugrug")) ? rand(1.2, 2.4) : (insane() && chance(0.35) ? rand(3, 5) : -1);
+    var chaos2 = null;
+    if (chaos && chance(0.32)) {
+      var pool2 = chaosPool.filter(function (c) { return c !== chaos; });
+      // don't stack tiny+zoom or suddennight+disco (palette fights)
+      if (chaos === "tiny") pool2 = pool2.filter(function (c) { return c !== "zoom"; });
+      if (chaos === "zoom") pool2 = pool2.filter(function (c) { return c !== "tiny"; });
+      chaos2 = choice(pool2);
+    }
+    function hasChaos(id) { return chaos === id || chaos2 === id; }
+    if (hasChaos("speed")) legTime *= 0.8;
+    var hitR = hasChaos("tiny") ? 9 : 16;
+    var shipScale = hasChaos("tiny") ? 1.1 : (hasChaos("zoom") ? 2.2 : 1.6);
+    var spMul = hasChaos("speed") ? 1.35 : 1, discoT = 0;
+    var rugT = (hasChaos("pugrug") || hasMut("pugrug")) ? rand(1.2, 2.4) : (insane() && chance(0.35) ? rand(3, 5) : -1);
+    var crackerT = hasChaos("crackerrain") ? rand(0.6, 1.2) : -1;
+    var polterT = hasChaos("poltergeist") ? rand(1.5, 2.5) : -1;
     // themed leg systems: a scripted waterspout and/or whirlpool, at most one
     // each per leg, plus a constant current push where the mission calls for it
     var waterspoutAt = (lm.waterspout > 0 && chance(lm.waterspout) && legTime > 6) ? rand(3, legTime - 2) : -1;
@@ -2100,6 +2193,7 @@
       else if (o.sub === "ingot") { addGold(40); addScore(26); SFX.win(); coinBurst(o.x, o.y); coinBurst(o.x, o.y); spawn(o.x, o.y - 18, { vy: -52, life: 1.0, r: 14, c: "#dfe7ee", shape: "txt", txt: "🥈 +40 🪙" }); }
       else if (o.sub === "chest") { addGold(70); addScore(50); SFX.win(); toast("💰 TREASURE CHEST! +70 🪙"); for (var cp = 0; cp < 20; cp++) spawn(o.x, o.y, { vx: rand(-140, 140), vy: rand(-170, -20), g: 240, life: rand(0.5, 1.1), r: rand(2, 4.5), c: choice(["#f7d84a", "#ffcf6a", "#fff", "#e0b25c"]) }); spawn(o.x, o.y - 22, { vy: -56, life: 1.2, r: 17, c: "#f7d84a", shape: "txt", txt: "💰 +70 🪙" }); }
       else if (o.sub === "pugrug") { addGold(25); addScore(40); SFX.win(); toast("🐶🛏 PUG IN THE RUG! +25 🪙"); for (var pr = 0; pr < 14; pr++) spawn(o.x, o.y, { vx: rand(-100, 100), vy: rand(-140, -20), g: 220, life: rand(0.4, 0.9), r: rand(2, 4), c: choice(["#c44a3a", "#f7d84a", "#e8c087", "#fff"]) }); spawn(o.x, o.y - 20, { vy: -52, life: 1.1, r: 16, c: "#ff8a9a", shape: "txt", txt: "🐶 +25" }); }
+      else if (o.sub === "cracker") { addGold(8); addScore(12); SFX.coin(); toast("🍪 CRACKER! +8 🪙"); spawn(o.x, o.y - 14, { vy: -48, life: 0.8, r: 12, c: "#e8c087", shape: "txt", txt: "+8" }); }
       else if (o.sub === "wind") { addScore(8); SFX.good(); if (legDone < 0) t += 0.6; }
       else if (o.sub === "heart") {
         if (G.hull < G.maxHull) { repair(1); toast("❤ +1 heart"); spawn(o.x, o.y - 18, { vy: -50, life: 1.0, r: 14, c: "#ff8a7a", shape: "txt", txt: "+1 ♥" }); }
@@ -2111,18 +2205,29 @@
     return {
       enter: function () {
         document.body.classList.add("playing");
-        if (lm.night || chaos === "suddennight") G.pal = PALETTES[4];   // moonlit night, forced for the Ghost Light leg (or the chaos roll)
+        if (lm.night || hasChaos("suddennight")) G.pal = PALETTES[4];
         else if (chance(0.5)) G.pal = choice(insane() ? PALETTES_INSANE : PALETTES);
-        G.gullFlip = chaos === "upsidegulls";
+        G.gullFlip = hasChaos("upsidegulls");
         G.chaosNow = chaos;
-        if (chance(0.6)) spawnGull();
+        G.chaos2 = chaos2;
+        if (chance(0.6) || hasChaos("parrotstorm") || hasMut("parrots")) spawnGull();
+        if (hasChaos("parrotstorm") || hasMut("parrots")) { for (var pg = 0; pg < 4; pg++) spawnGull(); }
         if (chaos) { toast(CHAOS[chaos]); SFX.good(); }
+        if (chaos2) { toast("AND ALSO — " + CHAOS[chaos2]); SFX.good(); }
       },
       update: function (dt) {
         seaT += dt; t += dt; updateGulls(dt);
         if (window.__FS_DEBUG) { window.__sailObjs = objs.length; window.__sailPeak = Math.max(window.__sailPeak || 0, objs.length); }
-        if (chaos === "disco") { discoT -= dt; if (discoT <= 0) { discoT = 2; G.pal = choice(PALETTES_INSANE); } }
-        helm(dt, slow, 0.4, chaos === "mirror");
+        if (hasChaos("disco")) { discoT -= dt; if (discoT <= 0) { discoT = 2; G.pal = choice(PALETTES_INSANE); } }
+        helm(dt, slow, 0.4, hasChaos("mirror"));
+        if (hasChaos("poltergeist")) {
+          polterT -= dt;
+          if (polterT <= 0) {
+            polterT = rand(1.2, 2.4);
+            G.shipX = clamp(G.shipX + (chance(0.5) ? 1 : -1) * rand(0.06, 0.12), steerLo(), steerHi());
+            toast(chance(0.5) ? "👻 the helm twitched!" : "👻 something shoved the bow!");
+          }
+        }
         if (lm.current) G.shipX = clamp(G.shipX + lm.current * 0.09 * dt, steerLo(), steerHi());   // the Gulf Stream fights the helm
         var shipPX = G.shipX * W, shipPY = shipYPx();
         // guns are live on the open sea: blast the wreckage out of your way (hold to keep firing)
@@ -2150,8 +2255,8 @@
           var pk = { kind: "pickup", sub: choice(picks), r: 15, sp: rand(135, 190) * spMul / ease };
           if (pk.sub === "crate" || pk.sub === "chest") { pk.r = 18; }
           if (pk.sub === "gem") { pk.gemc = choice(["#e05c9c", "#5cc7e0", "#7ae05c", "#e0b25c", "#b06ce0"]); }
-          if (pk.sub === "coin" && chaos === "gigacoins") { pk.r = 26; pk.giga = true; }
-          if (chaos === "gravity") pk.drift2 = rand(-55, 55);
+          if (pk.sub === "coin" && hasChaos("gigacoins")) { pk.r = 26; pk.giga = true; }
+          if (hasChaos("gravity")) pk.drift2 = rand(-55, 55);
           pk.x = rand(0.12, 0.88) * W; pk.y = -40; pk.a = 0; pk.spin = rand(-2, 2);
           objs.push(pk);
         }
@@ -2172,7 +2277,7 @@
             // the old shark-fin cue, reskinned as a harmless jellyfish bloom
             hz = { kind: "fin", sub: "jelly", r: 15, sp: rand(90, 130) * spMul / ease, drift: rand(-40, 40) };
           }
-          if (chaos === "gravity") hz.drift2 = rand(-55, 55);
+          if (hasChaos("gravity")) hz.drift2 = rand(-55, 55);
           hz.x = rand(0.1, 0.9) * W; hz.y = -40; hz.a = 0; hz.spin = rand(-2, 2);
           objs.push(hz);
         }
@@ -2216,8 +2321,16 @@
         if (rugT > 0 && legDone < 0 && t < legTime - 1.5) {
           rugT -= dt;
           if (rugT <= 0) {
-            rugT = (chaos === "pugrug" || hasMut("pugrug")) ? rand(2.2, 3.8) : rand(4.5, 7);
+            rugT = (hasChaos("pugrug") || hasMut("pugrug")) ? rand(2.2, 3.8) : rand(4.5, 7);
             objs.push({ kind: "pickup", sub: "pugrug", r: 28, sp: rand(90, 130) * spMul, x: rand(0.15, 0.85) * W, y: -50, a: 0, spin: rand(-0.6, 0.6), drift2: rand(-40, 40) });
+          }
+        }
+        // Cracker rain: edible chaos pickups
+        if (crackerT > 0 && legDone < 0 && t < legTime - 1) {
+          crackerT -= dt;
+          if (crackerT <= 0) {
+            crackerT = rand(0.5, 1.1);
+            objs.push({ kind: "pickup", sub: "cracker", r: 12, sp: rand(140, 200) * spMul, x: rand(0.1, 0.9) * W, y: -30, a: 0, spin: rand(-3, 3) });
           }
         }
         // the narrows: a wall of land with one gap — thread the needle. On the
@@ -2360,12 +2473,20 @@
             continue;
           }
           if (o.kind === "narrows") { drawNarrows(o); continue; }
-          if (o.kind === "hazard" && chaos === "crablegally") { drawCrabEnemy(o.x, o.y, o.r / 20, {}); continue; }
+          if (o.kind === "hazard" && hasChaos("crablegally")) { drawCrabEnemy(o.x, o.y, o.r / 20, {}); continue; }
           if (o.kind === "pickup" && o.sub === "pugrug") {
             drawPugRug(o.x, o.y, 1.05, Math.sin(seaT * 3 + o.x * 0.01) * 4);
             continue;
           }
-          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a + (chaos === "spinship" && o.kind === "hazard" ? seaT * 2 : 0));
+          if (o.kind === "pickup" && o.sub === "cracker") {
+            ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a);
+            ctx.fillStyle = "#e8c087"; ctx.fillRect(-10, -6, 20, 12);
+            ctx.strokeStyle = "#c9905a"; ctx.lineWidth = 1.5; ctx.strokeRect(-10, -6, 20, 12);
+            ctx.fillStyle = "#c9905a"; for (var ck = 0; ck < 5; ck++) ctx.fillRect(-7 + ck * 3.5, -3, 1.5, 6);
+            ctx.restore();
+            continue;
+          }
+          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.a + (hasChaos("spinship") && o.kind === "hazard" ? seaT * 2 : 0));
           if (o.kind === "hazard") {
             if (o.sub === "rock") { ctx.fillStyle = o.hp < 2 ? "#6e6a62" : "#5b5750"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.12)"; blob(o.r * 0.6); }
             else if (o.sub === "ice") { ctx.fillStyle = "#cfe9f2"; blob(o.r); ctx.fillStyle = "rgba(255,255,255,.5)"; blob(o.r * 0.5); }
@@ -2389,7 +2510,7 @@
         ctx.globalAlpha = 1;
         if (wspout) drawWaterspoutWarn(wspout);
         drawBalls(balls);
-        drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts(chaos === "spinship" ? { rot: seaT * 3.5 } : null));
+        drawShip(G.shipX * W, shipYPx(), shipScale, playerShipOpts(hasChaos("spinship") ? { rot: seaT * 3.5 } : null));
         drawParts();
         // fog: a radial lantern-circle mask instead of a flat haze; night: a warm glow around the ship
         if (lm.fog) {
@@ -2585,7 +2706,7 @@
       return bits.join("   ");
     }
     return {
-      debugChoose: function (i) { if (ev.choice && picked < 0) { picked = i; var c = ev.choice[i]; apply(c.fx); applyMod(c.mod); resultLine = c.r; } },
+      debugChoose: function (i) { if (ev.choice && picked < 0 && i >= 0 && i < ev.choice.length) { picked = i; var c = ev.choice[i]; apply(c.fx); applyMod(c.mod); resultLine = c.r; } },
       update: function (dt) {
         seaT += dt; t += dt; updateGulls(dt);
         if (hasFx && !barDone) {
@@ -2605,8 +2726,10 @@
         }
         if (!ev.choice && !applied && t > 0.2) { applied = true; apply(appliedFx); applyMod(ev.mod); }
         if (ev.choice && picked < 0) {
+          var nCh = ev.choice.length;
           if (input.leftPressed) this.debugChoose(0);
-          else if (input.rightPressed) this.debugChoose(1);
+          else if (input.rightPressed) this.debugChoose(nCh > 2 ? nCh - 1 : 1);
+          else if (input.upPressed && nCh >= 3) this.debugChoose(1);   // middle option
           return;
         }
         if (t > 0.3 && consumeTap()) advance();
@@ -2617,8 +2740,11 @@
         drawParts(); drawHUD();
         var w = clamp(W * 0.86, 290, 480);
         var isChoice = !!ev.choice && picked < 0;
+        var nCh = isChoice ? ev.choice.length : 0;
         var barLive = hasFx && !barDone;
-        var h = isChoice ? 236 : (barLive ? 224 : 196);
+        // 3+ choices stack taller; 2 stay side-by-side
+        var h = isChoice ? (nCh >= 3 ? 210 + nCh * 48 : 236) : (barLive ? 224 : 196);
+        if (h > H * 0.78) h = H * 0.78;
         var cy = H * 0.42;
         panel(W / 2, cy, w, h);
         var tagTxt = ev.tag === "record" ? "⚓ FROM THE RECORD" : (ev.tag === "yarn" ? "🌀 SEA YARN" : (ev.tag === "multi" ? "🤯 MULTIVERSE" : "LIFE AT SEA"));
@@ -2627,11 +2753,21 @@
         text(ev.t, W / 2, cy - h / 2 + 50, 21, "#e0b25c", "center", "bold");
         var yy = wrapText(ev.b, W / 2, cy - h / 2 + 76, w - 46, 20, 14, "#f4e7c9");
         if (isChoice) {
-          var bw = (w - 60) / 2, by = cy + h / 2 - 58;
-          for (var i = 0; i < 2; i++) {
-            if (uiButton(W / 2 - w / 2 + 20 + i * (bw + 20), by, bw, 44, ev.choice[i].l, { size: 13.5, color: i === 0 ? "#96341f" : "#1f4a5e" })) this.debugChoose(i);
+          var cols = ["#96341f", "#1f4a5e", "#2c5e38", "#6a4a1e"];
+          if (nCh >= 3) {
+            var bh = 40, gap = 8, stackH = nCh * bh + (nCh - 1) * gap;
+            var by0 = cy + h / 2 - 18 - stackH;
+            for (var i = 0; i < nCh; i++) {
+              if (uiButton(W / 2 - (w - 48) / 2, by0 + i * (bh + gap), w - 48, bh, ev.choice[i].l, { size: 13, color: cols[i % cols.length] })) this.debugChoose(i);
+            }
+            text("tap a choice  ·  ← / ↑ / → for 1st / mid / last", W / 2, cy + h / 2 - 6, 10.5, "rgba(244,231,201,.55)");
+          } else {
+            var bw = (w - 60) / 2, by = cy + h / 2 - 58;
+            for (var j = 0; j < 2; j++) {
+              if (uiButton(W / 2 - w / 2 + 20 + j * (bw + 20), by, bw, 44, ev.choice[j].l, { size: 13.5, color: cols[j] })) this.debugChoose(j);
+            }
+            text("or press ← for the first, → for the second", W / 2, cy + h / 2 - 4, 10.5, "rgba(244,231,201,.55)");
           }
-          text("or press ← for the first, → for the second", W / 2, cy + h / 2 - 4, 10.5, "rgba(244,231,201,.55)");
         } else if (barLive) {
           var bw2 = w - 80, bx2 = W / 2 - bw2 / 2, by2 = cy + h / 2 - 52;
           ctx.fillStyle = "rgba(244,231,201,.18)"; roundRect(bx2, by2, bw2, 14, 7); ctx.fill();
@@ -2799,8 +2935,23 @@
     ctx.fillRect(-12 * s, -22 * s, 8 * s, 10 * s); ctx.fillRect(4 * s, -20 * s, 8 * s, 8 * s);
     ctx.restore();
   }
-  // The multiverse roster: sea monsters, visitors, appliances, and the return of the pug.
+  function drawParrotEnemy(x, y, s, opt) {
+    ctx.save(); ctx.translate(x, y); if (opt.blink) ctx.globalAlpha = 0.35;
+    var bob = Math.sin(seaT * 5) * 3 * s;
+    ctx.translate(0, bob);
+    ctx.fillStyle = "#2ecc71"; ctx.beginPath(); ctx.ellipse(0, 4 * s, 18 * s, 14 * s, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#27ae60"; ctx.beginPath(); ctx.ellipse(14 * s, 0, 10 * s, 16 * s, 0.4, 0, 7); ctx.fill();   // wing
+    ctx.fillStyle = "#e74c3c"; ctx.beginPath(); ctx.arc(-14 * s, -6 * s, 10 * s, 0, 7); ctx.fill();               // head
+    ctx.fillStyle = "#f39c12";
+    ctx.beginPath(); ctx.moveTo(-22 * s, -6 * s); ctx.lineTo(-34 * s, -2 * s); ctx.lineTo(-22 * s, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-16 * s, -8 * s, 3 * s, 0, 7); ctx.fill();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(-16 * s, -8 * s, 1.4 * s, 0, 7); ctx.fill();
+    ctx.fillStyle = "#9b59b6"; ctx.beginPath(); ctx.moveTo(10 * s, 14 * s); ctx.lineTo(28 * s, 8 * s); ctx.lineTo(26 * s, 18 * s); ctx.closePath(); ctx.fill();   // tail
+    ctx.restore();
+  }
+  // The multiverse roster: sea monsters, visitors, appliances, pugs, and parrots.
   var SKIN_ENEMIES = [
+    { id: "parrot",   name: "A Very Loud Parrot",          draw: drawParrotEnemy,   projStyle: "note",     deathLine: "It squawks one last 'PIECES OF EIGHT!' and flaps off." },
     { id: "pug",      name: "A Pug in the Rug",            draw: drawPugEnemy,     projStyle: "quack",    deathLine: "It sneezes once, proudly, and sails home on the carpet." },
     { id: "lobster",  name: "The Lobster of Unusual Size", draw: drawLobsterEnemy, projStyle: "bubble",   deathLine: "It clacks once, with dignity, and sinks." },
     { id: "whale",    name: "An Extremely Large Whale",    draw: drawWhaleEnemy,   projStyle: "snowball", deathLine: "It sounds one last time and is gone." },
@@ -5053,7 +5204,7 @@
     drawToasts(paused ? 0 : dt);
     if (paused) drawPauseOverlay();
     ctx.restore();
-    input.pPressed = false; input.firePressed = false; input.leftPressed = false; input.rightPressed = false;
+    input.pPressed = false; input.firePressed = false; input.leftPressed = false; input.rightPressed = false; input.upPressed = false;
     requestAnimationFrame(loop);
   }
 
@@ -5118,7 +5269,7 @@
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
-      skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], chaos: G ? G.chaosNow || null : null }; },
+      skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], chaos: G ? G.chaosNow || null : null, chaos2: G ? G.chaos2 || null : null }; },
       skins: function () { return SHIP_SKINS.map(function (s) { return { id: s.id, name: s.name, open: !!s.unlock() }; }); },
       grantFeat: function (id) { feat(id); },
       setSkin: function (id) { SAVE.skin = id; persist(); return currentSkin().id; },
