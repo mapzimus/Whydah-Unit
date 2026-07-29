@@ -22,7 +22,7 @@
     <div class="crumbs"><a href="../">whydahstory.com</a> / <a href="../photo/">photo</a> / hunt gallery</div>
   </header>
 
-  <p class="muted">Every approved shot, live as it lands. This is the wall for the end-of-day critique.</p>
+  <p class="muted">Every shot, live as it lands. This is the wall for the end-of-day critique.</p>
 
   <div id="gallery"></div>
   <div id="err"></div>
@@ -49,10 +49,12 @@ async function refresh() {
   holder.textContent = '';
   let any = false;
   for (const t of TEAMS) {
-    const state = teamState(rows.filter((r) => r.team === t));
-    const shots = HUNT_ITEMS.map((it) => state[it.id]).filter((r) => r && r.status === 'approved');
+    // every submitted shot (pending or approved) — only staff-retaken photos are hidden
+    const shots = rows.filter((r) => r.team === t && r.status !== 'retake')
+      .sort((a, b) => a.item_id - b.item_id);
     if (!shots.length) continue;
     any = true;
+    const doneItems = new Set(shots.map((r) => r.item_id)).size;
     const grid = el('div', { class: 'photo-grid' });
     for (const r of shots) {
       const url = publicUrl(r.path);
@@ -62,9 +64,9 @@ async function refresh() {
         el('div', { class: 'tile-bar' }, el('span', { class: 'cap', text: '#' + r.item_id + ' ' + itemText(r.item_id) }))));
     }
     holder.appendChild(el('div', { class: 'team-section' },
-      el('h2', { text: 'Team ' + t + ' (' + shots.length + ' of 20)' }), grid));
+      el('h2', { text: 'Team ' + t + ' (' + doneItems + ' of 20)' }), grid));
   }
-  if (!any) holder.appendChild(el('p', { class: 'muted', text: 'Nothing approved yet. The wall fills up as teams shoot.' }));
+  if (!any) holder.appendChild(el('p', { class: 'muted', text: 'Nothing yet. The wall fills up as teams shoot.' }));
 }
 refresh();
 setInterval(refresh, 10000);

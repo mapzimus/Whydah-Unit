@@ -43,7 +43,7 @@
     <div class="row filter-row" id="filters"></div>
     <div class="counts" id="counts"></div>
     <div id="pendingList"></div>
-    <p class="muted">Refreshes on its own every few seconds. Approve puts the photo in the <a href="gallery.html">gallery</a>. Retake opens the item back up for the team.</p>
+    <p class="muted">Refreshes on its own every few seconds. Photos go straight to the <a href="gallery.html">gallery</a> — no approval needed. Retake pulls a photo off the wall and opens the item back up for the team.</p>
   </div>
 
   <div id="err"></div>
@@ -110,38 +110,33 @@ function render() {
   counts.textContent = '';
   for (const t of TEAMS) {
     const st = teamState(rows.filter((r) => r.team === t));
-    let a = 0, p = 0;
-    for (const id in st) {
-      if (st[id] && st[id].status === 'approved') a++;
-      if (st[id] && st[id].status === 'pending') p++;
-    }
-    counts.appendChild(el('span', { class: 'badge', text: 'Team ' + t + ': ' + a + ' ✔ · ' + p + ' waiting' }));
+    let done = 0;
+    for (const id in st) if (st[id]) done++;
+    counts.appendChild(el('span', { class: 'badge', text: 'Team ' + t + ': ' + done + ' of 20' }));
   }
 
-  // pending queue, newest last so staff work top-down in arrival order
+  // every live submission, newest last so staff can scan in arrival order
   const list = document.getElementById('pendingList');
   list.textContent = '';
-  const pending = rows.filter((r) => r.status === 'pending' && (!filterTeam || r.team === filterTeam));
-  if (!pending.length) {
-    list.appendChild(el('p', { class: 'muted', text: 'Nothing waiting right now.' }));
+  const live = rows.filter((r) => r.status !== 'retake' && (!filterTeam || r.team === filterTeam));
+  if (!live.length) {
+    list.appendChild(el('p', { class: 'muted', text: 'No photos yet.' }));
     return;
   }
-  for (const r of pending) list.appendChild(subCard(r));
+  for (const r of live) list.appendChild(subCard(r));
 }
 
 function subCard(r) {
   const url = publicUrl(r.path);
   const img = el('img', { src: url, alt: '', loading: 'lazy' });
   img.onclick = () => openLightbox(url, 'Team ' + r.team + ' · Item ' + r.item_id);
-  const approveBtn = el('button', { text: '✔ Approve' });
   const retakeBtn = el('button', { class: 'btn-retake', text: '↺ Retake' });
   const card = el('div', { class: 'card sub-card' }, img,
     el('div', { class: 'body' },
       el('div', {}, el('span', { class: 'badge', text: 'Team ' + r.team }), ' ',
         el('strong', { text: ' #' + r.item_id })),
       el('p', { class: 'muted', text: itemText(r.item_id) }),
-      el('div', { class: 'actions' }, approveBtn, retakeBtn)));
-  approveBtn.onclick = () => act(r, 'approved', card);
+      el('div', { class: 'actions' }, retakeBtn)));
   retakeBtn.onclick = () => act(r, 'retake', card);
   return card;
 }

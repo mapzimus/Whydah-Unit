@@ -44,10 +44,9 @@
     <div class="progress-bar row">
       <span class="badge team-badge" id="teamBadge"></span>
       <strong id="score"></strong>
-      <span class="muted" id="pendingNote"></span>
       <a href="#" id="switchTeam" class="muted" style="margin-left:auto">switch team</a>
     </div>
-    <div class="notice">Shoot it, upload it, keep moving. Staff approve from their screen. A ✔ means it counts. If a photo comes back, the card opens up again. Try a new shot.</div>
+    <div class="notice">Shoot it, upload it, keep moving. The second it uploads, it's on the <a href="gallery.html">gallery wall</a> and it counts. Use the camera or pick from your camera roll.</div>
     <div id="list"></div>
   </div>
 
@@ -117,17 +116,15 @@ function showError(msg) {
 
 function render() {
   const state = teamState(rows);
-  let approved = 0, pending = 0;
+  let done = 0;
   const list = document.getElementById('list');
   list.textContent = '';
   for (const it of HUNT_ITEMS) {
     const row = state[it.id];
-    if (row && row.status === 'approved') approved++;
-    if (row && row.status === 'pending') pending++;
+    if (row) done++;
     list.appendChild(card(it, row));
   }
-  document.getElementById('score').textContent = approved + ' of 20 approved';
-  document.getElementById('pendingNote').textContent = pending ? '(' + pending + ' waiting for staff)' : '';
+  document.getElementById('score').textContent = done + ' of 20 done';
 }
 
 function card(it, row) {
@@ -135,19 +132,22 @@ function card(it, row) {
   const body = el('div', { class: 'body' },
     el('p', { class: 'prompt', text: it.text }));
 
-  if (status === 'approved') {
-    body.appendChild(el('div', { class: 'state-approved', text: '✔ Approved. It counts!' }));
-  } else if (status === 'pending') {
-    body.appendChild(el('div', { class: 'state-pending', text: '⏳ Waiting for staff…' }));
+  if (status !== 'empty') {
+    body.appendChild(el('div', { class: 'state-approved', text: '✔ On the wall. It counts!' }));
   } else {
-    const label = el('label', { class: 'btn upload-btn', text: '📷 Shoot / upload' });
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.setAttribute('capture', 'environment');
-    input.onchange = () => input.files[0] && submit(it.id, input.files[0], label);
-    label.appendChild(input);
-    body.appendChild(label);
+    const mkUpload = (text, useCapture) => {
+      const label = el('label', { class: 'btn upload-btn', text });
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      if (useCapture) input.setAttribute('capture', 'environment');
+      input.onchange = () => input.files[0] && submit(it.id, input.files[0], label);
+      label.appendChild(input);
+      return label;
+    };
+    body.appendChild(el('div', { class: 'row', style: 'gap:0.6em; flex-wrap:wrap' },
+      mkUpload('📷 Camera', true),
+      mkUpload('🖼️ Camera roll', false)));
   }
 
   const thumbSrc = row ? publicUrl(row.path) : pendingLocal[it.id];
@@ -157,7 +157,7 @@ function card(it, row) {
     img.onclick = () => openLightbox(thumbSrc, 'Item ' + it.id + ': ' + it.text);
     kids.push(img);
   }
-  return el('div', { class: 'card hunt-card' + (status === 'approved' ? ' done' : '') }, ...kids);
+  return el('div', { class: 'card hunt-card' + (status !== 'empty' ? ' done' : '') }, ...kids);
 }
 
 async function submit(itemId, file, label) {
@@ -167,7 +167,13 @@ async function submit(itemId, file, label) {
     const ext = blob === file ? (file.name.match(/\.[a-zA-Z0-9]+$/) || ['.jpg'])[0] : '.jpg';
     const path = 'hunt/team-' + team + '/item-' + itemId + '-' + Date.now() + ext;
     await storageUpload(path, blob);
-    const row = await dbInsert('hunt_submissions', { team, item_id: itemId, path });
+    let row;
+    try {
+      row = await dbInsert('hunt_submissions', { team, item_id: itemId, path, status: 'approved' });
+    } catch (e) {
+      // DB may not allow setting status on insert — plain insert still shows everywhere
+      row = await dbInsert('hunt_submissions', { team, item_id: itemId, path });
+    }
     pendingLocal[itemId] = URL.createObjectURL(file);
     rows.push(row);
     render();
