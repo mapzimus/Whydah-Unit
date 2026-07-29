@@ -32,7 +32,7 @@ window.WHYDAH_DAYS = [
      so every day after it shifts up one. Filenames and the internal `day` keys
      are UNCHANGED (they are how the entries are looked up) — only the displayed
      `label` moved. Showcase reads Day 20. */
-  { day: 14.5, date: '2026-07-29', title: 'Project Studio',           url: 'day14b.html', label: 'Day 15' },
+  { day: 14.5, date: '2026-07-29', title: 'The Trial',                url: 'day14b.html', label: 'Day 15' },
   { day: 15, date: '2026-07-30', title: 'Pitch Day',                  url: 'day15.html', label: 'Day 16' },
   { day: 16, date: '2026-08-03', title: 'Synthesis Studio',           url: 'day16.html', label: 'Day 17' },
   { day: 17, date: '2026-08-04', title: 'Build Day 1',                url: 'day17.html', label: 'Day 18' },
