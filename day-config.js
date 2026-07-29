@@ -28,12 +28,16 @@ window.WHYDAH_DAYS = [
      7/22 is harmless — kept for the record. */
   { day: 13, date: '2026-07-27', title: 'Chokepoints: Then and Now',  url: 'day13.html' },
   { day: 14, date: '2026-07-28', title: 'Salem Then and Now',         url: 'day14.html' },
-  { day: 14.5, date: '2026-07-29', title: 'Project Trial Run',        url: 'day14b.html', label: 'Trial Run Day' },
-  { day: 15, date: '2026-07-30', title: 'Pitch Day',                  url: 'day15.html' },
-  { day: 16, date: '2026-08-03', title: 'Synthesis Studio',           url: 'day16.html' },
-  { day: 17, date: '2026-08-04', title: 'Build Day 1',                url: 'day17.html' },
-  { day: 18, date: '2026-08-05', title: 'Build Day 2',                url: 'day18.html' },
-  { day: 19, date: '2026-08-06', title: 'The Showcase',               url: 'day19.html', kind: 'showcase' }
+  /* Renumbered 2026-07-29 (Max): the inserted studio day IS Day 15 to the kids,
+     so every day after it shifts up one. Filenames and the internal `day` keys
+     are UNCHANGED (they are how the entries are looked up) — only the displayed
+     `label` moved. Showcase reads Day 20. */
+  { day: 14.5, date: '2026-07-29', title: 'Project Studio',           url: 'day14b.html', label: 'Day 15' },
+  { day: 15, date: '2026-07-30', title: 'Pitch Day',                  url: 'day15.html', label: 'Day 16' },
+  { day: 16, date: '2026-08-03', title: 'Synthesis Studio',           url: 'day16.html', label: 'Day 17' },
+  { day: 17, date: '2026-08-04', title: 'Build Day 1',                url: 'day17.html', label: 'Day 18' },
+  { day: 18, date: '2026-08-05', title: 'Build Day 2',                url: 'day18.html', label: 'Day 19' },
+  { day: 19, date: '2026-08-06', title: 'The Showcase',               url: 'day19.html', kind: 'showcase', label: 'Day 20' }
 ];
 
 /* ===================== EDIT ABOVE THIS LINE ONLY ===================== */
