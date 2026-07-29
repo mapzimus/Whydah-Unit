@@ -40,6 +40,10 @@
 !photo/
 !photo/**
 
+# Rain-day photo scavenger hunt (added 2026-07-29)
+!photohunt/
+!photohunt/**
+
 # Classroom games hub + Parrot Flip
 !games/
 !games/**

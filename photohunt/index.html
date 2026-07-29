@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Hunt</title>
+<meta name="description" content="Rain day photo scavenger hunt. Pick your team, shoot the list, upload from your phone.">
+<meta name="theme-color" content="#14161a">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
+<link rel="stylesheet" href="../photo/photo.css">
+<style>
+  .team-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1em; margin: 1.2em 0; }
+  .team-pick button { font-size: 1.4em; padding: 1.2em 0.5em; border-radius: 10px; }
+  .team-badge { font-size: 1em; padding: 0.2em 0.8em; }
+  .hunt-card { display: flex; gap: 0.9em; align-items: flex-start; }
+  .hunt-card .num { font-family: Georgia, serif; font-size: 1.4em; color: var(--muted); min-width: 1.4em; text-align: right; }
+  .hunt-card.done .num { color: var(--green); }
+  .hunt-card .body { flex: 1; }
+  .hunt-card .prompt { margin: 0 0 0.5em; }
+  .hunt-card .thumb { width: 84px; height: 84px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: #0d0e11; }
+  .state-pending { color: var(--accent); font-weight: 600; }
+  .state-approved { color: var(--green); font-weight: 600; }
+  .upload-btn input { display: none; }
+  .progress-bar { position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 0.6em 0; border-bottom: 1px solid var(--border); margin-bottom: 1em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-header">
+    <div class="kicker">Photography Unit</div>
+    <h1>🔦 Photo Hunt</h1>
+    <div class="crumbs"><a href="../">whydahstory.com</a> / <a href="../photo/">photo</a> / hunt</div>
+  </header>
+
+  <div id="picker" style="display:none">
+    <h2>Pick your team</h2>
+    <p class="muted">Ask your staff leader if you are not sure.</p>
+    <div class="team-pick" id="teamButtons"></div>
+  </div>
+
+  <div id="hunt" style="display:none">
+    <div class="progress-bar row">
+      <span class="badge team-badge" id="teamBadge"></span>
+      <strong id="score"></strong>
+      <span class="muted" id="pendingNote"></span>
+      <a href="#" id="switchTeam" class="muted" style="margin-left:auto">switch team</a>
+    </div>
+    <div class="notice">Shoot it, upload it, keep moving. Staff approve from their screen. A ✔ means it counts. If a photo comes back, the card opens up again. Try a new shot.</div>
+    <div id="list"></div>
+  </div>
+
+  <div id="err"></div>
+
+  <nav class="footer-nav">
+    <a href="../photo/">← Photography Unit</a> · <a href="gallery.html">Gallery</a>
+  </nav>
+</div>
+
+<script src="../photo/photo.js"></script>
+<script src="hunt.js"></script>
+<script>
+let team = null;
+let rows = [];
+const pendingLocal = {}; // itemId -> objectURL for optimistic thumbnails
+
+function init() {
+  const qp = new URLSearchParams(location.search).get('team');
+  if (qp && TEAMS.includes(qp.toUpperCase())) {
+    team = qp.toUpperCase();
+    localStorage.setItem('hunt_team', team);
+  } else {
+    team = localStorage.getItem('hunt_team');
+  }
+  if (team && TEAMS.includes(team)) showHunt();
+  else showPicker();
+}
+
+function showPicker() {
+  document.getElementById('hunt').style.display = 'none';
+  document.getElementById('picker').style.display = '';
+  const holder = document.getElementById('teamButtons');
+  holder.textContent = '';
+  for (const t of TEAMS) {
+    holder.appendChild(el('button', {
+      text: 'Team ' + t,
+      onclick: () => { team = t; localStorage.setItem('hunt_team', t); showHunt(); },
+    }));
+  }
+}
+
+function showHunt() {
+  document.getElementById('picker').style.display = 'none';
+  document.getElementById('hunt').style.display = '';
+  document.getElementById('teamBadge').textContent = 'Team ' + team;
+  document.getElementById('switchTeam').onclick = (e) => { e.preventDefault(); localStorage.removeItem('hunt_team'); showPicker(); };
+  refresh();
+}
+
+async function refresh() {
+  if (!team) return;
+  try {
+    rows = await huntRows(team);
+    document.getElementById('err').textContent = '';
+    render();
+  } catch (e) {
+    showError('Could not load the list. Check WiFi and it will retry on its own.');
+  }
+}
+
+function showError(msg) {
+  const box = document.getElementById('err');
+  box.textContent = '';
+  box.appendChild(el('div', { class: 'error', text: msg }));
+}
+
+function render() {
+  const state = teamState(rows);
+  let approved = 0, pending = 0;
+  const list = document.getElementById('list');
+  list.textContent = '';
+  for (const it of HUNT_ITEMS) {
+    const row = state[it.id];
+    if (row && row.status === 'approved') approved++;
+    if (row && row.status === 'pending') pending++;
+    list.appendChild(card(it, row));
+  }
+  document.getElementById('score').textContent = approved + ' of 20 approved';
+  document.getElementById('pendingNote').textContent = pending ? '(' + pending + ' waiting for staff)' : '';
+}
+
+function card(it, row) {
+  const status = row ? row.status : 'empty';
+  const body = el('div', { class: 'body' },
+    el('p', { class: 'prompt', text: it.text }));
+
+  if (status === 'approved') {
+    body.appendChild(el('div', { class: 'state-approved', text: '✔ Approved. It counts!' }));
+  } else if (status === 'pending') {
+    body.appendChild(el('div', { class: 'state-pending', text: '⏳ Waiting for staff…' }));
+  } else {
+    const label = el('label', { class: 'btn upload-btn', text: '📷 Shoot / upload' });
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.setAttribute('capture', 'environment');
+    input.onchange = () => input.files[0] && submit(it.id, input.files[0], label);
+    label.appendChild(input);
+    body.appendChild(label);
+  }
+
+  const thumbSrc = row ? publicUrl(row.path) : pendingLocal[it.id];
+  const kids = [el('div', { class: 'num', text: it.id }), body];
+  if (thumbSrc) {
+    const img = el('img', { class: 'thumb', src: thumbSrc, alt: 'Item ' + it.id, loading: 'lazy' });
+    img.onclick = () => openLightbox(thumbSrc, 'Item ' + it.id + ': ' + it.text);
+    kids.push(img);
+  }
+  return el('div', { class: 'card hunt-card' + (status === 'approved' ? ' done' : '') }, ...kids);
+}
+
+async function submit(itemId, file, label) {
+  label.textContent = 'Uploading…';
+  try {
+    const blob = await shrinkImage(file);
+    const ext = blob === file ? (file.name.match(/\.[a-zA-Z0-9]+$/) || ['.jpg'])[0] : '.jpg';
+    const path = 'hunt/team-' + team + '/item-' + itemId + '-' + Date.now() + ext;
+    await storageUpload(path, blob);
+    const row = await dbInsert('hunt_submissions', { team, item_id: itemId, path });
+    pendingLocal[itemId] = URL.createObjectURL(file);
+    rows.push(row);
+    render();
+  } catch (e) {
+    showError('Upload did not go through. Check WiFi and try again.');
+    render(); // restore the button
+  }
+}
+
+init();
+setInterval(refresh, 8000);
+</script>
+</body>
+</html>
