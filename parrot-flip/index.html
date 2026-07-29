@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Classroom gate: hides the game until the teacher opens it (see /games-gate.js) -->
   <script src="/games-gate.js" data-enforce="parrot-flip"></script>
-  <!-- Full parrot port: force the parrot skin and hide the bottle/skin picker. -->
-  <script>window.FLIP_FORCE_SKIN = 'parrot';</script>
+  <!-- Same game as the standalone Bottle Game; only the branding differs.
+       parrot is the free edition (it swaps unlock slots with the bottle), and
+       this build ships without online multiplayer. See tools/sync-parrot-flip.js
+       in the flipgame repo — this folder is generated, do not hand-edit. -->
+  <script>window.FLIP_BRAND = { baseSkin: 'parrot', online: false };</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Parrot Flip — WhydahStory</title>
 
@@ -19,10 +21,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=24">
+  <link rel="stylesheet" href="css/style.css?v=62">
 </head>
 <body>
-  <a class="back-link" href="/games/">← WhydahStory Games</a>
 
   <!-- ── Setup ───────────────────────────────────────── -->
   <div id="setup-screen" class="screen hidden">
@@ -30,25 +31,25 @@
       <h1>🦜 Parrot Flip</h1>
 
       <div>
-        <div class="section-label">Crew — pick a name &amp; parrot (tap Human/CPU to switch)</div>
+        <div class="section-label">Players — pick a name &amp; flavor (tap Human/CPU to switch)</div>
         <div id="player-inputs"><!-- rendered by main.js --></div>
-        <button id="add-player-btn">+ Add Crew</button>
+        <button id="add-player-btn">+ Add Player</button>
       </div>
 
       <div>
-        <div class="section-label">Pass around the table</div>
+        <div class="section-label">Pass direction</div>
         <div class="direction-options">
-          <label><input type="radio" name="direction" value="1" checked> ➡ Port → Starboard</label>
-          <label><input type="radio" name="direction" value="-1"> ⬅ Starboard → Port</label>
+          <label><input type="radio" name="direction" value="1" checked> ➡ Left → Right</label>
+          <label><input type="radio" name="direction" value="-1"> ⬅ Right → Left</label>
         </div>
       </div>
 
       <div>
-        <div class="section-label">Rival difficulty</div>
+        <div class="section-label">CPU difficulty</div>
         <div class="direction-options">
-          <label><input type="radio" name="difficulty" value="easy"> 🟢 Calm seas</label>
-          <label><input type="radio" name="difficulty" value="medium" checked> 🟡 Rough seas</label>
-          <label><input type="radio" name="difficulty" value="hard"> 🔴 Gale</label>
+          <label><input type="radio" name="difficulty" value="easy"> 🟢 Easy</label>
+          <label><input type="radio" name="difficulty" value="medium" checked> 🟡 Medium</label>
+          <label><input type="radio" name="difficulty" value="hard"> 🔴 Hard</label>
         </div>
       </div>
 
@@ -63,8 +64,8 @@
         </div>
       </div>
 
-      <button id="start-btn">Cast Off</button>
-      <button id="practice-btn">🎯 Solo practice</button>
+      <button id="start-btn">Start Game</button>
+      <button id="practice-btn">🎯 Practice (solo)</button>
       <div id="records-panel"></div>
     </div>
   </div>
@@ -82,7 +83,7 @@
       <div id="turn-timer"><div id="turn-timer-fill"></div></div>
       <div id="streak-banner"></div>
     </div>
-    <div id="flip-hint">Flick up — land your parrot on its feet!</div>
+    <div id="flip-hint">Flick up to flip!</div>
     <div id="player-list"></div>
   </div>
 
@@ -98,12 +99,12 @@
   <!-- ── Game Over ────────────────────────────────────── -->
   <div id="game-over" class="screen hidden">
     <div class="game-over-card">
-      <div style="font-size:3rem">👑</div>
-      <h2>Captain</h2>
+      <div class="trophy-emoji">🏆</div>
+      <h2>Winner</h2>
       <div id="winner-name"></div>
       <div id="scoreboard"></div>
       <div id="game-stats"></div>
-      <button id="play-again-btn">Sail Again</button>
+      <button id="play-again-btn">Play Again</button>
       <button id="home-btn">Main Menu</button>
     </div>
   </div>
@@ -111,16 +112,17 @@
   <!-- ?v= forces the browser to refetch on each release (dev server sends no
        cache headers). Bump alongside the service-worker CACHE_NAME. -->
   <script src="js/vendor/matter.min.js"></script>
-  <script src="js/polyfills.js?v=24"></script>
-  <script src="js/game.js?v=24"></script>
-  <script src="js/physics.js?v=24"></script>
-  <script src="js/input.js?v=24"></script>
-  <script src="js/renderer.js?v=24"></script>
-  <script src="js/audio.js?v=24"></script>
-  <script src="js/settings.js?v=24"></script>
-  <script src="js/records.js?v=24"></script>
-  <script src="js/skins.js?v=24"></script>
-  <script src="js/main.js?v=24"></script>
+  <script src="js/polyfills.js?v=62"></script>
+  <script src="js/game.js?v=62"></script>
+  <script src="js/physics.js?v=62"></script>
+  <script src="js/input.js?v=62"></script>
+  <script src="js/renderer.js?v=62"></script>
+  <script src="js/audio.js?v=62"></script>
+  <script src="js/settings.js?v=62"></script>
+  <script src="js/records.js?v=62"></script>
+  <script src="js/achievements.js?v=62"></script>
+  <script src="js/skins.js?v=62"></script>
+  <script src="js/main.js?v=62"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {

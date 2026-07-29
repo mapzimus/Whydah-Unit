@@ -4,8 +4,13 @@ const Renderer = (() => {
   let canvas, ctx, W, H;
   const particles = [];
   let reduceMotion = false;   // when on, suppress non-essential motion (particles, shake, pulses)
-  const BOTTLE_DRAW_SCALE = 1.15;
+  // Visual size of every flippable edition (bottle + skins). Physics body stays
+  // the same — this is paint-only. Bumped ~20% (1.15 → 1.38) so objects read
+  // bigger on phones after open-arena zoom made shots feel tiny.
+  const BOTTLE_DRAW_SCALE = 1.38;
   const FLIGHT_LIFT = 0.18;
+  // Smooth camera for mobile open-arena: zoom out when the object leaves frame.
+  let camZoom = 1, camX = 0, camY = 0;
 
   function setReduceMotion(v) { reduceMotion = !!v; }
 
@@ -14,6 +19,7 @@ const Renderer = (() => {
     ctx    = canvas.getContext('2d');
     W = canvas.width;
     H = canvas.height;
+    camZoom = 1; camX = W / 2; camY = H / 2;
   }
 
   function resize(w, h) { W = w; H = h; }
@@ -101,35 +107,39 @@ const Renderer = (() => {
   }
 
   // ── Background & scene ─────────────────────────────────────────────────────
-  function drawBackground(groundY, isOnFire) {
-    const sky = ctx.createLinearGradient(0, 0, 0, H);
-    if (isOnFire) {
-      sky.addColorStop(0, '#140400');
-      sky.addColorStop(1, '#2e0800');
-    } else {
-      sky.addColorStop(0, '#0a1628');
-      sky.addColorStop(1, '#112240');
+  function drawBackground(groundY, isOnFire, opts) {
+    const skyOnly = opts && opts.skyOnly;
+    const tableOnly = opts && opts.tableOnly;
+    if (!tableOnly) {
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      if (isOnFire) {
+        sky.addColorStop(0, '#140400');
+        sky.addColorStop(1, '#2e0800');
+      } else {
+        sky.addColorStop(0, '#0a1628');
+        sky.addColorStop(1, '#112240');
+      }
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
     }
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, W, H);
+    if (skyOnly) return;
 
-    // Table surface
+    // Extra-wide table so open-arena zoom-outs still show a floor.
+    const x0 = -W * 2, tw = W * 5;
     ctx.fillStyle = '#3e2723';
-    ctx.fillRect(0, groundY, W, H - groundY);
+    ctx.fillRect(x0, groundY, tw, Math.max(H, 800));
 
-    // Subtle wood grain lines
     ctx.strokeStyle = 'rgba(0,0,0,0.18)';
     ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 48) {
+    for (let x = x0; x < x0 + tw; x += 48) {
       ctx.beginPath();
       ctx.moveTo(x, groundY);
-      ctx.lineTo(x + 20, H);
+      ctx.lineTo(x + 20, groundY + 200);
       ctx.stroke();
     }
 
-    // Table edge highlight
     ctx.fillStyle = '#5d4037';
-    ctx.fillRect(0, groundY - 3, W, 4);
+    ctx.fillRect(x0, groundY - 3, tw, 4);
   }
 
   // ── Bottle ─────────────────────────────────────────────────────────────────
@@ -285,9 +295,13 @@ const Renderer = (() => {
     ctx.fill();
   }
 
-  // ── Flick indicator ─────────────────────────────────────────────────────────
-  // Points FROM the bottle in the direction you're flicking (the way it'll go),
-  // length grows with flick strength. Reads as "throw this way", not "pull back".
+  // ── Flick indicator — "power gauge", not a thin arrow ───────────────────────
+  // A charging ring around the object reads "how hard" at a glance from across
+  // a room (a filling ring is a universal charge/cooldown language); bold
+  // thrust chevrons stacked in the throw direction read "which way" and
+  // reinforce "how hard" via count + brightness, like a throttle gauge. The
+  // raw gesture path is traced faintly underneath. Strength math is unchanged —
+  // this only repaints the same `drag` state, so the flick itself is untouched.
   function drawFlickIndicator(drag, bottle, groundY) {
     if (!drag || !bottle) return;
     const dx  = drag.curX - drag.startX;   // flick direction = throw direction
@@ -297,34 +311,62 @@ const Renderer = (() => {
 
     const strength = Math.min(len / 220, 1);
     const ux = dx / len, uy = dy / len;
-    const reach = 28 + strength * 64;                 // 28..92px
     const p = projectBottleCenter(bottle, groundY);
     const ox = p.x, oy = p.y - 40 * BOTTLE_DRAW_SCALE;
-    const ex = ox + ux * reach, ey = oy + uy * reach;
-    const color = `hsl(${190 - strength * 150}, 95%, 62%)`; // cyan → hot orange
+    const hue = 190 - strength * 150;                  // cyan → hot orange/red
+    const color = `hsl(${hue}, 95%, 60%)`;
 
     ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth   = 4;
-    ctx.lineCap     = 'round';
-    ctx.globalAlpha = 0.88;
+
+    // Faint raw gesture trail (the actual swipe path).
+    ctx.strokeStyle = `hsla(${hue}, 95%, 72%, 0.35)`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 5]);
     ctx.beginPath();
-    ctx.moveTo(ox, oy);
-    ctx.lineTo(ex, ey);
+    ctx.moveTo(drag.startX, drag.startY);
+    ctx.lineTo(drag.curX, drag.curY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Charging ring — the primary "how hard" readout, fills clockwise from
+    // straight up as strength climbs 0→1 (full power = full circle).
+    const ringR = 52;
+    ctx.lineWidth = 7;
+    ctx.lineCap   = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.arc(ox, oy, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.arc(ox, oy, ringR, -Math.PI / 2, -Math.PI / 2 + strength * Math.PI * 2);
     ctx.stroke();
 
+    // Thrust chevrons stacked outward in the throw direction — count and
+    // brightness climb with power, like a rocket-throttle gauge.
     const a = Math.atan2(uy, ux);
-    ctx.beginPath();
-    ctx.moveTo(ex, ey);
-    ctx.lineTo(ex - 14 * Math.cos(a - 0.45), ey - 14 * Math.sin(a - 0.45));
-    ctx.moveTo(ex, ey);
-    ctx.lineTo(ex - 14 * Math.cos(a + 0.45), ey - 14 * Math.sin(a + 0.45));
-    ctx.stroke();
+    const chevronCount = 1 + Math.round(strength * 2);   // 1..3
+    for (let i = 0; i < chevronCount; i++) {
+      const reach = ringR + 16 + i * 22;
+      const cx = ox + ux * reach, cy = oy + uy * reach;
+      const size = 11 + strength * 5;
+      ctx.globalAlpha = 0.5 + 0.5 * (i + 1) / chevronCount;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * size,              cy + Math.sin(a) * size);
+      ctx.lineTo(cx + Math.cos(a + 2.35) * size * 0.7, cy + Math.sin(a + 2.35) * size * 0.7);
+      ctx.lineTo(cx + Math.cos(a - 2.35) * size * 0.7, cy + Math.sin(a - 2.35) * size * 0.7);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     ctx.restore();
   }
 
   // ── Side walls ───────────────────────────────────────────────────────────────
-  function drawWalls(groundY) {
+  function drawWalls(groundY, sideWalls) {
+    if (sideWalls === false) return; // mobile open arena — no painted walls
     const WALL = 14; // matches physics WALL_INSET
     for (const x0 of [0, W - WALL]) {
       const g = ctx.createLinearGradient(x0, 0, x0 + WALL, 0);
@@ -341,16 +383,29 @@ const Renderer = (() => {
   }
 
   // ── Result text ────────────────────────────────────────────────────────────
-  function drawResult(text, color, alpha) {
+  // `sub` is an optional second line under the verdict — the rare "Great Save"
+  // callout, big enough for the whole room, not just a corner banner.
+  function drawResult(text, color, alpha, sub) {
+    // Pop: scale overshoots to ~1.18 as it appears, settles back to 1.0.
+    const pop = reduceMotion ? 1 : 1 + 0.18 * Math.sin(Math.min(alpha, 1) * Math.PI);
     ctx.save();
     ctx.globalAlpha   = alpha;
     ctx.fillStyle     = color;
-    ctx.font          = 'bold 76px system-ui, sans-serif';
     ctx.textAlign     = 'center';
     ctx.textBaseline  = 'middle';
     ctx.shadowColor   = color;
     ctx.shadowBlur    = 36;
-    ctx.fillText(text, W / 2, H / 2 - 60);
+    ctx.translate(W / 2, H / 2 - 60);
+    ctx.scale(pop, pop);
+    ctx.font          = 'bold 76px system-ui, sans-serif';
+    ctx.fillText(text, 0, 0);
+    if (sub) {
+      ctx.font        = 'bold 30px system-ui, sans-serif';
+      ctx.fillStyle   = '#ffd21a';
+      ctx.shadowColor = '#ffd21a';
+      ctx.shadowBlur  = 22;
+      ctx.fillText(sub, 0, 60);
+    }
     ctx.restore();
   }
 
@@ -421,26 +476,181 @@ const Renderer = (() => {
   }
 
   // ── Main frame ─────────────────────────────────────────────────────────────
+  // ── Bounce-mode arena (see physics.js profiles) ────────────────────────────
+  // Only drawn when the active edition asks for it: the landing pad on the
+  // table, the wedge overhead that splits a straight-up shot, and the saucers
+  // drifting in between.
+  function drawTargetPad(target, groundY) {
+    if (!target) return;
+    const { x, halfWidth: hw } = target;
+    const hitHW = target.hitHalfWidth != null ? target.hitHalfWidth : hw;
+    const pulse = 0.5 + 0.5 * Math.sin(clock * 3);
+    ctx.save();
+    const glow = ctx.createRadialGradient(x, groundY, 4, x, groundY, hw * 1.15);
+    glow.addColorStop(0, `rgba(105,240,174,${0.22 + pulse * 0.12})`);
+    glow.addColorStop(1, 'rgba(105,240,174,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(x, groundY, hw * 1.15, hw * 0.34, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Outer ring = visual pad (soft), inner ring = actual MAKE radius
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = `rgba(105,240,174,${0.35 + pulse * 0.15})`;
+    ctx.beginPath();
+    ctx.ellipse(x, groundY, hw, hw * 0.29, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = `rgba(105,240,174,${0.85 + pulse * 0.15})`;
+    ctx.beginPath();
+    ctx.ellipse(x, groundY, hitHW, hitHW * 0.29, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(x, groundY, hitHW * 0.35, hitHW * 0.12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDeflectorPoly(d) {
+    if (!d || !d.vertices || !d.vertices.length) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(d.vertices[0].x, d.vertices[0].y);
+    for (let i = 1; i < d.vertices.length; i++) ctx.lineTo(d.vertices[i].x, d.vertices[i].y);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(0, d.vertices[0].y, 0, d.vertices[0].y + 90);
+    g.addColorStop(0, '#8fa7bd');
+    g.addColorStop(1, '#4a5f75');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#26384a';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawObstacles(obstacles) {
+    if (!obstacles) return;
+    const list = obstacles.deflectors && obstacles.deflectors.length
+      ? obstacles.deflectors
+      : (obstacles.deflector ? [obstacles.deflector] : []);
+    for (const d of list) drawDeflectorPoly(d);
+
+    for (const s of obstacles.saucers || []) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.angle * 0.35);
+      ctx.beginPath();
+      ctx.ellipse(0, -s.ry * 0.55, s.rx * 0.46, s.ry * 0.85, 0, Math.PI, 0);
+      ctx.fillStyle = '#bfe7ff';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#5d7f97';
+      ctx.stroke();
+      const g = ctx.createLinearGradient(0, -s.ry, 0, s.ry);
+      g.addColorStop(0, '#e7edf2');
+      g.addColorStop(1, '#8c99a5');
+      ctx.beginPath();
+      ctx.ellipse(0, 0, s.rx, s.ry * 0.62, 0, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = '#43586b';
+      ctx.stroke();
+      const blink = 0.45 + 0.55 * Math.sin(clock * 5 + s.x * 0.05);
+      ctx.fillStyle = `rgba(255,210,63,${blink})`;
+      for (const lx of [-s.rx * 0.62, 0, s.rx * 0.62]) {
+        ctx.beginPath();
+        ctx.arc(lx, s.ry * 0.22, 3.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  function applyCamera(view) {
+    const targetZoom = view && view.zoom != null ? view.zoom : 1;
+    const tx = view && view.camX != null ? view.camX : W / 2;
+    const ty = view && view.camY != null ? view.camY : H / 2;
+    // Ease toward the needed framing so zoom-outs aren't jumpy.
+    const k = reduceMotion ? 1 : 0.14;
+    camZoom += (targetZoom - camZoom) * k;
+    camX += (tx - camX) * k;
+    camY += (ty - camY) * k;
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(camZoom, camZoom);
+    ctx.translate(-camX, -camY);
+    return true;
+  }
+
   function frame(dt, state) {
-    const { bottle, liquid, drag, groundY, result, resultAlpha, showGlow, isOnFire,
-            liquidColor, intense, suddenDeath, awaitingFlick, stake, skin } = state;
+    const { bottle, liquid, drag, groundY, result, resultAlpha, specialLabel, showGlow, isOnFire,
+            liquidColor, intense, suddenDeath, awaitingFlick, stake, skin,
+            target, obstacles, view } = state;
     clock += dt;
     updateParticles(dt);
 
-    drawBackground(groundY, isOnFire);
-    drawWalls(groundY);
+    // Reset any camera transform from the previous frame (DPR setTransform
+    // lives on the canvas from main.resize — we only add a logical camera).
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Re-apply DPR from the canvas backing store ratio.
+    const dpr = canvas.width / Math.max(1, W);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, W, H);
+    drawBackground(groundY, isOnFire, { skyOnly: true });
+
+    ctx.save();
+    applyCamera(view);
+    drawBackground(groundY, isOnFire, { tableOnly: true });
+    drawWalls(groundY, view ? view.sideWalls : true);
+    drawTargetPad(target, groundY);
+    drawObstacles(obstacles);
     drawFlickIndicator(drag, bottle, groundY);
     if (showGlow) drawLandingGlow(bottle, groundY);
     drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, skin);
     drawParticles();
+    ctx.restore();
+
+    // HUD overlays stay screen-fixed (not affected by world zoom).
     drawStake(stake);
     drawIntense(intense, suddenDeath, awaitingFlick);
 
     if (result) {
       const color = result === 'MAKE' ? '#69f0ae' : '#ff5252';
-      drawResult(result === 'MAKE' ? 'MAKE!' : 'MISS', color, resultAlpha);
+      drawResult(result === 'MAKE' ? 'MAKE!' : 'MISS', color, resultAlpha, specialLabel);
     }
   }
 
-  return { init, resize, frame, setReduceMotion, projectPoint, projectBottleCenter, bottleDrawScale };
+  // Paint one upright object into some OTHER canvas (the setup-screen skin
+  // previews). Borrows the module ctx for the call and puts it back, so this
+  // must stay synchronous — it runs from setup, never from inside frame().
+  // groundY is pushed far below so projectPoint's airborne lift clamps to 0
+  // and the object is drawn flat-on rather than in flight perspective.
+  function drawPreview(target, skin, liquidColor) {
+    const prevCanvas = canvas, prevCtx = ctx, prevW = W, prevH = H;
+    canvas = target;
+    ctx = target.getContext('2d');
+    W = target.width;
+    H = target.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    // Fit box measured off the real drawn pixels of every edition — widest is
+    // the T-Rex (x≈±106), tallest aliens / landmarks (y≈-221..58) whose
+    // antennae/towers reach high. Already includes the BOTTLE_DRAW_SCALE
+    // that drawBottle applies. The artwork sits well above the origin, so it
+    // centers on y≈-81, not 0. Re-measure if any edition's art grows.
+    const CONTENT_W = 216, CONTENT_H = 284, CONTENT_MID_Y = -81;
+    const scale = Math.min(W / CONTENT_W, H / CONTENT_H) * 0.95;
+    ctx.translate(W / 2, H / 2 - CONTENT_MID_Y * scale);
+    ctx.scale(scale, scale);
+    try {
+      drawBottle({ position: { x: 0, y: 0 }, angle: 0 }, { slosh: 0, vel: 0 },
+        false, liquidColor, -10000, skin);
+    } finally {
+      canvas = prevCanvas; ctx = prevCtx; W = prevW; H = prevH;
+    }
+  }
+
+  // drawBottle is exported for the art-iteration harness (drawing one object
+  // without the full scene); the game itself only calls frame().
+  return { init, resize, frame, setReduceMotion, projectPoint, projectBottleCenter, bottleDrawScale, drawBottle, drawPreview };
 })();

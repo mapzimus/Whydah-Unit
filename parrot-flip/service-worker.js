@@ -2,7 +2,7 @@
 // Bump CACHE_NAME on every release so stale caches are purged and users get
 // the fresh build. All paths are RELATIVE so they resolve under /flipgame/
 // on GitHub Pages (the SW lives at repo root → scope is /flipgame/).
-const CACHE_NAME = 'parrot-flip-v6';
+const CACHE_NAME = 'parrotflip-v62';
 
 const PRECACHE_URLS = [
   './',
@@ -16,6 +16,7 @@ const PRECACHE_URLS = [
   './js/audio.js',
   './js/settings.js',
   './js/records.js',
+  './js/achievements.js',
   './js/skins.js',
   './js/main.js',
   './js/vendor/matter.min.js',
@@ -46,27 +47,41 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first for everything, always: a live classroom needs today's real
-// code, not whatever got cached (possibly incomplete — precache tolerates
-// partial failures, see above) during some earlier install. The cache is only
-// an OFFLINE FALLBACK, never served ahead of a working network fetch — that
-// stale-while-revalidate used to serve a cached JS file instantly against a
-// freshly fetched HTML page, which could mismatch and crash the game (shows
-// as the black window.onerror overlay) until someone manually cleared site data.
+// HTML/navigation is network-first so the main game URL updates as soon as a
+// deploy finishes. Other assets stay stale-while-revalidate for fast offline
+// starts, with query-string asset bumps pulling the matching release files.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const req = event.request;
   const isPage = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').includes('text/html');
 
+  if (isPage) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) =>
+        fetch(req).then((res) => {
+          if (res && res.status === 200) cache.put(req, res.clone());
+          return res;
+        }).catch(() => cache.match(req).then((cached) => cached || cache.match('./')))
+      )
+    );
+    return;
+  }
+
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
-      fetch(req).then((res) => {
-        if (res && res.status === 200) cache.put(req, res.clone());
-        return res;
-      }).catch(() =>
-        cache.match(req).then((cached) => cached || (isPage ? cache.match('./') : undefined))
-      )
+      cache.match(req).then((cached) => {
+        // HTML uses ?v=N cache-busting; precache stores bare paths — ignore the
+        // query when looking up so offline still hits the precache.
+        const lookup = cached || cache.match(req, { ignoreSearch: true });
+        return Promise.resolve(lookup).then((hit) => {
+          const fromNetwork = fetch(req).then((res) => {
+            if (res && res.status === 200) cache.put(req, res.clone());
+            return res;
+          }).catch(() => hit);
+          return hit || fromNetwork;
+        });
+      })
     )
   );
 });
