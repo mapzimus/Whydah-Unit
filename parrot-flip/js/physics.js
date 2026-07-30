@@ -15,12 +15,11 @@ const Physics = (() => {
   let sideWallsEnabled = true;
   let openArena = false;  // mobile open sides (no wall caroms)
 
-  // Spin tuning (rad/step) — see applyFlick. Single sweet spot near 1 turn:
-  // soft flick under-rotates (<360, fails), medium ≈ one clean turn (make),
-  // hard overshoots (~1.35 turns, miss). v63: re-tightened — the easing passes had
-  // flattened this into a 99% plateau at ~3200px/s, i.e. "just flick hard".
-  const SPIN_BASE   = 0.1171;  // soft flick under-rotates
-  const SPIN_RANGE  = 0.140;  // steep: small speed errors cost real rotation
+  // Spin tuning (rad/step) — see applyFlick. Normal throws should usually land
+  // if you give a decent flick; only wild overshoots tip. v78: cut high-end
+  // over-rotation (hard flicks were falling ~70% of the time).
+  const SPIN_BASE   = 0.138;  // soft/medium flicks clear 360°
+  const SPIN_RANGE  = 0.082;  // flat high end — hard flicks tip less
   const POWER_SPEED = 4000;   // flick px/s that maps to full power
   const WALL_INSET  = 14;     // px from each screen edge to the wall's inner face (matches renderer)
   const FIXED_DT    = 1 / 60; // multiplayer-safe fixed physics step
@@ -36,19 +35,17 @@ const Physics = (() => {
   // resolves within MISS_CAP_FRAMES (the glitch / teeter-stall fallback) do we
   // force a MISS so a turn can never soft-lock in EVALUATING.
   //
-  // v54: ~10% more forgiving upright / settle thresholds so normal flips (esp.
-  // on mobile open-arena, where wall caroms no longer bail you out) feel fairer.
-  const SETTLE_FRAMES   = 22;    // frames of stillness required to read the pose
-  const SETTLE_RANGE    = 0.03;  // rad — max angle spread across that window
-  const MAKE_ANGLE      = 0.61;  // ≤±35° upright = MAKE
-  const PERFECT_ANGLE   = 0.16;  // perfect-landing flair. NB: not actually
-                                 // selective — a settled bottle is either dead
-                                 // vertical (median tilt 0.003 rad) or toppled,
-                                 // so this fires on ~every make at any value.
-  const FALLEN_ANGLE    = 1.20;  // ≥~69° tilt = toppled past recovery → certain MISS
+  // v78: normal throws — generous upright cone + softer settle / landing kick.
+  const SETTLE_FRAMES   = 14;    // frames of stillness required to read the pose
+  const SETTLE_RANGE    = 0.055; // rad — max angle spread across that window
+  const MAKE_ANGLE      = 1.00;  // ≤±~57° upright = MAKE (was feeling stingy)
+  const PERFECT_ANGLE   = 0.22;  // perfect-landing flair
+  const FALLEN_ANGLE    = 1.40;  // ≥~80° tilt = toppled past recovery → certain MISS
   const MISS_CAP_FRAMES = 300;   // ~5s grounded with no verdict → forced MISS (fallback)
-  const SETTLE_ANG_VEL  = 0.010; // "at rest" spin threshold
-  const SETTLE_LIN_SPD  = 7.2;   // "at rest" slide threshold
+  const ABS_MISS_FRAMES = 600;   // ~10s after leaving the floor → forced MISS no matter what
+  const SETTLE_ANG_VEL  = 0.018; // "at rest" spin threshold
+  const SETTLE_LIN_SPD  = 10.0;  // "at rest" slide threshold
+  const GROUND_TOUCH_PX = 6;     // AABB bottom within this of groundY = touching floor
 
   // ── Seeded PRNG (mulberry32) ───────────────────────────────────────────────
   // All in-flight randomness (launch jitter + landing kick + pad placement)
@@ -69,13 +66,13 @@ const Physics = (() => {
   // can instead ship a profile (see META.physics in skins.js) that retunes
   // gravity, drag, bounce, the launch impulse and how a landing is judged.
   //
-  // BOUNCE MODE (the 50-win alien — the ONLY non-flip edition) is a different
+  // BOUNCE MODE (the 100-win alien — the ONLY non-flip edition) is a different
   // game: a bank shot, not a flip. You aim sideways, the object caroms off the
   // two walls and the ceiling, and the FLOOR is dead: the first time it touches
-  // down is where it landed, and it counts if the body center is over the pad.
+  // down is where it landed, and it counts if the body is over the pad.
   const DEFAULT_PROFILE = {
     gravity: 1.5,
-    frictionAir: 0.027,    // was 0.025 — a touch more drag, less floaty/wild
+    frictionAir: 0.024,    // a touch less drag so soft flicks still complete the turn
     friction: 0.85,
     restitution: 0.02,
     spinScale: 1,
@@ -129,6 +126,7 @@ const Physics = (() => {
   let floorTouched = false; // bounce mode: first touchdown happened (slide window open)
   let slideFrames = 0;      // frames spent in the post-touchdown slide window
   let maxGroundedTilt = 0;  // display-only: worst |tilt| seen while grounded this flip
+  let flightFrames = 0;     // frames since the bottle left the floor (absolute soft-lock guard)
 
   function wantsOpenArena() {
     if (profile.keepWalls || profile.wallBounce > 0) return false;
@@ -384,12 +382,16 @@ const Physics = (() => {
     return result;
   }
 
+  function touchingFloor() {
+    return !!bottle && bottle.bounds.max.y >= groundY - GROUND_TOUCH_PX;
+  }
+
   function checkLanding() {
     if (!bottle) return null;
 
     // Bounce mode: first contact / slide-on is the verdict (alien profile).
     if (profile.floorResolve && launched && wasAirborne) {
-      const grounded = bottle.bounds.max.y >= groundY - 6;
+      const grounded = touchingFloor();
 
       if (!floorTouched) {
         if (bottle.bounds.max.y < groundY - 2) return null;
@@ -414,9 +416,18 @@ const Physics = (() => {
       return null;
     }
 
+    // Absolute soft-lock guard: once the bottle has left the floor, something
+    // MUST resolve within ~10s (off-world, perpetual bounce, etc.).
+    if (launched && wasAirborne) {
+      flightFrames++;
+      if (flightFrames > ABS_MISS_FRAMES) return recordLanding('MISS', null, 'timeout');
+    }
+
     const angVel   = Math.abs(bottle.angularVelocity);
     const linSpeed = Math.hypot(bottle.velocity.x, bottle.velocity.y);
-    const grounded = bottle.position.y >= groundY - 80;
+    // Touch the table via AABB bottom — COM can sit well above the floor when
+    // the bottle is inverted on its neck / resting on a tall corner.
+    const grounded = touchingFloor();
 
     if (!grounded) {
       groundedFrames = 0;
@@ -540,6 +551,7 @@ const Physics = (() => {
     floorTouched   = false;
     slideFrames    = 0;
     maxGroundedTilt = 0;
+    flightFrames   = 0;
     liquid.reset();
     acc = 0;
 
@@ -569,9 +581,9 @@ const Physics = (() => {
     const upSpeed = Math.max(0, -vy);
     const power   = Math.min(upSpeed / POWER_SPEED, 1.0);
 
-    const jSpin   = 1 + (rand() - 0.5) * 0.205;  // less spin chaos
-    const jLaunch = 1 + (rand() - 0.5) * 0.102; // less height chaos
-    const jDrift  = (rand() - 0.5) * 2.05;       // less sideways chaos
+    const jSpin   = 1 + (rand() - 0.5) * 0.10;   // mild spin chaos
+    const jLaunch = 1 + (rand() - 0.5) * 0.06;   // mild height chaos
+    const jDrift  = (rand() - 0.5) * 1.1;        // mild sideways chaos
 
     // Slightly lower arcs than the "harder/higher/wilder" feel (was 16 + power*5).
     const launchY = -(15.2 + power * 4.7) * jLaunch * profile.launchScale;
@@ -597,6 +609,9 @@ const Physics = (() => {
     launchAngle = bottle.angle;
     launched = true;
     wasAirborne = false;
+    flightFrames = 0;
+    groundedFrames = 0;
+    angleWin = [];
     lastLandingInfo = null;
     Body.setVelocity(bottle, { x: launchX, y: launchY });
     Body.setAngularVelocity(bottle, spin);
@@ -614,10 +629,11 @@ const Physics = (() => {
 
     // Landing kick is for normal flips (liquid slosh punch). Bank-shot editions
     // accumulate "hasFlipped" from wall caroms and must not get a random shove.
+    // v78: softened — the old kick tipped a lot of near-makes into misses.
     if (!profile.floorResolve && hasFlipped && !hasLanded &&
         bottle.velocity.y > 0 && bottle.position.y >= groundY - 55) {
       hasLanded = true;
-      const kick = liquid.vel * 0.056 + (rand() - 0.5) * 0.142;
+      const kick = liquid.vel * 0.028 + (rand() - 0.5) * 0.06;
       Body.setAngularVelocity(bottle, bottle.angularVelocity + kick);
     }
 
@@ -634,22 +650,38 @@ const Physics = (() => {
     }
   }
 
+  // Profile-driven base zoom (Alien pulls way back so the pad is harder).
+  function profileArenaZoom() {
+    const compact = isCompactScreen();
+    const z = compact
+      ? (profile.mobileArenaZoom != null ? profile.mobileArenaZoom : profile.arenaZoom)
+      : profile.arenaZoom;
+    if (z == null || !(z > 0)) return null;
+    return Math.max(0.35, Math.min(1, z));
+  }
+
   // Camera helper: when the bottle leaves the frame (mobile open arena), the
   // renderer zooms out so the shot stays visible. Returns world bounds that
-  // should remain on-screen.
+  // should remain on-screen. Some profiles (Alien) force a pulled-back zoom
+  // even with walls so phones feel like a bigger arena.
   function getViewHint() {
+    const forced = profileArenaZoom();
+    const cx = canvasW / 2;
+    const cy = groundY / 2;
     if (!bottle) {
-      return { openArena, sideWalls: sideWallsEnabled, zoom: 1, camX: canvasW / 2, camY: groundY / 2 };
+      return {
+        openArena, sideWalls: sideWallsEnabled,
+        zoom: forced != null ? forced : 1,
+        camX: cx, camY: cy,
+      };
     }
-    // Desktop / walled arenas stay 1:1 — zoom is only for mobile open-arena
-    // shots that leave the frame.
     if (!openArena) {
       return {
         openArena: false,
         sideWalls: sideWallsEnabled,
-        zoom: 1,
-        camX: canvasW / 2,
-        camY: groundY / 2,
+        zoom: forced != null ? forced : 1,
+        camX: cx,
+        camY: cy,
         worldW: canvasW,
         worldH: groundY + 30,
       };
@@ -662,9 +694,10 @@ const Physics = (() => {
     const spanX = maxX - minX;
     const spanY = maxY - minY;
     const zoom = Math.min(1, canvasW / spanX, (groundY + 30) / Math.max(spanY, 1));
-    // Only zoom out (never in past 1). Floor raised so mobile doesn't shrink
-    // the bottle into a speck on long open-arena shots.
-    const z = Math.max(0.58, Math.min(1, zoom));
+    // Only zoom out (never in past 1). Floor lowered so long open-arena shots
+    // (and forced Alien zoom) can pull further back on phones.
+    let z = Math.max(0.40, Math.min(1, zoom));
+    if (forced != null) z = Math.min(z, forced);
     return {
       openArena,
       sideWalls: sideWallsEnabled,

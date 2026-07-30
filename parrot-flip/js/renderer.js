@@ -302,6 +302,16 @@ const Renderer = (() => {
   // reinforce "how hard" via count + brightness, like a throttle gauge. The
   // raw gesture path is traced faintly underneath. Strength math is unchanged —
   // this only repaints the same `drag` state, so the flick itself is untouched.
+  // Input drag coords are screen/CSS pixels; world drawing sits under the
+  // camera. Convert so the trail stays under the finger when zoomed out.
+  function screenToWorld(sx, sy) {
+    const z = camZoom || 1;
+    return {
+      x: camX + (sx - W / 2) / z,
+      y: camY + (sy - H / 2) / z,
+    };
+  }
+
   function drawFlickIndicator(drag, bottle, groundY) {
     if (!drag || !bottle) return;
     const dx  = drag.curX - drag.startX;   // flick direction = throw direction
@@ -315,6 +325,8 @@ const Renderer = (() => {
     const ox = p.x, oy = p.y - 40 * BOTTLE_DRAW_SCALE;
     const hue = 190 - strength * 150;                  // cyan → hot orange/red
     const color = `hsl(${hue}, 95%, 60%)`;
+    const trailA = screenToWorld(drag.startX, drag.startY);
+    const trailB = screenToWorld(drag.curX, drag.curY);
 
     ctx.save();
 
@@ -323,8 +335,8 @@ const Renderer = (() => {
     ctx.lineWidth = 2;
     ctx.setLineDash([3, 5]);
     ctx.beginPath();
-    ctx.moveTo(drag.startX, drag.startY);
-    ctx.lineTo(drag.curX, drag.curY);
+    ctx.moveTo(trailA.x, trailA.y);
+    ctx.lineTo(trailB.x, trailB.y);
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -633,12 +645,16 @@ const Renderer = (() => {
     H = target.height;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    // Fit box measured off the real drawn pixels of every edition — widest is
-    // the T-Rex (x≈±106), tallest aliens / landmarks (y≈-221..58) whose
-    // antennae/towers reach high. Already includes the BOTTLE_DRAW_SCALE
-    // that drawBottle applies. The artwork sits well above the origin, so it
-    // centers on y≈-81, not 0. Re-measure if any edition's art grows.
-    const CONTENT_W = 216, CONTENT_H = 284, CONTENT_MID_Y = -81;
+    // Fit box measured off the real drawn pixels of EVERY family (ink bounding
+    // box per family, then the union). Widest is the T-Rex at x≈±148; the art
+    // spans y≈-346 (pineapple's crown) to y≈+66 (the parrot's tail), so it
+    // centers on y≈-140, not 0. Already includes the BOTTLE_DRAW_SCALE that
+    // drawBottle applies. Re-measure if any family's art grows.
+    //
+    // The old 216x284 @ -81 box was ~27% too narrow, ~31% too short AND sat 59
+    // units too low, so nearly every family was clipped — most at the top, and
+    // trex/vending/ocean/pets/parrot at the sides too.
+    const CONTENT_W = 300, CONTENT_H = 420, CONTENT_MID_Y = -140;
     const scale = Math.min(W / CONTENT_W, H / CONTENT_H) * 0.95;
     ctx.translate(W / 2, H / 2 - CONTENT_MID_Y * scale);
     ctx.scale(scale, scale);

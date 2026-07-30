@@ -21,17 +21,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=63">
+  <link rel="stylesheet" href="css/style.css?v=80">
 </head>
 <body>
 
   <!-- ── Setup ───────────────────────────────────────── -->
   <div id="setup-screen" class="screen hidden">
     <div class="setup-card">
-      <h1>🦜 Parrot Flip</h1>
+      <h1 class="title-secret"><span data-secret="parrot">Parrot</span> <span data-secret="flip">Flip</span></h1>
 
       <div>
-        <div class="section-label">Players — pick a name &amp; flavor (tap Human/CPU to switch)</div>
+        <div class="section-label">Players — pick character &amp; color (tap Human/CPU to switch)</div>
         <div id="player-inputs"><!-- rendered by main.js --></div>
         <button id="add-player-btn">+ Add Player</button>
       </div>
@@ -65,8 +65,46 @@
       </div>
 
       <button id="start-btn">Start Game</button>
-      <button id="practice-btn">🎯 Practice (solo)</button>
-      <div id="records-panel"></div>
+      <button id="practice-btn">🎯 Practice (solo)</button>      <div id="records-panel"></div>
+    </div>
+  </div>
+
+  <!-- ── Character picker (overlay; edits one player row) ──
+       MUST stay ABOVE the Online lobby block: tools/sync-parrot-flip.js strips
+       everything from the lobby marker to the NEXT "<!-- ── " heading, so markup
+       placed after it vanishes from the branded build. No <h1> here either —
+       the same tool rewrites the first <h1> to the parrot brand title. -->
+  <div id="char-picker-screen" class="screen hidden" role="dialog" aria-modal="true"
+       aria-labelledby="charpick-title">
+    <div class="charpick-card">
+      <div class="charpick-head">
+        <div id="charpick-title" class="charpick-title">Choose a character</div>
+        <button type="button" id="charpick-close" class="charpick-close" aria-label="Close">✕</button>
+      </div>
+      <div id="charpick-grid" class="charpick-grid"><!-- rendered by main.js --></div>
+    </div>
+  </div>
+
+  <!-- ── Mystery box reveal (a won box hatches a random flippable) ──
+       Same placement rule as the picker above: must stay ABOVE the Online lobby
+       marker or sync-parrot-flip.js strips it. No <h1>. -->
+  <div id="mystery-screen" class="screen hidden" role="dialog" aria-modal="true"
+       aria-labelledby="mystery-headline">
+    <div class="mystery-card">
+      <div id="mystery-headline" class="mystery-headline">A new flippable appears!</div>
+      <div class="mystery-stage">
+        <div id="mystery-box" class="mystery-box" aria-hidden="true">
+          <div class="mbox-lid"></div>
+          <div class="mbox-body">?</div>
+        </div>
+        <div id="mystery-prize" class="mystery-prize">
+          <canvas id="mystery-art" class="mystery-art" width="300" height="420" aria-hidden="true"></canvas>
+        </div>
+      </div>
+      <div id="mystery-name" class="mystery-name" aria-live="polite"></div>
+      <div id="mystery-family" class="mystery-family"></div>
+      <button type="button" id="mystery-go-btn">Tap to open</button>
+      <div id="mystery-queue" class="mystery-queue"></div>
     </div>
   </div>
 
@@ -112,17 +150,17 @@
   <!-- ?v= forces the browser to refetch on each release (dev server sends no
        cache headers). Bump alongside the service-worker CACHE_NAME. -->
   <script src="js/vendor/matter.min.js"></script>
-  <script src="js/polyfills.js?v=63"></script>
-  <script src="js/game.js?v=63"></script>
-  <script src="js/physics.js?v=63"></script>
-  <script src="js/input.js?v=63"></script>
-  <script src="js/renderer.js?v=63"></script>
-  <script src="js/audio.js?v=63"></script>
-  <script src="js/settings.js?v=63"></script>
-  <script src="js/records.js?v=63"></script>
-  <script src="js/achievements.js?v=63"></script>
-  <script src="js/skins.js?v=63"></script>
-  <script src="js/main.js?v=63"></script>
+  <script src="js/polyfills.js?v=80"></script>
+  <script src="js/game.js?v=80"></script>
+  <script src="js/physics.js?v=80"></script>
+  <script src="js/input.js?v=80"></script>
+  <script src="js/renderer.js?v=80"></script>
+  <script src="js/audio.js?v=80"></script>
+  <script src="js/settings.js?v=80"></script>
+  <script src="js/records.js?v=80"></script>
+  <script src="js/achievements.js?v=80"></script>
+  <script src="js/cartoon-casts.js?v=80"></script>
+  <script src="js/skins.js?v=80"></script>  <script src="js/main.js?v=80"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
