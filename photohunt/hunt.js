@@ -39,10 +39,12 @@ async function dbUpdate(table, query, patch) {
   if (!r.ok) throw new Error(`Update failed (${r.status})`);
 }
 
-/* All submissions, oldest first (optionally one team's) */
+/* Round 1's submissions, oldest first (optionally one team's).
+ * The path filter keeps this round separate from round 2 ("hunt2/"), which
+ * shares this table. */
 async function huntRows(team) {
   const filter = team ? `&team=eq.${team}` : '';
-  return dbSelect('hunt_submissions', `select=*${filter}&order=created_at.asc`);
+  return dbSelect('hunt_submissions', `select=*&path=like.hunt/*${filter}&order=created_at.asc`);
 }
 
 /* Current state per item for one team: the newest row wins; a 'retake' row
