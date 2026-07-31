@@ -29,7 +29,7 @@
   var HEADERS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
 
   var GAMES = ['navigator', 'black-sam', 'parrot-flip'];
-  var GAME_NAMES = { 'navigator': 'Navigator', 'black-sam': 'Black Sam', 'parrot-flip': 'Parrot Flip' };
+  var GAME_NAMES = { 'navigator': "Whydah's Voyage", 'black-sam': 'Black Sam', 'parrot-flip': 'Parrot Flip' };
 
   // state[slug] = true (open) | false (locked) | undefined (not yet known)
   var state = {};
