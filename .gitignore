@@ -67,6 +67,10 @@
 !vendor/
 !vendor/**
 
+# LEAP unit planner (final draft — submission document, not a student page)
+!unit-planner/
+!unit-planner/**
+
 # CI (not published by Pages — GitHub reads it from the repo)
 !.github/
 !.github/**
