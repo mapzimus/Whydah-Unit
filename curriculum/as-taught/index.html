@@ -10,7 +10,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Navigating Piracy — Black Sam Bellamy &amp; the Whydah">
 <meta property="og:description" content="Learn the navigation tools pirates used to cross the ocean — and navigate the real story of the people aboard the Whydah, wrecked off Cape Cod in 1717.">
-<meta property="og:image" content="pics/whydah-bell.jpg">
+<meta property="og:image" content="../../pics/whydah-bell.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="../../pics/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="../../pics/favicon-16.png">
@@ -1239,12 +1239,12 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
     <li class="nav-group" data-audience="admin">
       <span class="nav-group-label">Captain's Cabin</span>
       <ul>
-        <li data-audience="admin"><a href="#game-gate" data-admin-link="true">Game Gate</a></li>
+
         <li data-audience="admin"><a href="#unit-plan" data-admin-link="true">Unit Plan</a></li>
         <li data-audience="admin"><a href="#voyage-journal" data-admin-link="true">Voyage Journal</a></li>
         <li data-audience="admin"><a href="#source-links" data-admin-link="true">Sources &amp; Bibliography</a></li>
         <li data-audience="admin"><a href="#confidence" data-admin-link="true">Confidence &amp; Methods</a></li>
-        <li data-audience="admin"><a href="#teacher-toolkit" data-admin-link="true">Teacher Toolkit</a></li>
+
       </ul>
     </li>
   </ul>
@@ -2761,20 +2761,6 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 </div>
 </section>
 
-<section id="game-gate" data-folio="xiii" data-audience="admin">
-<h2>Game Gate</h2>
-<p class="meta">Open the crew games for the class, then lock them when you're done. This flips a live switch in the ship's log (Supabase) &mdash; every student device unlocks or re-locks within a few seconds. Students <strong>cannot</strong> open the games themselves; only this panel can, and only with the gate passcode.</p>
-<div id="gate-conn" class="gate-status">Checking the ship's log&hellip;</div>
-<div id="gate-grid" class="gate-grid"><!-- rows injected by the gate script --></div>
-<p class="gate-bulk">
-  <button type="button" id="gate-open-all" class="gate-bulk-btn">Open all</button>
-  <button type="button" id="gate-lock-all" class="gate-bulk-btn">Lock all</button>
-</p>
-<p class="meta">Teacher preview (ignores the gate): <a href="../../navigator/" target="_blank" rel="noopener">Whydah’s Voyage</a> &middot; <a href="../../black-sam/" target="_blank" rel="noopener">Black Sam</a> &middot; <a href="../../parrot-flip/" target="_blank" rel="noopener">Parrot Flip</a> &middot; <a href="../../games/">Games hub</a></p>
-<p class="meta">The first toggle each session asks for the <strong>gate passcode</strong> (stored only in the database, never on this page). <button type="button" id="gate-forget" class="gate-linklike">Forget the passcode on this device</button></p>
-<p class="meta">Note: this is a classroom-management gate, not hard security &mdash; a student who already knows a game's direct URL and has the passcode could still reach it. It stops casual wandering into the games between activities.</p>
-</section>
-
 <section id="unit-plan" data-folio="xiii" data-audience="admin">
 <h2>Unit Plan</h2>
 
@@ -3732,137 +3718,6 @@ Full source lists and tier-by-tier findings live alongside this file in <code>re
 
 </section>
 
-<section id="teacher-toolkit" data-folio="xvii" data-audience="admin">
-<h2>Teacher Toolkit</h2>
-<p class="meta">Live maps, GIS apps, and modern-piracy trackers to pull into class &mdash; teacher-facing, kept out of the student tabs.</p>
-
-<div class="card" id="banner-override-panel">
-<h3 style="margin-top:0;">📍 Banner Control</h3>
-<p class="meta">Which day banner shows at the top of the site. Normally leave on Automatic: the banner picks the right day by the date, for everyone, with no clicks. An override here changes <strong>this device only</strong> (handy for the projector). To force a day for every device, edit <code>WHYDAH_FORCE</code> in <code>day-config.js</code> and push.</p>
-<label style="display:flex; align-items:center; gap:.6em; flex-wrap:wrap;">
-<strong>Banner:</strong>
-<select style="padding:.35em .5em; font-size:1em; max-width:100%;"></select>
-</label>
-<p class="meta" data-role="status" style="margin-top:.5em;"></p>
-</div>
-
-<div class="card" id="crew-points-panel">
-<h3 style="margin-top:0;">🏴‍☠️ Crew Points</h3>
-<p class="meta">Points live on this device (the class sees them when you project). Cipher wins, board posts, and mission finishes earn points. Use "Project the board" for the big-screen leaderboard.</p>
-<div data-role="crew-list"></div>
-<div style="display:flex; gap:.5em; margin-top:.7em; flex-wrap:wrap;">
-<input data-role="crew-name" type="text" placeholder="New crew name" style="padding:.35em .5em; flex:1; min-width:10em;">
-<button data-role="add-crew" type="button" style="padding:.35em .9em; cursor:pointer;">Add crew</button>
-<button data-role="project-board" type="button" style="padding:.35em .9em; cursor:pointer; font-weight:700;">Project the board</button>
-</div>
-</div>
-<h3>GIS toolkit - free tools we can pull into class</h3>
-<p class="meta">Beyond MarineTraffic. Each one of these has a teaching use; none of them require a login or a paid account.</p>
-
-<div class="salem-callout" style="margin-bottom: 1em;">
-<h4>In-build: our own interactive student maps + Google Earth tour</h4>
-<p>Two planning artifacts in <code>resources/</code> that aren't shipped yet but are locked-in directions for the unit:</p>
-<ul style="margin: 0.4em 0;">
-<li><strong>Leaflet lesson scaffold</strong> (<code>resources/leaflet-middle-school-gis-whydah-lesson.md</code>) — five-activity arc using Leaflet (~42 KB, MIT) + Leaflet-Geoman: orient the Atlantic, plot the Whydah's route, place the wreck (41.891°N, 69.957°W), simulate Clifford's grid-search excavation, synthesize student evidence as a GeoJSON-output closing activity. Locked technical decision: <em>Leaflet, not MapLibre/Cesium/Felt.</em> Ready to build; suggested order is Activity 3 first as the self-contained template.</li>
-<li><strong>KML walkthrough</strong> (<code>resources/whydah-walkthrough.kml</code>) — Google Earth tour scaffold with confidence-tier styling (green/yellow/red + blue for modern sites + red triangle for the wreck). <em>Currently empty</em> — has the document header and styles but no placemarks yet. Needs populating from the dashboard's spatial waypoints (London, Ouidah, Jamaica, Nassau, Cape Cod wreck site, Boston, Charlestown gallows, Wellfleet, Salem, West Yarmouth Whydah Pirate Museum, Real Pirates Salem 285 Derby St).</li>
-</ul>
-<p class="meta" style="margin-top: 0.4em;">Both files are referenced here so the working directions don't get lost between sessions. Use <strong>TappyMaps</strong> for US-states-only thematic lessons; use Leaflet for anything that needs continuous-map drawing or world geography. The activity scaffold mirrors the howe2math worksheet pattern: one bank of data + a configurable presentation layer.</p>
-</div>
-
-<div class="card-grid">
-
-<div class="card">
-<h4><a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" target="_blank" rel="noopener">earth.nullschool.net - live wind, currents, weather</a></h4>
-<div class="video-embed-wrap" style="padding-bottom: 70%;">
-<iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" title="earth.nullschool.net - live North Atlantic wind" loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
-</div>
-<p class="meta" style="margin-top: 0.6em;">Live wind over the North Atlantic right now, centered on the same water Bellamy sailed. Click "earth" in the bottom-left to switch layer (try <em>Ocean -&gt; Currents</em> to see the Gulf Stream and the North Atlantic Gyre rolling in real time). The single best way to make the trade-wind &amp; gyre lecture (S5) land. <strong>If the embed shows blank above</strong>, nullschool may be blocking the iframe - just click the heading link to open in a new tab.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S5</strong> (the triangle's physics) and <strong>S14</strong> (chokepoint comparison).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://www.shipmap.org/" target="_blank" rel="noopener">Shipmap.org (Kiln, 2012)</a></h4>
-<p>Animated visualization of one full year of global merchant shipping. Watch container ships, dry bulk, tankers, gas, and vehicles move across the Atlantic. The 2012 data is a snapshot but the patterns are durable.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S5</strong> alongside the 1717 triangle map. Same ocean, different decade.</p>
-</div>
-
-<div class="card">
-<h4><a href="https://map.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap</a></h4>
-<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful for showing students how nautical charts encode depth and hazards differently than road maps.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S2-S3</strong> (cartographic conventions) and <strong>S11</strong> (the wreck site, with bathymetry).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://www.davidrumsey.com/" target="_blank" rel="noopener">David Rumsey Historical Map Collection</a></h4>
-<p>Stanford's online archive of 100,000+ historical maps - period charts, atlases, globes. The single best free archive of pre-1900 cartography. Includes Moll, Southack-era charts, period Atlantic and Caribbean maps. Built-in Luna Viewer for zoom + compare.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S3</strong> (Moll close-read) and any session where students want to find a period map for their final project.</p>
-</div>
-
-<div class="card">
-<h4><a href="https://collections.leventhalmap.org/" target="_blank" rel="noopener">Leventhal Map &amp; Education Center (BPL)</a></h4>
-<p>Boston Public Library's map collection - especially strong on New England, Cape Cod, and 18th-century coastal charts. Has a Southack Cape Cod chart and a "<em>X Marks the Spot</em>" article tracing the Whydah cartography story directly.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S13</strong> (Southack -&gt; Clifford story).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://historicalcharts.noaa.gov/" target="_blank" rel="noopener">NOAA Historical Map &amp; Chart Collection</a></h4>
-<p>U.S. government archive of 19th-century coastal charts of the U.S. and territories - direct descendants of the Southack tradition. Free, downloadable, mostly NOAA-hosted PDFs. Useful for showing how NOAA still maintains charts of the same waters Southack was mapping in 1717.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S2</strong> and <strong>S11</strong>.</p>
-</div>
-
-<div class="card">
-<h4><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy.com</a></h4>
-<p>Live weather + waves + wind, very visual. Pull up the North Atlantic the morning of S11 and ask "what would today have been like for a 1717 ship?" Run a hypothetical: a 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S11</strong> (the wreck conditions).</p>
-</div>
-
-<div class="card">
-<h4><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a></h4>
-<p>The International Maritime Bureau's Piracy Reporting Centre maintains a live map of every piracy and armed-robbery-at-sea incident reported worldwide. Updated continuously. Singapore Straits was the world's #1 hotspot in 2025 (80 of 137 IMB incidents), far ahead of the Gulf of Guinea (21); Q1 2026 fell to 16 incidents worldwide, the lowest since 1991. Somali piracy resurged in 2024 under cover of Houthi attacks (MV Ruen retaken March 16, 2024) and surged again from late 2025 into 2026 — naval presence deters but no longer fully contains it. The 1717 chokepoints have moved, not gone away.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S14</strong> (chokepoint comparison + modern piracy parallels). Show students that piracy is a current Coast Guard / Navy concern, not just a costume-and-treasure-chest story.</p>
-</div>
-
-</div>
-
-<h3>Modern tools (2026)</h3>
-<div class="card">
-<h4><a href="https://www.marinetraffic.com/">MarineTraffic.com</a> — live ship tracking</h4>
-<p>Our main modern-bridge tool. Free tier shows current positions of commercial ships at sea.</p>
-<ul>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-12.0/centery:25.0/zoom:4">Bellamy's world — central Atlantic</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12">Salem Harbor</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:14">Wellfleet wreck site (41.891N, 69.957W)</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6">Suez</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5">Red Sea / Bab-el-Mandeb</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8">Panama Canal</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6">Strait of Malacca</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:11">Cape Cod / wreck site (zoomed out)</a></li>
-<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.9/centery:42.5/zoom:12">Salem Harbor</a></li>
-</ul>
-</div>
-
-<h3>Modern piracy - news, trackers, and organizations</h3>
-<div class="card">
-<p class="meta">Current sources for the modern bridge in S14. Vetted, ad-light, public-interest. Most are also linked from <a href="http://www.cindyvallar.com/modernresources.html" target="_blank" rel="noopener">Cindy Vallar's running modern-piracy resources page</a>, which is updated through 2026.</p>
-<ul>
-<li><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a> - International Maritime Bureau Piracy Reporting Centre. Live, continuously updated.</li>
-<li><a href="https://www.recaap.org/" target="_blank" rel="noopener">ReCAAP ISC</a> - Asia regional piracy reporting (Singapore Straits is the 2025 hotspot).</li>
-<li><a href="https://eunavfor.eu/" target="_blank" rel="noopener">EUNAVFOR Operation Atalanta</a> - EU naval force off Somalia.</li>
-<li><a href="https://www.shipping.nato.int/" target="_blank" rel="noopener">NATO Shipping Centre</a> - merchant shipping coordination + piracy stats.</li>
-<li><a href="https://www.imo.org/" target="_blank" rel="noopener">IMO (International Maritime Organization)</a> - UN maritime regulatory body.</li>
-<li><a href="https://gcaptain.com/category/piracy/" target="_blank" rel="noopener">gCaptain - piracy section</a> - the best ongoing news source.</li>
-<li><a href="https://news.usni.org/" target="_blank" rel="noopener">USNI News</a> - US Naval Institute, strong coverage of military responses.</li>
-<li><a href="https://cimsec.org/" target="_blank" rel="noopener">Center for International Maritime Security (CIMSEC)</a> - analysis and policy.</li>
-</ul>
-<h4>Recent incidents in modern piracy</h4>
-<ul>
-<li><strong>2024 Ruen rescue (Arabian Sea)</strong> - Indian Navy commandos retook the bulk carrier <em>Ruen</em> from Somali pirates in an airborne raid (March 16, 2024). Concrete modern parallel to Bellamy-era boarding tactics, with helicopters instead of cutlasses.</li>
-<li><strong>2024–2026 Somali piracy resurgence</strong> - Houthi attacks on Red Sea shipping created cover for a Somali piracy resurgence after years of decline; it surged again from late 2025 into 2026 (Hellas Aphrodite hijacked Nov 2025; multiple simultaneous incidents tracked by EUNAVFOR in spring 2026).</li>
-<li><strong>2025 Singapore Straits #1 hotspot</strong> - the world's busiest chokepoint became the busiest piracy zone, surpassing the Gulf of Guinea and Somalia.</li>
-<li><strong>2026 Q1 decline</strong> - early 2026 numbers show a sharp drop from 2025 peaks (16 incidents worldwide, lowest since 1991). The pattern is cyclical, not a story of progress.</li>
-</ul>
-</div>
-</section>
 </main>
 
 <script>
