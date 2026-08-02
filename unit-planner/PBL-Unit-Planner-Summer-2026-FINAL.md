@@ -35,8 +35,9 @@
 
 ## Daily Project Planning Calendar
 
-Links go to the live student page for that day. **Slide decks and printed run-sheets are noted per
-day and will be attached** (see *Materials still to be linked*, below).
+Links go to the live student page for that day. Every day also has a projector deck and a timed
+teacher run-sheet; those files are listed by name in **Appendix C — Materials manifest**, and are
+pending upload (see *Materials still to be linked*, below).
 
 ### Week 1 (07/06) — Maps & Power
 
@@ -76,7 +77,7 @@ day and will be attached** (see *Materials still to be linked*, below).
 
 **Weekly extended writing prompt:** Pick one person who died in the wreck or stood trial. Write a paragraph about who you imagine they were.
 
-**Additional notes:** ⚠️ **Two scheduling facts to confirm before submission** — (1) the class ran ahead of the date grid on Mon 7/20 and the banner was forced to Day 9 that morning; (2) Day 12 (Lost and Found) was pulled forward out of Week 4 and taught Wed 7/22, sharing the slot with Day 10. The table above is the best reconstruction from the site config and commit record; Max should confirm the exact Mon/Tue/Wed split. Depositions and the shares-math extension are in the handouts packet → https://whydahstory.com/handouts.html#deposition and https://whydahstory.com/handouts.html#shares-math
+**Additional notes:** **Day 12 (Lost and Found) was pulled forward out of Week 4 and taught Wed 7/22, doubled up with Day 10** — a Week-3 crunch created by the fixed Georges Island ferry booking on Thu 7/23. The rebuilt Day 12 kit prepared later for the original Mon 7/27 slot was therefore never used; its project-decision beat was folded into Day 13 instead. Mon/Tue ran as planned (The Vote, then Sign the Articles). Depositions and the shares-math extension are in the handouts packet → https://whydahstory.com/handouts.html#deposition and https://whydahstory.com/handouts.html#shares-math
 
 ---
 
@@ -200,17 +201,23 @@ documents on the Salem trade. Every factual claim on the dashboard is tiered
 
 ## Materials still to be linked
 
-The following exist on Max's flash drive and are **not yet uploaded or linked**. They should be
-added to a shared Drive folder and linked here before this planner is considered complete:
+All of the following have been **located and inventoried** on Max's flash drive and are named
+file-by-file in **Appendix C**. What remains is the upload — they are **not yet hosted or linked**.
+Once uploaded, each filename in Appendix C becomes a link, and the manifest is done.
 
-- [ ] **Daily slide decks** — the projected slides for each session (Days 1–20)
-- [ ] **Printed run-sheets** — the teacher-facing timed run-sheets used in class
-- [ ] **Field trip packets** — the Real Pirates + Salem Maritime trip sheet (Day 6), the Georges Island pre-trip briefing (Day 11)
-- [ ] **The final-project rubric** as used
-- [ ] **Voyage Journal templates** — folder cover, weekly dividers, per-session sheets
-- [ ] **Any Day 1 materials** (the hook artifact images, the DQ wall poster)
+- [x] **Daily slide decks** — located. All 20 sessions have one; none missing, none orphaned.
+- [x] **Teacher run-sheets** — located. One timed presentation script per day, in `.docx` and `.md`.
+- [x] **Field trip packets** — located. Day 6 pre-trip deck; the Georges Island pre-trip briefing for Day 11.
+- [x] **The final-project rubric** — located: *Navigating Piracy — Assessment Tracker & Criteria*.
+- [x] **Voyage Journal / student print pack** — located: `PRINT-JOB-Student-Pack.pdf`.
+- [x] **Day 1 materials** — located: a 20-slide deck, teleprompter notes, script, and circle activities.
+- [ ] **Upload to a shared folder and swap the filenames in Appendix C for links.**
 
-Once uploaded, each one links into the day it belongs to in the calendar above.
+> ⚠️ **Two files must be excluded from any shared folder.** `runsheets.html` and
+> `TEACHER-ONLY-Answer-Sheets.pdf` contain the cipher-league answers and mission answer keys. The
+> cipher league runs live in class; publishing the answers breaks it. `runsheets.html` is
+> deliberately kept out of the public repo for this reason and must stay out of the shared Drive
+> folder too.
 
 *Not included by design:* the student photo galleries and the teacher-only Captain's Cabin
 (passcode-gated) are excluded from this shared planner — the first for student-privacy reasons,
@@ -248,3 +255,55 @@ Kept here because the changes are the useful part for a future facilitator.
 | **Mock trial role-play cut, then reborn as Day 15** | The original mock trial was cut in early July; in Week 4 it came back, rebuilt around the actual printed 1718 trial record with scored, sourced evidence. It became the best sourcing lesson in the unit. |
 | **Day 12 pulled forward into Week 3** | Week-3 scheduling crunch ahead of the Georges Island trip. |
 | **Circles added to every day** | Added July 20 after the Middle Passage day showed how much the harder content needed a container. |
+
+## Appendix C — Materials manifest
+
+Every session's projector deck and teacher run-sheet, by filename. These are inventoried and
+verified present; **they are not yet uploaded**. When they are, replace each filename with its link
+and this planner is complete.
+
+> **Read the three columns carefully — the numbers do not line up, on purpose.** From Day 15 on,
+> what students see, what the web page is called, and what the deck is called were renumbered at
+> different times. The deck filenames match the **student** numbering; the page filenames were
+> deliberately frozen (see Appendix A). A file called `Day-17-Synthesis-Studio.pptx` is the deck for
+> student **Day 17**, and its student page is `day16.html`. This is correct, not a typo.
+
+| Students see | Lesson | Student page | Projector deck | Teacher run-sheet |
+| :-- | :-- | :-- | :-- | :-- |
+| Day 1 | Launching the Voyage | *(no page — predates the day-page pattern)* | `Day-1-Welcome-Aboard.pptx` | `DAY-1-Presentation-Script.docx` |
+| Day 2 | What Is a Map? | `day2.html` | `Day-2-What-Is-A-Map.pptx` | `DAY-2-Presentation-Script.docx` |
+| Day 3 | Reading the 1719 World Map | `day3.html` | `Day-3-Reading-The-1719-Map.pptx` | `DAY-3-Presentation-Script.docx` |
+| Day 4 | Adopt a Ship | `day4.html` | `Day-4-Adopt-A-Ship.pptx` | `DAY-4-Presentation-Script.docx` |
+| Day 5 | Out of the Machine | `day5.html` | `Day-5-Out-Of-The-Machine.pptx` | `DAY-5-Presentation-Script.docx` |
+| Day 6 | FT1 — Real Pirates + Salem Maritime | `day6.html` | `Day-6-FT1-Real-Pirates-Salem-Maritime.pptx` | `DAY-6-Presentation-Script.docx` |
+| Day 7 | FT2 — Life at Sea: Kayak Day | `day7.html` | `Day-7-Life-At-Sea.pptx` | `DAY-7-Presentation-Script.docx` |
+| Day 8 | The Vote | `day8.html` | `Day-8-The-Vote.pptx` | `DAY-8-Presentation-Script.docx` |
+| Day 9 | Sign the Articles | `day9.html` | `Day-9-Sign-The-Articles.pptx` | `DAY-9-Presentation-Script.docx` |
+| Day 10 | The Wreck | `day10.html` | `Day-10-The-Wreck.pptx` | `DAY-10-Presentation-Script.docx` |
+| Day 11 | FT3 — Georges Island | `day11.html` | `Day-11-Georges-Island.pptx` | `DAY-11-Presentation-Script.docx` · `Georges-Island-Pretrip-Briefing.docx` |
+| Day 12 | Lost and Found | `day12.html` | `Day-12-Lost-And-Found.pptx` | `DAY-12-Presentation-Script.docx` |
+| Day 13 | Where Ships Squeeze Through | `day13.html` | `Day-13-Where-Ships-Squeeze-Through.pptx` | `DAY-13-Presentation-Script.docx` |
+| Day 14 | Salem Then and Now | `day14.html` | `Day-14-Salem-Then-And-Now.pptx` | `DAY-14-Presentation-Script.docx` |
+| Day 15 | The Trial | `day14b.html` | `Day-15-Project-Studio.pptx` | `DAY-15-Project-Studio-Script.docx` · `DAY-15-Mock-Trial-Cards-And-Judge-Script.docx` |
+| Day 16 | Pitch Day | `day15.html` | `Day-16-Pitch-Day.pptx` | `DAY-16-Pitch-Day-Script.docx` |
+| Day 17 | Synthesis Studio | `day16.html` | `Day-17-Synthesis-Studio.pptx` | `DAY-17-Synthesis-Script.docx` |
+| Day 18 | Build Day 1 | `day17.html` | `Day-18-Build-Day-1.pptx` | `DAY-18-Build-1-Script.docx` |
+| Day 19 | Build Day 2 — Peer Review | `day18.html` | `Day-19-Build-Day-2.pptx` | `DAY-19-Build-2-Script.docx` |
+| Day 20 | The Showcase | `day19.html` | `Day-20-The-Showcase.pptx` | `DAY-20-Showcase-Script.docx` |
+
+**Whole-unit materials (not day-specific)**
+
+| Material | File |
+| :-- | :-- |
+| Student print pack — the Voyage Journal sheets | `PRINT-JOB-Student-Pack.pdf` |
+| Final-project rubric / assessment criteria | `Navigating Piracy — Assessment Tracker & Criteria.docx` |
+| Full materials and supply list | `MATERIALS-LIST.docx` |
+| Circle question banks (the daily circle routine) | `Circle-Time-Question-Bank-v2.docx` · `Circle-Questions-Simple.docx` |
+| Per-day circle activities (Days 1, 2, 3, 12, 13, 14, 14B, 16) | `Day-N-Circle-Activities.docx` |
+| Day 1 teleprompter notes | `Day-1-Teleprompter-Notes.pdf` |
+| Substitute-runnable backup lessons (3) | `Lesson Plans/SWAP-01…03-*.md` |
+
+**Decks are regenerable.** Each deck is built from a script in `Lessons/deck-assets/build-dayN.js`
+using pptxgenjs (`node build-dayN.js`). Those build scripts use the **page** numbering, not the
+student numbering — `build-day16.js` produces `Day-17-Synthesis-Studio.pptx`. Edit the build script,
+not the `.pptx`, or the next rebuild silently reverts your change.
