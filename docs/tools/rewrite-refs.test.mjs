@@ -46,3 +46,19 @@ test('root-level static assets climb two levels', () => {
   assert.equal(rewriteRef('site.webmanifest'), '../../site.webmanifest');
   assert.equal(rewriteRef('apple-touch-icon.png'), '../../apple-touch-icon.png');
 });
+
+test('depth 1: assets climb one level', () => {
+  assert.equal(rewriteRef('pics/whydah-bell.jpg', { depth: 1 }), '../pics/whydah-bell.jpg');
+  assert.equal(rewriteRef('map-studio.html', { depth: 1 }), '../map-studio.html');
+});
+
+test('depth 1: archive-internal targets are siblings', () => {
+  assert.equal(rewriteRef('day8.html', { depth: 1 }), 'day-8-the-vote/');
+  assert.equal(rewriteRef('whydah-dashboard.html#people', { depth: 1 }), 'as-taught/#people');
+  assert.equal(rewriteRef('handouts.html', { depth: 1 }), 'handouts.html');
+});
+
+test('depth defaults to 2 and is unchanged', () => {
+  assert.equal(rewriteRef('pics/x.jpg'), '../../pics/x.jpg');
+  assert.equal(rewriteRef('day8.html'), '../day-8-the-vote/');
+});
