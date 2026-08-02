@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 15 · The Trial · Navigating Piracy</title>
+<meta name="description" content="Day 15: the Boston trial of the Whydah survivors. Sit the court, weigh the real evidence, then open the Appeal: build a piece of your project and price your supply list before Pitch Day.">
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+
+<style>
+  :root{
+    --ink:#12222B; --ink2:#1C3743; --parch:#F3E8CE; --parch2:#EAD9B4;
+    --brass:#A9781F; --brassl:#D8B25A; --ox:#8C2C1E; --inktx:#2B2114; --muted:#6E5B3C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--parch); color:var(--inktx); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; line-height:1.5;}
+  .hero{background:var(--ink); color:var(--parch); padding:2.2em 1em 1.8em; text-align:center;}
+  .hero .kicker{color:var(--brassl); font-weight:700; letter-spacing:.25em; font-size:.85em; text-transform:uppercase;}
+  .hero h1{font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.9em,5vw,3em); margin:.25em 0 .2em;}
+  .hero .sub{color:#C7BCA0; font-style:italic; font-size:1.05em;}
+  .wrap{max-width:880px; margin:0 auto; padding:1.2em 1em 3em;}
+  .mission{background:var(--parch2); border:1.5px solid var(--brass); border-radius:10px; padding:1.2em 1.3em 1.3em; margin:1.3em 0; box-shadow:2px 3px 10px rgba(42,29,15,.14);}
+  .mission-top{display:flex; align-items:baseline; gap:.7em; flex-wrap:wrap;}
+  .mnum{background:var(--ox); color:var(--parch); font-family:Georgia,serif; font-weight:700; font-size:1.25em; border-radius:50%; width:1.9em; height:1.9em; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;}
+  .mission h2{font-family:Georgia,serif; font-size:1.45em; color:var(--inktx);}
+  .meta{color:var(--ox); font-weight:700; font-size:.92em; margin:.15em 0 .6em;}
+  .mission p{margin:.5em 0;}
+  .btn{display:inline-block; background:var(--brass); color:#FBF4E2; font-weight:700; font-size:1.06em; text-decoration:none; padding:.85em 1.25em; border-radius:8px; margin:.45em .45em .2em 0; border:2px solid #8a6119;}
+  .btn:hover,.btn:focus{background:#8a6119; outline:3px solid var(--ox);}
+  .btn.alt{background:var(--ink2); border-color:var(--ink);}
+  .btn.alt:hover,.btn.alt:focus{background:var(--ink);}
+  .log{background:#FBF4E2; border:1.5px dashed var(--ox); border-radius:8px; padding:.8em 1em; margin-top:.8em;}
+  .log b{color:var(--ox);}
+  .hunt{margin:.5em 0 .3em 1.2em;}
+  .hunt li{margin:.35em 0;}
+  .bonus{font-style:italic; color:var(--muted); margin-top:.6em;}
+  .foot{background:var(--ink); color:#C7BCA0; text-align:center; padding:1.6em 1em 2em; font-size:.95em;}
+  .foot a{color:var(--brassl);}
+  .divider{text-align:center; color:var(--ox); font-size:1.3em; margin:1.6em 0 .2em; font-family:Georgia,serif; font-weight:700;}
+  .note{font-size:.9em; color:var(--muted); font-style:italic;}
+  .card-fields{background:#FBF4E2; border:1.5px solid var(--brass); border-radius:8px; padding:.8em 1em; margin:.6em 0;}
+  .card-fields div{padding:.28em 0; border-bottom:1px dashed var(--parch2); font-weight:700; color:var(--ink2);}
+  .card-fields div:last-child{border-bottom:none;}
+  .card-fields span{color:var(--muted); font-weight:400; font-style:italic;}
+  .race{background:#FBF4E2; border:2px solid var(--ox); border-radius:8px; padding:.8em 1em; margin-top:.8em;}
+  .race b{color:var(--ox);}
+  .station{background:#FBF4E2; border:1.5px solid var(--brass); border-radius:8px; padding:.7em .9em; margin:.5em 0;}
+  .station b{color:var(--ink2);}
+  .docket{background:var(--ink); color:var(--parch); border-radius:8px; padding:.9em 1.1em; margin:.7em 0; font-family:Georgia,serif;}
+  .docket div{padding:.3em 0; border-bottom:1px solid #2f4a56;}
+  .docket div:last-child{border-bottom:none;}
+  .docket b{color:var(--brassl);}
+  .verdict{color:#E8B4A6;}
+  .points{display:inline-block; background:var(--ox); color:var(--parch); font-weight:700; font-size:.85em; padding:.15em .55em; border-radius:4px; margin-left:.3em;}
+  .defendant{background:#FBF4E2; border:1.5px solid var(--brass); border-radius:8px; padding:.7em .9em; margin:.5em 0;}
+  .defendant b{color:var(--ox); font-family:Georgia,serif;}
+  blockquote.dep{border-left:4px solid var(--brass); padding:.4em 0 .4em 1em; margin:.6em 0; font-family:Georgia,serif; font-style:italic;}
+  @media (max-width:520px){ .mission{padding:1em .9em;} .btn{display:block; text-align:center; margin-right:0;} }
+</style>
+</head>
+<body>
+<div class="archive-notice" style="background:#1C3743;color:#C7BCA0;padding:.7em 1em;text-align:center;font-size:.95em;border-bottom:2px solid #A9781F;">
+This unit ran July 6 – August 6, 2026 at Collins Middle School, Salem MA. <b>Archived as taught.</b> Not maintained. <a href="../" style="color:#D8B25A;">All 20 days</a>
+</div>
+<header class="hero">
+  <div class="kicker">Day 15 · Week 4 · Pitch Week</div>
+  <h1>The Trial</h1>
+  <div class="sub">Boston, October 1717. Nine men came out of the surf alive. Today this room is the courtroom, and you are the court.</div>
+</header>
+
+<main class="wrap">
+
+  <section class="mission" id="convene" style="border-color:var(--ox); border-width:2px;">
+    <div class="mission-top"><span class="mnum">⚖</span><h2>The Court Convenes</h2></div>
+    <div class="meta">Whole crew · Max presides · you are the commissioners</div>
+    <p>The Whydah went down April 26, 1717. Nine survivors were marched to Boston. This really happened, and the record survives: <em>The Trials of Eight Persons</em>, printed in Boston, 1718. Today we sit that court again, and this time YOU weigh the evidence.</p>
+    <div class="docket">
+      <div><b>THE CHARGE:</b> Piracy and Robbery, upon the High Seas.</div>
+      <div><b>THE STAKES:</b> Guilty means the gallows. "Forced man" means you walk.</div>
+      <div><b>THE PROBLEM:</b> Almost every man at the bar said the same thing: I was taken. I was forced. The court believed two of them.</div>
+    </div>
+    <p class="note">Rules of this court: verdicts need evidence. Anyone can be made to say why. And nobody hangs today, we are here to judge the JUDGING.</p>
+  </section>
+
+  <section class="mission" id="evidence">
+    <div class="mission-top"><span class="mnum">1</span><h2>Gather the Evidence<span class="points">SCORED</span></h2></div>
+    <div class="meta">9 minutes on the clock · pairs · Chromebooks up</div>
+    <p>A court runs on sworn testimony, and we have the real thing: depositions taken days after the wreck, from the survivors themselves. Raid the record. Bring back <b>three pieces of evidence</b> and where each came from.</p>
+    <div class="race"><b>⚑ SCORING, on the board:</b>
+      <ul class="hunt">
+        <li><b>1 point</b> per piece of evidence with the page it came from. No page, no point.</li>
+        <li><b>2 points</b> if it comes from a sworn deposition or a real artifact.</li>
+        <li><b>3 points</b> for evidence nobody else brings back.</li>
+        <li><b>Minus 1</b> for anything you cannot show on a page. In this court, made up is perjury.</li>
+      </ul>
+      Hunting grounds: the <b>survivors' depositions</b> on the Wreck pages (Davis, Hoof, Dunavan, word for word), the Timeline, the People tab, Artifacts.</div>
+    <a class="btn" href="../as-taught/#wreck-fleet" target="_blank" rel="noopener">The depositions →</a>
+    <div class="log"><b>LOG IT:</b> THE EVIDENCE page. Three facts, three sources. At least ONE must be about the person YOUR project is on.</div>
+    <p class="bonus">First pair to three sourced pieces calls the first case in the Verdict round.</p>
+  </section>
+
+  <section class="mission" id="verdicts">
+    <div class="mission-top"><span class="mnum">2</span><h2>The Verdict Round</h2></div>
+    <div class="meta">12 minutes · whole crew · vote with your feet, then the record answers</div>
+    <p>Four real men. For each one: hear the case, then walk to your wall, <b>GUILTY</b> or <b>FORCED MAN</b>. Defend your side if called. Then Max reads what the court actually did in 1717. Match the court, or find out you would have hanged a man it freed.</p>
+    <div class="defendant"><b>Thomas Davis</b>, 22, Welsh carpenter. Taken off the <em>St. Michael</em> in December 1716. Says the pirates kept him for his trade and he never signed their articles.</div>
+    <div class="defendant"><b>Thomas South</b>, carpenter, taken from a captured ship like Davis. Says he was kept for his trade and was never willingly one of them.</div>
+    <div class="defendant"><b>Peter Cornelius Hoof</b>, Sweden, sailor. In Bellamy's crew over a year. His own sworn words put him at the treasure count: fifty pounds to every man's share.</div>
+    <div class="defendant"><b>Simon van der Vorst</b>, New York. The one defendant born closest to this courtroom. Claims force, like nearly every man at the bar. Where is the line?</div>
+    <div class="log"><b>LOG IT:</b> after the reveals, one line on THE EVIDENCE page: <em>"The court got ___ right and ___ wrong, because ___."</em></div>
+    <p class="note">Then the ninth man. John Julian, the Miskito pilot, got no verdict to vote on. No trial. No record of a defense. He was sold. Eight men got a trial. One man got a receipt.</p>
+  </section>
+
+  <section class="mission" id="appeal" style="border-color:var(--ox); border-width:2px;">
+    <div class="mission-top"><span class="mnum">🧭</span><h2>The Appeal Opens: Your Project</h2></div>
+    <div class="meta">8 minutes · solo · tomorrow you sign. For real.</div>
+    <p>The 1717 court wrote the ending for all nine men in a few October days, and for one of them it never even opened the file. <b>Your Showcase project is the appeal.</b> The retrial. You pick one person from this story and you tell it with the evidence the first court never weighed.</p>
+    <ol class="hunt">
+      <li><b>ONE person.</b> Circle it on your tracker. Davis. South. Hoof. Julian. John King. Ashton. Mather. Somebody nobody has named yet.</li>
+      <li><b>ONE format.</b> The one you test today. Twelve on the menu.</li>
+      <li><b>Your opening statement</b>, written now: <em>"I am making a ___ about ___, because the record ___."</em> One sentence. Write it badly. Fix it before you leave.</li>
+    </ol>
+    <a class="btn" href="../choose-your-project.html" target="_blank" rel="noopener">The menu, the cast, and the form →</a>
+    <p class="note">Tomorrow is Pitch Day: you hand Max a signed commitment form with your person, format, opening statement, and supply list. He shops from it once. Torn between two formats? Test the harder one today.</p>
+  </section>
+
+  <section class="mission" id="m0">
+    <div class="mission-top"><span class="mnum">0</span><h2>Rig your case file</h2></div>
+    <div class="meta">2 minutes · solo · paper and pencil</div>
+    <p>One sheet, folded like a book. Cover: <b>your name, "Day 15: The Trial," the date.</b> Then:</p>
+    <div class="card-fields">
+      <div>Page 1: THE EVIDENCE <span>your three sourced facts + your verdict line</span></div>
+      <div>Page 2: THE EXHIBIT <span>what you built today, what worked, what fought you</span></div>
+      <div>Page 3: THE LIST <span>your priced supply list. This becomes tomorrow's form.</span></div>
+      <div>Back cover: MY COURSE <span>tonight your tracker locks.</span></div>
+    </div>
+  </section>
+
+  <section class="mission" id="build">
+    <div class="mission-top"><span class="mnum">3</span><h2>Build Exhibit A</h2></div>
+    <div class="meta">~25 minutes · solo or with your partner · pick YOUR station</div>
+    <p>Every appeal needs an exhibit. Not the whole project: <b>one small real piece of it</b>, and it must carry <b>at least one piece of evidence you raided</b>. That is what makes it an exhibit and not a decoration.</p>
+    <div class="station"><b>🗺️ Story map or narrated tour:</b> open <a href="../../map-studio.html" target="_blank" rel="noopener">Map Studio</a>. Drop your first 3 pins. Write one pin's story in your person's voice. Try the 1717 chart and the globe. Saves stay on your machine, so note your Chromebook number.</div>
+    <div class="station"><b>🖼️ Poster, exhibit board, newspaper:</b> scrap paper. Sketch the whole layout small. Every box, every image, every label. Headline it like the 1718 printers did. The sketch writes your supply list.</div>
+    <div class="station"><b>📖 Flip book, graphic novel, letters:</b> make page one for real. A letter? Write it from the gaol, dated 1717. Time one unit, then multiply by eight.</div>
+    <div class="station"><b>🎭 Performance or shanty:</b> your first 6 lines. A closing argument counts. Say them to a wall, then a partner, timed.</div>
+    <div class="station"><b>🎬 Slides story:</b> storyboard all 10 to 12 slides on paper. Title, image idea, one quote each. A real deposition line beats any caption you invent. Then see Max for the no-login plan.</div>
+    <div class="log"><b>LOG IT:</b> THE EXHIBIT page. What you built. One thing that worked. One thing that fought you.</div>
+    <p class="bonus">Format fought you the whole block? Good, the trial run did its job. Switch to your other format NOW. Today is the last free switch.</p>
+  </section>
+
+  <section class="mission" id="inspect">
+    <div class="mission-top"><span class="mnum">4</span><h2>The Jury Walk</h2></div>
+    <div class="meta">7 minutes · everybody up · silent</div>
+    <p>Tools down. Exhibit on your desk, opening statement face up. Now the jury inspects, and juries do not chat.</p>
+    <ol class="hunt">
+      <li>Visit <b>at least three</b> exhibits that are not near you.</li>
+      <li>Leave <b>two slips</b> on two different exhibits. One says <b>STEAL THIS:</b> the thing worth copying. One says <b>IT NEEDS:</b> the thing they forgot. Sign your slips.</li>
+      <li>Back at your desk: read your slips. Anything true goes on THE LIST.</li>
+    </ol>
+    <p class="bonus">Best slip in the room gets read aloud at the ring.</p>
+  </section>
+
+  <section class="mission" id="list">
+    <div class="mission-top"><span class="mnum">5</span><h2>THE LIST, and you are on a budget</h2></div>
+    <div class="meta">7 minutes · solo · this is the one Max actually needs</div>
+    <p>You built the exhibit, so now you know what the full appeal needs. Write it <b>exact, boring, complete</b>. Then price it.</p>
+    <ol class="hunt">
+      <li><b>Every item, with a number.</b> Board size. Marker count. Which pictures, named. Glue. String. Tape. "Art stuff" buys nothing.</li>
+      <li><b>Guess each price. Add it up. Budget: $15 solo, $25 partners.</b> Over? Cut something, or write one sentence telling Max why it is worth it. He reads every one.</li>
+      <li><b>All digital?</b> Write <b>ALL DIGITAL</b> big, then what you still need from Max: a printed map, a practice slot, a machine held for you.</li>
+    </ol>
+    <div class="log"><b>LOG IT:</b> THE LIST page is tomorrow's form, already written. Copy it in ink tomorrow and you are done in two minutes.</div>
+  </section>
+
+  <section class="mission" id="drill">
+    <div class="mission-top"><span class="mnum">6</span><h2>Opening Statements<span class="points">30 SECONDS</span></h2></div>
+    <div class="meta">6 minutes · standing · say it out loud today so tomorrow is not the first time</div>
+    <ol class="hunt">
+      <li>Partner who is NOT your project partner. 30 seconds: your opening statement, your person, one piece of raided evidence. Timed.</li>
+      <li>Swap partners. Again, faster. It gets better every time you say it, which is the point.</li>
+      <li>Three volunteers address the court. The room times it and rules: <b>did that land?</b></li>
+    </ol>
+    <p class="bonus">Nail it in under 30 seconds tomorrow and the Captain's Check is a formality.</p>
+  </section>
+
+  <div class="divider">✦</div>
+
+  <section class="mission" id="circle">
+    <div class="mission-top"><span class="mnum">○</span><h2>The Court Recesses: Ring</h2></div>
+    <div class="meta">5 minutes · standing ring</div>
+    <p>Around the ring, one sentence each: <b>"I tested ___ and learned ___."</b> Second lap, fast: <b>the one supply you cannot build without.</b></p>
+  </section>
+
+  <section class="mission" id="log">
+    <div class="mission-top"><span class="mnum">★</span><h2>Captain's Log</h2></div>
+    <div class="meta">4 minutes · solo · in your captain's voice</div>
+    <div class="log"><b>LOG IT:</b> "The court of 1717 gave my person ___. My appeal gives them ___. Tomorrow I sign for it." Date it like a sailor: "29 July 2026." Bottom of THE EVIDENCE page.</div>
+  </section>
+
+  <section class="mission" id="reflect">
+    <div class="mission-top"><span class="mnum">✦</span><h2>The Question</h2></div>
+    <div class="meta">On your way out · say it to your first mate</div>
+    <p><b>Can you finish your appeal in two build days?</b></p>
+    <p class="note">After today you actually know. Answer honestly at the door. Tomorrow you sign your name to it.</p>
+  </section>
+
+  <section class="mission" id="early">
+    <div class="mission-top"><span class="mnum">⚓</span><h2>Done early?</h2></div>
+    <div class="meta">Earned time only · list finished and checked first</div>
+    <p>Run the Chokepoints 60 second leaderboard, or take a voyage in First Sail. Beat somebody's score and say so.</p>
+    <a class="btn alt" href="../../map-studio.html?door=" target="_blank" rel="noopener">🚢 Chokepoints</a>
+    <a class="btn alt" href="../../navigator/index.html" target="_blank" rel="noopener">⛵ First Sail</a>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <p><b>Tomorrow:</b> Pitch Day. You stand up, you make your opening statement, you pass the Captain's Check, you hand Max the signed form with THE LIST copied onto it.</p>
+  <p style="margin-top:.6em;"><a href="../as-taught/#overview">⚓ Back to the ship's logbook (dashboard)</a></p>
+</footer>
+
+</body>
+</html>
