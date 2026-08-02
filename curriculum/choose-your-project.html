@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choose Your Project · Navigating Piracy</title>
+<meta name="description" content="The project menu: twelve ways to tell your person's story at the Showcase, and the commitment form due Thursday.">
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+
+<style>
+  :root{
+    --ink:#12222B; --ink2:#1C3743; --parch:#F3E8CE; --parch2:#EAD9B4;
+    --brass:#A9781F; --brassl:#D8B25A; --ox:#8C2C1E; --inktx:#2B2114; --muted:#6E5B3C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--parch); color:var(--inktx); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; line-height:1.5;}
+  .hero{background:var(--ink); color:var(--parch); padding:2.2em 1em 1.8em; text-align:center;}
+  .hero .kicker{color:var(--brassl); font-weight:700; letter-spacing:.25em; font-size:.85em; text-transform:uppercase;}
+  .hero h1{font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.9em,5vw,3em); margin:.25em 0 .2em;}
+  .hero .sub{color:#C7BCA0; font-style:italic; font-size:1.05em;}
+  .wrap{max-width:880px; margin:0 auto; padding:1.2em 1em 3em;}
+  .mission{background:var(--parch2); border:1.5px solid var(--brass); border-radius:10px; padding:1.2em 1.3em 1.3em; margin:1.3em 0; box-shadow:2px 3px 10px rgba(42,29,15,.14);}
+  .mission h2{font-family:Georgia,serif; font-size:1.45em; color:var(--inktx); margin-bottom:.3em;}
+  .meta{color:var(--ox); font-weight:700; font-size:.92em; margin:.15em 0 .6em;}
+  .mission p{margin:.5em 0;}
+  .btn{display:inline-block; background:var(--brass); color:#FBF4E2; font-weight:700; font-size:1.06em; text-decoration:none; padding:.85em 1.25em; border-radius:8px; margin:.45em .45em .2em 0; border:2px solid #8a6119;}
+  .btn:hover,.btn:focus{background:#8a6119; outline:3px solid var(--ox);}
+  .btn.alt{background:var(--ink2); border-color:var(--ink);}
+  .btn.alt:hover,.btn.alt:focus{background:var(--ink);}
+  .note{font-size:.9em; color:var(--muted); font-style:italic;}
+  .menu{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8em; margin:.8em 0 .2em;}
+  .fmt{background:#FBF4E2; border:1.5px solid var(--brass); border-radius:8px; padding:.85em .95em;}
+  .fmt h3{font-family:Georgia,serif; font-size:1.08em; color:var(--ink2); margin-bottom:.15em;}
+  .fmt p{font-size:.92em; margin:.25em 0;}
+  .fmt .needs{font-size:.85em; color:var(--muted); font-style:italic;}
+  .tag{display:inline-block; font-size:.7em; font-weight:800; letter-spacing:.06em; padding:.15em .55em; border-radius:999px; vertical-align:middle; margin-left:.35em;}
+  .tag.d{background:var(--ink2); color:var(--brassl);}
+  .tag.p{background:var(--ox); color:var(--parch);}
+  .tag.b{background:var(--brass); color:#FBF4E2;}
+  .steps{margin:.5em 0 .3em 1.2em;}
+  .steps li{margin:.35em 0;}
+  .log{background:#FBF4E2; border:1.5px dashed var(--ox); border-radius:8px; padding:.8em 1em; margin-top:.8em;}
+  .log b{color:var(--ox);}
+  .foot{background:var(--ink); color:#C7BCA0; text-align:center; padding:1.6em 1em 2em; font-size:.95em;}
+  .foot a{color:var(--brassl);}
+
+  /* ---- Commitment form (screen preview + print) ---- */
+  .form-sheet{background:#FBF4E2; border:2px solid var(--ink2); border-radius:8px; padding:1.1em 1.2em; margin-top:.8em;}
+  .form-sheet h3{font-family:Georgia,serif; color:var(--ink2); text-align:center; letter-spacing:.04em;}
+  .form-sheet .fline{border-bottom:1.5px solid var(--ink2); min-height:2em; margin:.9em 0 .2em; display:flex; align-items:flex-end; gap:.5em;}
+  .form-sheet .fline label{font-weight:700; font-size:.85em; color:var(--ox); white-space:nowrap;}
+  .form-sheet .fbig{border:1.5px solid var(--ink2); border-radius:6px; min-height:5.5em; margin:.35em 0 .1em; padding:.4em .6em; font-size:.85em; color:var(--muted); font-style:italic;}
+  .form-sheet .row2{display:grid; grid-template-columns:1fr 1fr; gap:1.2em;}
+  .form-sheet .tick{font-size:.95em; margin:.65em 0 0;}
+  .form-sheet .tick b{color:var(--ox);}
+  .sig{display:grid; grid-template-columns:2fr 1fr; gap:1.2em;}
+  @media (max-width:520px){ .mission{padding:1em .9em;} .btn{display:block; text-align:center; margin-right:0;} .menu{grid-template-columns:1fr;} .form-sheet .row2,.sig{grid-template-columns:1fr;} }
+  @media print{
+    body{background:white;}
+    .hero,.no-print,.foot,#today-banner{display:none !important;}
+    .wrap{max-width:none; padding:0;}
+    .mission{display:none;}
+    .mission.print-form{display:block; border:none; box-shadow:none; background:white; padding:0; margin:0;}
+    .form-sheet{border-color:#000; background:white;}
+    .form-sheet .fline,.form-sheet .fbig{border-color:#000;}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="kicker">Pitch Week · Decision by Thursday</div>
+  <h1>Choose Your Project</h1>
+  <div class="sub">One person. One format. You commit Thursday, July 30 — and then we build it together.</div>
+</header>
+
+<main class="wrap">
+
+  <section class="mission no-print" id="how">
+    <h2>How this works</h2>
+    <div class="meta">Read this once. It's the whole deal.</div>
+    <ol class="steps">
+      <li><b>Your person</b> — someone real from our story. Their cards live in the <a href="as-taught/#people">People tab</a>.</li>
+      <li><b>Your format</b> — ONE from the menu below. It's how your person's story gets told at the Showcase on <b>Thursday, August 6</b>.</li>
+      <li><b>Your evidence</b> — 3–4 pages from your own Voyage Journal. No journal pages, no project.</li>
+      <li><b>Thursday, July 30:</b> you pitch it, Max checks it, and you hand in the <b>commitment form</b> at the bottom of this page. If your project needs supplies, that form is how they get bought. No form, no supplies.</li>
+    </ol>
+    <p class="note">Only two build days (Aug 4 + 5). Pick something you can actually finish. Small and done beats big and half-built — every time.</p>
+  </section>
+
+  <section class="mission no-print" id="menu">
+    <h2>The menu: twelve ways to tell it</h2>
+    <div class="meta">💻 = on the Chromebooks (no logins needed) · ✂️ = physical, Max buys the supplies · 🎭 = performed live</div>
+    <div class="menu">
+      <div class="fmt"><h3>🗺️ Story map <span class="tag d">💻 or ✂️</span></h3>
+        <p>8–10 stops along your person's voyage, each with a pin and their voice. Build it in our own <a href="../map-studio.html"><b>Map Studio</b></a> — or huge on paper.</p>
+        <p class="needs">Needs: Map Studio (free, on this site) or a big sheet + markers.</p></div>
+      <div class="fmt"><h3>🖼️ Illustrated poster <span class="tag p">✂️</span></h3>
+        <p>A visual timeline or map with your written reflection built in. The classic, for a reason.</p>
+        <p class="needs">Needs: poster board, markers, maybe printed images.</p></div>
+      <div class="fmt"><h3>🎭 Live performance <span class="tag b">🎭</span></h3>
+        <p>3–5 minute monologue or two-person scene, performed at the Showcase, in your person's voice.</p>
+        <p class="needs">Needs: a script and guts. Optional: simple costume bits.</p></div>
+      <div class="fmt"><h3>📖 Character flip book <span class="tag p">✂️</span></h3>
+        <p>Handmade 8-page folded book written in your character's voice. Starter pages are in your folder.</p>
+        <p class="needs">Needs: paper, staples, colored pencils.</p></div>
+      <div class="fmt"><h3>✉️ Letter sequence <span class="tag p">✂️</span></h3>
+        <p>4–6 letters in character, tracking one perspective across the voyage. Seal them like it's 1717.</p>
+        <p class="needs">Needs: paper, pen; optional wax seal (we have it).</p></div>
+      <div class="fmt"><h3>🏛️ Museum exhibit board <span class="tag p">✂️</span></h3>
+        <p>Artifacts (made or printed) with real museum labels, curating your person's story like the Real Pirates museum does.</p>
+        <p class="needs">Needs: board, label cards, artifact materials.</p></div>
+      <div class="fmt"><h3>💥 Graphic novel spread <span class="tag p">✂️</span></h3>
+        <p>4–6 illustrated panels telling ONE scene from your person's life. Dialogue counts as evidence if it's sourced.</p>
+        <p class="needs">Needs: paper or board, pencils, fine-liners.</p></div>
+      <div class="fmt"><h3>📰 1717 newspaper front page <span class="tag p">✂️</span></h3>
+        <p>A broadside reporting the wreck or a capture, period style — headlines, columns, an "eyewitness" quote.</p>
+        <p class="needs">Needs: big paper; we can tea-stain it.</p></div>
+      <div class="fmt"><h3>🎬 Slides story <span class="tag d">💻</span></h3>
+        <p>10–12 chapter slides with images, quotes, and evidence — built offline-style on our machines, presented from Max's account at the Showcase.</p>
+        <p class="needs">Needs: a Chromebook and a plan. Talk to Max first — our machines have no logins.</p></div>
+      <div class="fmt"><h3>🌍 Narrated map tour <span class="tag b">💻+🎭</span></h3>
+        <p>You drive the <a href="../map-studio.html">Map Studio</a> (or the 3D flythrough) live at the Showcase while narrating in character. A performance with a map.</p>
+        <p class="needs">Needs: your route built in Map Studio + practiced narration.</p></div>
+      <div class="fmt"><h3>🎵 Ballad or sea shanty <span class="tag b">🎭</span></h3>
+        <p>Original lyrics in period style telling your person's story. Perform it, or print it beautifully with a verse-by-verse sources list.</p>
+        <p class="needs">Needs: paper. Courage optional but encouraged.</p></div>
+      <div class="fmt"><h3>⭐ Pitch your own <span class="tag b">?</span></h3>
+        <p>Got a better idea? Bring it to Max on Thursday. If it's buildable by Wednesday with our gear, it's legal.</p>
+        <p class="needs">Needs: a straight answer to "can you finish it in two days?"</p></div>
+    </div>
+    <div class="log"><b>THE TEST for any format:</b> Can I finish it in two build days? · Does it show MY person's story? · Can I point at the Journal pages that back it up? Three yeses = green light.</div>
+  </section>
+
+  <section class="mission no-print" id="people">
+    <h2>The cast: whose story will you tell?</h2>
+    <div class="meta">Every project needs a PERSON. Twelve good doors into the same shipwreck — full cards live in <a href="as-taught/#people"><b>the People tab</b></a>.</div>
+    <div class="menu">
+      <div class="fmt"><h3>🏴‍☠️ Sam Bellamy</h3><p>The captain everyone knows — which is exactly the trap. Can you show the parts of him the legend leaves out?</p></div>
+      <div class="fmt"><h3>👦 John King</h3><p>Boy pirate, age 8–11. CHOSE the pirate life over his mother's ship. His shoe and leg bone came off the wreck. You've seen them.</p></div>
+      <div class="fmt"><h3>🧭 John Julian</h3><p>Ship's pilot, likely Miskito. Steered the Whydah, survived the wreck at ~16 — then was sold into slavery. The record follows him for years.</p></div>
+      <div class="fmt"><h3>🪓 Thomas Davis</h3><p>Welsh carpenter, forced aboard. Survived the wreck, stood trial for piracy in Boston — and had to prove he never chose it.</p></div>
+      <div class="fmt"><h3>⛵ Paulsgrave Williams</h3><p>Bellamy's partner-captain. Middle-aged, wealthy family, chose piracy anyway — and sailed AWAY from the storm that killed his friend. Then vanished.</p></div>
+      <div class="fmt"><h3>🌊 "Maria Hallett"</h3><p>The Cape Cod legend: Bellamy's love, watching the wreck from the dunes. CONTESTED — the record barely knows her. Perfect for a legend-vs-evidence project.</p></div>
+      <div class="fmt"><h3>🏝️ Philip Ashton</h3><p>Marblehead fisherman, seized by pirates, refused to join, escaped, and survived TWO YEARS alone on an island. Came home to a town that thought him dead.</p></div>
+      <div class="fmt"><h3>🗺️ Cyprian Southack</h3><p>The mapmaker who arrived too late to salvage anything — except the wreck's location, in ink. His mark found the Whydah 267 years later.</p></div>
+      <div class="fmt"><h3>🤿 Barry Clifford</h3><p>The Cape Cod diver who believed the legend, read Southack's chart, and in 1984 brought up the bell with the ship's name on it.</p></div>
+      <div class="fmt"><h3>💰 Sir Humphrey Morice</h3><p>The London MP whose money built the Whydah as a slave ship. Never touched a deck. The machine's quietest, most powerful man.</p></div>
+      <div class="fmt"><h3>⚖️ John Baker or Robert Auchmuty</h3><p>A pirate hanged in Boston — or the defense lawyer who resigned in protest at his trial. The courtroom end of the story.</p></div>
+      <div class="fmt"><h3>❓ Someone never named</h3><p>Dozens aboard — including African crew members freed or taken from prizes — left no name in the record. Telling an unnamed person's story honestly is the hardest, bravest pick on this list.</p></div>
+    </div>
+    <div class="log"><b>THE PERSON TEST:</b> Do they pull at you? · Are there Journal pages and People-tab evidence to build from? · Can you say one true, specific thing about them right now? Three yeses = your person.</div>
+  </section>
+
+  <section class="mission no-print" id="week">
+    <h2>The countdown to Thursday</h2>
+    <div class="meta">Where you should be, day by day</div>
+    <ol class="steps">
+      <li><b>Monday (Day 13):</b> read this whole menu once. Write TWO formats you might use on your MY COURSE tracker.</li>
+      <li><b>Tuesday (Day 14):</b> circle one person and one format. In pencil.</li>
+      <li><b>Wednesday (Day 15 · The Trial):</b> build a small piece of it for real. Write every supply you&rsquo;d need.</li>
+      <li><b>Thursday (Day 16):</b> pitch it, pass the captain's check, ink the commitment form below, hand it to Max.</li>
+    </ol>
+    <p><a class="btn alt" href="as-taught/#people">Meet the people →</a> <a class="btn alt" href="as-taught/#final-project">Project HQ →</a> <a class="btn" href="../map-studio.html">Try Map Studio →</a></p>
+  </section>
+
+  <section class="mission print-form" id="form">
+    <h2 class="no-print">The commitment form</h2>
+    <div class="meta no-print">Thursday: copy this onto a plain sheet from Max, in ink · hand it in · this is how supplies get bought</div>
+    <p class="no-print"><b>No printer at school — and no problem.</b> Thursday you <b>rule up your own form</b>: one plain sheet, the field names below copied down the left side, your answers next to them. Navigators ruled their own logs; you rule your own contract. (The 🖨️ button still works if you ever want a printed one from home.) <button class="btn" onclick="window.print()">🖨️ Print at home</button></p>
+    <div class="form-sheet">
+      <h3>⚓ FINAL PROJECT COMMITMENT · Navigating Piracy · due Thu July 30</h3>
+      <div class="row2">
+        <div class="fline"><label>MY NAME:</label></div>
+        <div class="fline"><label>CREW:</label></div>
+      </div>
+      <div class="fline"><label>MY PERSON (from our story):</label></div>
+      <div class="fline"><label>MY FORMAT (one from the menu):</label></div>
+      <div class="fline"><label>MY ONE-LINE PITCH: I am telling</label></div>
+      <div class="fline"><label>'s story as a</label></div>
+      <div class="fline"><label>because</label></div>
+      <p class="tick"><b>MY EVIDENCE</b> — Journal pages I will use (name them by day, at least 3):</p>
+      <div class="fbig">Day ___ : ______________ · Day ___ : ______________ · Day ___ : ______________ · Day ___ : ______________</div>
+      <p class="tick"><b>SUPPLIES</b> — circle one: &nbsp; MY PROJECT IS ALL-DIGITAL &nbsp;/&nbsp; I NEED PHYSICAL SUPPLIES (list EVERYTHING below — Max shops from this list, once):</p>
+      <div class="fbig">&nbsp;</div>
+      <p class="tick"><b>PARTNER?</b> — circle one: &nbsp; SOLO &nbsp;/&nbsp; WITH: ______________________ (two-person formats split the work, not the credit)</p>
+      <div class="sig">
+        <div class="fline"><label>SIGNED (that's a promise to build it):</label></div>
+        <div class="fline"><label>DATE:</label></div>
+      </div>
+      <div class="fline"><label>⚓ CAPTAIN'S MARK (Max):</label></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot no-print">
+  <p>Stuck between two ideas? That's normal. Ask: which one would my PERSON pick?</p>
+  <p style="margin-top:.6em;"><a href="/">⚓ Back to the crew deck</a> · <a href="as-taught/#overview">The story</a></p>
+</footer>
+
+</body>
+</html>
