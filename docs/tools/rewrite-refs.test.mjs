@@ -40,3 +40,9 @@ test('sibling day links use the new slug and the displayed number', () => {
 test('an unrecognised relative reference throws rather than shipping broken', () => {
   assert.throws(() => rewriteRef('mystery-page.html'), /unmapped/i);
 });
+
+test('root-level static assets climb two levels', () => {
+  assert.equal(rewriteRef('favicon.ico'), '../../favicon.ico');
+  assert.equal(rewriteRef('site.webmanifest'), '../../site.webmanifest');
+  assert.equal(rewriteRef('apple-touch-icon.png'), '../../apple-touch-icon.png');
+});

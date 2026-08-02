@@ -7,7 +7,7 @@
 import { byFile } from './day-map.mjs';
 
 const ASSET_DIRS = ['pics/', 'navigator/', 'black-sam/', 'games/', 'parrot-flip/', 'vendor/'];
-const STAYS_AT_ROOT = ['map-studio.html', 'flythrough.html'];
+const STAYS_AT_ROOT = ['map-studio.html', 'flythrough.html', 'favicon.ico', 'site.webmanifest', 'apple-touch-icon.png'];
 const MOVES_INTO_ARCHIVE = [
   'handouts.html',
   'choose-your-project.html',
