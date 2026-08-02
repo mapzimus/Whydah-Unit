@@ -6,12 +6,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DAY_MAP } from './day-map.mjs';
 import { rewriteRef } from './rewrite-refs.mjs';
+import { withArchiveNotice } from './archive-notice.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-
-const NOTICE = `<div class="archive-notice" style="background:#1C3743;color:#C7BCA0;padding:.7em 1em;text-align:center;font-size:.95em;border-bottom:2px solid #A9781F;">
-This unit ran July 6 – August 6, 2026 at Collins Middle School, Salem MA. <b>Archived as taught.</b> Not maintained. <a href="../" style="color:#D8B25A;">All 20 days</a>
-</div>`;
 
 export function transform(html, entry) {
   let out = html;
@@ -39,8 +36,9 @@ export function transform(html, entry) {
     }
   });
 
-  // 4. Add the archive notice at the top of the body.
-  out = out.replace(/(<body[^>]*>)/, `$1\n${NOTICE}`);
+  // 4. Add the archive notice at the top of the body. Depth 2, because day
+  //    pages live at curriculum/<slug>/index.html.
+  out = withArchiveNotice(out, 2);
 
   return out;
 }

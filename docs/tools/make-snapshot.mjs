@@ -18,6 +18,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rewriteRef } from './rewrite-refs.mjs';
+import { withArchiveNotice } from './archive-notice.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -108,6 +109,7 @@ export function transform(html) {
     return `${attr}="${next}"`;
   });
 
+  out = withArchiveNotice(out, 2);
   return { html: out, rewritten };
 }
 
