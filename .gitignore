@@ -74,3 +74,8 @@
 # CI (not published by Pages — GitHub reads it from the repo)
 !.github/
 !.github/**
+
+# Design specs (committed for the record; Pages will serve them, so robots.txt
+# disallows /docs/ — they are not part of the public reference site)
+!docs/
+!docs/**
