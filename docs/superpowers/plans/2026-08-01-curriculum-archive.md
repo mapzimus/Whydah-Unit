@@ -61,12 +61,19 @@ Append to `.gitignore`:
 
 - [ ] **Step 2: Verify git will accept the new paths**
 
+Do not use `git check-ignore` here. With `-v` it exits 0 whenever *any* pattern matches,
+including a `!` negation, so it cannot distinguish "ignored" from "explicitly un-ignored".
+Test the behaviour that actually matters instead — whether git will stage the file:
+
 ```bash
 mkdir -p curriculum && echo test > curriculum/.probe
-git check-ignore -v curriculum/.probe; echo "exit=$?"
+git add curriculum/.probe && git diff --cached --name-only | grep -q '^curriculum/.probe$' \
+  && echo "PASS: git stages files under curriculum/" \
+  || echo "FAIL: whitelist rule is wrong"
+git reset -q HEAD curriculum/.probe
 ```
 
-Expected: `exit=1` (nothing ignores it). If it prints a matching rule, the whitelist is wrong — fix before continuing.
+Expected: `PASS`. A `FAIL` means the `!` rules are missing or mis-ordered.
 
 - [ ] **Step 3: Clean up and commit**
 
@@ -427,7 +434,7 @@ git commit -m "feat: day page migration script"
 
 - [ ] **Step 1: Run the full test suite first**
 
-Run: `node --test docs/tools/`
+Run: `node --test "docs/tools/*.test.mjs"` (the bare-directory form `node --test docs/tools/` fails on this Node 24 / Windows setup — it tries to `require()` the directory)
 Expected: PASS, 15 tests. Do not migrate on a red suite.
 
 - [ ] **Step 2: Run the migration**
@@ -730,7 +737,7 @@ Expected: empty. This plan must not have modified a single page a student is sti
 
 - [ ] **Step 4: Confirm the tests still pass**
 
-Run: `node --test docs/tools/`
+Run: `node --test "docs/tools/*.test.mjs"` (the bare-directory form `node --test docs/tools/` fails on this Node 24 / Windows setup — it tries to `require()` the directory)
 Expected: PASS, 15 tests
 
 - [ ] **Step 5: Push**
