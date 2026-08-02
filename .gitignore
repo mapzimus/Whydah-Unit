@@ -79,3 +79,7 @@
 # disallows /docs/ — they are not part of the public reference site)
 !docs/
 !docs/**
+
+# Frozen curriculum archive (added 2026-08-01)
+!curriculum/
+!curriculum/**
