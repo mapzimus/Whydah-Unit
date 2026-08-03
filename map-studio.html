@@ -27,8 +27,14 @@
   .tbtn.on{background:var(--ox); color:var(--parch); border-color:var(--ox);}
   .tbtn.danger{border-color:var(--ox); color:var(--ox);}
   .tbtn.danger:hover{background:var(--ox); color:var(--parch);}
+  .tbtn:disabled{opacity:.45;cursor:not-allowed;}
+  .tgrp{display:inline-flex;flex-wrap:wrap;gap:.35em;align-items:center;padding:.15em .35em;border-radius:10px;background:rgba(255,255,255,.35);border:1px solid rgba(169,120,31,.35);}
+  .tgrp .tg{font-size:.68em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ox);padding:0 .25em;}
   .stat{font-size:.88em; font-weight:700; color:var(--ink2); background:#FBF4E2; border:1.5px dashed var(--brass); border-radius:8px; padding:.45em .7em;}
   #map{flex:1; min-height:340px; background:#cfe3ec;}
+  #map.cursor-pin{cursor:crosshair;}
+  #map.cursor-route{cursor:cell;}
+  #map.cursor-measure{cursor:crosshair;}
   .notice{position:absolute; z-index:1200; left:50%; transform:translateX(-50%); top:.6em; max-width:min(92vw,560px); background:var(--ox); color:var(--parch); font-size:.9em; font-weight:600; padding:.6em .9em; border-radius:8px; display:none; box-shadow:0 3px 10px rgba(0,0,0,.3);}
   .notice button{float:right; margin-left:.8em; background:none; border:1px solid var(--parch); color:var(--parch); border-radius:6px; cursor:pointer; font-weight:700;}
   .mapwrap{position:relative; flex:1; display:flex;}
@@ -50,16 +56,17 @@
   .pbtn{display:inline-block; margin:.35em .35em 0 0; padding:.3em .6em; border:1.5px solid var(--brass); border-radius:6px; background:#FBF4E2; font-weight:700; font-size:.85em; cursor:pointer;}
   .story-pin{background:var(--ox);color:var(--brassl);font:700 12px Georgia,serif;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brassl);box-shadow:0 1px 4px rgba(0,0,0,.5);}
   .story-pin.empty{background:var(--ink2);opacity:.85;}
-  .proj{position:absolute;z-index:1160;left:.6em;top:.6em;width:min(92vw,340px);max-height:calc(100% - 1.2em);background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;overflow:hidden;flex-direction:column;}
-  .proj.open{display:flex;}
-  .proj-head{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-weight:700;padding:.55em .8em;font-size:1.02em;flex:0 0 auto;}
-  .proj-head .lb-sub{display:block;color:#C7BCA0;font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;font-style:italic;font-size:.78em;}
-  .proj-head button{float:right;background:none;border:1px solid var(--brassl);color:var(--brassl);border-radius:6px;cursor:pointer;font-weight:700;margin:-.1em 0 0;}
-  .proj-body{padding:.7em .8em .9em;overflow-y:auto;flex:1;}
-  .proj label{display:block;font-size:.78em;font-weight:800;color:var(--ox);letter-spacing:.04em;text-transform:uppercase;margin:.55em 0 .2em;}
-  .proj label:first-child{margin-top:0;}
-  .proj input,.proj select,.proj textarea{width:100%;font:inherit;font-size:.95em;padding:.45em .55em;border:1.5px solid var(--brass);border-radius:6px;background:#FBF4E2;color:var(--inktx);}
-  .proj textarea{min-height:4.5em;resize:vertical;}
+  .side{position:absolute;z-index:1160;top:.6em;width:min(92vw,360px);max-height:calc(100% - 1.2em);background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;overflow:hidden;flex-direction:column;}
+  .side.open{display:flex;}
+  .side.left{left:.6em;}
+  .side.right{right:.6em;}
+  .side-head{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-weight:700;padding:.55em .8em;font-size:1.02em;flex:0 0 auto;}
+  .side-head .lb-sub{display:block;color:#C7BCA0;font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;font-style:italic;font-size:.78em;}
+  .side-head button{float:right;background:none;border:1px solid var(--brassl);color:var(--brassl);border-radius:6px;cursor:pointer;font-weight:700;margin:-.1em 0 0;}
+  .side-body{padding:.7em .8em .9em;overflow-y:auto;flex:1;}
+  .side label{display:block;font-size:.78em;font-weight:800;color:var(--ox);letter-spacing:.04em;text-transform:uppercase;margin:.55em 0 .2em;}
+  .side label:first-child{margin-top:0;}
+  .side input,.side select,.side textarea{width:100%;font:inherit;font-size:.95em;padding:.45em .55em;border:1.5px solid var(--brass);border-radius:6px;background:#FBF4E2;color:var(--inktx);}
   .check{list-style:none;margin:.55em 0 0;padding:0;}
   .check li{font-size:.88em;padding:.28em 0;border-bottom:1px dashed var(--parch2);display:flex;gap:.45em;align-items:flex-start;}
   .check .mark{flex:0 0 auto;font-weight:800;color:var(--muted);}
@@ -67,6 +74,25 @@
   .check .mark.no{color:var(--ox);}
   .starter{margin-top:.7em;padding-top:.55em;border-top:1px solid var(--parch2);}
   .starter p{font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;}
+  .place-search{margin-bottom:.55em;}
+  .place-cat{font-size:.72em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ox);margin:.7em 0 .3em;border-bottom:1px solid var(--parch2);padding-bottom:.15em;}
+  .place-row{display:flex;gap:.35em;align-items:flex-start;padding:.4em 0;border-bottom:1px dashed var(--parch2);}
+  .place-row .info{flex:1;min-width:0;}
+  .place-row .info b{display:block;font-size:.92em;color:var(--ink2);}
+  .place-row .info span{display:block;font-size:.78em;color:var(--muted);font-style:italic;}
+  .place-row .acts{display:flex;flex-direction:column;gap:.25em;flex:0 0 auto;}
+  .place-row .acts .tbtn{font-size:.78em;padding:.28em .5em;}
+  .stop-row{display:flex;gap:.4em;align-items:flex-start;padding:.45em 0;border-bottom:1px dashed var(--parch2);}
+  .stop-row .num{flex:0 0 auto;width:1.6em;height:1.6em;border-radius:50%;background:var(--ox);color:var(--brassl);font:700 12px Georgia,serif;display:flex;align-items:center;justify-content:center;}
+  .stop-row .num.miss{background:var(--ink2);}
+  .stop-row .info{flex:1;min-width:0;}
+  .stop-row .info b{display:block;font-size:.92em;}
+  .stop-row .info span{display:block;font-size:.78em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stop-row .acts{display:flex;flex-wrap:wrap;gap:.2em;flex:0 0 auto;max-width:7.5em;justify-content:flex-end;}
+  .stop-row .acts .tbtn{font-size:.75em;padding:.22em .4em;}
+  .kind-row{display:flex;flex-wrap:wrap;gap:.3em;margin:.25em 0 .4em;}
+  .kind{border:1.5px solid var(--brass);background:#FBF4E2;color:var(--inktx);font-size:.78em;font-weight:700;padding:.28em .55em;border-radius:999px;cursor:pointer;}
+  .kind.on{background:var(--ox);color:var(--parch);border-color:var(--ox);}
   .modal-bg{position:fixed;inset:0;z-index:2000;background:rgba(18,34,43,.55);display:none;align-items:center;justify-content:center;padding:1em;}
   .modal-bg.open{display:flex;}
   .modal{width:min(94vw,440px);background:var(--parch);border:2px solid var(--brass);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);overflow:hidden;}
@@ -87,6 +113,7 @@
   .tour .nav .tbtn{background:#1C3743;color:var(--parch);border-color:var(--brassl);}
   .tour .nav .tbtn:hover{background:var(--brass);}
   .tour .count{margin-left:auto;font-size:.85em;color:var(--brassl);font-weight:700;}
+  .measure-tip{position:absolute;z-index:1170;pointer-events:none;background:var(--ink);color:var(--brassl);font-weight:700;font-size:.85em;padding:.35em .55em;border-radius:6px;border:1px solid var(--brassl);display:none;}
   .sheet{display:none;}
   @media print{
     body *{visibility:hidden !important;}
@@ -99,7 +126,13 @@
     .sheet .voice{font-style:italic;margin:.2em 0;}
     .sheet .cite{font-size:.9em;color:#444;}
   }
-  @media (max-width:560px){ .toolbar{gap:.3em;} .tbtn{font-size:.85em; padding:.45em .6em;} .stat{font-size:.8em;} .proj{left:.35em;right:.35em;width:auto;} }
+  @media (max-width:720px){
+    .toolbar{gap:.3em;justify-content:flex-start;}
+    .tbtn{font-size:.82em; padding:.42em .55em;}
+    .stat{font-size:.78em;}
+    .tgrp{width:100%;}
+    .side.left,.side.right{left:.35em;right:.35em;width:auto;}
+  }
 </style>
 </head>
 <body>
@@ -109,24 +142,45 @@
   <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Saves on this device. No account.</span>
 </header>
 
-<div class="toolbar" role="toolbar" aria-label="Map tools">
-  <button class="tbtn" id="mode-world" title="Modern world map">🌍 World</button>
-  <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart">📜 1717 Chart</button>
-  <button class="tbtn" id="mode-doors" title="Where the world's ships squeeze through">🚢 Chokepoints</button>
-  <button class="tbtn" id="mode-globe" title="The same ocean, as a planet">🌐 Globe</button>
-  <span style="width:.6em"></span>
-  <button class="tbtn" id="tool-project" title="Your person, title, and Showcase checklist">📋 My project</button>
-  <button class="tbtn" id="tool-pin">📌 Pin</button>
-  <button class="tbtn" id="tool-route">✏️ Route</button>
-  <button class="tbtn" id="tool-undo">↩ Undo</button>
-  <button class="tbtn" id="tool-voyage">⚓ Whydah's voyage</button>
-  <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
-  <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
-  <button class="tbtn" id="tool-export">💾 Download</button>
-  <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
-  <span class="stat" id="stat">0 pins · route 0 nm</span>
+<div class="toolbar" role="toolbar" aria-label="Choose a map">
+  <span class="tgrp" id="build-modes">
+    <span class="tg">Build</span>
+    <button class="tbtn" id="mode-world" title="Modern world map — best for story maps">🌍 World</button>
+    <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart — offline">📜 1717 Chart</button>
+  </span>
+  <span class="tgrp" id="explore-modes">
+    <span class="tg">Explore</span>
+    <button class="tbtn" id="mode-doors" title="Watch modern shipping choke points (not for drawing)">🚢 Chokepoints</button>
+    <button class="tbtn" id="mode-globe" title="Spin the same ocean as a planet">🌐 Globe</button>
+  </span>
+  <span class="stat" id="stat">0 pins · need 8</span>
 </div>
-<div class="hint" id="hint">Story-map tip: open <b>📋 My project</b>, pick your person, then drop 8–10 pins — each with a place, their voice, and a Journal page.</div>
+<div class="toolbar" id="studio-bar" role="toolbar" aria-label="Add to your map">
+  <span class="tgrp">
+    <span class="tg">Add</span>
+    <button class="tbtn" id="tool-pin" title="Tap the map to drop a numbered story stop">📌 Tap stop</button>
+    <button class="tbtn" id="tool-places" title="Pick a known place from the Whydah story">📍 Places</button>
+    <button class="tbtn" id="tool-route" title="Draw a track leg by leg">✏️ Draw route</button>
+    <button class="tbtn" id="tool-connect" title="Draw a route through your stops in order">🔗 Route from stops</button>
+    <button class="tbtn" id="tool-measure" title="Tap two points to measure nautical miles">📏 Measure</button>
+    <button class="tbtn" id="tool-undo" title="Undo last route point or stop">↩ Undo</button>
+  </span>
+  <span class="tgrp">
+    <span class="tg">Reference</span>
+    <button class="tbtn" id="tool-voyage" title="Show the documented Whydah voyage (read-only)">⚓ Whydah voyage</button>
+    <button class="tbtn" id="tool-copy-voyage" title="Copy the 8 Whydah stops into YOUR editable map">⧉ Copy voyage</button>
+  </span>
+  <span class="tgrp">
+    <span class="tg">Project</span>
+    <button class="tbtn" id="tool-project" title="Your person, title, and Showcase checklist">📋 My project</button>
+    <button class="tbtn" id="tool-stops" title="List, reorder, and edit your stops">📑 Stops</button>
+    <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
+    <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
+    <button class="tbtn" id="tool-export">💾 Download</button>
+    <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
+  </span>
+</div>
+<div class="hint" id="hint">Start with <b>📍 Places</b> or <b>📌 Tap stop</b>. Aim for 8–10 numbered stops in your person’s voice.</div>
 <div class="toolbar" id="doors-bar" style="display:none; border-bottom:2px solid var(--ox);">
   <button class="tbtn" id="jump-all">🌍 Whole ocean</button>
   <button class="tbtn" id="jump-suez">Suez</button>
@@ -149,11 +203,13 @@
 </div>
 
 <div class="mapwrap">
-  <div class="notice" id="notice"><button onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
-  <div class="proj" id="proj-panel" role="dialog" aria-label="My story-map project">
-    <div class="proj-head">📋 My story map <span class="lb-sub">for the Showcase · autosaves here</span>
+  <div class="notice" id="notice"><button type="button" onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
+  <div class="measure-tip" id="measure-tip"></div>
+
+  <div class="side left" id="proj-panel" role="dialog" aria-label="My story-map project">
+    <div class="side-head">📋 My story map <span class="lb-sub">for the Showcase · autosaves here</span>
       <button type="button" id="proj-close" aria-label="Close">✕</button></div>
-    <div class="proj-body">
+    <div class="side-body">
       <label for="proj-student">Your name</label>
       <input id="proj-student" type="text" maxlength="48" placeholder="What visitors should see on the sheet" autocomplete="name">
       <label for="proj-person">Your person</label>
@@ -183,9 +239,32 @@
       </div>
     </div>
   </div>
+
+  <div class="side left" id="places-panel" role="dialog" aria-label="Places library">
+    <div class="side-head">📍 Places <span class="lb-sub">tap Add — then write the voice</span>
+      <button type="button" id="places-close" aria-label="Close">✕</button></div>
+    <div class="side-body">
+      <input class="place-search" id="place-search" type="search" placeholder="Search places…" aria-label="Search places">
+      <div id="places-list"></div>
+    </div>
+  </div>
+
+  <div class="side right" id="stops-panel" role="dialog" aria-label="Your story stops">
+    <div class="side-head">📑 Your stops <span class="lb-sub">reorder = Showcase story order</span>
+      <button type="button" id="stops-close" aria-label="Close">✕</button></div>
+    <div class="side-body">
+      <p class="hint-sm" style="font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;">Up/down changes the tour order. Incomplete stops stay dark until voice + Journal are filled.</p>
+      <div id="stops-list"></div>
+      <div class="starter" style="display:flex;flex-wrap:wrap;gap:.35em;">
+        <button type="button" class="tbtn" id="stops-connect">🔗 Route from stops</button>
+        <button type="button" class="tbtn" id="stops-fit">⤢ Fit all</button>
+      </div>
+    </div>
+  </div>
+
   <div class="lb" id="lb-panel">
     <div class="lb-head">🏆 Pirate Leaderboard <span class="lb-sub">best 60-second voyages on this device</span>
-      <button onclick="document.getElementById('lb-panel').style.display='none'">✕</button></div>
+      <button type="button" onclick="document.getElementById('lb-panel').style.display='none'">✕</button></div>
     <ol id="lb-list"></ol>
     <div class="lb-foot">Park your pirate to start a 60-second voyage. 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5.</div>
   </div>
@@ -210,6 +289,8 @@
     <div class="body">
       <label for="pin-label">Place / stop name</label>
       <input id="pin-label" type="text" maxlength="80" placeholder="Where is this stop?">
+      <label>Stop type <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional)</span></label>
+      <div class="kind-row" id="pin-kinds" role="group" aria-label="Stop type"></div>
       <label for="pin-voice">In their voice</label>
       <p class="hint-sm">2–4 sentences as your person. What do they see, fear, choose, or remember here?</p>
       <textarea id="pin-voice" maxlength="600" placeholder="Write as them — not about them."></textarea>
@@ -228,7 +309,7 @@
 <div class="sheet" id="story-sheet" aria-hidden="true"></div>
 
 <footer class="foot">
-  Story map = <b>8–10 numbered stops</b>, each in your person’s voice, citing Journal pages. Use <b>🎤 Tour</b> at the Showcase · <b>📄 Story sheet</b> for the gallery table.
+  <b>Add</b> stops from <b>📍 Places</b> or by tapping · <b>📑 Stops</b> to reorder · <b>🔗 Route from stops</b> to connect them · <b>🎤 Tour</b> at Showcase.
   <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
@@ -254,6 +335,51 @@
     { n: 8, ll: [42.522, -70.895], t: 'Salem · found again',  d: '1984: Barry Clifford reads Southack’s 267-year-old mark and finds her. The bell proves it: THE WHYDAH GALLY 1716. You met the finds at Real Pirates.' }
   ];
   var VOYAGE_LINE = VOYAGE.map(function (w) { return w.ll; });
+
+  var PIN_KINDS = [
+    { id: '', label: 'None' },
+    { id: 'begin', label: 'Beginning' },
+    { id: 'choice', label: 'Choice' },
+    { id: 'capture', label: 'Capture' },
+    { id: 'voyage', label: 'At sea' },
+    { id: 'storm', label: 'Storm / wreck' },
+    { id: 'aftermath', label: 'Aftermath' },
+    { id: 'modern', label: 'Modern' },
+    { id: 'evidence', label: 'Evidence' }
+  ];
+  var kindLabel = {};
+  PIN_KINDS.forEach(function (k) { if (k.id) kindLabel[k.id] = k.label; });
+
+  /* Curated places students can add without hunting the ocean. World mode only. */
+  var PLACES = [
+    { cat: 'Whydah voyage', t: 'London, 1715', ll: [51.507, -0.128], note: 'Built as a slave ship' },
+    { cat: 'Whydah voyage', t: 'Ouidah, West Africa', ll: [6.367, 2.083], note: 'The port she was named for' },
+    { cat: 'Whydah voyage', t: 'Caribbean hunting grounds', ll: [17.97, -76.87], note: '1716–17 prizes' },
+    { cat: 'Whydah voyage', t: 'Windward Passage', ll: [19.9, -73.9], note: 'Where the Whydah was taken' },
+    { cat: 'Whydah voyage', t: 'Carolinas run north', ll: [33.9, -76.5], note: 'Dead reckoning coast' },
+    { cat: 'Whydah voyage', t: 'Wreck · Wellfleet', ll: [41.891, -69.957], note: '26 April 1717' },
+    { cat: 'Whydah voyage', t: 'Southack’s mark', ll: [41.93, -69.98], note: 'May 1717 chart mark' },
+    { cat: 'Whydah voyage', t: 'Salem · found again', ll: [42.522, -70.895], note: '1984 discovery / museum' },
+    { cat: 'Cape & Salem', t: 'Boston', ll: [42.36, -71.06], note: 'Trial, gallows, papers' },
+    { cat: 'Cape & Salem', t: 'Wellfleet dunes', ll: [41.93, -70.03], note: 'Cape Cod shore' },
+    { cat: 'Cape & Salem', t: 'Provincetown', ll: [42.058, -70.179], note: 'Southack’s salvage start' },
+    { cat: 'Cape & Salem', t: 'Marblehead', ll: [42.5, -70.86], note: 'Philip Ashton’s home' },
+    { cat: 'Cape & Salem', t: 'Block Island', ll: [41.17, -71.58], note: 'Williams visits family' },
+    { cat: 'Cape & Salem', t: 'Rhode Island', ll: [41.49, -71.31], note: 'Williams’s world' },
+    { cat: 'Cape & Salem', t: 'Real Pirates Salem', ll: [42.521, -70.888], note: '285 Derby St museum' },
+    { cat: 'Caribbean', t: 'Nassau / New Providence', ll: [25.06, -77.345], note: 'Pirate republic waters' },
+    { cat: 'Caribbean', t: 'Jamaica', ll: [17.97, -76.79], note: 'Sugar & navy base' },
+    { cat: 'Caribbean', t: 'Hispaniola north coast', ll: [19.8, -72.7], note: 'Near the Passage' },
+    { cat: 'Caribbean', t: 'Antigua', ll: [17.12, -61.85], note: 'John King’s mother’s ship' },
+    { cat: 'Caribbean', t: 'Florida wreck coast', ll: [27.5, -80.3], note: '1715 treasure fleet' },
+    { cat: 'Atlantic doors', t: 'Straits of Florida', ll: [23.9, -81.0], note: 'Treasure highway' },
+    { cat: 'Atlantic doors', t: 'Gibraltar', ll: [35.95, -5.6], note: 'Med door' },
+    { cat: 'Atlantic doors', t: 'Cape of Good Hope', ll: [-34.8, 19.0], note: 'The long way' },
+    { cat: 'People & origins', t: 'Hittisleigh, Devon', ll: [50.77, -3.75], note: 'Bellamy’s birthplace' },
+    { cat: 'People & origins', t: 'Mosquito Coast', ll: [14.5, -83.5], note: 'Julian’s home waters' },
+    { cat: 'People & origins', t: 'Wales', ll: [51.48, -3.18], note: 'Thomas Davis' },
+    { cat: 'People & origins', t: 'Roatán', ll: [16.3, -86.55], note: 'Ashton’s island exile' }
+  ];
 
   /* Suggested stops for Showcase story maps — places only; students write the voice. */
   var STARTERS = {
@@ -399,6 +525,7 @@
   function freshMap(crs) {
     /* Leaflet can't change CRS on a live map — tear down and rebuild */
     stopTraffic();
+    clearMeasure();
     if (map) { try { map.remove(); } catch (_) {} }
     detachPins();
     routeLine = null;
@@ -407,6 +534,7 @@
     map = L.map('map', { zoomControl: true, worldCopyJump: crs !== L.CRS.Simple, crs: crs, preferCanvas: true });
     pinLayer = L.layerGroup().addTo(map);
     map.on('click', onMapClick);
+    updateMapCursor();
     return map;
   }
 
@@ -416,7 +544,7 @@
       work[k].pins = work[k].pins.map(function (m) {
         if (m instanceof L.Marker) {
           var ll = m.getLatLng();
-          return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', n: m._n || 0 };
+          return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', kind: m._kind || '', n: m._n || 0 };
         }
         return m;
       });
@@ -426,6 +554,7 @@
   function enterWorld() {
     saveNow();
     exitTour();
+    clearMeasure();
     mode = 'world';
     freshMap(L.CRS.EPSG3857);
     map.setMinZoom(2); map.setMaxZoom(19);
@@ -435,12 +564,13 @@
     restoreWork();
     if (voyageOn) { voyageOn = false; showVoyage(); }
     setModeButtons();
-    document.getElementById('hint').textContent = 'Story-map tip: open 📋 My project, pick your person, then drop 8–10 pins — each with a place, their voice, and a Journal page.';
+    document.getElementById('hint').textContent = 'Start with 📍 Places or 📌 Tap stop. Aim for 8–10 numbered stops in your person’s voice.';
   }
 
   function enterChart() {
     saveNow();
     exitTour();
+    clearMeasure();
     mode = 'chart';
     freshMap(L.CRS.Simple);
     map.setMinZoom(-2); map.setMaxZoom(3);
@@ -456,19 +586,24 @@
     document.getElementById('mode-chart').classList.toggle('on', mode === 'chart');
     document.getElementById('mode-doors').classList.toggle('on', mode === 'doors');
     document.getElementById('mode-globe').classList.toggle('on', mode === 'globe');
-    document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
     var studio = (mode !== 'doors' && mode !== 'globe');
-    ['tool-pin', 'tool-route', 'tool-undo', 'tool-export', 'tool-clear', 'tool-project', 'tool-tour', 'tool-sheet'].forEach(function (id) {
-      document.getElementById(id).style.display = studio ? '' : 'none';
-    });
+    document.getElementById('studio-bar').style.display = studio ? 'flex' : 'none';
     document.getElementById('doors-bar').style.display = studio ? 'none' : 'flex';
+    document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-copy-voyage').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-places').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-measure').style.display = (mode === 'world') ? '' : 'none';
     if (!studio) {
       document.getElementById('lb-panel').style.display = 'none';
-      document.getElementById('proj-panel').classList.remove('open');
-      document.getElementById('tool-project').classList.remove('on');
+      closeSidePanels();
       exitTour();
+      clearMeasure();
+    } else if (mode === 'chart') {
+      document.getElementById('places-panel').classList.remove('open');
+      document.getElementById('tool-places').classList.remove('on');
     }
     renderChecklist();
+    updateMapCursor();
   }
   function applyToggles() {
     document.getElementById('toggle-ports').classList.toggle('on', showPorts);
@@ -485,13 +620,17 @@
   /* ---------- Pins (story-map stops) ---------- */
   var editingPin = null;
   var pendingLatLng = null;
+  var pendingKind = '';
   var tourIdx = -1;
+  var measurePts = [];
+  var measureLayer = null;
 
   function pinData(m) {
     return {
       label: m._label || '',
       voice: m._voice || '',
       journal: m._journal || '',
+      kind: m._kind || '',
       n: typeof m._n === 'number' ? m._n : 0
     };
   }
@@ -513,21 +652,24 @@
       m._n = i + 1;
       m.setIcon(storyIcon(m._n, pinIsComplete(m)));
     });
+    renderStopsList();
   }
   function addPin(latlng, data, skipSave) {
     data = data || {};
     var label = data.label || '';
     var voice = data.voice || '';
     var journal = data.journal || '';
+    var kind = data.kind || '';
     var n = data.n || (work[mode].pins.length + 1);
     var complete = !!(label && voice && journal);
     var m = L.marker(latlng, { draggable: true, icon: storyIcon(n, complete) }).addTo(pinLayer);
     m._label = label;
     m._voice = voice;
     m._journal = journal;
+    m._kind = kind;
     m._n = n;
     bindPinPopup(m);
-    m.on('dragend', saveNow);
+    m.on('dragend', function () { saveNow(); renderStopsList(); });
     work[mode].pins.push(m);
     renumberPins();
     if (!skipSave) saveNow();
@@ -537,13 +679,16 @@
   function bindPinPopup(m) {
     var d = pinData(m);
     var div = document.createElement('div');
+    var kindHtml = d.kind && kindLabel[d.kind]
+      ? '<div style="font-size:.78em;font-weight:800;color:#A9781F;margin:.15em 0;">' + escapeHtml(kindLabel[d.kind]) + '</div>'
+      : '';
     var voiceHtml = d.voice
       ? '<div style="margin:.35em 0;font-style:italic;max-width:240px;">“' + escapeHtml(d.voice) + '”</div>'
       : '<div style="margin:.35em 0;color:#6E5B3C;font-style:italic;font-size:.9em;">No voice yet — tap Edit.</div>';
     var citeHtml = d.journal
       ? '<div style="font-size:.82em;color:#6E5B3C;">Journal: ' + escapeHtml(d.journal) + '</div>'
       : '';
-    div.innerHTML = '<b>' + (d.n || '') + ' · ' + escapeHtml(d.label || 'Untitled stop') + '</b>' + voiceHtml + citeHtml;
+    div.innerHTML = '<b>' + (d.n || '') + ' · ' + escapeHtml(d.label || 'Untitled stop') + '</b>' + kindHtml + voiceHtml + citeHtml;
     var ed = document.createElement('span'); ed.className = 'pbtn'; ed.textContent = '✏️ Edit';
     var del = document.createElement('span'); del.className = 'pbtn'; del.textContent = '🗑 Remove';
     ed.onclick = function () { openPinEditor(m); };
@@ -557,13 +702,32 @@
   }
   function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-  function openPinEditor(markerOrNull, latlng) {
+  function renderKindChips(selected) {
+    var wrap = document.getElementById('pin-kinds');
+    wrap.innerHTML = '';
+    pendingKind = selected || '';
+    PIN_KINDS.forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'kind' + ((pendingKind === k.id) ? ' on' : '');
+      b.textContent = k.label;
+      b.onclick = function () {
+        pendingKind = k.id;
+        Array.prototype.forEach.call(wrap.querySelectorAll('.kind'), function (el) { el.classList.remove('on'); });
+        b.classList.add('on');
+      };
+      wrap.appendChild(b);
+    });
+  }
+  function openPinEditor(markerOrNull, latlng, preset) {
     editingPin = markerOrNull || null;
     pendingLatLng = latlng || null;
-    document.getElementById('pin-modal-title').textContent = editingPin ? ('Edit stop ' + (editingPin._n || '')) : 'New story pin';
-    document.getElementById('pin-label').value = editingPin ? (editingPin._label || '') : '';
-    document.getElementById('pin-voice').value = editingPin ? (editingPin._voice || '') : '';
-    document.getElementById('pin-journal').value = editingPin ? (editingPin._journal || '') : '';
+    preset = preset || {};
+    document.getElementById('pin-modal-title').textContent = editingPin ? ('Edit stop ' + (editingPin._n || '')) : 'New story stop';
+    document.getElementById('pin-label').value = editingPin ? (editingPin._label || '') : (preset.label || '');
+    document.getElementById('pin-voice').value = editingPin ? (editingPin._voice || '') : (preset.voice || '');
+    document.getElementById('pin-journal').value = editingPin ? (editingPin._journal || '') : (preset.journal || '');
+    renderKindChips(editingPin ? (editingPin._kind || '') : (preset.kind || ''));
     document.getElementById('pin-delete').style.display = editingPin ? '' : 'none';
     document.getElementById('pin-modal').classList.add('open');
     setTimeout(function () { document.getElementById('pin-label').focus(); }, 50);
@@ -577,18 +741,20 @@
     var label = document.getElementById('pin-label').value.trim() || 'Untitled stop';
     var voice = document.getElementById('pin-voice').value.trim();
     var journal = document.getElementById('pin-journal').value.trim();
+    var kind = pendingKind || '';
     if (editingPin) {
       editingPin._label = label;
       editingPin._voice = voice;
       editingPin._journal = journal;
+      editingPin._kind = kind;
       editingPin.setIcon(storyIcon(editingPin._n, pinIsComplete(editingPin)));
       bindPinPopup(editingPin);
-      saveNow(); updateStat();
+      saveNow(); updateStat(); renderStopsList();
       closePinEditor();
       return;
     }
     if (!pendingLatLng) { closePinEditor(); return; }
-    var m = addPin(pendingLatLng, { label: label, voice: voice, journal: journal });
+    var m = addPin(pendingLatLng, { label: label, voice: voice, journal: journal, kind: kind });
     closePinEditor();
     m.openPopup();
   }
@@ -596,6 +762,189 @@
   function livePins() {
     return work[mode].pins.filter(function (m) { return m instanceof L.Marker; });
   }
+  function movePin(i, dir) {
+    var arr = work[mode].pins;
+    var j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    renumberPins(); saveNow(); updateStat();
+  }
+  function removePinAt(i) {
+    var arr = work[mode].pins;
+    var m = arr[i];
+    if (!m) return;
+    if (m instanceof L.Marker) pinLayer.removeLayer(m);
+    arr.splice(i, 1);
+    renumberPins(); saveNow(); updateStat();
+  }
+  function jumpToPin(m) {
+    if (!map || !(m instanceof L.Marker)) return;
+    try {
+      map.flyTo(m.getLatLng(), Math.max(map.getZoom(), mode === 'chart' ? 0 : 5), { duration: 0.6 });
+      setTimeout(function () { m.openPopup(); }, 400);
+    } catch (_) {}
+  }
+  function renderStopsList() {
+    var list = document.getElementById('stops-list');
+    if (!list) return;
+    var pins = livePins();
+    list.innerHTML = '';
+    if (!pins.length) {
+      list.innerHTML = '<p style="font-size:.9em;color:var(--muted);font-style:italic;">No stops yet. Use <b>📍 Places</b> or <b>📌 Tap stop</b>.</p>';
+      return;
+    }
+    pins.forEach(function (m, i) {
+      var d = pinData(m);
+      var row = document.createElement('div');
+      row.className = 'stop-row';
+      var miss = !pinIsComplete(m);
+      var preview = d.voice ? d.voice : (d.kind && kindLabel[d.kind] ? kindLabel[d.kind] + ' · needs voice' : 'needs voice + Journal');
+      row.innerHTML = '<div class="num' + (miss ? ' miss' : '') + '">' + d.n + '</div><div class="info"><b></b><span></span></div>';
+      row.querySelector('b').textContent = d.label || 'Untitled stop';
+      row.querySelector('span').textContent = preview;
+      var acts = document.createElement('div');
+      acts.className = 'acts';
+      function mk(label, fn) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = label; b.onclick = fn; return b;
+      }
+      acts.appendChild(mk('↑', function () { movePin(i, -1); }));
+      acts.appendChild(mk('↓', function () { movePin(i, 1); }));
+      acts.appendChild(mk('Go', function () { jumpToPin(m); }));
+      acts.appendChild(mk('Edit', function () { openPinEditor(m); }));
+      acts.appendChild(mk('✕', function () { if (window.confirm('Remove stop ' + d.n + '?')) removePinAt(i); }));
+      row.appendChild(acts);
+      list.appendChild(row);
+    });
+  }
+
+  function closeSidePanels() {
+    ['proj-panel', 'places-panel', 'stops-panel'].forEach(function (id) {
+      document.getElementById(id).classList.remove('open');
+    });
+    ['tool-project', 'tool-places', 'tool-stops'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.classList.remove('on');
+    });
+  }
+  function openSide(which) {
+    var mapIds = { project: 'proj-panel', places: 'places-panel', stops: 'stops-panel' };
+    var toolIds = { project: 'tool-project', places: 'tool-places', stops: 'tool-stops' };
+    var panel = document.getElementById(mapIds[which]);
+    var wasOpen = panel.classList.contains('open');
+    closeSidePanels();
+    exitTour();
+    if (wasOpen) return false;
+    panel.classList.add('open');
+    document.getElementById(toolIds[which]).classList.add('on');
+    return true;
+  }
+
+  function renderPlacesList() {
+    var q = (document.getElementById('place-search').value || '').trim().toLowerCase();
+    var wrap = document.getElementById('places-list');
+    wrap.innerHTML = '';
+    var cats = [];
+    var byCat = {};
+    PLACES.forEach(function (p) {
+      var hay = (p.t + ' ' + p.note + ' ' + p.cat).toLowerCase();
+      if (q && hay.indexOf(q) === -1) return;
+      if (!byCat[p.cat]) { byCat[p.cat] = []; cats.push(p.cat); }
+      byCat[p.cat].push(p);
+    });
+    if (!cats.length) {
+      wrap.innerHTML = '<p style="font-size:.9em;color:var(--muted);font-style:italic;">No places match that search.</p>';
+      return;
+    }
+    cats.forEach(function (cat) {
+      var h = document.createElement('div');
+      h.className = 'place-cat';
+      h.textContent = cat;
+      wrap.appendChild(h);
+      byCat[cat].forEach(function (p) {
+        var row = document.createElement('div');
+        row.className = 'place-row';
+        row.innerHTML = '<div class="info"><b></b><span></span></div>';
+        row.querySelector('b').textContent = p.t;
+        row.querySelector('span').textContent = p.note;
+        var acts = document.createElement('div');
+        acts.className = 'acts';
+        var go = document.createElement('button'); go.type = 'button'; go.className = 'tbtn'; go.textContent = 'Go';
+        go.onclick = function () {
+          if (mode !== 'world') { notice('Places work on the World map — switch to 🌍 World.'); return; }
+          map.flyTo(p.ll, 6);
+        };
+        var add = document.createElement('button'); add.type = 'button'; add.className = 'tbtn on'; add.textContent = 'Add';
+        add.onclick = function () { addPlaceAsPin(p); };
+        acts.appendChild(add); acts.appendChild(go);
+        row.appendChild(acts);
+        wrap.appendChild(row);
+      });
+    });
+  }
+  function addPlaceAsPin(p) {
+    if (mode !== 'world') { notice('Switch to 🌍 World to add Places as story stops.'); return; }
+    map.flyTo(p.ll, Math.max(map.getZoom(), 5), { duration: 0.5 });
+    openPinEditor(null, L.latLng(p.ll[0], p.ll[1]), { label: p.t });
+  }
+
+  function connectPinsRoute() {
+    var pins = livePins();
+    if (pins.length < 2) { notice('Add at least 2 stops first — then Route from stops connects them in order.'); return; }
+    work[mode].route = pins.map(function (m) { return m.getLatLng(); });
+    drawRoute();
+    saveNow();
+    notice('Route drawn through your ' + pins.length + ' stops in story order. Reorder in 📑 Stops, then tap again to refresh.');
+    document.getElementById('hint').textContent = 'Route follows stop order. Change order in 📑 Stops, then 🔗 Route from stops again.';
+  }
+  function copyWhydahVoyage() {
+    if (mode !== 'world') { notice('Copy voyage works on the World map.'); return; }
+    if (livePins().length && !window.confirm('Add the 8 documented Whydah voyage stops to YOUR map? (Keeps pins you already have.)')) return;
+    VOYAGE.forEach(function (w) {
+      addPin(w.ll, { label: w.t, voice: '', journal: '', kind: w.n <= 2 ? 'begin' : (w.n === 6 || w.n === 7 ? 'storm' : (w.n === 8 ? 'modern' : 'voyage')) }, true);
+    });
+    if (!work.world.route.length) {
+      VOYAGE.forEach(function (w) { work.world.route.push(L.latLng(w.ll[0], w.ll[1])); });
+      drawRoute();
+    }
+    renumberPins(); saveNow(); updateStat();
+    try { map.fitBounds(L.featureGroup(livePins()).getBounds().pad(0.2)); } catch (_) {}
+    notice('Copied. Those captions were the ship’s story — now rewrite each stop in YOUR person’s voice.');
+    openSide('stops');
+    renderStopsList();
+  }
+  function fitAllStops() {
+    var pins = livePins();
+    if (!pins.length) { notice('No stops to fit yet.'); return; }
+    try { map.fitBounds(L.featureGroup(pins).getBounds().pad(0.25)); } catch (_) {}
+  }
+
+  function clearMeasure() {
+    measurePts = [];
+    if (measureLayer && map) { try { map.removeLayer(measureLayer); } catch (_) {} }
+    measureLayer = null;
+    var tip = document.getElementById('measure-tip');
+    if (tip) tip.style.display = 'none';
+  }
+  function onMeasureClick(latlng) {
+    if (!measureLayer) measureLayer = L.layerGroup().addTo(map);
+    measurePts.push(latlng);
+    L.circleMarker(latlng, { radius: 5, color: '#A9781F', weight: 2, fillColor: '#D8B25A', fillOpacity: 1 }).addTo(measureLayer);
+    if (measurePts.length === 1) {
+      document.getElementById('hint').textContent = '📏 Tap the second point — distance shows in nautical miles (nm).';
+      return;
+    }
+    var a = measurePts[0], b = measurePts[1];
+    L.polyline([a, b], { color: '#A9781F', weight: 3, dashArray: '4 6' }).addTo(measureLayer);
+    var nm = L.latLng(a).distanceTo(L.latLng(b)) / 1852;
+    var tip = document.getElementById('measure-tip');
+    tip.textContent = (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
+    tip.style.display = 'block';
+    tip.style.left = '50%';
+    tip.style.top = '1em';
+    tip.style.transform = 'translateX(-50%)';
+    document.getElementById('stat').textContent = '📏 ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm between taps · tap again to measure a new pair';
+    measurePts = [];
+  }
+
   function checklistState() {
     var pins = livePins();
     var withVoice = pins.filter(function (m) { return m._voice && m._voice.trim(); }).length;
@@ -698,6 +1047,7 @@
     voyageLayer.addTo(map);
     voyageOn = true;
     document.getElementById('tool-voyage').classList.add('on');
+    document.getElementById('hint').textContent = '⚓ Read-only reference voyage. Want these as YOUR editable stops? Tap ⧉ Copy voyage.';
   }
   function hideVoyage() {
     if (voyageLayer) { map.removeLayer(voyageLayer); voyageLayer = null; }
@@ -1157,9 +1507,9 @@
         pins: work[k].pins.map(function (m) {
           if (m instanceof L.Marker) {
             var ll = m.getLatLng();
-            return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', n: m._n || 0 };
+            return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', kind: m._kind || '', n: m._n || 0 };
           }
-          return { lat: m.lat, lng: m.lng, label: m.label || '', voice: m.voice || '', journal: m.journal || '', n: m.n || 0 };
+          return { lat: m.lat, lng: m.lng, label: m.label || '', voice: m.voice || '', journal: m.journal || '', kind: m.kind || '', n: m.n || 0 };
         }),
         route: work[k].route.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; })
       };
@@ -1189,6 +1539,7 @@
           label: p.label || '',
           voice: p.voice || '',
           journal: p.journal || '',
+          kind: p.kind || '',
           n: p.n || 0
         };
       });
@@ -1202,7 +1553,7 @@
     work[mode].pins = [];
     pins.forEach(function (p) {
       if (p instanceof L.Marker) { p.addTo(pinLayer); work[mode].pins.push(p); }
-      else addPin([p.lat, p.lng], { label: p.label, voice: p.voice, journal: p.journal, n: p.n }, true);
+      else addPin([p.lat, p.lng], { label: p.label, voice: p.voice, journal: p.journal, kind: p.kind, n: p.n }, true);
     });
     renumberPins();
     drawRoute();
@@ -1261,7 +1612,9 @@
     } else {
       pins.forEach(function (m) {
         var d = pinData(m);
-        html += '<div class="stop"><h3>' + escapeHtml(String(d.n)) + '. ' + escapeHtml(d.label || 'Untitled') + '</h3>';
+        html += '<div class="stop"><h3>' + escapeHtml(String(d.n)) + '. ' + escapeHtml(d.label || 'Untitled');
+        if (d.kind && kindLabel[d.kind]) html += ' <span style="font-weight:400;font-size:.85em;">(' + escapeHtml(kindLabel[d.kind]) + ')</span>';
+        html += '</h3>';
         if (d.voice) html += '<div class="voice">“' + escapeHtml(d.voice) + '”</div>';
         else html += '<div class="voice">(voice still needed)</div>';
         if (d.journal) html += '<div class="cite">Journal evidence: ' + escapeHtml(d.journal) + '</div>';
@@ -1296,14 +1649,31 @@
       map.fitBounds(group.getBounds().pad(0.25));
     } catch (_) {}
     notice('Starter places dropped for ' + project.person + '. Now rewrite each stop in their voice and cite Journal pages.');
-    document.getElementById('hint').textContent = 'Tap a numbered pin → Edit. Fill “In their voice” and Journal evidence. Aim for 8–10 complete stops.';
+    document.getElementById('hint').textContent = 'Open 📑 Stops to reorder · tap a pin to Edit voice + Journal. Aim for 8–10 complete stops.';
+    openSide('stops');
+    renderStopsList();
   }
 
   /* ---------- Toolbar wiring ---------- */
+  function updateMapCursor() {
+    var el = document.getElementById('map');
+    if (!el) return;
+    el.classList.remove('cursor-pin', 'cursor-route', 'cursor-measure');
+    if (mode === 'doors' || mode === 'globe') return;
+    if (tool === 'pin') el.classList.add('cursor-pin');
+    else if (tool === 'route') el.classList.add('cursor-route');
+    else if (tool === 'measure') el.classList.add('cursor-measure');
+  }
   function setTool(t) {
+    if (t !== 'measure') clearMeasure();
     tool = t;
     document.getElementById('tool-pin').classList.toggle('on', t === 'pin');
     document.getElementById('tool-route').classList.toggle('on', t === 'route');
+    document.getElementById('tool-measure').classList.toggle('on', t === 'measure');
+    updateMapCursor();
+    if (t === 'pin') document.getElementById('hint').textContent = '📌 Tap-stop mode: tap the map to drop a numbered story stop, then write their voice.';
+    if (t === 'route') document.getElementById('hint').textContent = '✏️ Draw-route mode: tap leg by leg — or use 🔗 Route from stops to connect pins in order.';
+    if (t === 'measure') document.getElementById('hint').textContent = '📏 Measure mode: tap two points. Distance is in nautical miles (nm) — the unit sailors use.';
   }
   document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
   document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
@@ -1334,19 +1704,30 @@
     p.style.display = 'block';
   };
   document.getElementById('tool-project').onclick = function () {
-    var panel = document.getElementById('proj-panel');
-    var open = panel.classList.toggle('open');
-    this.classList.toggle('on', open);
-    if (open) { syncProjectFields(); exitTour(); }
+    if (openSide('project')) syncProjectFields();
   };
-  document.getElementById('proj-close').onclick = function () {
-    document.getElementById('proj-panel').classList.remove('open');
-    document.getElementById('tool-project').classList.remove('on');
+  document.getElementById('proj-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('tool-places').onclick = function () {
+    if (mode !== 'world') { notice('Places library works on 🌍 World (lat/long places don’t map onto the 1717 chart image).'); return; }
+    if (openSide('places')) {
+      document.getElementById('place-search').value = '';
+      renderPlacesList();
+      setTool('pin');
+    }
   };
+  document.getElementById('places-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('place-search').addEventListener('input', renderPlacesList);
+  document.getElementById('tool-stops').onclick = function () {
+    if (openSide('stops')) renderStopsList();
+  };
+  document.getElementById('stops-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('stops-connect').onclick = connectPinsRoute;
+  document.getElementById('stops-fit').onclick = fitAllStops;
+  document.getElementById('tool-connect').onclick = connectPinsRoute;
+  document.getElementById('tool-copy-voyage').onclick = copyWhydahVoyage;
   ['proj-student', 'proj-person', 'proj-title'].forEach(function (id) {
     document.getElementById(id).addEventListener('change', readProjectFields);
     document.getElementById(id).addEventListener('input', function () {
-      /* light autosave without hammering checklist on every keystroke for title/name */
       if (id === 'proj-person') readProjectFields();
     });
   });
@@ -1355,7 +1736,7 @@
   document.getElementById('tool-starter').onclick = dropStarters;
   document.getElementById('tool-tour').onclick = function () {
     if (document.getElementById('tour-panel').classList.contains('open')) exitTour();
-    else startTour();
+    else { closeSidePanels(); startTour(); }
   };
   document.getElementById('tour-prev').onclick = function () { showTourStop(tourIdx - 1); };
   document.getElementById('tour-next').onclick = function () { showTourStop(tourIdx + 1); };
@@ -1376,6 +1757,7 @@
     if (e.key === 'Escape') {
       if (document.getElementById('pin-modal').classList.contains('open')) { closePinEditor(); return; }
       if (document.getElementById('tour-panel').classList.contains('open')) { exitTour(); return; }
+      closeSidePanels();
     }
     if (document.getElementById('tour-panel').classList.contains('open')) {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); showTourStop(tourIdx + 1); }
@@ -1384,8 +1766,13 @@
   });
   document.getElementById('tool-pin').onclick = function () { setTool('pin'); };
   document.getElementById('tool-route').onclick = function () { setTool('route'); };
+  document.getElementById('tool-measure').onclick = function () {
+    if (mode !== 'world') { notice('Measure needs the World map (the 1717 chart has no honest scale).'); return; }
+    setTool(tool === 'measure' ? 'pin' : 'measure');
+  };
   document.getElementById('tool-undo').onclick = function () {
     if (tool === 'route' && work[mode].route.length) { work[mode].route.pop(); drawRoute(); saveNow(); return; }
+    if (tool === 'measure') { clearMeasure(); document.getElementById('hint').textContent = '📏 Measure cleared. Tap two new points.'; return; }
     var arr = work[mode].pins;
     if (arr.length) { pinLayer.removeLayer(arr.pop()); renumberPins(); saveNow(); updateStat(); }
   };
@@ -1394,7 +1781,7 @@
     if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. This cannot be undone.')) return;
     work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
     work[mode] = { pins: [], route: [] };
-    drawRoute(); saveNow(); updateStat(); exitTour();
+    drawRoute(); saveNow(); updateStat(); exitTour(); clearMeasure(); renderStopsList();
   };
   document.getElementById('tool-export').onclick = function () {
     var d = serialize();
@@ -1403,7 +1790,7 @@
       d[k].pins.forEach(function (p) {
         gj.features.push({
           type: 'Feature',
-          properties: { label: p.label, voice: p.voice, journal: p.journal, n: p.n, canvas: k },
+          properties: { label: p.label, voice: p.voice, journal: p.journal, kind: p.kind || '', n: p.n, canvas: k },
           geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
         });
       });
@@ -1423,6 +1810,10 @@
   function onMapClick(e) {
     if (mode === 'doors') {
       if (pirate.armed) parkPirate(e.latlng);
+      return;
+    }
+    if (tool === 'measure') {
+      onMeasureClick(e.latlng);
       return;
     }
     if (tool === 'pin') {
@@ -1448,7 +1839,7 @@
     return { mode: mode, center: c ? [c.lat.toFixed(2), c.lng.toFixed(2)] : null, zoom: m ? +m.getZoom().toFixed(1) : null,
              ships: ships.length, pirate: pirate.ll ? [pirate.ll[0].toFixed(2), pirate.ll[1].toFixed(2)] : null,
              spotted: pirate.count, pts: pirate.pts, showPorts: showPorts, showLanes: showLanes,
-             project: project, checklist: checklistState(),
+             project: project, checklist: checklistState(), tool: tool,
              globe: gmap ? { styleLoaded: gmap.isStyleLoaded(), shipsSrc: !!gmap.getSource('ships'), loaded: gmap.loaded() } : null };
   };
 
@@ -1456,6 +1847,7 @@
   setTool('pin');
   applyToggles();
   syncProjectFields();
+  renderPlacesList();
   var doorParam = null, viewParam = null;
   try {
     var qs = new URLSearchParams(window.location.search);
