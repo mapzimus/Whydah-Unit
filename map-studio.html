@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Map Studio · Navigating Piracy</title>
-<meta name="description" content="Build your own map of the Whydah story: drop pins, draw the route, measure the distance — on a modern map or the real 1717 chart. No account needed.">
+<meta name="description" content="Build your Showcase story map: pick your person, drop 8–10 pins in their voice, cite Journal pages, rehearse a live tour — on a modern map or the real 1717 chart. No account needed.">
 <script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
@@ -48,14 +48,65 @@
   .leaflet-popup-content{font-family:"Segoe UI",system-ui,sans-serif;}
   .leaflet-popup-content b{color:var(--ox);}
   .pbtn{display:inline-block; margin:.35em .35em 0 0; padding:.3em .6em; border:1.5px solid var(--brass); border-radius:6px; background:#FBF4E2; font-weight:700; font-size:.85em; cursor:pointer;}
-  @media (max-width:560px){ .toolbar{gap:.3em;} .tbtn{font-size:.85em; padding:.45em .6em;} .stat{font-size:.8em;} }
+  .story-pin{background:var(--ox);color:var(--brassl);font:700 12px Georgia,serif;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brassl);box-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .story-pin.empty{background:var(--ink2);opacity:.85;}
+  .proj{position:absolute;z-index:1160;left:.6em;top:.6em;width:min(92vw,340px);max-height:calc(100% - 1.2em);background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;overflow:hidden;flex-direction:column;}
+  .proj.open{display:flex;}
+  .proj-head{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-weight:700;padding:.55em .8em;font-size:1.02em;flex:0 0 auto;}
+  .proj-head .lb-sub{display:block;color:#C7BCA0;font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;font-style:italic;font-size:.78em;}
+  .proj-head button{float:right;background:none;border:1px solid var(--brassl);color:var(--brassl);border-radius:6px;cursor:pointer;font-weight:700;margin:-.1em 0 0;}
+  .proj-body{padding:.7em .8em .9em;overflow-y:auto;flex:1;}
+  .proj label{display:block;font-size:.78em;font-weight:800;color:var(--ox);letter-spacing:.04em;text-transform:uppercase;margin:.55em 0 .2em;}
+  .proj label:first-child{margin-top:0;}
+  .proj input,.proj select,.proj textarea{width:100%;font:inherit;font-size:.95em;padding:.45em .55em;border:1.5px solid var(--brass);border-radius:6px;background:#FBF4E2;color:var(--inktx);}
+  .proj textarea{min-height:4.5em;resize:vertical;}
+  .check{list-style:none;margin:.55em 0 0;padding:0;}
+  .check li{font-size:.88em;padding:.28em 0;border-bottom:1px dashed var(--parch2);display:flex;gap:.45em;align-items:flex-start;}
+  .check .mark{flex:0 0 auto;font-weight:800;color:var(--muted);}
+  .check .mark.ok{color:#2d6a3e;}
+  .check .mark.no{color:var(--ox);}
+  .starter{margin-top:.7em;padding-top:.55em;border-top:1px solid var(--parch2);}
+  .starter p{font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;}
+  .modal-bg{position:fixed;inset:0;z-index:2000;background:rgba(18,34,43,.55);display:none;align-items:center;justify-content:center;padding:1em;}
+  .modal-bg.open{display:flex;}
+  .modal{width:min(94vw,440px);background:var(--parch);border:2px solid var(--brass);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);overflow:hidden;}
+  .modal h2{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-size:1.1em;padding:.65em .9em;}
+  .modal .body{padding:.85em .9em 1em;}
+  .modal label{display:block;font-size:.78em;font-weight:800;color:var(--ox);letter-spacing:.04em;text-transform:uppercase;margin:.5em 0 .2em;}
+  .modal input,.modal textarea{width:100%;font:inherit;font-size:.95em;padding:.45em .55em;border:1.5px solid var(--brass);border-radius:6px;background:#FBF4E2;color:var(--inktx);}
+  .modal textarea{min-height:5.5em;resize:vertical;}
+  .modal .hint-sm{font-size:.78em;color:var(--muted);font-style:italic;margin:.2em 0 .1em;}
+  .modal .actions{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.85em;}
+  .tour{position:absolute;z-index:1180;left:50%;transform:translateX(-50%);bottom:.7em;width:min(94vw,560px);background:var(--ink);color:var(--parch);border:2px solid var(--brassl);border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.45);display:none;padding:.85em 1em;}
+  .tour.open{display:block;}
+  .tour .who{color:var(--brassl);font-size:.78em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+  .tour .stop{font-family:Georgia,serif;font-size:1.15em;margin:.15em 0 .35em;}
+  .tour .voice{font-size:.95em;line-height:1.4;color:#EAD9B4;font-style:italic;}
+  .tour .cite{font-size:.8em;color:#C7BCA0;margin-top:.45em;}
+  .tour .nav{display:flex;gap:.4em;margin-top:.7em;flex-wrap:wrap;align-items:center;}
+  .tour .nav .tbtn{background:#1C3743;color:var(--parch);border-color:var(--brassl);}
+  .tour .nav .tbtn:hover{background:var(--brass);}
+  .tour .count{margin-left:auto;font-size:.85em;color:var(--brassl);font-weight:700;}
+  .sheet{display:none;}
+  @media print{
+    body *{visibility:hidden !important;}
+    .sheet,.sheet *{visibility:visible !important;}
+    .sheet{display:block !important;position:absolute;left:0;top:0;width:100%;padding:0;background:white;color:#000;}
+    .sheet h1{font-family:Georgia,serif;font-size:1.6em;margin:0 0 .2em;}
+    .sheet .meta{color:#444;font-style:italic;margin-bottom:1em;}
+    .sheet .stop{border-top:1px solid #999;padding:.7em 0;page-break-inside:avoid;}
+    .sheet .stop h3{margin:0 0 .25em;font-family:Georgia,serif;}
+    .sheet .voice{font-style:italic;margin:.2em 0;}
+    .sheet .cite{font-size:.9em;color:#444;}
+  }
+  @media (max-width:560px){ .toolbar{gap:.3em;} .tbtn{font-size:.85em; padding:.45em .6em;} .stat{font-size:.8em;} .proj{left:.35em;right:.35em;width:auto;} }
 </style>
 </head>
 <body>
 
 <header class="hero">
   <h1>🗺️ Map Studio</h1>
-  <span class="sub">Your map. Your pins. Your story. Everything saves on this device — no account, no login.</span>
+  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Saves on this device. No account.</span>
 </header>
 
 <div class="toolbar" role="toolbar" aria-label="Map tools">
@@ -64,15 +115,18 @@
   <button class="tbtn" id="mode-doors" title="Where the world's ships squeeze through">🚢 Chokepoints</button>
   <button class="tbtn" id="mode-globe" title="The same ocean, as a planet">🌐 Globe</button>
   <span style="width:.6em"></span>
+  <button class="tbtn" id="tool-project" title="Your person, title, and Showcase checklist">📋 My project</button>
   <button class="tbtn" id="tool-pin">📌 Pin</button>
   <button class="tbtn" id="tool-route">✏️ Route</button>
   <button class="tbtn" id="tool-undo">↩ Undo</button>
   <button class="tbtn" id="tool-voyage">⚓ Whydah's voyage</button>
+  <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
+  <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
   <button class="tbtn" id="tool-export">💾 Download</button>
   <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
   <span class="stat" id="stat">0 pins · route 0 nm</span>
 </div>
-<div class="hint" id="hint">Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship's track leg by leg.</div>
+<div class="hint" id="hint">Story-map tip: open <b>📋 My project</b>, pick your person, then drop 8–10 pins — each with a place, their voice, and a Journal page.</div>
 <div class="toolbar" id="doors-bar" style="display:none; border-bottom:2px solid var(--ox);">
   <button class="tbtn" id="jump-all">🌍 Whole ocean</button>
   <button class="tbtn" id="jump-suez">Suez</button>
@@ -96,17 +150,86 @@
 
 <div class="mapwrap">
   <div class="notice" id="notice"><button onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
+  <div class="proj" id="proj-panel" role="dialog" aria-label="My story-map project">
+    <div class="proj-head">📋 My story map <span class="lb-sub">for the Showcase · autosaves here</span>
+      <button type="button" id="proj-close" aria-label="Close">✕</button></div>
+    <div class="proj-body">
+      <label for="proj-student">Your name</label>
+      <input id="proj-student" type="text" maxlength="48" placeholder="What visitors should see on the sheet" autocomplete="name">
+      <label for="proj-person">Your person</label>
+      <select id="proj-person">
+        <option value="">— pick whose story you’re telling —</option>
+        <option>Sam Bellamy</option>
+        <option>John King</option>
+        <option>John Julian</option>
+        <option>Thomas Davis</option>
+        <option>Paulsgrave Williams</option>
+        <option>Maria Hallett</option>
+        <option>Philip Ashton</option>
+        <option>Cyprian Southack</option>
+        <option>Barry Clifford</option>
+        <option>Sir Humphrey Morice</option>
+        <option>Hendrick Quintor</option>
+        <option>John Lambert</option>
+        <option>Other / pitch my own</option>
+      </select>
+      <label for="proj-title">Map title</label>
+      <input id="proj-title" type="text" maxlength="80" placeholder="e.g. John Julian’s Course — in his voice">
+      <label>Showcase checklist</label>
+      <ul class="check" id="proj-check"></ul>
+      <div class="starter" id="starter-box">
+        <p>Stuck on where to pin? Drop a starter pack of places for your person — then rewrite every stop in their voice.</p>
+        <button type="button" class="tbtn" id="tool-starter">📍 Drop starter pins</button>
+      </div>
+    </div>
+  </div>
   <div class="lb" id="lb-panel">
     <div class="lb-head">🏆 Pirate Leaderboard <span class="lb-sub">best 60-second voyages on this device</span>
       <button onclick="document.getElementById('lb-panel').style.display='none'">✕</button></div>
     <ol id="lb-list"></ol>
     <div class="lb-foot">Park your pirate to start a 60-second voyage. 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5.</div>
   </div>
+  <div class="tour" id="tour-panel" role="dialog" aria-label="Story tour">
+    <div class="who" id="tour-who"></div>
+    <div class="stop" id="tour-stop"></div>
+    <div class="voice" id="tour-voice"></div>
+    <div class="cite" id="tour-cite"></div>
+    <div class="nav">
+      <button type="button" class="tbtn" id="tour-prev">← Prev</button>
+      <button type="button" class="tbtn" id="tour-next">Next →</button>
+      <button type="button" class="tbtn" id="tour-exit">Exit tour</button>
+      <span class="count" id="tour-count"></span>
+    </div>
+  </div>
   <div id="map"></div>
 </div>
 
+<div class="modal-bg" id="pin-modal" role="dialog" aria-modal="true" aria-labelledby="pin-modal-title">
+  <div class="modal">
+    <h2 id="pin-modal-title">Story pin</h2>
+    <div class="body">
+      <label for="pin-label">Place / stop name</label>
+      <input id="pin-label" type="text" maxlength="80" placeholder="Where is this stop?">
+      <label for="pin-voice">In their voice</label>
+      <p class="hint-sm">2–4 sentences as your person. What do they see, fear, choose, or remember here?</p>
+      <textarea id="pin-voice" maxlength="600" placeholder="Write as them — not about them."></textarea>
+      <label for="pin-journal">Journal evidence</label>
+      <p class="hint-sm">Which Voyage Journal page backs this stop? (e.g. Day 9 · push/pull card)</p>
+      <input id="pin-journal" type="text" maxlength="80" placeholder="Day __ · page / artifact">
+      <div class="actions">
+        <button type="button" class="tbtn on" id="pin-save">Save pin</button>
+        <button type="button" class="tbtn" id="pin-cancel">Cancel</button>
+        <button type="button" class="tbtn danger" id="pin-delete" style="display:none">🗑 Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="story-sheet" aria-hidden="true"></div>
+
 <footer class="foot">
-  Building the story-map format? You want 8–10 pins, each in your person's voice. <a href="choose-your-project.html">The project menu →</a> · <a href="/">⚓ Crew deck</a>
+  Story map = <b>8–10 numbered stops</b>, each in your person’s voice, citing Journal pages. Use <b>🎤 Tour</b> at the Showcase · <b>📄 Story sheet</b> for the gallery table.
+  <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
 <script>
@@ -114,7 +237,10 @@
   'use strict';
   L.Icon.Default.imagePath = 'vendor/leaflet/images/';
 
-  var SAVE_KEY = 'whydah-map-studio-v1';
+  var SAVE_KEY = 'whydah-map-studio-v2';
+  var SAVE_KEY_LEGACY = 'whydah-map-studio-v1';
+
+  var project = { student: '', person: '', title: '' };
 
   /* ---------- The Whydah's documented voyage, 1715–1984 ---------- */
   var VOYAGE = [
@@ -128,6 +254,110 @@
     { n: 8, ll: [42.522, -70.895], t: 'Salem · found again',  d: '1984: Barry Clifford reads Southack’s 267-year-old mark and finds her. The bell proves it: THE WHYDAH GALLY 1716. You met the finds at Real Pirates.' }
   ];
   var VOYAGE_LINE = VOYAGE.map(function (w) { return w.ll; });
+
+  /* Suggested stops for Showcase story maps — places only; students write the voice. */
+  var STARTERS = {
+    'Sam Bellamy': [
+      { ll: [50.77, -3.75], t: 'Hittisleigh, Devon' },
+      { ll: [41.7, -70.2], t: 'Cape Cod salvage dreams' },
+      { ll: [27.0, -80.2], t: 'Florida wreck gold rush' },
+      { ll: [19.9, -73.9], t: 'Windward Passage — taking the Whydah' },
+      { ll: [17.97, -76.87], t: 'Caribbean hunting grounds' },
+      { ll: [33.9, -76.5], t: 'North along the Carolinas' },
+      { ll: [41.891, -69.957], t: 'Wrecked off Wellfleet' },
+      { ll: [42.36, -71.06], t: 'Boston — the legend after' }
+    ],
+    'John King': [
+      { ll: [17.12, -61.85], t: 'Antigua — mother’s ship' },
+      { ll: [18.2, -63.0], t: 'Choosing the pirate life' },
+      { ll: [19.9, -73.9], t: 'Aboard the Whydah' },
+      { ll: [25.0, -77.4], t: 'Bahamas prizes' },
+      { ll: [33.9, -76.5], t: 'The run north' },
+      { ll: [41.891, -69.957], t: 'The storm' },
+      { ll: [41.93, -69.98], t: 'Shoe and stocking on the sand' },
+      { ll: [42.52, -70.89], t: 'Seen again at Real Pirates' }
+    ],
+    'John Julian': [
+      { ll: [14.5, -83.5], t: 'Mosquito Coast — home' },
+      { ll: [17.97, -76.87], t: 'Caribbean — hired as pilot' },
+      { ll: [19.9, -73.9], t: 'Steering the Whydah' },
+      { ll: [41.891, -69.957], t: 'Surviving the wreck' },
+      { ll: [42.36, -71.06], t: 'Boston — sold, not tried' },
+      { ll: [42.25, -71.0], t: 'Braintree — John Quincy’s household' },
+      { ll: [42.40, -71.05], t: 'Escape attempts' },
+      { ll: [42.358, -71.059], t: 'Hanged, 1733' }
+    ],
+    'Thomas Davis': [
+      { ll: [51.48, -3.18], t: 'Wales — a carpenter’s life' },
+      { ll: [19.9, -73.9], t: 'Forced aboard' },
+      { ll: [17.97, -76.87], t: 'Working the prizes' },
+      { ll: [33.9, -76.5], t: 'North with the fleet' },
+      { ll: [41.891, -69.957], t: 'Surviving Wellfleet' },
+      { ll: [42.36, -71.06], t: 'Boston trial' },
+      { ll: [42.36, -71.06], t: 'Proving he never chose it' },
+      { ll: [42.52, -70.89], t: 'What the record kept' }
+    ],
+    'Paulsgrave Williams': [
+      { ll: [41.49, -71.31], t: 'Rhode Island — silversmith’s son' },
+      { ll: [27.0, -80.2], t: 'Florida salvage partnership' },
+      { ll: [19.9, -73.9], t: 'With Bellamy in the Passage' },
+      { ll: [17.97, -76.87], t: 'Marianne — partner captain' },
+      { ll: [41.17, -71.58], t: 'Block Island — visiting family' },
+      { ll: [41.891, -69.957], t: 'The storm he missed' },
+      { ll: [42.36, -71.06], t: 'Boston hears of the wreck' },
+      { ll: [41.49, -71.31], t: 'Vanished from the record' }
+    ],
+    'Maria Hallett': [
+      { ll: [41.93, -70.03], t: 'Cape Cod dunes' },
+      { ll: [41.7, -70.2], t: 'Where legend says they met' },
+      { ll: [41.891, -69.957], t: 'Watching the wreck?' },
+      { ll: [41.93, -69.98], t: 'Southack’s mark nearby' },
+      { ll: [42.36, -71.06], t: 'Boston papers — no Maria' },
+      { ll: [41.93, -70.03], t: 'The legend vs. the record' },
+      { ll: [42.52, -70.89], t: 'Museum retellings' },
+      { ll: [41.93, -70.03], t: 'Whose story is this?' }
+    ],
+    'Philip Ashton': [
+      { ll: [42.5, -70.86], t: 'Marblehead — fisherman' },
+      { ll: [42.5, -70.86], t: 'Seized by pirates' },
+      { ll: [17.97, -76.87], t: 'Refusing to join' },
+      { ll: [16.7, -62.2], t: 'Roatán — two years alone' },
+      { ll: [16.7, -62.2], t: 'Surviving the island' },
+      { ll: [42.5, -70.86], t: 'Home to a town that thought him dead' },
+      { ll: [42.36, -71.06], t: 'The 1725 memoir' },
+      { ll: [42.52, -70.89], t: 'Salem’s living memory of piracy' }
+    ],
+    'Cyprian Southack': [
+      { ll: [42.36, -71.06], t: 'Boston — ordered to salvage' },
+      { ll: [41.93, -69.98], t: 'Wellfleet — too late' },
+      { ll: [41.891, -69.957], t: 'Marking the wreck' },
+      { ll: [41.7, -70.2], t: 'Cape Cod chart work' },
+      { ll: [44.6, -66.0], t: 'Bay of Fundy charts' },
+      { ll: [42.36, -71.06], t: 'Report to the governor' },
+      { ll: [41.93, -69.98], t: 'The ink that outlived him' },
+      { ll: [42.52, -70.89], t: '1984 — Clifford reads the mark' }
+    ],
+    'Barry Clifford': [
+      { ll: [41.93, -70.03], t: 'Cape Cod — believing the legend' },
+      { ll: [41.93, -69.98], t: 'Reading Southack’s chart' },
+      { ll: [41.891, -69.957], t: '1984 — the find' },
+      { ll: [41.891, -69.957], t: 'THE WHYDAH GALLY 1716' },
+      { ll: [41.93, -69.98], t: 'Decades of raising her' },
+      { ll: [42.52, -70.89], t: 'Real Pirates Salem' },
+      { ll: [42.36, -71.06], t: 'Telling the crew’s story' },
+      { ll: [41.891, -69.957], t: 'What still lies below' }
+    ],
+    'Sir Humphrey Morice': [
+      { ll: [51.507, -0.128], t: 'London — MP and money' },
+      { ll: [51.507, -0.128], t: 'Ordering a slave ship built' },
+      { ll: [6.367, 2.083], t: 'Ouidah — the name on the stern' },
+      { ll: [13.0, -59.5], t: 'Middle Passage routes' },
+      { ll: [19.9, -73.9], t: 'Lost to Bellamy, Feb 1717' },
+      { ll: [51.507, -0.128], t: 'The investment written off' },
+      { ll: [51.507, -0.128], t: 'Never touched a deck' },
+      { ll: [41.891, -69.957], t: 'The wreck that outlived the ledger' }
+    ]
+  };
 
   /* ---------- Basemaps (several hosts — if school wifi blocks one, try another) ---------- */
   var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Imagery © Esri' });
@@ -184,7 +414,10 @@
     /* live markers survive as plain data so they can rehydrate later */
     ['world', 'chart'].forEach(function (k) {
       work[k].pins = work[k].pins.map(function (m) {
-        if (m instanceof L.Marker) { var ll = m.getLatLng(); return { lat: ll.lat, lng: ll.lng, label: m._label || '' }; }
+        if (m instanceof L.Marker) {
+          var ll = m.getLatLng();
+          return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', n: m._n || 0 };
+        }
         return m;
       });
     });
@@ -192,6 +425,7 @@
 
   function enterWorld() {
     saveNow();
+    exitTour();
     mode = 'world';
     freshMap(L.CRS.EPSG3857);
     map.setMinZoom(2); map.setMaxZoom(19);
@@ -201,11 +435,12 @@
     restoreWork();
     if (voyageOn) { voyageOn = false; showVoyage(); }
     setModeButtons();
-    document.getElementById('hint').textContent = 'Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship’s track leg by leg.';
+    document.getElementById('hint').textContent = 'Story-map tip: open 📋 My project, pick your person, then drop 8–10 pins — each with a place, their voice, and a Journal page.';
   }
 
   function enterChart() {
     saveNow();
+    exitTour();
     mode = 'chart';
     freshMap(L.CRS.Simple);
     map.setMinZoom(-2); map.setMaxZoom(3);
@@ -223,11 +458,17 @@
     document.getElementById('mode-globe').classList.toggle('on', mode === 'globe');
     document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
     var studio = (mode !== 'doors' && mode !== 'globe');
-    ['tool-pin', 'tool-route', 'tool-undo', 'tool-export', 'tool-clear'].forEach(function (id) {
+    ['tool-pin', 'tool-route', 'tool-undo', 'tool-export', 'tool-clear', 'tool-project', 'tool-tour', 'tool-sheet'].forEach(function (id) {
       document.getElementById(id).style.display = studio ? '' : 'none';
     });
     document.getElementById('doors-bar').style.display = studio ? 'none' : 'flex';
-    if (studio) document.getElementById('lb-panel').style.display = 'none';
+    if (!studio) {
+      document.getElementById('lb-panel').style.display = 'none';
+      document.getElementById('proj-panel').classList.remove('open');
+      document.getElementById('tool-project').classList.remove('on');
+      exitTour();
+    }
+    renderChecklist();
   }
   function applyToggles() {
     document.getElementById('toggle-ports').classList.toggle('on', showPorts);
@@ -241,35 +482,174 @@
     }
   }
 
-  /* ---------- Pins ---------- */
-  function addPin(latlng, label, skipSave) {
-    var m = L.marker(latlng, { draggable: true }).addTo(pinLayer);
+  /* ---------- Pins (story-map stops) ---------- */
+  var editingPin = null;
+  var pendingLatLng = null;
+  var tourIdx = -1;
+
+  function pinData(m) {
+    return {
+      label: m._label || '',
+      voice: m._voice || '',
+      journal: m._journal || '',
+      n: typeof m._n === 'number' ? m._n : 0
+    };
+  }
+  function pinIsComplete(m) {
+    var d = (m instanceof L.Marker) ? pinData(m) : m;
+    return !!(d.label && d.label.trim() && d.voice && d.voice.trim() && d.journal && d.journal.trim());
+  }
+  function storyIcon(n, complete) {
+    return L.divIcon({
+      className: '',
+      html: '<div class="story-pin' + (complete ? '' : ' empty') + '">' + (n || '·') + '</div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+  }
+  function renumberPins() {
+    work[mode].pins.forEach(function (m, i) {
+      if (!(m instanceof L.Marker)) return;
+      m._n = i + 1;
+      m.setIcon(storyIcon(m._n, pinIsComplete(m)));
+    });
+  }
+  function addPin(latlng, data, skipSave) {
+    data = data || {};
+    var label = data.label || '';
+    var voice = data.voice || '';
+    var journal = data.journal || '';
+    var n = data.n || (work[mode].pins.length + 1);
+    var complete = !!(label && voice && journal);
+    var m = L.marker(latlng, { draggable: true, icon: storyIcon(n, complete) }).addTo(pinLayer);
     m._label = label;
+    m._voice = voice;
+    m._journal = journal;
+    m._n = n;
     bindPinPopup(m);
     m.on('dragend', saveNow);
     work[mode].pins.push(m);
+    renumberPins();
     if (!skipSave) saveNow();
     updateStat();
     return m;
   }
   function bindPinPopup(m) {
+    var d = pinData(m);
     var div = document.createElement('div');
-    div.innerHTML = '<b>' + escapeHtml(m._label || 'My pin') + '</b><br>';
-    var rn = document.createElement('span'); rn.className = 'pbtn'; rn.textContent = '✏️ Rename';
+    var voiceHtml = d.voice
+      ? '<div style="margin:.35em 0;font-style:italic;max-width:240px;">“' + escapeHtml(d.voice) + '”</div>'
+      : '<div style="margin:.35em 0;color:#6E5B3C;font-style:italic;font-size:.9em;">No voice yet — tap Edit.</div>';
+    var citeHtml = d.journal
+      ? '<div style="font-size:.82em;color:#6E5B3C;">Journal: ' + escapeHtml(d.journal) + '</div>'
+      : '';
+    div.innerHTML = '<b>' + (d.n || '') + ' · ' + escapeHtml(d.label || 'Untitled stop') + '</b>' + voiceHtml + citeHtml;
+    var ed = document.createElement('span'); ed.className = 'pbtn'; ed.textContent = '✏️ Edit';
     var del = document.createElement('span'); del.className = 'pbtn'; del.textContent = '🗑 Remove';
-    rn.onclick = function () {
-      var v = window.prompt('New label for this pin:', m._label || '');
-      if (v !== null && v.trim()) { m._label = v.trim(); bindPinPopup(m); m.openPopup(); saveNow(); }
-    };
+    ed.onclick = function () { openPinEditor(m); };
     del.onclick = function () {
       pinLayer.removeLayer(m);
       var arr = work[mode].pins; var i = arr.indexOf(m); if (i > -1) arr.splice(i, 1);
-      saveNow(); updateStat();
+      renumberPins(); saveNow(); updateStat();
     };
-    div.appendChild(rn); div.appendChild(del);
+    div.appendChild(ed); div.appendChild(del);
     m.bindPopup(div);
   }
   function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function openPinEditor(markerOrNull, latlng) {
+    editingPin = markerOrNull || null;
+    pendingLatLng = latlng || null;
+    document.getElementById('pin-modal-title').textContent = editingPin ? ('Edit stop ' + (editingPin._n || '')) : 'New story pin';
+    document.getElementById('pin-label').value = editingPin ? (editingPin._label || '') : '';
+    document.getElementById('pin-voice').value = editingPin ? (editingPin._voice || '') : '';
+    document.getElementById('pin-journal').value = editingPin ? (editingPin._journal || '') : '';
+    document.getElementById('pin-delete').style.display = editingPin ? '' : 'none';
+    document.getElementById('pin-modal').classList.add('open');
+    setTimeout(function () { document.getElementById('pin-label').focus(); }, 50);
+  }
+  function closePinEditor() {
+    document.getElementById('pin-modal').classList.remove('open');
+    editingPin = null;
+    pendingLatLng = null;
+  }
+  function savePinEditor() {
+    var label = document.getElementById('pin-label').value.trim() || 'Untitled stop';
+    var voice = document.getElementById('pin-voice').value.trim();
+    var journal = document.getElementById('pin-journal').value.trim();
+    if (editingPin) {
+      editingPin._label = label;
+      editingPin._voice = voice;
+      editingPin._journal = journal;
+      editingPin.setIcon(storyIcon(editingPin._n, pinIsComplete(editingPin)));
+      bindPinPopup(editingPin);
+      saveNow(); updateStat();
+      closePinEditor();
+      return;
+    }
+    if (!pendingLatLng) { closePinEditor(); return; }
+    var m = addPin(pendingLatLng, { label: label, voice: voice, journal: journal });
+    closePinEditor();
+    m.openPopup();
+  }
+
+  function livePins() {
+    return work[mode].pins.filter(function (m) { return m instanceof L.Marker; });
+  }
+  function checklistState() {
+    var pins = livePins();
+    var withVoice = pins.filter(function (m) { return m._voice && m._voice.trim(); }).length;
+    var withJournal = pins.filter(function (m) { return m._journal && m._journal.trim(); }).length;
+    var complete = pins.filter(pinIsComplete).length;
+    var journals = {};
+    pins.forEach(function (m) {
+      var j = (m._journal || '').trim().toLowerCase();
+      if (j) journals[j] = true;
+    });
+    return {
+      pins: pins.length,
+      withVoice: withVoice,
+      withJournal: withJournal,
+      complete: complete,
+      distinctJournals: Object.keys(journals).length,
+      person: !!(project.person && project.person.trim()),
+      title: !!(project.title && project.title.trim()),
+      student: !!(project.student && project.student.trim())
+    };
+  }
+  function renderChecklist() {
+    var c = checklistState();
+    var items = [
+      { ok: c.person, text: 'Pick your person' },
+      { ok: c.pins >= 8, text: '8–10 pins on the map (' + c.pins + ')' },
+      { ok: c.withVoice >= 8, text: 'Voice written on each stop (' + c.withVoice + ')' },
+      { ok: c.distinctJournals >= 3, text: 'At least 3 Journal pages cited (' + c.distinctJournals + ')' },
+      { ok: c.title, text: 'Give your map a title' }
+    ];
+    var ul = document.getElementById('proj-check');
+    ul.innerHTML = '';
+    items.forEach(function (it) {
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="mark ' + (it.ok ? 'ok' : 'no') + '">' + (it.ok ? '✓' : '○') + '</span><span>' + escapeHtml(it.text) + '</span>';
+      ul.appendChild(li);
+    });
+    document.getElementById('starter-box').style.display =
+      (mode === 'world' && project.person && STARTERS[project.person]) ? '' : 'none';
+  }
+  function syncProjectFields() {
+    document.getElementById('proj-student').value = project.student || '';
+    document.getElementById('proj-person').value = project.person || '';
+    document.getElementById('proj-title').value = project.title || '';
+    renderChecklist();
+  }
+  function readProjectFields() {
+    project.student = document.getElementById('proj-student').value.trim();
+    project.person = document.getElementById('proj-person').value;
+    project.title = document.getElementById('proj-title').value.trim();
+    saveNow();
+    renderChecklist();
+    updateStat();
+  }
 
   /* ---------- Route ---------- */
   function addRoutePoint(latlng, skipSave) {
@@ -292,12 +672,18 @@
     return m / 1852;
   }
   function updateStat() {
-    var nPins = work[mode].pins.length;
-    var s = nPins + ' pin' + (nPins === 1 ? '' : 's');
+    if (mode === 'doors' || mode === 'globe') return;
+    var c = checklistState();
+    var s = c.pins + ' pin' + (c.pins === 1 ? '' : 's');
+    if (c.pins < 8) s += ' · need ' + (8 - c.pins) + ' more for story map';
+    else if (c.pins <= 10 && c.complete >= 8) s += ' · Showcase-ready ✓';
+    else if (c.pins > 10) s += ' · trim to 8–10?';
+    else s += ' · fill in voice + Journal';
     var nm = routeDistanceNm();
-    if (nm !== null) s += ' · route ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
-    else if (work[mode].route.length) s += ' · route: ' + work[mode].route.length + ' point' + (work[mode].route.length === 1 ? '' : 's') + ' (no scale on a 1717 chart!)';
+    if (nm !== null && work.world.route.length) s += ' · route ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
+    else if (mode === 'chart' && work[mode].route.length) s += ' · route: ' + work[mode].route.length + ' pts (no scale!)';
     document.getElementById('stat').textContent = s;
+    renderChecklist();
   }
 
   /* ---------- The Whydah's voyage overlay (world mode) ---------- */
@@ -765,12 +1151,15 @@
 
   /* ---------- Save / restore (this device) ---------- */
   function serialize() {
-    var out = {};
+    var out = { project: project, version: 2 };
     ['world', 'chart'].forEach(function (k) {
       out[k] = {
         pins: work[k].pins.map(function (m) {
-          if (m instanceof L.Marker) { var ll = m.getLatLng(); return { lat: ll.lat, lng: ll.lng, label: m._label || '' }; }
-          return { lat: m.lat, lng: m.lng, label: m.label || '' };
+          if (m instanceof L.Marker) {
+            var ll = m.getLatLng();
+            return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', n: m._n || 0 };
+          }
+          return { lat: m.lat, lng: m.lng, label: m.label || '', voice: m.voice || '', journal: m.journal || '', n: m.n || 0 };
         }),
         route: work[k].route.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; })
       };
@@ -780,25 +1169,134 @@
   function saveNow() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); } catch (_) {}
   }
-  var savedData = null;
-  try { savedData = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) {}
-  if (savedData) {
+  function loadSaved() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) {}
+    if (!raw) {
+      try { raw = JSON.parse(localStorage.getItem(SAVE_KEY_LEGACY) || 'null'); } catch (_) {}
+    }
+    if (!raw) return;
+    if (raw.project) {
+      project.student = raw.project.student || '';
+      project.person = raw.project.person || '';
+      project.title = raw.project.title || '';
+    }
     ['world', 'chart'].forEach(function (k) {
-      if (!savedData[k]) return;
-      work[k].pins = savedData[k].pins || [];   /* raw objects until that mode opens */
-      work[k].route = (savedData[k].route || []).map(function (a) { return L.latLng(a[0], a[1]); });
+      if (!raw[k]) return;
+      work[k].pins = (raw[k].pins || []).map(function (p) {
+        return {
+          lat: p.lat, lng: p.lng,
+          label: p.label || '',
+          voice: p.voice || '',
+          journal: p.journal || '',
+          n: p.n || 0
+        };
+      });
+      work[k].route = (raw[k].route || []).map(function (a) { return L.latLng(a[0], a[1]); });
     });
   }
+  loadSaved();
   function restoreWork() {
     /* raw saved pin objects -> live markers, once, when their mode first opens */
     var pins = work[mode].pins;
     work[mode].pins = [];
     pins.forEach(function (p) {
       if (p instanceof L.Marker) { p.addTo(pinLayer); work[mode].pins.push(p); }
-      else addPin([p.lat, p.lng], p.label, true);
+      else addPin([p.lat, p.lng], { label: p.label, voice: p.voice, journal: p.journal, n: p.n }, true);
     });
+    renumberPins();
     drawRoute();
     updateStat();
+  }
+
+  /* ---------- Showcase tour + story sheet ---------- */
+  function exitTour() {
+    tourIdx = -1;
+    document.getElementById('tour-panel').classList.remove('open');
+    document.getElementById('tool-tour').classList.remove('on');
+  }
+  function showTourStop(i) {
+    var pins = livePins();
+    if (!pins.length) { exitTour(); notice('Drop some story pins first — then Tour walks visitors through them.'); return; }
+    if (i < 0) i = pins.length - 1;
+    if (i >= pins.length) i = 0;
+    tourIdx = i;
+    var m = pins[i];
+    var d = pinData(m);
+    document.getElementById('tour-who').textContent =
+      (project.person ? project.person + ' · ' : '') + 'Stop ' + d.n + ' of ' + pins.length;
+    document.getElementById('tour-stop').textContent = d.label || 'Untitled stop';
+    document.getElementById('tour-voice').textContent = d.voice
+      ? '“' + d.voice + '”'
+      : '(No voice yet — edit this pin before Showcase.)';
+    document.getElementById('tour-cite').textContent = d.journal
+      ? 'Journal: ' + d.journal
+      : 'Journal: — add a Voyage Journal page citation';
+    document.getElementById('tour-count').textContent = d.n + ' / ' + pins.length;
+    document.getElementById('tour-panel').classList.add('open');
+    document.getElementById('tool-tour').classList.add('on');
+    if (map && mode !== 'doors' && mode !== 'globe') {
+      map.closePopup();
+      try { map.flyTo(m.getLatLng(), Math.max(map.getZoom(), mode === 'chart' ? 0 : 5), { duration: 0.85 }); } catch (_) {}
+      setTimeout(function () { try { m.openPopup(); } catch (_) {} }, 500);
+    }
+  }
+  function startTour() {
+    if (mode === 'doors' || mode === 'globe') return;
+    document.getElementById('proj-panel').classList.remove('open');
+    showTourStop(0);
+    document.getElementById('hint').textContent = 'Tour mode — use Next / Prev (or ← → keys). Exit when you’re done rehearsing for Showcase.';
+  }
+  function buildStorySheet() {
+    var pins = livePins();
+    var title = project.title || ((project.person ? project.person + ' — ' : '') + 'Story Map');
+    var html = '<h1>' + escapeHtml(title) + '</h1>';
+    html += '<div class="meta">';
+    if (project.student) html += escapeHtml(project.student);
+    if (project.student && project.person) html += ' · ';
+    if (project.person) html += 'Told as ' + escapeHtml(project.person);
+    html += ' · Navigating Piracy · WhydahStory Showcase</div>';
+    if (!pins.length) {
+      html += '<p>No pins yet. Build your 8–10 stops in Map Studio, then print this sheet for the gallery table.</p>';
+    } else {
+      pins.forEach(function (m) {
+        var d = pinData(m);
+        html += '<div class="stop"><h3>' + escapeHtml(String(d.n)) + '. ' + escapeHtml(d.label || 'Untitled') + '</h3>';
+        if (d.voice) html += '<div class="voice">“' + escapeHtml(d.voice) + '”</div>';
+        else html += '<div class="voice">(voice still needed)</div>';
+        if (d.journal) html += '<div class="cite">Journal evidence: ' + escapeHtml(d.journal) + '</div>';
+        else html += '<div class="cite">Journal evidence: —</div>';
+        html += '</div>';
+      });
+    }
+    document.getElementById('story-sheet').innerHTML = html;
+  }
+  function printStorySheet() {
+    buildStorySheet();
+    window.print();
+  }
+  function dropStarters() {
+    if (mode !== 'world') { notice('Starter pins only work on the World map — switch to 🌍 World first.'); return; }
+    var pack = STARTERS[project.person];
+    if (!pack) { notice('Pick a person in My project first — then we can drop starter places for them.'); return; }
+    if (livePins().length && !window.confirm('Add ' + pack.length + ' starter places for ' + project.person + '? (Keeps any pins you already have.)')) return;
+    pack.forEach(function (s) {
+      addPin(s.ll, { label: s.t, voice: '', journal: '' }, true);
+    });
+    /* connect starters with a rough route if empty */
+    if (!work.world.route.length) {
+      pack.forEach(function (s) { work.world.route.push(L.latLng(s.ll[0], s.ll[1])); });
+      drawRoute();
+    }
+    renumberPins();
+    saveNow();
+    updateStat();
+    try {
+      var group = L.featureGroup(livePins());
+      map.fitBounds(group.getBounds().pad(0.25));
+    } catch (_) {}
+    notice('Starter places dropped for ' + project.person + '. Now rewrite each stop in their voice and cite Journal pages.');
+    document.getElementById('hint').textContent = 'Tap a numbered pin → Edit. Fill “In their voice” and Journal evidence. Aim for 8–10 complete stops.';
   }
 
   /* ---------- Toolbar wiring ---------- */
@@ -835,26 +1333,79 @@
     renderLb();
     p.style.display = 'block';
   };
+  document.getElementById('tool-project').onclick = function () {
+    var panel = document.getElementById('proj-panel');
+    var open = panel.classList.toggle('open');
+    this.classList.toggle('on', open);
+    if (open) { syncProjectFields(); exitTour(); }
+  };
+  document.getElementById('proj-close').onclick = function () {
+    document.getElementById('proj-panel').classList.remove('open');
+    document.getElementById('tool-project').classList.remove('on');
+  };
+  ['proj-student', 'proj-person', 'proj-title'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', readProjectFields);
+    document.getElementById(id).addEventListener('input', function () {
+      /* light autosave without hammering checklist on every keystroke for title/name */
+      if (id === 'proj-person') readProjectFields();
+    });
+  });
+  document.getElementById('proj-student').addEventListener('blur', readProjectFields);
+  document.getElementById('proj-title').addEventListener('blur', readProjectFields);
+  document.getElementById('tool-starter').onclick = dropStarters;
+  document.getElementById('tool-tour').onclick = function () {
+    if (document.getElementById('tour-panel').classList.contains('open')) exitTour();
+    else startTour();
+  };
+  document.getElementById('tour-prev').onclick = function () { showTourStop(tourIdx - 1); };
+  document.getElementById('tour-next').onclick = function () { showTourStop(tourIdx + 1); };
+  document.getElementById('tour-exit').onclick = exitTour;
+  document.getElementById('tool-sheet').onclick = printStorySheet;
+  document.getElementById('pin-save').onclick = savePinEditor;
+  document.getElementById('pin-cancel').onclick = closePinEditor;
+  document.getElementById('pin-delete').onclick = function () {
+    if (!editingPin) return;
+    pinLayer.removeLayer(editingPin);
+    var arr = work[mode].pins; var i = arr.indexOf(editingPin); if (i > -1) arr.splice(i, 1);
+    renumberPins(); saveNow(); updateStat(); closePinEditor();
+  };
+  document.getElementById('pin-modal').addEventListener('click', function (e) {
+    if (e.target === this) closePinEditor();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (document.getElementById('pin-modal').classList.contains('open')) { closePinEditor(); return; }
+      if (document.getElementById('tour-panel').classList.contains('open')) { exitTour(); return; }
+    }
+    if (document.getElementById('tour-panel').classList.contains('open')) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); showTourStop(tourIdx + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); showTourStop(tourIdx - 1); }
+    }
+  });
   document.getElementById('tool-pin').onclick = function () { setTool('pin'); };
   document.getElementById('tool-route').onclick = function () { setTool('route'); };
   document.getElementById('tool-undo').onclick = function () {
     if (tool === 'route' && work[mode].route.length) { work[mode].route.pop(); drawRoute(); saveNow(); return; }
     var arr = work[mode].pins;
-    if (arr.length) { pinLayer.removeLayer(arr.pop()); saveNow(); updateStat(); }
+    if (arr.length) { pinLayer.removeLayer(arr.pop()); renumberPins(); saveNow(); updateStat(); }
   };
   document.getElementById('tool-voyage').onclick = function () { voyageOn ? hideVoyage() : showVoyage(); };
   document.getElementById('tool-clear').onclick = function () {
-    if (!window.confirm('Clear ALL your pins and routes on this device? This cannot be undone.')) return;
+    if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. This cannot be undone.')) return;
     work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
     work[mode] = { pins: [], route: [] };
-    drawRoute(); saveNow(); updateStat();
+    drawRoute(); saveNow(); updateStat(); exitTour();
   };
   document.getElementById('tool-export').onclick = function () {
     var d = serialize();
-    var gj = { type: 'FeatureCollection', features: [] };
+    var gj = { type: 'FeatureCollection', whydahProject: d.project || null, features: [] };
     ['world', 'chart'].forEach(function (k) {
       d[k].pins.forEach(function (p) {
-        gj.features.push({ type: 'Feature', properties: { label: p.label, canvas: k }, geometry: { type: 'Point', coordinates: [p.lng, p.lat] } });
+        gj.features.push({
+          type: 'Feature',
+          properties: { label: p.label, voice: p.voice, journal: p.journal, n: p.n, canvas: k },
+          geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
+        });
       });
       if (d[k].route.length > 1) {
         gj.features.push({ type: 'Feature', properties: { name: 'route', canvas: k }, geometry: { type: 'LineString', coordinates: d[k].route.map(function (a) { return [a[1], a[0]]; }) } });
@@ -863,9 +1414,10 @@
     var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'my-whydah-map.geojson';
+    var slug = (project.person || project.student || 'whydah').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    a.download = 'story-map-' + (slug || 'whydah') + '.geojson';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    notice('Downloaded! That file is real GIS data — the same format professionals use. Keep it: it’s your project backup.');
+    notice('Downloaded! Voice + Journal cites are inside the file. Keep it as your project backup — and print 📄 Story sheet for the gallery table.');
   };
 
   function onMapClick(e) {
@@ -874,9 +1426,7 @@
       return;
     }
     if (tool === 'pin') {
-      var label = window.prompt('Label this pin (who / what / when):', '');
-      if (label === null) return;
-      addPin(e.latlng, label.trim() || 'My pin');
+      openPinEditor(null, e.latlng);
     } else if (tool === 'route') {
       addRoutePoint(e.latlng);
     }
@@ -898,12 +1448,14 @@
     return { mode: mode, center: c ? [c.lat.toFixed(2), c.lng.toFixed(2)] : null, zoom: m ? +m.getZoom().toFixed(1) : null,
              ships: ships.length, pirate: pirate.ll ? [pirate.ll[0].toFixed(2), pirate.ll[1].toFixed(2)] : null,
              spotted: pirate.count, pts: pirate.pts, showPorts: showPorts, showLanes: showLanes,
+             project: project, checklist: checklistState(),
              globe: gmap ? { styleLoaded: gmap.isStyleLoaded(), shipsSrc: !!gmap.getSource('ships'), loaded: gmap.loaded() } : null };
   };
 
   /* go */
   setTool('pin');
   applyToggles();
+  syncProjectFields();
   var doorParam = null, viewParam = null;
   try {
     var qs = new URLSearchParams(window.location.search);
