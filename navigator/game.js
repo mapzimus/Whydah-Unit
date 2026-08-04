@@ -185,14 +185,29 @@
     } catch (e) { cb(false); }
   }
   // seen-count is scanned once and cached; invalidated whenever a new tale is logged
-  var seenCache = null;
-  function invalidateSeenCache() { seenCache = null; }
+  var seenCache = null, seenVoyageCache = null, seenMultiCache = null;
+  function invalidateSeenCache() { seenCache = null; seenVoyageCache = null; seenMultiCache = null; }
   function countSeen() {
     if (seenCache != null) return seenCache;
     var n = 0;
     for (var i = 0; i < EVENTS.length; i++) if (SAVE.seen && SAVE.seen[EVENTS[i].id]) n++;
     seenCache = n;
     return n;
+  }
+  // Voyage (Easy/Hard/Extreme) vs Multiverse (INSANE) tallies — so the logbook
+  // can be "finished" without sailing the multiverse.
+  function countSeenPool(wantIns) {
+    var cache = wantIns ? seenMultiCache : seenVoyageCache;
+    if (cache != null) return cache;
+    var n = 0, tot = 0;
+    for (var i = 0; i < EVENTS.length; i++) {
+      if (!!EVENTS[i].ins !== !!wantIns) continue;
+      tot++;
+      if (SAVE.seen && SAVE.seen[EVENTS[i].id]) n++;
+    }
+    cache = { n: n, tot: tot };
+    if (wantIns) seenMultiCache = cache; else seenVoyageCache = cache;
+    return cache;
   }
 
   // ---------------------------------------------------------------- upgrades
@@ -211,6 +226,14 @@
   function shotBonus() { return upgLvl("shot") * 0.25; }
   function stormShrug() { return upgLvl("pumps") * 0.25; }
   function warnBonus() { return upgLvl("nest") * 0.4; }
+  // Soft per-run "voyage weather" for Easy/Hard/Extreme — historical flavor that
+  // nudges denseness/loot/fog without INSANE chaos. Drawn once in newGame.
+  var WEATHER_POOL = [
+    { id: "busy", line: "⛅ Busy shipping lanes — more hail chances this voyage", apply: function () { G.mods.busyShipping = true; } },
+    { id: "fogbanks", line: "🌫 Fog banks on the coast — keep a sharp lookout", apply: function () { G.mods.fogBanks = true; } },
+    { id: "richholds", line: "📦 Rich holds reported — cargo drifts thicker", apply: function () { G.mods.richHolds = true; } },
+    { id: "clearwater", line: "🌊 Clear water north — wreckage stands farther apart", apply: function () { G.mods.clearWater = true; } }
+  ];
   function legSpeedMul() { return 1 - upgLvl("canvas") * 0.12; }   // full canvas shortens each leg
   function ballSpeedMul() { return 1 + (upgLvl("guns") >= 1 ? 0.3 : 0); }
   function twinShot() { return upgLvl("guns") >= 2; }
@@ -524,6 +547,19 @@
         { l: "Feed the flock", r: "Every bird within a league arrives. They sing your name for an hour.", fx: { s: 35 } },
         { l: "Ignore it", r: "You pretend this is normal. It stops. Nobody believes you later.", fx: { s: 5 } } ] },
     { id: "talltales",  w: 2, tag: "multi", ins: true, t: "Tall tales about the captain", b: "The crew starts a game: the captain once rowed to Maine in one night. The captain counted every fish in the sea, twice. The captain's stare becalms storms. Points for the best one.", fx: { s: 25 } },
+    // more consequential choices for the historical voyage (replayability)
+    { id: "prizecrew", w: 2, tag: "record", t: "A prize needs a crew", b: "You've taken a sloop. Someone has to sail her into the next friendly harbor — and those hands won't be on your guns.", choice: [
+        { l: "Send a prize crew", r: "Six good hands peel off. She makes port; you're lighter by a watch.", fx: { s: 25, g: 20 } },
+        { l: "Strip her and sink her", r: "Everything useful comes aboard. The rest goes down. Cold, and common.", fx: { g: 35, s: -5 } } ] },
+    { id: "rumtot",    w: 2, tag: "",       t: "The crew wants an extra tot", b: "The bosun asks for a double issue of rum after a hard day. The articles leave it to you.", choice: [
+        { l: "Issue it", r: "Morale climbs. The next watch is a little slower, and a little louder.", fx: { s: 20, g: -10 } },
+        { l: "Hold the line", r: "One tot is the rule. Nobody cheers — but nobody forgets who keeps the cask.", fx: { s: 5 } } ] },
+    { id: "signalsmoke", w: 2, tag: "record", t: "Smoke on the headland", b: "A column of smoke inland. Could be a farm clearing brush. Could be a militia signal that pirates are on the coast.", choice: [
+        { l: "Stand out to sea", r: "You give the shore a wide berth. Slow, and safe.", fx: { s: 15 }, mod: "warned" },
+        { l: "Investigate", r: "Just charcoal burners. They sell you pitch cheap and swear they saw nothing.", fx: { g: -8, h: 1, s: 10 } } ] },
+    { id: "powderwet", w: 2, tag: "",       t: "Damp in the magazine", b: "A leak found its way to the powder. Half the charges may not fire clean. The gunner wants a decision now.", choice: [
+        { l: "Dry and sift (lose time)", r: "Hours of careful work. When the next fight comes, the powder answers.", fx: { s: -10 }, mod: "drill" },
+        { l: "Risk it", r: "You keep sailing. The gunner looks unhappy. So does the powder.", fx: { s: 5 }, mod: "slow" } ] },
     // legends and myths, mission-weighted via m: so they surface near where they belong
     { id: "davyjones", w: 2, tag: "yarn", ins: true,   m: "rhodeisland", t: "Davy Jones' Locker", b: "The old sailors say the locker is where the sea keeps everything it takes — ships, sailors, secrets. Nobody's ever brought back an inventory.", fx: { s: 12 } },
     { id: "fiddlers",  w: 2, tag: "yarn", ins: true,   m: "rhodeisland", t: "Fiddler's Green", b: "Fiddler's Green, the old hands call it — the far shore where the rum never runs dry and the fiddler never stops playing. You have to drown to get there, though. Mixed review.", fx: { s: 12 } },
@@ -584,7 +620,7 @@
       obj: "Weather the twisting wind. A powder brig bars the capes.",
       objInsane: "Weather the twisting wind. The forecast says sharks.",
       decor: "dunes", pal: null, legCount: 1, legMods: { hazChance: 0.22, sharkT: null, narrows: false, whirlpool: 0, fog: false, current: 0, night: false, waterspout: 0.5, icy: true, mooncusser: false },
-      slots: { event: [1, 1], mini: [0, 1], battle: 0 }, signature: "brigboss", sigInsane: "sharknado", battleTier: 2, routeVariant: true },
+      slots: { event: [1, 1], mini: [0, 1], battle: 1 }, signature: "brigboss", sigInsane: "sharknado", battleTier: 2, routeVariant: true },
     { id: "longisland",  name: "Long Island Sound",     nameInsane: "Duckling Sound",
       sub: "The Hunt",
       obj: "Privateers are working these waters. Sink them before they sink you.",
@@ -594,7 +630,7 @@
       sub: "The Ghost Light",
       obj: "A light burns where no ship should be. Keep clear of it.",
       decor: "sounds", pal: null, legCount: 2, legMods: { hazChance: 0.20, sharkT: null, narrows: false, whirlpool: 0.3, fog: false, current: 0, night: true, waterspout: 0, icy: true, mooncusser: false, siren: 0.6 },
-      slots: { event: [1, 2], mini: [0, 1], battle: 0 }, signature: "palatine", battleTier: 3, routeVariant: false },
+      slots: { event: [1, 2], mini: [0, 1], battle: 1 }, signature: "palatine", battleTier: 3, routeVariant: false },
     { id: "capecod",     name: "Cape Cod",              nameInsane: "Cape Absurdity",
       sub: "Hallett's Curse",
       obj: "The King's ships bar the last passage north.",
@@ -704,9 +740,15 @@
       preStormScore: 0, reachedStorm: false, stormT: 0, capped: false, won: false, stormCleared: false, ended: false, banked: false,
       rank: "", serpentBeaten: false, bossBeaten: false, shipsBeaten: 0, battleNum: 0,
       firstRun: SAVE.runs === 0, mods: {}, curBeat: "title", events: [], gullFlip: false, cargo: 0,
+      weather: null, weatherLine: null,
       // INSANE: four per-run mutators, drawn fresh every voyage and announced on the first mission card
       mutators: runMode === "insane" ? shuffle(MUTATOR_POOL.slice()).slice(0, 4) : []
     };
+    // Easy/Hard/Extreme: one soft voyage-weather draw (not chaos — historical denseness/loot/fog)
+    if (runMode !== "insane") {
+      var wx = choice(WEATHER_POOL);
+      G.weather = wx.id; G.weatherLine = wx.line; wx.apply();
+    }
     // Build the voyage mission by mission: an intro card, then sail legs with
     // that mission's random events/minis/battles spread through the gaps,
     // then the mission's signature beat, then a port call before the next.
@@ -743,7 +785,8 @@
       for (var k2 = 0; k2 < msn.slots.battle; k2++) randomBeats.push({ kind: "battle", m: mi });
       // a trading brig works these waters: sail legs from Windward on have a
       // fair chance of a merchant hail (buy repairs, powder, or port cargo)
-      if (msn.legCount > 0 && mi >= 2 && chance(0.5)) randomBeats.push({ kind: "merchant", m: mi });
+      var merchOdds = G.mods.busyShipping ? 0.78 : 0.5;
+      if (msn.legCount > 0 && mi >= 2 && chance(merchOdds)) randomBeats.push({ kind: "merchant", m: mi });
       shuffle(randomBeats);
 
       var legs = msn.legCount;
@@ -1444,6 +1487,8 @@
         // announce the run's multiverse mutators on the very first mission card
         if (mi === G.startMission && G.mutators && G.mutators.length) {
           toast("Today's multiverse: " + G.mutators.map(function (m) { return MUTATOR_LINES[m]; }).join("  ·  "));
+        } else if (mi === G.startMission && G.weatherLine) {
+          toast(G.weatherLine);
         }
       },
       update: function (dt) { seaT += dt; t += dt; updateGulls(dt); if (t > 0.4 && consumeTap()) advance(); },
@@ -1504,7 +1549,7 @@
           text("tap 🔇 up top for sound", W - 16, 64, 12, "#ffe1b0", "right", "bold");
           ctx.globalAlpha = 1;
         }
-        var seen = countSeen(), tot = EVENTS.length;
+        var seenVoy = countSeenPool(false);
         var bw = clamp(W * 0.36, 130, 172), by = H * 0.8;
         // difficulty picker: the kids' tiers. Beating EXTREME opens the multiverse.
         var mw = (bw * 2 + 20 - 18) / 4, my = by - 66;
@@ -1550,7 +1595,7 @@
         }
         if (uiButton(W / 2 - bw - 10, by - 26, bw, 52, "⚓ SET SAIL", { size: 17 })) { beginVoyage(); }
         if (uiButton(W / 2 + 10, by - 26, bw, 52, "⚒ HARBOR", { size: 17, color: "#1f4a5e" })) { setScene(HarborScene(false)); }
-        if (uiButton(W / 2 - bw / 2 - 5, by + 34, bw + 10, 36, "📖 LOG  " + seen + " / " + tot, { size: 13, color: "#4a3a5e" })) { setScene(LogScene()); }
+        if (uiButton(W / 2 - bw / 2 - 5, by + 34, bw + 10, 36, "📖 LOG  " + seenVoy.n + " / " + seenVoy.tot, { size: 13, color: "#4a3a5e" })) { setScene(LogScene()); }
         if (consumeTap()) beginVoyage();
       }
     };
@@ -1558,27 +1603,29 @@
 
   // ---------------------------------------------------------------- TALES LOGBOOK
   function LogScene() {
-    var page = 0, perPage = 8;
+    var page = 0, perPage = 8, showMulti = false;
     return {
       noPause: true,
       enter: function () { document.body.classList.remove("playing"); },
       update: function (dt) { seaT += dt; updateGulls(dt); },
       render: function () {
         drawSea(PALETTES[4], seaT * 25, false);
-        var pages = Math.ceil(EVENTS.length / perPage);
+        var pool = EVENTS.filter(function (e) { return !!e.ins === showMulti; });
+        var pages = Math.max(1, Math.ceil(pool.length / perPage));
+        if (page >= pages) page = pages - 1;
         var w = clamp(W * 0.92, 300, 540), rowH = clamp(H * 0.062, 34, 44);
         var h = 116 + perPage * rowH;
         h = Math.min(h, H * 0.86);
         var top = clamp(H * 0.05, 8, 40);
         panel(W / 2, top + h / 2, w, h);
-        var seen = countSeen();
+        var tallied = countSeenPool(showMulti);
         text("📖  THE TALES LOGBOOK", W / 2, top + 32, 20, "#e0b25c", "center", "bold");
-        text(seen + " of " + EVENTS.length + " tales found  ·  page " + (page + 1) + " / " + pages + (SAVE.bellSeen ? "  ·  🔔 1984: the wreck is found" : ""), W / 2, top + 54, 12, "rgba(244,231,201,.75)", "center");
+        text(tallied.n + " of " + tallied.tot + (showMulti ? " multiverse" : " voyage") + " tales  ·  page " + (page + 1) + " / " + pages + (SAVE.bellSeen ? "  ·  🔔 1984" : ""), W / 2, top + 54, 11.5, "rgba(244,231,201,.75)", "center");
         var innerRowH = (h - 130) / perPage;
         for (var i = 0; i < perPage; i++) {
           var idx = page * perPage + i;
-          if (idx >= EVENTS.length) break;
-          var ev = EVENTS[idx], got = SAVE.seen && SAVE.seen[ev.id];
+          if (idx >= pool.length) break;
+          var ev = pool[idx], got = SAVE.seen && SAVE.seen[ev.id];
           var ry = top + 70 + i * innerRowH;
           var tagCol = ev.tag === "record" ? "#8fd6a0" : (ev.tag === "yarn" ? "#9fb6d6" : (ev.tag === "multi" ? "#ff9de2" : "#cdb98a"));
           var tagIco = ev.tag === "record" ? "⚓" : (ev.tag === "yarn" ? "🌀" : (ev.tag === "multi" ? "🤯" : "·"));
@@ -1592,6 +1639,8 @@
         var by = top + h - 46;
         if (page > 0 && uiButton(W / 2 - w / 2 + 16, by, 88, 34, "◀ BACK", { size: 12.5, color: "#1f4a5e" })) page--;
         if (page < pages - 1 && uiButton(W / 2 + w / 2 - 104, by, 88, 34, "MORE ▶", { size: 12.5, color: "#1f4a5e" })) page++;
+        var tabLbl = showMulti ? "⚓ Voyage tales" : "🤯 Multiverse";
+        if (uiButton(W / 2 - 70, by - 40, 140, 28, tabLbl, { size: 11.5, color: showMulti ? "#7a4ab8" : "#2c5e38" })) { showMulti = !showMulti; page = 0; SFX.point(); }
         if (uiButton(W / 2 - 55, by, 110, 34, "⚓ DONE", { size: 13 })) setScene(TitleScene());
       }
     };
@@ -2127,7 +2176,10 @@
     if (narrowsAt < 0 && sharksHere) sharkT = Math.min(sharkT, rand(2, legTime * 0.5));
     var coinArcAt = chance(0.7) ? rand(2, Math.max(3, legTime * 0.5)) : -1;
     var slow = consumeMod("slow") ? 0.75 : 1;
-    G.mods.fogNow = !!consumeMod("fog");
+    // "A better chart" — longer telegraphs this leg (see trouble coming)
+    var chartWarn = consumeMod("chart") ? 0.55 : 0;
+    function sailWarn() { return warnBonus() + chartWarn; }
+    G.mods.fogNow = !!consumeMod("fog") || !!G.mods.fogBanks;
     // insane mode: every leg spins the multiverse wheel — sometimes twice
     var CHAOS = {
       gravity:   "🌀 LOW GRAVITY — everything drifts!",
@@ -2238,7 +2290,7 @@
         // you pop for gold, bottles, wind, repairs, and hearts when you're hurt.
         pickupT -= dt;
         if (pickupT <= 0 && t < legTime - 1.2 && legDone < 0) {
-          pickupT = rand(0.5, 1.0) / diff().pickup;
+          pickupT = rand(0.5, 1.0) / diff().pickup / (G.mods.richHolds ? 1.35 : 1);
           // common coins, then a spread of richer treasure that gets rarer as it
           // gets more valuable: crate/bottle/pearl (common-ish), gem/ingot (rarer),
           // chest (rare jackpot). Sea route runs a little richer than the shore.
@@ -2247,7 +2299,8 @@
           if (sea) picks.push("coin", "coin", "crate", "pearl");
           if (chance(0.35)) picks.push("gem");
           if (chance(0.22)) picks.push("ingot");
-          if (chance(0.10)) picks.push("chest");
+          if (chance(G.mods.richHolds ? 0.18 : 0.10)) picks.push("chest");
+          if (G.mods.richHolds) picks.push("crate", "pearl");
           // hearts drift by when you're hurt — the easier the mode, the likelier;
           // when you're desperate they show up in any mode
           if (G.hull < G.maxHull) for (var hw = 0; hw < diff().heart; hw++) picks.push("heart");   // easy 2 / hard 1 / extreme+insane 0 drifting hearts
@@ -2266,9 +2319,18 @@
         // sea can be lively without being lethal.
         hazT -= dt;
         if (hazT <= 0 && t < legTime - 1.6 && legDone < 0) {
-          hazT = rand(1.5, 2.5) * diff().hazGap * (1 + warnBonus() * 0.2) * (G.firstRun ? 1.25 : 1) * ease;
+          // mission hazChance densifies/thins wreckage; clear-water weather spaces it out
+          var hazChanceMul = (lm.hazChance != null) ? (0.22 / lm.hazChance) : 1;
+          if (G.mods.clearWater) hazChanceMul *= 1.3;
+          hazT = rand(1.5, 2.5) * diff().hazGap * (1 + sailWarn() * 0.2) * (G.firstRun ? 1.25 : 1) * ease * hazChanceMul;
           var north = lm.icy;
           var baseHaz = sea ? 0.6 : (shore ? 1.0 : 0.82);   // open sea runs calmer; the shore is rocky
+          if (lm.hazChance != null) {
+            baseHaz = clamp(lm.hazChance * 3.2, 0.48, 0.95);
+            if (sea) baseHaz *= 0.85;
+            if (shore) baseHaz = Math.min(1, baseHaz * 1.08);
+          }
+          if (G.mods.clearWater) baseHaz *= 0.72;
           var hz;
           if (Math.random() < baseHaz) {
             var hsub = north ? choice(["ice", "rock", "ice"]) : (shore ? "rock" : choice(["rock", "ice"]));
@@ -2294,11 +2356,11 @@
           if (sharkT <= 0) {
             sharkT = rand(10, 16);   // long intervals — this is a rare, telegraphed threat now
             var easyNoLeap = gameMode() === "easy" && chance(0.5);
-            objs.push({ kind: "shark", phase: "stalk", pt: (2.2 + warnBonus() * 0.3) * ease, willLeap: !easyNoLeap, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
+            objs.push({ kind: "shark", phase: "stalk", pt: (2.2 + sailWarn() * 0.3) * ease, willLeap: !easyNoLeap, x: clamp(shipPX + rand(-80, 80), 30, W - 30), y: H + 20, r: 20 });
           }
         }
         // a scripted waterspout: a marked column, then a push/hit if you're still in it
-        if (waterspoutAt > 0 && !waterspoutDone && t >= waterspoutAt) { waterspoutDone = true; wspout = { x: rand(W * 0.15, W * 0.85), warn: 1.1 + warnBonus() * 0.3 }; }
+        if (waterspoutAt > 0 && !waterspoutDone && t >= waterspoutAt) { waterspoutDone = true; wspout = { x: rand(W * 0.15, W * 0.85), warn: 1.1 + sailWarn() * 0.3 }; }
         if (wspout) {
           wspout.warn -= dt;
           if (wspout.warn <= 0) {
@@ -2514,7 +2576,7 @@
         drawParts();
         // fog: a radial lantern-circle mask instead of a flat haze; night: a warm glow around the ship
         if (lm.fog) {
-          var maskR = clamp(W * 0.24, 100, 170) * (1 + warnBonus() * 0.35);
+          var maskR = clamp(W * 0.24, 100, 170) * (1 + sailWarn() * 0.35);
           var mg = ctx.createRadialGradient(G.shipX * W, shipYPx(), maskR * 0.28, G.shipX * W, shipYPx(), maskR);
           mg.addColorStop(0, "rgba(10,14,18,0)"); mg.addColorStop(1, "rgba(10,14,18,.88)");
           ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
@@ -5063,18 +5125,27 @@
   var SHIP_SKINS = [
     { id: "auto",    name: "The Sultana",       desc: "Your first command — becomes the Whydah when you take her.", unlock: function () { return true; }, opts: {} },
     { id: "gilded",  name: "The Gilded Gally",  desc: "Win a voyage.", unlock: function () { return SAVE.wins >= 1; }, opts: { hull: "#6a4a1a", deck: "#8a6a2a", trim: "#f7d84a", sail: "#fdf2d0", flag: "#f7d84a" } },
+    { id: "ballot",  name: "The Free Vote",     desc: "Win the crew's election.", unlock: function () { return SAVE.feats && SAVE.feats.election; }, opts: { hull: "#2c5e38", deck: "#3e7a4c", sail: "#e8f5e0", flag: "#f7d84a", trim: "#cdeccf" } },
+    { id: "prize",   name: "The Prize Taker",   desc: "Sink the Bounty Sloop.", unlock: function () { return SAVE.feats && SAVE.feats.sloopboss; }, opts: { hull: "#3a4a5e", deck: "#4e6078", sail: "#dfe9f4", flag: "#e0b25c", trim: "#9fb6d6" } },
     { id: "night",   name: "The Night Runner",  desc: "Beat the Mooncusser's gauntlet.", unlock: function () { return SAVE.feats && SAVE.feats.mooncusser; }, opts: { hull: "#1a2230", deck: "#2a3648", sail: "#3a4a62", flag: "#0e141e", trim: "#7fd6ea" } },
-    { id: "tooth",   name: "The Sharktooth",    desc: "Bring down the Sharknado.", unlock: function () { return SAVE.feats && SAVE.feats.sharknado; }, opts: { hull: "#4a5c66", deck: "#5e7280", sail: "#dfe9ee", flag: "#e05c5c" } },
+    { id: "powder",  name: "The Powder Keg",    desc: "Sink the Powder Brig.", unlock: function () { return SAVE.feats && SAVE.feats.brigboss; }, opts: { hull: "#5a3a18", deck: "#7a5224", sail: "#f3e2c0", flag: "#c73a3a", trim: "#e08c2a" } },
     { id: "crimson", name: "The Crimson Corsair", desc: "Sink the Hunter's Flagship.", unlock: function () { return SAVE.feats && SAVE.feats.flagship; }, opts: { hull: "#5e1a1a", deck: "#7a2a2a", sail: "#e8c1ae", flag: "#c73a3a", trim: "#f7d84a" } },
+    { id: "runner",  name: "The Blockade Runner", desc: "Break the King's Blockade.", unlock: function () { return SAVE.feats && SAVE.feats.blockade; }, opts: { hull: "#1f2a3a", deck: "#2e3e52", sail: "#c8d6e8", flag: "#5cc7e0", trim: "#f4e7c9" } },
     { id: "ghost",   name: "The Palatine",      desc: "Witness the ghost light — and keep your distance.", unlock: function () { return SAVE.feats && SAVE.feats.palatine; }, opts: { hull: "#241512", deck: "#3a2a24", sail: "rgba(255,220,180,.55)", flag: "#000" } },
     { id: "serpent", name: "The Serpent's Wake", desc: "Drive off the Cape Cod serpent.", unlock: function () { return SAVE.feats && SAVE.feats.serpent; }, opts: { hull: "#2f6b4a", deck: "#3c7f58", sail: "#d6ffd0", flag: "#245239" } },
     { id: "lamp",    name: "The Lamplighter",   desc: "Run the Mooncusser's gauntlet without one false light fooling you.", unlock: function () { return SAVE.feats && SAVE.feats.cleanlights; }, opts: { hull: "#2b2a3a", deck: "#3d3b52", sail: "#f6efd8", flag: "#ffe4a0", trim: "#ffd24a" } },
     { id: "duck",    name: "The Rubber Ducky",  desc: "Speak the secret word.", unlock: function () { return SAVE.secretUnlock; }, opts: { hull: "#f7d84a", deck: "#ffe27a", sail: "#fff6d6", flag: "#e08c2a" } },
-    // Renamed briefly when the pug left; restored. `visitors` / `bigclaw` still unlock
-    // so anyone who earned the livery under the lobster/visitor era keeps it.
-    { id: "goodboy", name: "The Good Boy",      desc: "Befriend PUGNAROK.", unlock: function () { return SAVE.feats && (SAVE.feats.pugnarok || SAVE.feats.visitors); }, opts: { hull: "#c9905a", deck: "#e8c087", sail: "#fff3dc", flag: "#ff8a9a", trim: "#4a3020" } },
-    { id: "carapace", name: "The Carapace",     desc: "Best the Sea Pug (or the Lobster, once).", unlock: function () { return SAVE.feats && (SAVE.feats.seapug || SAVE.feats.bigclaw); }, opts: { hull: "#8f2f1e", deck: "#c4402a", sail: "#ffe0d2", flag: "#ff8a6a", trim: "#ffd24a" } }
+    // 🌀 INSANE-only liveries — hidden in Harbor until the multiverse is unlocked
+    // (or already earned). `visitors` / `bigclaw` keep older unlocks working.
+    { id: "tooth",   name: "The Sharktooth",    desc: "Bring down the Sharknado (🌀 INSANE).", insaneOnly: true, unlock: function () { return SAVE.feats && SAVE.feats.sharknado; }, opts: { hull: "#4a5c66", deck: "#5e7280", sail: "#dfe9ee", flag: "#e05c5c" } },
+    { id: "goodboy", name: "The Good Boy",      desc: "Befriend PUGNAROK (🌀 INSANE).", insaneOnly: true, unlock: function () { return SAVE.feats && (SAVE.feats.pugnarok || SAVE.feats.visitors); }, opts: { hull: "#c9905a", deck: "#e8c087", sail: "#fff3dc", flag: "#ff8a9a", trim: "#4a3020" } },
+    { id: "carapace", name: "The Carapace",     desc: "Best the Sea Pug (🌀 INSANE).", insaneOnly: true, unlock: function () { return SAVE.feats && (SAVE.feats.seapug || SAVE.feats.bigclaw); }, opts: { hull: "#8f2f1e", deck: "#c4402a", sail: "#ffe0d2", flag: "#ff8a6a", trim: "#ffd24a" } }
   ];
+  function multiverseOpen() { return !!(SAVE.extremeWon || SAVE.secretUnlock); }
+  function skinVisible(sk) {
+    if (!sk.insaneOnly) return true;
+    return multiverseOpen() || !!(sk.unlock && sk.unlock());
+  }
   function currentSkin() {
     for (var i = 0; i < SHIP_SKINS.length; i++) if (SHIP_SKINS[i].id === SAVE.skin && SHIP_SKINS[i].unlock()) return SHIP_SKINS[i];
     return SHIP_SKINS[0];
@@ -5088,15 +5159,16 @@
       render: function () {
         drawSea(PALETTES[1], seaT * 25, false);
         var w = clamp(W * 0.92, 300, 560);
-        var rowH = clamp(H * 0.075, 40, 52), rows = SHIP_SKINS.length;
+        var list = SHIP_SKINS.filter(skinVisible);
+        var rowH = clamp(H * 0.075, 40, 52), rows = list.length;
         var h = 110 + rows * rowH;
         if (h > H * 0.86) { h = H * 0.86; rowH = (h - 100) / rows; }
         var top = clamp(H * 0.05, 8, 40);
         panel(W / 2, top + h / 2, w, h);
         text("⛵  SHIP LIVERIES", W / 2, top + 30, 20, "#e0b25c", "center", "bold");
         text(msg || "earn them by sailing — pick any you've unlocked", W / 2, top + 52, 11.5, "rgba(244,231,201,.7)", "center");
-        for (var i = 0; i < SHIP_SKINS.length; i++) {
-          var sk = SHIP_SKINS[i], open2 = sk.unlock(), sel = (SAVE.skin || "auto") === sk.id;
+        for (var i = 0; i < list.length; i++) {
+          var sk = list[i], open2 = sk.unlock(), sel = (SAVE.skin || "auto") === sk.id;
           var ry = top + 70 + i * rowH;
           ctx.save(); ctx.translate(W / 2 - w / 2 + 34, ry + rowH / 2 - 4); ctx.scale(0.62, 0.62);
           if (open2) drawShip(0, 0, 1.4, Object.assign({ wake: false, dmg: 0, flag: "#111" }, sk.opts));
@@ -5118,7 +5190,7 @@
   // ---------------------------------------------------------------- PORT CALLS (between missions)
   // A compact refit stop after every mission but the last. The gold you've
   // earned since the last port banks the moment you arrive — dying later only
-  // costs what you've made since. Buying Oak Timbers here helps immediately.
+  // costs what you've made since. (Upgrades are Harbor-only between voyages.)
   var PORT_NAMES = ["Nassau", "Eleuthera", "Charles Town Lights", "Ocracoke", "Hampton Roads", "Montauk", "Block Island", "Provincetown", "Race Point"];
   // A port call is a breath and a bank run, NOT a shop. Refitting mid-voyage
   // let a good run snowball and made the Harbor pointless, and the kids asked
@@ -5269,8 +5341,8 @@
       hurt: function (n) { damage(n || 1); },
       winStorm: function () { G.stormCleared = true; endRun(true, false); },
       winScene: function () { if (scene && scene.debugWin) scene.debugWin(); },
-      skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], chaos: G ? G.chaosNow || null : null, chaos2: G ? G.chaos2 || null : null }; },
-      skins: function () { return SHIP_SKINS.map(function (s) { return { id: s.id, name: s.name, open: !!s.unlock() }; }); },
+      skinInfo: function () { return { insane: insane(), mutators: G ? (G.mutators || []) : [], weather: G ? G.weather || null : null, chaos: G ? G.chaosNow || null : null, chaos2: G ? G.chaos2 || null : null }; },
+      skins: function () { return SHIP_SKINS.filter(skinVisible).map(function (s) { return { id: s.id, name: s.name, open: !!s.unlock(), insaneOnly: !!s.insaneOnly }; }); },
       grantFeat: function (id) { feat(id); },
       setSkin: function (id) { SAVE.skin = id; persist(); return currentSkin().id; },
       suggest: function (txt) { if (!SAVE.suggestions) SAVE.suggestions = []; SAVE.suggestions.push({ t: String(txt).slice(0, 200), d: new Date().toISOString().slice(0, 10) }); persist(); return SAVE.suggestions.length; },
