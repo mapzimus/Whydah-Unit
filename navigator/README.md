@@ -19,7 +19,7 @@ Ten missions, each its own leg of the real 1716–1717 voyage, each escalating i
 9. **Cape Cod** — Goody Hallett's shore. Leave an offering or sail on — the choice follows you into the storm. Then the hardest real fight of the run: **THE KING'S BLOCKADE**, two men-of-war throwing alternating broadside sweeps and marked mortar fire, the survivor enraging when the first goes down.
 10. **The Nor'easter** — the wolf pack, then the storm that sank the real Whydah — now a four-phase gauntlet (see below). Beat it and the **sea serpent** that followed you out is the one true monster of the main game; then **the Old Sow**, the real giant whirlpool off Eastport, Maine, guarding the harbor mouth.
 
-**Between every mission but the last, you put in at port**: the run's gold banks (a death only ever costs what's been earned since the last port), and you can spend the bank on upgrades before sailing on. **A death never wipes the afternoon** — the title screen remembers the furthest mission reached and offers to resume there, and the two prologue missions (the dive and the chase) become skippable — with a small score stipend — once you've cleared them once.
+**Between every mission but the last, you put in at port**: the run's gold banks (a death only ever costs what's been earned since the last port). You spend the bank on upgrades at the **Harbor between voyages** — what you sail out with is what you finish with. **A death never wipes the afternoon** — the title screen remembers the furthest mission reached and offers to resume there, and the two prologue missions (Robin Hood's Men and the Three-Day Chase) become skippable — with a small score stipend — once you've cleared them once.
 
 ## The storm — four phases
 
@@ -38,8 +38,10 @@ Pirate history is full of stories half the crew believed. Whydah’s Voyage keep
 - The **Kraken** (mission 3), the **Sharknado** (mission 6), and a mid-run **sea-serpent** encounter (mission 9) are now **INSANE-only** — they replace the real ship bosses on those legs when you sail the multiverse.
 - **Goody Hallett's curse** is a real choice at Cape Cod, with a real consequence at the storm.
 - **Davy Jones' Locker**, **Fiddler's Green**, **a Jonah aboard**, **the Klabautermann**, **a selkie**, **the island that swims away (Aspidochelone)**, tavern talk of **Blackbeard**, and word of **Anne Bonny and Mary Read** are all logbook cards; the mythic ones surface only in INSANE, the historical ones near where they belong.
-- The **📖 Tales Logbook** on the title screen collects every card you've found, tagged **⚓ FROM THE RECORD** (real Whydah history), **🌀 SEA YARN** (the stories sailors told), or **🤯 MULTIVERSE** (insane mode only).
+- The **📖 Tales Logbook** on the title screen collects every card you've found, tagged **⚓ FROM THE RECORD** (real Whydah history), **🌀 SEA YARN** (the stories sailors told), or **🤯 MULTIVERSE** (insane mode only). Voyage tales and multiverse tales are tallied separately so a classroom run can finish the historical book without sailing INSANE.
 - Win your first career voyage and the title screen and logbook both pick up a permanent line: 1984, Barry Clifford finds the wreck.
+- **Voyage weather** (Easy/Hard/Extreme): each run draws one soft historical weather — busy shipping, fog banks, rich holds, or clear water — announced on the first mission card. Mutators and chaos stay INSANE-only.
+- Ladder clears (election, bounty sloop, powder brig, blockade) unlock Harbor liveries. Sharktooth / Good Boy / Carapace stay multiverse rewards and stay hidden until INSANE is unlocked.
 
 ## Whirlpools
 
@@ -67,7 +69,7 @@ It all interlocks: hit → chain climbs → dodge close → charge → blast to 
 - **A lively sea, full of treasure.** Between fights the water is busy with things worth grabbing, on a steady pickup stream that's separate from the hazard stream (so the sea can be full without being deadly). A whole spread of treasure, common to rare: **coins** and drifting **coin arcs**, **cargo crates** (📦 +20g), message **bottles**, **pearls** (🦪 +18g), **gems** (💎 +30g, in five colours), **silver ingots** (🥈 +40g), and the rare **treasure chest** (💰 +70g). Wind and repair barrels too, and hearts when you're hurt.
 - **Ship battles.** An escalating boss ladder — the bounty sloop, the mooncusser, the powder brig, the Hunter's flagship, and the King's blockade — plus the wolf pack before the storm.
 - **Navigator games.** A sun-sight (backstaff), a depth sounding (lead line), and a speed count (log-line) — quick skill checks for points and gold.
-- **Gold banks at every port**, spendable on eight upgrades: Oak Timbers, Bilge Pumps, Chain Shot, Crow's Nest, Weather Helm, Lucky Charm, Full Canvas, Long Nines. Buying Oak Timbers mid-run raises your hull cap immediately.
+- **Gold banks at every port**, spendable at the Harbor (between voyages) on eight upgrades: Oak Timbers, Bilge Pumps, Chain Shot, Crow's Nest, Weather Helm, Lucky Charm, Full Canvas, Long Nines. Ports themselves are a bank run and a breath — not a mid-voyage shop.
 - **The nor'easter.** Four escalating phases (see above): forked lightning, telegraphed gusts, rogue-wave sets you brace with well-timed taps, and a wandering storm eddy in the final wall. Beat it and the win locks in — make for port, or turn and fight the Grandfather Serpent that followed you out. Either way, the Old Sow is waiting.
 
 ## v8 — the depth pass
@@ -95,5 +97,6 @@ Arrow keys or WASD to steer in all four directions, or drag on the sea. Space (o
 
 - Self-contained: no dependencies, no build, no network requests.
 - The history behind it: Sam Bellamy took the *Whydah* in a three-day chase in February 1717, then sailed her north until a nor'easter wrecked her off Cape Cod that April. In the game you get the chance her crew never had. Barry Clifford found the wreck in 1984 — the bell still reads THE WHYDAH GALLY 1716, the first pirate ship ever proven authentic.
+- v9.1 ("Replay the coast"): voyage weather for Easy/Hard/Extreme; wired `chart` / `hazChance`; Virginia & Rhode Island mid-leg battles; four new choice cards; ladder-clear liveries; logbook split voyage vs multiverse; INSANE skins gated in Harbor. August 2026.
 - v9 ("Whydah's Voyage"): renamed from "First Sail"; split the realism so the main game tells the (mostly) true voyage while every truly-unrealistic element (Kraken, Sharknado, mid-run serpent, Davy Jones, Poseidon) moves to an expanded twelve-mission INSANE campaign; added an escalating real ship-boss ladder (bounty sloop → mooncusser → powder brig → flagship → King's blockade); rebuilt the nor'easter into four escalating phases; INSANE unlocks by beating EXTREME or the secret word. July 2026.
 - v7 ("The Voyage"): rebuilt around a ten-mission campaign with a resumable, mission-scoped save, port-to-port ship upgrades, a reworked and confined shark encounter, new legend/myth event cards, whirlpools, and a full INSANE-mode comedy rebuild. July 2026.
