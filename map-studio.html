@@ -38,6 +38,9 @@
   .notice{position:absolute; z-index:1200; left:50%; transform:translateX(-50%); top:.6em; max-width:min(92vw,560px); background:var(--ox); color:var(--parch); font-size:.9em; font-weight:600; padding:.6em .9em; border-radius:8px; display:none; box-shadow:0 3px 10px rgba(0,0,0,.3);}
   .notice button{float:right; margin-left:.8em; background:none; border:1px solid var(--parch); color:var(--parch); border-radius:6px; cursor:pointer; font-weight:700;}
   .mapwrap{position:relative; flex:1; display:flex;}
+  .mapwrap.globe-on #map{background:#071828;}
+  .mapwrap.globe-on .maplibregl-canvas-container,
+  .mapwrap.globe-on .maplibregl-canvas{background:#071828 !important;}
   .lb{position:absolute; z-index:1150; right:.6em; top:.6em; width:min(88vw,330px); background:var(--parch); border:2px solid var(--brass); border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.35); display:none; overflow:hidden;}
   .lb-head{background:var(--ink); color:var(--brassl); font-family:Georgia,serif; font-weight:700; padding:.55em .8em; font-size:1.02em;}
   .lb-head .lb-sub{display:block; color:#C7BCA0; font-family:"Segoe UI",system-ui,sans-serif; font-weight:400; font-style:italic; font-size:.78em;}
@@ -62,6 +65,20 @@
   .seg-menu.open{display:block;}
   .seg-menu p{font-size:.8em;color:var(--muted);font-style:italic;margin:0 0 .4em;}
   .seg-menu .tbtn{display:block;width:100%;margin:.25em 0;font-size:.85em;}
+  .howto{position:absolute;z-index:1300;inset:0;background:rgba(18,34,43,.72);display:none;align-items:center;justify-content:center;padding:1em;}
+  .howto.open{display:flex;}
+  .howto-card{width:min(94vw,440px);background:var(--parch);border:2px solid var(--brass);border-radius:14px;box-shadow:0 10px 32px rgba(0,0,0,.45);overflow:hidden;}
+  .howto-card h2{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-size:1.2em;padding:.7em .95em;}
+  .howto-card .body{padding:1em 1.05em 1.15em;}
+  .howto-card .step-k{color:var(--ox);font-size:.75em;font-weight:800;letter-spacing:.1em;text-transform:uppercase;}
+  .howto-card .step-t{font-family:Georgia,serif;font-size:1.2em;margin:.2em 0 .45em;color:var(--ink2);}
+  .howto-card .step-d{font-size:.95em;line-height:1.45;color:var(--inktx);}
+  .howto-card .dots{display:flex;gap:.35em;justify-content:center;margin:.85em 0 .2em;}
+  .howto-card .dots span{width:.55em;height:.55em;border-radius:50%;background:var(--parch2);border:1.5px solid var(--brass);}
+  .howto-card .dots span.on{background:var(--ox);border-color:var(--ox);}
+  .howto-card .actions{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.9em;}
+  .score-pop{position:absolute;z-index:1250;pointer-events:none;font:800 1.05em Georgia,serif;color:var(--ox);text-shadow:0 1px 0 #F3E8CE,0 2px 8px rgba(0,0,0,.35);opacity:0;transition:opacity .15s,transform .5s ease;transform:translateY(0);}
+  .score-pop.show{opacity:1;transform:translateY(-28px);}
   .side{position:absolute;z-index:1160;top:.6em;width:min(92vw,360px);max-height:calc(100% - 1.2em);background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;overflow:hidden;flex-direction:column;}
   .side.open{display:flex;}
   .side.left{left:.6em;}
@@ -154,10 +171,9 @@
     <button class="tbtn" id="mode-world" title="Modern world map — best for story maps">🌍 World</button>
     <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart — offline">📜 1717 Chart</button>
   </span>
-  <span class="tgrp" id="explore-modes">
-    <span class="tg">Explore</span>
-    <button class="tbtn" id="mode-doors" title="Watch modern shipping choke points (not for drawing)">🚢 Chokepoints</button>
-    <button class="tbtn" id="mode-globe" title="Spin the same ocean as a planet">🌐 Globe</button>
+  <span class="tgrp" id="play-modes">
+    <span class="tg">Play</span>
+    <button class="tbtn" id="mode-pirate" title="Park Your Pirate — score ships at the world’s doors (flat map or globe)">🏴‍☠️ Park Your Pirate</button>
   </span>
   <span class="stat" id="stat">0 pins · need 8</span>
 </div>
@@ -193,6 +209,10 @@
 </div>
 <div class="hint" id="hint">Start with <b>📍 Places</b> or <b>📌 Tap stop</b>. Aim for 8–10 numbered stops in your person’s voice.</div>
 <div class="toolbar" id="doors-bar" style="display:none; border-bottom:2px solid var(--ox);">
+  <button class="tbtn on" id="view-flat" title="Flat map view">🗺️ Flat</button>
+  <button class="tbtn" id="view-globe" title="Spin the ocean as a solid planet">🌐 Globe</button>
+  <button class="tbtn" id="tool-howto" title="How to play Park Your Pirate">❓ How to play</button>
+  <span style="width:.6em"></span>
   <button class="tbtn" id="jump-all">🌍 Whole ocean</button>
   <button class="tbtn" id="jump-suez">Suez</button>
   <button class="tbtn" id="jump-malacca">Malacca</button>
@@ -209,7 +229,7 @@
   <button class="tbtn on" id="toggle-ports">⚓ Ports</button>
   <button class="tbtn on" id="toggle-lanes">〰 Lanes</button>
   <span style="width:.6em"></span>
-  <button class="tbtn" id="tool-pirate">🏴‍☠️ Park your pirate</button>
+  <button class="tbtn" id="tool-pirate">🏴‍☠️ Park Your Pirate</button>
   <button class="tbtn" id="tool-lb">🏆 Leaderboard</button>
 </div>
 
@@ -282,10 +302,26 @@
   </div>
 
   <div class="lb" id="lb-panel">
-    <div class="lb-head">🏆 Pirate Leaderboard <span class="lb-sub">best 60-second voyages on this device</span>
+    <div class="lb-head">🏆 Park Your Pirate <span class="lb-sub">best 60-second voyages on this device</span>
       <button type="button" onclick="document.getElementById('lb-panel').style.display='none'">✕</button></div>
     <ol id="lb-list"></ol>
-    <div class="lb-foot">Park your pirate to start a 60-second voyage. 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5.</div>
+    <div class="lb-foot">Park Your Pirate to start a 60-second voyage. 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5.</div>
+  </div>
+  <div class="howto" id="howto" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+    <div class="howto-card">
+      <h2 id="howto-title">🏴‍☠️ Park Your Pirate</h2>
+      <div class="body">
+        <div class="step-k" id="howto-k">Step 1 of 5</div>
+        <div class="step-t" id="howto-t"></div>
+        <div class="step-d" id="howto-d"></div>
+        <div class="dots" id="howto-dots" aria-hidden="true"></div>
+        <div class="actions">
+          <button type="button" class="tbtn" id="howto-skip">Skip</button>
+          <button type="button" class="tbtn" id="howto-demo">▶ Watch a demo</button>
+          <button type="button" class="tbtn on" id="howto-next">Next →</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="tour" id="tour-panel" role="dialog" aria-label="Story tour">
     <div class="who" id="tour-who"></div>
@@ -619,9 +655,14 @@
   function setModeButtons() {
     document.getElementById('mode-world').classList.toggle('on', mode === 'world');
     document.getElementById('mode-chart').classList.toggle('on', mode === 'chart');
-    document.getElementById('mode-doors').classList.toggle('on', mode === 'doors');
-    document.getElementById('mode-globe').classList.toggle('on', mode === 'globe');
-    var studio = (mode !== 'doors' && mode !== 'globe');
+    var pirateMode = (mode === 'doors' || mode === 'globe');
+    document.getElementById('mode-pirate').classList.toggle('on', pirateMode);
+    var vf = document.getElementById('view-flat');
+    var vg = document.getElementById('view-globe');
+    if (vf) vf.classList.toggle('on', mode === 'doors');
+    if (vg) vg.classList.toggle('on', mode === 'globe');
+    document.querySelector('.mapwrap').classList.toggle('globe-on', mode === 'globe');
+    var studio = !pirateMode;
     document.getElementById('studio-bar').style.display = studio ? 'flex' : 'none';
     document.getElementById('doors-bar').style.display = studio ? 'none' : 'flex';
     document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
@@ -637,9 +678,12 @@
       exitTour();
       clearMeasure();
       hideSegMenu();
-    } else if (mode === 'chart') {
-      document.getElementById('places-panel').classList.remove('open');
-      document.getElementById('tool-places').classList.remove('on');
+    } else {
+      closeHowto(false);
+      if (mode === 'chart') {
+        document.getElementById('places-panel').classList.remove('open');
+        document.getElementById('tool-places').classList.remove('on');
+      }
     }
     renderChecklist();
     updateMapCursor();
@@ -1322,7 +1366,7 @@
     renderChecklist();
   }
 
-  /* Sea routing along the same shipping-lane shapes used in Chokepoints (offline, no API). */
+  /* Sea routing along the same shipping-lane shapes used in Park Your Pirate (offline, no API). */
   function ensureSeaGraph() {
     if (seaGraphCache) return seaGraphCache;
     var nodes = {};
@@ -1457,7 +1501,7 @@
     document.getElementById('tool-voyage').classList.remove('on');
   }
 
-  /* ---------- 🚢 Chokepoints mode: the doors, the traffic, and your pirate ---------- */
+  /* ---------- 🏴‍☠️ Park Your Pirate: the doors, the traffic, and your pirate ---------- */
   var DOORS = {
     suez:     { ll: [30.5, 32.4],   z: 7, t: 'Suez Canal',        d: 'One canal through a desert. About 12% of everything the world trades squeezes through it.' },
     malacca:  { ll: [2.5, 101.5],   z: 6, t: 'Strait of Malacca', d: 'About a third of global shipping rides this one strait past Singapore.' },
@@ -1544,6 +1588,88 @@
   var RANGE_M = 200000; /* 200 km spotting range */
   var RUN_MS = 60000;   /* one 60-second voyage per park */
   var LB_KEY = 'whydah-doors-leaderboard-v1';
+  var HOWTO_KEY = 'whydah-pyp-howto-seen';
+  var howtoStep = 0;
+  var pirateEnterOpts = { showHowto: false, restorePirate: null };
+  var HOWTO_STEPS = [
+    { t: 'Welcome aboard', d: 'Park Your Pirate is a 60-second lookout game on real shipping doors. Ships ride modern sea lanes — the same squeeze points Bellamy hunted in 1717.' },
+    { t: 'Find the doors', d: 'Gold dashed lines are shipping lanes. Red 🚪 labels mark chokepoints — Suez, Malacca, Windward Passage, and more. Ships bunch there because they must.' },
+    { t: 'Park your pirate', d: 'Tap 🏴‍☠️ Park Your Pirate, then tap the ocean to anchor. A dashed ring shows your lookout range (about 200 km). Every ship that enters scores.' },
+    { t: 'Score the haul', d: '🟡 Cargo = 1 · ⬛ Tanker = 2 · 🟣 Treasure = 5. One voyage lasts 60 seconds. Re-park smarter to climb the leaderboard on this Chromebook.' },
+    { t: 'Flat map or Globe', d: 'Use 🗺️ Flat for a classic map, or 🌐 Globe to spin a solid planet. Same game, same lanes — pick the view that helps you hunt.' }
+  ];
+
+  function spawnScorePop(pts, pos) {
+    var wrap = document.querySelector('.mapwrap');
+    if (!wrap || !pos) return;
+    var x = 0, y = 0, ok = false;
+    try {
+      if (mode === 'doors' && map) {
+        var p = map.latLngToContainerPoint(L.latLng(pos[0], pos[1]));
+        x = p.x; y = p.y; ok = true;
+      } else if (mode === 'globe' && gmap) {
+        var p2 = gmap.project([pos[1], pos[0]]);
+        x = p2.x; y = p2.y; ok = true;
+      }
+    } catch (_) {}
+    if (!ok) return;
+    var el = document.createElement('div');
+    el.className = 'score-pop';
+    el.textContent = '+' + pts;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    wrap.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 650);
+  }
+
+  function renderHowto() {
+    var s = HOWTO_STEPS[howtoStep] || HOWTO_STEPS[0];
+    document.getElementById('howto-k').textContent = 'Step ' + (howtoStep + 1) + ' of ' + HOWTO_STEPS.length;
+    document.getElementById('howto-t').textContent = s.t;
+    document.getElementById('howto-d').textContent = s.d;
+    var dots = document.getElementById('howto-dots');
+    dots.innerHTML = '';
+    HOWTO_STEPS.forEach(function (_, i) {
+      var sp = document.createElement('span');
+      if (i === howtoStep) sp.className = 'on';
+      dots.appendChild(sp);
+    });
+    document.getElementById('howto-next').textContent = (howtoStep >= HOWTO_STEPS.length - 1) ? 'Play →' : 'Next →';
+  }
+  function openHowto(force) {
+    if (!force) {
+      try { if (localStorage.getItem(HOWTO_KEY) === '1') return; } catch (_) {}
+    }
+    howtoStep = 0;
+    renderHowto();
+    document.getElementById('howto').classList.add('open');
+  }
+  function closeHowto(markSeen) {
+    document.getElementById('howto').classList.remove('open');
+    if (markSeen) {
+      try { localStorage.setItem(HOWTO_KEY, '1'); } catch (_) {}
+    }
+  }
+  function runPirateDemo() {
+    closeHowto(true);
+    var d = DOORS.windward;
+    function parkDemo() {
+      parkPirate(d.ll[0], d.ll[1]);
+      document.getElementById('hint').textContent = 'Demo: parked at the Windward Passage — 1717’s door. Watch ships cross your ring. Re-park anywhere to try your own spot.';
+      notice('Demo parked at Windward Passage. Ships crossing the ring score points.');
+    }
+    if (mode === 'globe' && gmap) {
+      gmap.flyTo({ center: [d.ll[1], d.ll[0]], zoom: Math.max(3, d.z - 2) });
+      setTimeout(parkDemo, 900);
+    } else if (map) {
+      map.flyTo(d.ll, d.z);
+      setTimeout(parkDemo, 700);
+    } else {
+      enterDoors('windward');
+      setTimeout(parkDemo, 500);
+    }
+  }
 
   /* library-agnostic distance: [lat,lng] pairs → meters */
   function haversineM(a, b) {
@@ -1680,6 +1806,7 @@
         s.styleDirty = true;
         pirate.count++;
         pirate.pts += s.type.pts;
+        spawnScorePop(s.type.pts, s.pos);
       }
     });
   }
@@ -1776,10 +1903,13 @@
     }
     document.getElementById('tool-pirate').classList.remove('on');
     document.getElementById('lb-panel').style.display = 'none';
-    document.getElementById('hint').textContent = '⏱ 60-second voyage started! The dashed ring is how far your lookout can see. Every ship it touches scores — best haul goes on the 🏆 leaderboard.';
+    document.getElementById('hint').textContent = '⏱ 60-second voyage started! The dashed ring is how far your lookout can see. Every ship it touches scores — best haul goes on the 🏆 Park Your Pirate leaderboard.';
   }
   function enterDoors(jumpKey) {
     saveNow();
+    var restore = pirateEnterOpts.restorePirate;
+    var showHowto = pirateEnterOpts.showHowto;
+    pirateEnterOpts = { showHowto: false, restorePirate: null };
     mode = 'doors';
     freshMap(L.CRS.EPSG3857);
     map.setMinZoom(2); map.setMaxZoom(12);
@@ -1789,11 +1919,13 @@
     if (d) map.setView(d.ll, d.z); else map.setView([22, 30], 2);
     startTraffic();
     setModeButtons();
-    document.getElementById('hint').textContent = 'Ships ride real-world sea lanes: 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5. Watch where they bunch — those are the doors. Then 🏴‍☠️ park your pirate and see why Bellamy never chased.';
+    document.getElementById('hint').textContent = 'Park Your Pirate: ships ride real sea lanes — 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5. Watch the doors, then park and score a 60-second haul.';
     document.getElementById('stat').textContent = 'tap any ship for its cargo · tap a 🚪 door for its story';
+    if (restore) parkPirate(restore[0], restore[1]);
+    if (showHowto) openHowto(false);
   }
 
-  /* ---------- 🌐 Globe mode: the same ocean, as a planet (MapLibre GL, globe projection) ---------- */
+  /* ---------- 🌐 Globe view: solid planet for Park Your Pirate (MapLibre GL) ---------- */
   function densify(coords, stepDeg) {
     /* sparse lines cut chords through the globe — insert a vertex about every degree */
     stepDeg = stepDeg || 1;
@@ -1807,6 +1939,9 @@
   }
   function enterGlobe(jumpKey) {
     saveNow();
+    var restore = pirateEnterOpts.restorePirate;
+    var showHowto = pirateEnterOpts.showHowto;
+    pirateEnterOpts = { showHowto: false, restorePirate: null };
     stopTraffic();
     if (map) { try { map.remove(); } catch (_) {} map = null; }
     detachPins();
@@ -1822,16 +1957,28 @@
       style: {
         version: 8,
         projection: { type: 'globe' },
-        sky: { 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0] },
-        light: { anchor: 'map', intensity: 0.4 },
+        sky: {
+          'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.65, 4, 0.35, 6, 0]
+        },
+        light: {
+          anchor: 'viewport',
+          position: [1.35, 210, 30],
+          intensity: 0.55
+        },
         sources: {
-          osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                 tileSize: 256, maxzoom: 19,
-                 attribution: '© OpenStreetMap contributors' }
+          /* Opaque satellite — solid oceans (OSM looked washed / see-through on the globe). */
+          sat: {
+            type: 'raster',
+            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+            tileSize: 256,
+            maxzoom: 19,
+            attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics'
+          }
         },
         layers: [
-          { id: 'space', type: 'background', paint: { 'background-color': '#0A1520' } },
-          { id: 'osm', type: 'raster', source: 'osm' }
+          { id: 'ocean', type: 'background', paint: { 'background-color': '#0A3D5C' } },
+          { id: 'sat', type: 'raster', source: 'sat',
+            paint: { 'raster-opacity': 1, 'raster-fade-duration': 0 } }
         ]
       }
     });
@@ -1847,21 +1994,22 @@
       gmap.addSource('lanes', { type: 'geojson', data: laneFc });
       gmap.addLayer({ id: 'lanes', type: 'line', source: 'lanes',
         layout: { 'line-cap': 'round', 'line-join': 'round', visibility: showLanes ? 'visible' : 'none' },
-        paint: { 'line-color': '#D8B25A', 'line-width': 1.4, 'line-opacity': 0.55, 'line-dasharray': [1, 3] } });
+        paint: { 'line-color': '#F0D078', 'line-width': 1.8, 'line-opacity': 0.85, 'line-dasharray': [1.2, 2.2] } });
 
       gmap.addSource('pirate-ring', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       gmap.addLayer({ id: 'pirate-ring-fill', type: 'fill', source: 'pirate-ring',
-        paint: { 'fill-color': '#8C2C1E', 'fill-opacity': 0.08 } });
+        paint: { 'fill-color': '#8C2C1E', 'fill-opacity': 0.18 } });
       gmap.addLayer({ id: 'pirate-ring-line', type: 'line', source: 'pirate-ring',
-        paint: { 'line-color': '#8C2C1E', 'line-width': 2, 'line-dasharray': [2, 2] } });
+        paint: { 'line-color': '#F3E8CE', 'line-width': 2.2, 'line-dasharray': [2, 2] } });
 
       gmap.addSource('ships', { type: 'geojson', data: shipsGeojson() });
       gmap.addLayer({ id: 'ships', type: 'circle', source: 'ships',
         paint: {
-          'circle-radius': ['+', ['get', 'r'], 0.5],
-          'circle-stroke-color': '#0A1520', 'circle-stroke-width': 1,
+          'circle-radius': ['+', ['get', 'r'], 1],
+          'circle-stroke-color': '#071828', 'circle-stroke-width': 1.2,
           'circle-color': ['case', ['==', ['get', 'spotted'], 1], '#FF4B2E',
-            ['match', ['get', 'cls'], 'tanker', '#4FB3C9', 'treasure', '#C77DFF', '#FFD75E']]
+            ['match', ['get', 'cls'], 'tanker', '#4FB3C9', 'treasure', '#C77DFF', '#FFD75E']],
+          'circle-opacity': 1
         } });
 
       /* doors + ports as DOM markers (no glyph server needed — same-origin rule holds) */
@@ -1870,7 +2018,7 @@
         var el = document.createElement('div');
         el.style.cssText = 'background:#8C2C1E;color:#F3E8CE;font:700 12px Georgia,serif;padding:2px 7px;border-radius:999px;border:2px solid #D8B25A;box-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;cursor:pointer;';
         el.textContent = '🚪 ' + w.t.split('·')[0].trim();
-        var mk = new maplibregl.Marker({ element: el }).setLngLat([w.ll[1], w.ll[0]])
+        new maplibregl.Marker({ element: el }).setLngLat([w.ll[1], w.ll[0]])
           .setPopup(new maplibregl.Popup({ offset: 14 }).setHTML('<b>' + w.t + '</b><br>' + w.d)).addTo(gmap);
       });
       PORTS.forEach(function (pt) {
@@ -1892,13 +2040,29 @@
         if (e.defaultPrevented) return;
         if (pirate.armed) parkPirate(e.lngLat.lat, e.lngLat.lng);
       });
+
+      if (restore) parkPirate(restore[0], restore[1]);
     });
 
     buildFleet();
     trafficTimer = setInterval(tickTraffic, 100);
     setModeButtons();
-    document.getElementById('hint').textContent = 'The same ocean as a planet — drag to spin it. 🟡 cargo = 1 · 🔵 tanker = 2 · 🟣 treasure = 5. The pirate game works up here too.';
-    document.getElementById('stat').textContent = 'spin the globe · the lanes hug the sphere for real';
+    document.getElementById('hint').textContent = 'Park Your Pirate on the globe — drag to spin a solid planet. Same lanes & scoring as Flat. 🟡1 · 🔵2 · 🟣5.';
+    document.getElementById('stat').textContent = 'spin the globe · park on a door · score the haul';
+    if (showHowto) openHowto(false);
+  }
+
+  function enterPirate(view, jumpKey, opts) {
+    opts = opts || {};
+    var wasPlaying = (mode === 'doors' || mode === 'globe');
+    var keep = (opts.keepPirate && pirate.ll) ? pirate.ll.slice() : null;
+    var showHowto = false;
+    if (opts.forceHowto) showHowto = true;
+    else if (opts.skipHowto) showHowto = false;
+    else if (!wasPlaying) showHowto = true;
+    pirateEnterOpts = { showHowto: showHowto, restorePirate: keep };
+    if (view === 'globe') enterGlobe(jumpKey || null);
+    else enterDoors(jumpKey || null);
   }
 
   /* ---------- Save / restore (this device) ---------- */
@@ -2293,8 +2457,25 @@
   }
   document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
   document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
-  document.getElementById('mode-doors').onclick = function () { if (mode !== 'doors') enterDoors(); };
-  document.getElementById('mode-globe').onclick = function () { if (mode !== 'globe') enterGlobe(); };
+  document.getElementById('mode-pirate').onclick = function () {
+    if (mode !== 'doors' && mode !== 'globe') enterPirate('flat', null, { showHowto: true });
+  };
+  document.getElementById('view-flat').onclick = function () {
+    if (mode === 'doors') return;
+    enterPirate('flat', null, { keepPirate: true, skipHowto: true });
+  };
+  document.getElementById('view-globe').onclick = function () {
+    if (mode === 'globe') return;
+    enterPirate('globe', null, { keepPirate: true, skipHowto: true });
+  };
+  document.getElementById('tool-howto').onclick = function () { openHowto(true); };
+  document.getElementById('howto-skip').onclick = function () { closeHowto(true); };
+  document.getElementById('howto-demo').onclick = function () { runPirateDemo(); };
+  document.getElementById('howto-next').onclick = function () {
+    if (howtoStep >= HOWTO_STEPS.length - 1) { closeHowto(true); return; }
+    howtoStep++;
+    renderHowto();
+  };
   document.getElementById('jump-all').onclick = function () {
     if (mode === 'globe' && gmap) gmap.flyTo({ center: [-40, 25], zoom: 1.6 });
     else map.flyTo([22, 30], 2);
@@ -2484,14 +2665,17 @@
   applyToggles();
   syncProjectFields();
   renderPlacesList();
-  var doorParam = null, viewParam = null;
+  var doorParam = null, viewParam = null, playParam = null;
   try {
     var qs = new URLSearchParams(window.location.search);
-    doorParam = qs.get('door'); viewParam = qs.get('view');
+    doorParam = qs.get('door'); viewParam = qs.get('view'); playParam = qs.get('play');
   } catch (_) {}
-  if (viewParam === 'globe') enterGlobe(doorParam && DOORS[doorParam] ? doorParam : null);
-  else if (doorParam !== null) enterDoors(DOORS[doorParam] ? doorParam : null);
-  else enterWorld();
+  var jumpDoor = (doorParam && DOORS[doorParam]) ? doorParam : null;
+  if (viewParam === 'globe' || playParam === 'pirate' || doorParam !== null) {
+    enterPirate(viewParam === 'globe' ? 'globe' : 'flat', jumpDoor, { showHowto: true });
+  } else {
+    enterWorld();
+  }
 })();
 </script>
 
