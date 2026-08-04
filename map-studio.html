@@ -145,7 +145,7 @@
 
 <header class="hero">
   <h1>🗺️ Map Studio</h1>
-  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Saves on this device. No account.</span>
+  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Autosaves here · Download a backup for shared Chromebooks.</span>
 </header>
 
 <div class="toolbar" role="toolbar" aria-label="Choose a map">
@@ -185,7 +185,9 @@
     <button class="tbtn" id="tool-stops" title="List, reorder, and edit your stops">📑 Stops</button>
     <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
     <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
-    <button class="tbtn" id="tool-export">💾 Download</button>
+    <button class="tbtn" id="tool-export" title="Save a backup file you can bring to any Chromebook">💾 Download</button>
+    <button class="tbtn" id="tool-import" title="Open a story-map file you downloaded earlier">📂 Import</button>
+    <input type="file" id="import-file" accept=".geojson,.json,application/geo+json,application/json" hidden>
     <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
   </span>
 </div>
@@ -245,6 +247,13 @@
       <div class="starter" id="starter-box">
         <p>Stuck on where to pin? Drop a starter pack of places for your person — then rewrite every stop in their voice.</p>
         <button type="button" class="tbtn" id="tool-starter">📍 Drop starter pins</button>
+      </div>
+      <div class="starter" id="backup-box">
+        <p><b>Shared Chromebook?</b> Download a backup file before you log out. On the next machine, Import that same file to pick up where you left off.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.35em;">
+          <button type="button" class="tbtn" id="proj-export">💾 Download backup</button>
+          <button type="button" class="tbtn on" id="proj-import">📂 Import backup</button>
+        </div>
       </div>
     </div>
   </div>
@@ -326,7 +335,7 @@
 <div class="sheet" id="story-sheet" aria-hidden="true"></div>
 
 <footer class="foot">
-  <b>Add</b> stops · <b>🌊 Sea route</b> around land · <b>➕ New route</b> for a separate track · tap a leg to <b>split</b> into two routes.
+  <b>Add</b> stops · <b>💾 Download</b> a backup for shared Chromebooks · <b>📂 Import</b> to continue on another machine.
   <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
@@ -1968,6 +1977,199 @@
     updateStat();
   }
 
+  function applyProjectState(state) {
+    /* Load a full serialize()-shaped object into work + project, then redraw the live map. */
+    if (!state || typeof state !== 'object') throw new Error('Not a Whydah story-map file.');
+    if (state.project) {
+      project.student = state.project.student || '';
+      project.person = state.project.person || '';
+      project.title = state.project.title || '';
+    }
+    ['world', 'chart'].forEach(function (k) {
+      var src = state[k] || {};
+      work[k].pins = (src.pins || []).map(function (p) {
+        return {
+          lat: p.lat, lng: p.lng,
+          label: p.label || '',
+          voice: p.voice || '',
+          journal: p.journal || '',
+          kind: p.kind || '',
+          n: p.n || 0
+        };
+      });
+      if (src.routes && src.routes.length) {
+        work[k].routes = src.routes.map(function (track) {
+          return (track || []).map(function (a) { return L.latLng(a[0], a[1]); });
+        });
+      } else if (src.route && src.route.length) {
+        work[k].routes = [src.route.map(function (a) { return L.latLng(a[0], a[1]); })];
+      } else {
+        work[k].routes = [];
+      }
+      work[k].activeRoute = src.activeRoute || 0;
+      ensureRoutesShape(work[k]);
+    });
+  }
+  function geojsonToState(gj) {
+    /* Turn a Map Studio .geojson download (or embedded whydahState) back into serialize() shape. */
+    if (gj && gj.whydahState && gj.whydahState.world) return gj.whydahState;
+    if (gj && gj.world && (gj.world.pins || gj.world.routes || gj.world.route)) {
+      return {
+        project: gj.project || {},
+        version: gj.version || 3,
+        world: gj.world,
+        chart: gj.chart || { pins: [], routes: [] }
+      };
+    }
+    if (!gj || gj.type !== 'FeatureCollection' || !Array.isArray(gj.features)) {
+      throw new Error('Pick a story-map file from 💾 Download (.geojson or .json).');
+    }
+    var state = {
+      project: gj.whydahProject || {},
+      version: 3,
+      world: { pins: [], routes: [], activeRoute: 0 },
+      chart: { pins: [], routes: [], activeRoute: 0 }
+    };
+    var routeBuckets = { world: {}, chart: {} };
+    gj.features.forEach(function (f) {
+      if (!f || !f.geometry) return;
+      var props = f.properties || {};
+      var canvas = (props.canvas === 'chart') ? 'chart' : 'world';
+      if (f.geometry.type === 'Point' && f.geometry.coordinates && f.geometry.coordinates.length >= 2) {
+        state[canvas].pins.push({
+          lng: f.geometry.coordinates[0],
+          lat: f.geometry.coordinates[1],
+          label: props.label || '',
+          voice: props.voice || '',
+          journal: props.journal || '',
+          kind: props.kind || '',
+          n: props.n || 0
+        });
+      } else if (f.geometry.type === 'LineString' && f.geometry.coordinates && f.geometry.coordinates.length >= 2) {
+        var ri = (typeof props.routeIndex === 'number') ? props.routeIndex : 0;
+        if (!routeBuckets[canvas][ri]) routeBuckets[canvas][ri] = [];
+        routeBuckets[canvas][ri] = f.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+      }
+    });
+    ['world', 'chart'].forEach(function (k) {
+      state[k].pins.sort(function (a, b) { return (a.n || 0) - (b.n || 0); });
+      var keys = Object.keys(routeBuckets[k]).map(Number).sort(function (a, b) { return a - b; });
+      state[k].routes = keys.map(function (ri) { return routeBuckets[k][ri]; });
+    });
+    if (!state.world.pins.length && !state.chart.pins.length &&
+        !state.world.routes.length && !state.chart.routes.length &&
+        !state.project.person && !state.project.title && !state.project.student) {
+      throw new Error('That file doesn’t look like a Map Studio story map.');
+    }
+    return state;
+  }
+  function reloadLiveMapFromWork() {
+    /* Tear down live markers and rebuild from work[mode] plain data. */
+    if (mode === 'doors' || mode === 'globe') {
+      enterWorld();
+      return;
+    }
+    if (pinLayer) pinLayer.clearLayers();
+    work[mode].pins = work[mode].pins.map(function (p) {
+      if (p instanceof L.Marker) {
+        var ll = p.getLatLng();
+        return { lat: ll.lat, lng: ll.lng, label: p._label || '', voice: p._voice || '', journal: p._journal || '', kind: p._kind || '', n: p._n || 0 };
+      }
+      return p;
+    });
+    restoreWork();
+    syncProjectFields();
+    saveNow();
+    try {
+      var pins = livePins();
+      if (pins.length) map.fitBounds(L.featureGroup(pins).getBounds().pad(0.25));
+      else if (routesOf().length) {
+        var latlngs = [];
+        routesOf().forEach(function (t) { t.forEach(function (p) { latlngs.push(p); }); });
+        if (latlngs.length) map.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+      }
+    } catch (_) {}
+  }
+  function importStoryMapText(text) {
+    var parsed;
+    try { parsed = JSON.parse(text); }
+    catch (_) { throw new Error('Couldn’t read that file — is it the .geojson from 💾 Download?'); }
+    var state = geojsonToState(parsed);
+    applyProjectState(state);
+    /* Prefer World if it has content; otherwise chart */
+    var worldHas = (work.world.pins && work.world.pins.length) || (work.world.routes && work.world.routes.length);
+    var chartHas = (work.chart.pins && work.chart.pins.length) || (work.chart.routes && work.chart.routes.length);
+    if (mode === 'doors' || mode === 'globe') {
+      if (worldHas || !chartHas) enterWorld();
+      else enterChart();
+      return;
+    }
+    if (chartHas && !worldHas && mode !== 'chart') enterChart();
+    else if (worldHas && mode !== 'world') enterWorld();
+    else reloadLiveMapFromWork();
+  }
+  function downloadStoryMap() {
+    var d = serialize();
+    var gj = {
+      type: 'FeatureCollection',
+      whydahProject: d.project || null,
+      whydahState: d,
+      features: []
+    };
+    ['world', 'chart'].forEach(function (k) {
+      d[k].pins.forEach(function (p) {
+        gj.features.push({
+          type: 'Feature',
+          properties: { label: p.label, voice: p.voice, journal: p.journal, kind: p.kind || '', n: p.n, canvas: k },
+          geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
+        });
+      });
+      (d[k].routes || []).forEach(function (track, ri) {
+        if (track.length > 1) {
+          gj.features.push({
+            type: 'Feature',
+            properties: { name: 'route', routeIndex: ri, canvas: k },
+            geometry: { type: 'LineString', coordinates: track.map(function (a) { return [a[1], a[0]]; }) }
+          });
+        }
+      });
+    });
+    var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    var slug = (project.person || project.student || 'whydah').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    a.download = 'story-map-' + (slug || 'whydah') + '.geojson';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    notice('Backup downloaded. On a shared Chromebook, use 📂 Import with this same file to continue later.');
+  }
+  function promptImportFile() {
+    document.getElementById('import-file').value = '';
+    document.getElementById('import-file').click();
+  }
+  function handleImportFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var hasWork = livePins().length || routePointCount() ||
+          (work.world.pins && work.world.pins.length) || (work.chart.pins && work.chart.pins.length);
+        if (hasWork && !window.confirm('Import replaces what’s on this Chromebook with the file. Continue?')) return;
+        importStoryMapText(String(reader.result || ''));
+        var n = (work.world.pins.length || 0) + (work.chart.pins.length || 0);
+        notice('Imported! ' + n + ' stop' + (n === 1 ? '' : 's') + ' restored' +
+          (project.person ? ' · ' + project.person : '') +
+          '. It also saved on this device for the rest of class.');
+        document.getElementById('hint').textContent = 'Backup restored. Keep downloading after big edits — shared Chromebooks forget local saves.';
+        openSide('stops');
+        renderStopsList();
+      } catch (err) {
+        notice(err.message || 'Import failed.');
+      }
+    };
+    reader.onerror = function () { notice('Couldn’t read that file.'); };
+    reader.readAsText(file);
+  }
+
   /* ---------- Showcase tour + story sheet ---------- */
   function exitTour() {
     tourIdx = -1;
@@ -2231,35 +2433,14 @@
     startNewRouteNext = false;
     drawRoute(); saveNow(); updateStat(); exitTour(); clearMeasure(); renderStopsList();
   };
-  document.getElementById('tool-export').onclick = function () {
-    var d = serialize();
-    var gj = { type: 'FeatureCollection', whydahProject: d.project || null, features: [] };
-    ['world', 'chart'].forEach(function (k) {
-      d[k].pins.forEach(function (p) {
-        gj.features.push({
-          type: 'Feature',
-          properties: { label: p.label, voice: p.voice, journal: p.journal, kind: p.kind || '', n: p.n, canvas: k },
-          geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
-        });
-      });
-      (d[k].routes || []).forEach(function (track, ri) {
-        if (track.length > 1) {
-          gj.features.push({
-            type: 'Feature',
-            properties: { name: 'route', routeIndex: ri, canvas: k },
-            geometry: { type: 'LineString', coordinates: track.map(function (a) { return [a[1], a[0]]; }) }
-          });
-        }
-      });
-    });
-    var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    var slug = (project.person || project.student || 'whydah').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    a.download = 'story-map-' + (slug || 'whydah') + '.geojson';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    notice('Downloaded! Voice + Journal cites are inside the file. Keep it as your project backup — and print 📄 Story sheet for the gallery table.');
-  };
+  document.getElementById('tool-export').onclick = downloadStoryMap;
+  document.getElementById('tool-import').onclick = promptImportFile;
+  document.getElementById('proj-export').onclick = downloadStoryMap;
+  document.getElementById('proj-import').onclick = promptImportFile;
+  document.getElementById('import-file').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (f) handleImportFile(f);
+  });
 
   function onMapClick(e) {
     if (mode === 'doors') {
