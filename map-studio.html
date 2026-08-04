@@ -56,6 +56,12 @@
   .pbtn{display:inline-block; margin:.35em .35em 0 0; padding:.3em .6em; border:1.5px solid var(--brass); border-radius:6px; background:#FBF4E2; font-weight:700; font-size:.85em; cursor:pointer;}
   .story-pin{background:var(--ox);color:var(--brassl);font:700 12px Georgia,serif;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brassl);box-shadow:0 1px 4px rgba(0,0,0,.5);}
   .story-pin.empty{background:var(--ink2);opacity:.85;}
+  .route-dot{width:12px;height:12px;border-radius:50%;background:#D8B25A;border:2px solid #12222B;box-shadow:0 1px 3px rgba(0,0,0,.45);}
+  .route-dot:hover{background:#F3E8CE;transform:scale(1.15);}
+  .seg-menu{position:absolute;z-index:1190;background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.35);padding:.55em .65em;display:none;min-width:11em;}
+  .seg-menu.open{display:block;}
+  .seg-menu p{font-size:.8em;color:var(--muted);font-style:italic;margin:0 0 .4em;}
+  .seg-menu .tbtn{display:block;width:100%;margin:.25em 0;font-size:.85em;}
   .side{position:absolute;z-index:1160;top:.6em;width:min(92vw,360px);max-height:calc(100% - 1.2em);background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;overflow:hidden;flex-direction:column;}
   .side.open{display:flex;}
   .side.left{left:.6em;}
@@ -160,8 +166,11 @@
     <span class="tg">Add</span>
     <button class="tbtn" id="tool-pin" title="Tap the map to drop a numbered story stop">📌 Tap stop</button>
     <button class="tbtn" id="tool-places" title="Pick a known place from the Whydah story">📍 Places</button>
-    <button class="tbtn" id="tool-route" title="Draw a track leg by leg">✏️ Draw route</button>
-    <button class="tbtn" id="tool-connect" title="Draw a route through your stops in order">🔗 Route from stops</button>
+    <button class="tbtn" id="tool-route" title="Draw on the active track — tap dots to delete, tap a leg to bend/split">✏️ Draw route</button>
+    <button class="tbtn" id="tool-new-route" title="Start a separate route (doesn’t connect to the last one)">➕ New route</button>
+    <button class="tbtn" id="tool-connect" title="Straight lines through your stops in order">🔗 Straight route</button>
+    <button class="tbtn" id="tool-sea" title="Route between stops along sea lanes — goes around land">🌊 Sea route</button>
+    <button class="tbtn" id="tool-clear-route" title="Clear all routes (keeps your pins)">✂ Clear routes</button>
     <button class="tbtn" id="tool-measure" title="Tap two points to measure nautical miles">📏 Measure</button>
     <button class="tbtn" id="tool-undo" title="Undo last route point or stop">↩ Undo</button>
   </span>
@@ -256,7 +265,8 @@
       <p class="hint-sm" style="font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;">Up/down changes the tour order. Incomplete stops stay dark until voice + Journal are filled.</p>
       <div id="stops-list"></div>
       <div class="starter" style="display:flex;flex-wrap:wrap;gap:.35em;">
-        <button type="button" class="tbtn" id="stops-connect">🔗 Route from stops</button>
+        <button type="button" class="tbtn" id="stops-connect">🔗 Straight route</button>
+        <button type="button" class="tbtn" id="stops-sea">🌊 Sea route</button>
         <button type="button" class="tbtn" id="stops-fit">⤢ Fit all</button>
       </div>
     </div>
@@ -279,6 +289,13 @@
       <button type="button" class="tbtn" id="tour-exit">Exit tour</button>
       <span class="count" id="tour-count"></span>
     </div>
+  </div>
+  <div class="seg-menu" id="seg-menu" role="dialog" aria-label="Edit route leg">
+    <p id="seg-menu-label">This route leg</p>
+    <button type="button" class="tbtn on" id="seg-bend">⤵ Add bend (drag around land)</button>
+    <button type="button" class="tbtn danger" id="seg-split">✂ Split into two routes</button>
+    <button type="button" class="tbtn danger" id="seg-delete">🗑 Delete this leg’s point</button>
+    <button type="button" class="tbtn" id="seg-cancel">Cancel</button>
   </div>
   <div id="map"></div>
 </div>
@@ -309,7 +326,7 @@
 <div class="sheet" id="story-sheet" aria-hidden="true"></div>
 
 <footer class="foot">
-  <b>Add</b> stops from <b>📍 Places</b> or by tapping · <b>📑 Stops</b> to reorder · <b>🔗 Route from stops</b> to connect them · <b>🎤 Tour</b> at Showcase.
+  <b>Add</b> stops · <b>🌊 Sea route</b> around land · <b>➕ New route</b> for a separate track · tap a leg to <b>split</b> into two routes.
   <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
@@ -499,14 +516,21 @@
   var mode = 'world';                       /* 'world' | 'chart' */
   var chartImg = null;
 
-  /* per-mode student work (doors mode has no pins — it's for watching, not drawing) */
-  var work = { world: { pins: [], route: [] }, chart: { pins: [], route: [] }, doors: { pins: [], route: [] } };
+  /* per-mode student work (doors mode has no pins — it's for watching, not drawing)
+     routes: array of independent tracks; each track is an array of LatLngs */
+  var work = {
+    world: { pins: [], routes: [], activeRoute: 0 },
+    chart: { pins: [], routes: [], activeRoute: 0 },
+    doors: { pins: [], routes: [], activeRoute: 0 }
+  };
   var pinLayer = null;
-  var routeLine = null;
+  var routeLine = null; /* unused; kept null — multi-route lives on routeEditLayer */
+  var routeEditLayer = null;
   var voyageLayer = null;
   var voyageOn = false;
   var tool = 'pin';
   var tileFailures = 0;
+  var startNewRouteNext = false; /* next draw tap begins a fresh independent track */
 
   function notice(msg) {
     document.getElementById('notice-text').textContent = msg;
@@ -526,9 +550,11 @@
     /* Leaflet can't change CRS on a live map — tear down and rebuild */
     stopTraffic();
     clearMeasure();
+    hideSegMenu();
     if (map) { try { map.remove(); } catch (_) {} }
     detachPins();
     routeLine = null;
+    routeEditLayer = null;
     voyageLayer = null;
     chartImg = null;
     map = L.map('map', { zoomControl: true, worldCopyJump: crs !== L.CRS.Simple, crs: crs, preferCanvas: true });
@@ -593,11 +619,15 @@
     document.getElementById('tool-copy-voyage').style.display = (mode === 'world') ? '' : 'none';
     document.getElementById('tool-places').style.display = (mode === 'world') ? '' : 'none';
     document.getElementById('tool-measure').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-sea').style.display = (mode === 'world') ? '' : 'none';
+    var stopsSea = document.getElementById('stops-sea');
+    if (stopsSea) stopsSea.style.display = (mode === 'world') ? '' : 'none';
     if (!studio) {
       document.getElementById('lb-panel').style.display = 'none';
       closeSidePanels();
       exitTour();
       clearMeasure();
+      hideSegMenu();
     } else if (mode === 'chart') {
       document.getElementById('places-panel').classList.remove('open');
       document.getElementById('tool-places').classList.remove('on');
@@ -886,14 +916,30 @@
     openPinEditor(null, L.latLng(p.ll[0], p.ll[1]), { label: p.t });
   }
 
-  function connectPinsRoute() {
+  function connectPinsRoute(sea) {
     var pins = livePins();
-    if (pins.length < 2) { notice('Add at least 2 stops first — then Route from stops connects them in order.'); return; }
-    work[mode].route = pins.map(function (m) { return m.getLatLng(); });
+    if (pins.length < 2) { notice('Add at least 2 stops first — then Straight route or 🌊 Sea route can connect them.'); return; }
+    var track;
+    if (sea) {
+      track = seaRouteThroughPins(pins);
+      if (!track || track.length < 2) {
+        notice('Couldn’t find a sea-lane path between those stops — falling back to straight lines. Tap a leg to add bends around land.');
+        track = pins.map(function (m) { return m.getLatLng(); });
+      } else {
+        notice('🌊 Sea route follows shipping lanes around land. Use ➕ New route for another independent track.');
+      }
+    } else {
+      track = pins.map(function (m) { return m.getLatLng(); });
+      notice('Straight route through ' + pins.length + ' stops. Crosses land? Use 🌊 Sea route — or ➕ New route to draw a separate track.');
+    }
+    /* Replace tracks with this one connection (pins→one voyage). Other independent routes stay if student drew them — actually replace all for clarity when using connect. */
+    work[mode].routes = [track];
+    work[mode].activeRoute = 0;
+    startNewRouteNext = false;
     drawRoute();
     saveNow();
-    notice('Route drawn through your ' + pins.length + ' stops in story order. Reorder in 📑 Stops, then tap again to refresh.');
-    document.getElementById('hint').textContent = 'Route follows stop order. Change order in 📑 Stops, then 🔗 Route from stops again.';
+    setTool('route');
+    document.getElementById('hint').textContent = 'One track through your stops. ➕ New route starts another independent track · tap a leg → Split into two routes.';
   }
   function copyWhydahVoyage() {
     if (mode !== 'world') { notice('Copy voyage works on the World map.'); return; }
@@ -901,8 +947,9 @@
     VOYAGE.forEach(function (w) {
       addPin(w.ll, { label: w.t, voice: '', journal: '', kind: w.n <= 2 ? 'begin' : (w.n === 6 || w.n === 7 ? 'storm' : (w.n === 8 ? 'modern' : 'voyage')) }, true);
     });
-    if (!work.world.route.length) {
-      VOYAGE.forEach(function (w) { work.world.route.push(L.latLng(w.ll[0], w.ll[1])); });
+    if (!work.world.routes.length) {
+      work.world.routes = [VOYAGE.map(function (w) { return L.latLng(w.ll[0], w.ll[1]); })];
+      work.world.activeRoute = 0;
       drawRoute();
     }
     renumberPins(); saveNow(); updateStat();
@@ -1000,25 +1047,251 @@
     updateStat();
   }
 
-  /* ---------- Route ---------- */
+  /* ---------- Route (multiple independent tracks) ---------- */
+  var segMenuState = null; /* { routeIdx, segStart, latlng } */
+  var seaGraphCache = null;
+  var ROUTE_COLORS = ['#8C2C1E', '#1C3743', '#A9781F', '#5B2C6F', '#1A5276', '#784212'];
+
+  function ensureRoutesShape(bucket) {
+    if (!bucket.routes) bucket.routes = [];
+    if (typeof bucket.activeRoute !== 'number') bucket.activeRoute = 0;
+    /* migrate legacy single route: [] */
+    if (bucket.route && bucket.route.length && !bucket.routes.length) {
+      bucket.routes = [bucket.route];
+    }
+    delete bucket.route;
+    if (bucket.activeRoute >= bucket.routes.length) bucket.activeRoute = Math.max(0, bucket.routes.length - 1);
+  }
+  function routesOf(m) {
+    m = m || mode;
+    ensureRoutesShape(work[m]);
+    return work[m].routes;
+  }
+  function activeTrack() {
+    ensureRoutesShape(work[mode]);
+    var routes = work[mode].routes;
+    if (!routes.length) {
+      routes.push([]);
+      work[mode].activeRoute = 0;
+    }
+    if (work[mode].activeRoute < 0 || work[mode].activeRoute >= routes.length) work[mode].activeRoute = routes.length - 1;
+    return routes[work[mode].activeRoute];
+  }
+  function pruneEmptyRoutes() {
+    ensureRoutesShape(work[mode]);
+    work[mode].routes = work[mode].routes.filter(function (t) { return t && t.length > 0; });
+    if (work[mode].activeRoute >= work[mode].routes.length) work[mode].activeRoute = Math.max(0, work[mode].routes.length - 1);
+  }
+  function routePointCount() {
+    return routesOf().reduce(function (n, t) { return n + t.length; }, 0);
+  }
+
+  function clearRouteLayers() {
+    if (routeEditLayer && map) { try { map.removeLayer(routeEditLayer); } catch (_) {} }
+    routeEditLayer = null;
+    routeLine = null;
+    hideSegMenu();
+  }
+  function hideSegMenu() {
+    var m = document.getElementById('seg-menu');
+    if (m) m.classList.remove('open');
+    segMenuState = null;
+  }
+  function showSegMenu(routeIdx, segStart, latlng, containerPoint) {
+    segMenuState = { routeIdx: routeIdx, i: segStart, latlng: latlng };
+    var menu = document.getElementById('seg-menu');
+    var label = document.getElementById('seg-menu-label');
+    if (label) label.textContent = 'Route ' + (routeIdx + 1) + ' · this leg';
+    var wrap = document.querySelector('.mapwrap');
+    var x = containerPoint.x, y = containerPoint.y;
+    menu.classList.add('open');
+    var mw = menu.offsetWidth || 180, mh = menu.offsetHeight || 140;
+    var maxX = (wrap && wrap.clientWidth ? wrap.clientWidth : window.innerWidth) - mw - 8;
+    var maxY = (wrap && wrap.clientHeight ? wrap.clientHeight : window.innerHeight) - mh - 8;
+    menu.style.left = Math.max(8, Math.min(x + 8, maxX)) + 'px';
+    menu.style.top = Math.max(8, Math.min(y + 8, maxY)) + 'px';
+  }
+  function beginNewRoute() {
+    ensureRoutesShape(work[mode]);
+    /* If active track is empty, just keep drawing on it */
+    var cur = activeTrack();
+    if (cur.length === 0) {
+      startNewRouteNext = false;
+      setTool('route');
+      notice('Draw your route — tap the map. This track is already empty and ready.');
+      return;
+    }
+    startNewRouteNext = true;
+    setTool('route');
+    document.getElementById('tool-new-route').classList.add('on');
+    document.getElementById('hint').textContent = '➕ Next tap starts a NEW independent route (won’t connect to the last track).';
+    notice('New route armed. Tap the map to place the first point of a separate track.');
+  }
   function addRoutePoint(latlng, skipSave) {
-    work[mode].route.push(latlng);
+    hideSegMenu();
+    ensureRoutesShape(work[mode]);
+    if (startNewRouteNext) {
+      work[mode].routes.push([]);
+      work[mode].activeRoute = work[mode].routes.length - 1;
+      startNewRouteNext = false;
+      document.getElementById('tool-new-route').classList.remove('on');
+    }
+    activeTrack().push(latlng);
     drawRoute();
     if (!skipSave) saveNow();
   }
-  function drawRoute() {
-    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
-    var pts = work[mode].route;
-    if (pts.length > 0) {
-      routeLine = L.polyline(pts, { color: '#8C2C1E', weight: 4, dashArray: '8 6' }).addTo(map);
+  function deleteRouteVertex(routeIdx, idx) {
+    hideSegMenu();
+    var routes = routesOf();
+    if (!routes[routeIdx] || idx < 0 || idx >= routes[routeIdx].length) return;
+    routes[routeIdx].splice(idx, 1);
+    if (routes[routeIdx].length < 2) routes[routeIdx] = routes[routeIdx].length ? [] : [];
+    pruneEmptyRoutes();
+    drawRoute();
+    saveNow();
+    document.getElementById('hint').textContent = 'Deleted a route point. Tracks stay independent — ➕ New route to start another.';
+  }
+  function splitRouteAtLeg(routeIdx, segStart) {
+    /* Cut the connection: left part keeps 0..segStart, right part keeps segStart+1..end — two independent routes */
+    hideSegMenu();
+    var routes = routesOf();
+    var pts = routes[routeIdx];
+    if (!pts || pts.length < 2) return;
+    var left = pts.slice(0, segStart + 1);
+    var right = pts.slice(segStart + 1);
+    var next = [];
+    if (left.length) next.push(left);
+    if (right.length) next.push(right);
+    /* rebuild routes array replacing the one track with 0–2 parts */
+    var out = [];
+    for (var i = 0; i < routes.length; i++) {
+      if (i === routeIdx) {
+        next.forEach(function (t) { if (t.length) out.push(t); });
+      } else if (routes[i].length) {
+        out.push(routes[i]);
+      }
     }
+    work[mode].routes = out;
+    work[mode].activeRoute = Math.min(routeIdx, Math.max(0, out.length - 1));
+    pruneEmptyRoutes();
+    drawRoute();
+    saveNow();
+    notice('Split into independent routes (' + work[mode].routes.length + ' tracks). Each can be edited on its own.');
+    document.getElementById('hint').textContent = work[mode].routes.length + ' independent route' + (work[mode].routes.length === 1 ? '' : 's') + ' on the map. ➕ New route adds another.';
+  }
+  function deleteRouteLegPoint(routeIdx, segStart) {
+    /* Remove the later vertex of this leg (does not split — shortens the track) */
+    hideSegMenu();
+    var routes = routesOf();
+    var pts = routes[routeIdx];
+    if (!pts) return;
+    if (pts.length <= 2) {
+      routes.splice(routeIdx, 1);
+      pruneEmptyRoutes();
+      drawRoute(); saveNow();
+      notice('That short route was removed. Others stay.');
+      return;
+    }
+    var removeIdx = segStart + 1;
+    if (removeIdx >= pts.length) removeIdx = segStart;
+    pts.splice(removeIdx, 1);
+    pruneEmptyRoutes();
+    drawRoute(); saveNow();
+    document.getElementById('hint').textContent = 'Point removed from route ' + (routeIdx + 1) + '. Use Split to break into two independent tracks.';
+  }
+  function insertRouteBend(routeIdx, segStart, latlng) {
+    hideSegMenu();
+    var routes = routesOf();
+    if (!routes[routeIdx]) return;
+    routes[routeIdx].splice(segStart + 1, 0, L.latLng(latlng));
+    work[mode].activeRoute = routeIdx;
+    drawRoute(); saveNow();
+    setTool('route');
+    document.getElementById('hint').textContent = 'Bend added on route ' + (routeIdx + 1) + ' — drag the new gold dot into open water.';
+  }
+  function clearRouteOnly() {
+    hideSegMenu();
+    ensureRoutesShape(work[mode]);
+    if (!routePointCount()) { notice('No routes to clear.'); return; }
+    var n = work[mode].routes.length;
+    if (!window.confirm('Clear all ' + n + ' route' + (n === 1 ? '' : 's') + '? Your pins stay put.')) return;
+    work[mode].routes = [];
+    work[mode].activeRoute = 0;
+    startNewRouteNext = false;
+    document.getElementById('tool-new-route').classList.remove('on');
+    drawRoute(); saveNow();
+    notice('All routes cleared. Pins untouched.');
+  }
+  function drawRoute() {
+    clearRouteLayers();
+    if (!map) { updateStat(); return; }
+    ensureRoutesShape(work[mode]);
+    var routes = work[mode].routes;
+    if (!routes.length) { updateStat(); return; }
+    routeEditLayer = L.layerGroup().addTo(map);
+    var vtxIcon = L.divIcon({
+      className: '',
+      html: '<div class="route-dot" title="Tap to delete · drag to move"></div>',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+    routes.forEach(function (pts, routeIdx) {
+      if (!pts || pts.length < 1) return;
+      var color = ROUTE_COLORS[routeIdx % ROUTE_COLORS.length];
+      var isActive = routeIdx === work[mode].activeRoute;
+      if (pts.length >= 2) {
+        for (var i = 1; i < pts.length; i++) {
+          (function (rIdx, segStart) {
+            var hit = L.polyline([pts[segStart], pts[segStart + 1]], {
+              weight: 18, opacity: 0, interactive: true, bubblingMouseEvents: false
+            });
+            hit.on('click', function (e) {
+              L.DomEvent.stopPropagation(e);
+              if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent);
+              work[mode].activeRoute = rIdx;
+              showSegMenu(rIdx, segStart, e.latlng, e.containerPoint || map.latLngToContainerPoint(e.latlng));
+            });
+            hit.addTo(routeEditLayer);
+          })(routeIdx, i - 1);
+        }
+        L.polyline(pts, {
+          color: color, weight: isActive ? 5 : 3.5, dashArray: '8 6',
+          opacity: isActive ? 1 : 0.85, interactive: false
+        }).addTo(routeEditLayer);
+      }
+      pts.forEach(function (p, idx) {
+        var mk = L.marker(p, { draggable: true, icon: vtxIcon, bubblingMouseEvents: false });
+        mk._routeIdx = routeIdx;
+        mk._ptIdx = idx;
+        mk.on('click', function (e) {
+          L.DomEvent.stopPropagation(e);
+          if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent);
+          deleteRouteVertex(mk._routeIdx, mk._ptIdx);
+        });
+        mk.on('mousedown', function () { work[mode].activeRoute = mk._routeIdx; });
+        mk.on('drag', function () {
+          var r = routesOf()[mk._routeIdx];
+          if (r && mk._ptIdx >= 0 && mk._ptIdx < r.length) r[mk._ptIdx] = mk.getLatLng();
+        });
+        mk.on('dragend', function () {
+          var r = routesOf()[mk._routeIdx];
+          if (r && mk._ptIdx >= 0 && mk._ptIdx < r.length) r[mk._ptIdx] = mk.getLatLng();
+          drawRoute();
+          saveNow();
+          updateStat();
+        });
+        mk.addTo(routeEditLayer);
+      });
+    });
     updateStat();
   }
   function routeDistanceNm() {
-    if (mode !== 'world') return null; /* the 1717 chart has no honest scale — that's a lesson in itself */
-    var pts = work.world.route, m = 0;
-    for (var i = 1; i < pts.length; i++) m += L.latLng(pts[i - 1]).distanceTo(L.latLng(pts[i]));
-    return m / 1852;
+    if (mode !== 'world') return null;
+    var m = 0;
+    routesOf('world').forEach(function (pts) {
+      for (var i = 1; i < pts.length; i++) m += L.latLng(pts[i - 1]).distanceTo(L.latLng(pts[i]));
+    });
+    return m;
   }
   function updateStat() {
     if (mode === 'doors' || mode === 'globe') return;
@@ -1028,11 +1301,131 @@
     else if (c.pins <= 10 && c.complete >= 8) s += ' · Showcase-ready ✓';
     else if (c.pins > 10) s += ' · trim to 8–10?';
     else s += ' · fill in voice + Journal';
-    var nm = routeDistanceNm();
-    if (nm !== null && work.world.route.length) s += ' · route ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
-    else if (mode === 'chart' && work[mode].route.length) s += ' · route: ' + work[mode].route.length + ' pts (no scale!)';
+    var nRoutes = routesOf().length;
+    var nPts = routePointCount();
+    if (nRoutes) {
+      s += ' · ' + nRoutes + ' route' + (nRoutes === 1 ? '' : 's');
+      var nm = routeDistanceNm();
+      if (nm !== null) s += ' ' + ((nm / 1852) >= 100 ? Math.round(nm / 1852) : (nm / 1852).toFixed(1)) + ' nm';
+      else s += ' (' + nPts + ' pts, no scale!)';
+    }
     document.getElementById('stat').textContent = s;
     renderChecklist();
+  }
+
+  /* Sea routing along the same shipping-lane shapes used in Chokepoints (offline, no API). */
+  function ensureSeaGraph() {
+    if (seaGraphCache) return seaGraphCache;
+    var nodes = {};
+    function key(ll) { return ll[0].toFixed(3) + ',' + ll[1].toFixed(3); }
+    function addNode(ll) {
+      var k = key(ll);
+      if (!nodes[k]) nodes[k] = { ll: [ll[0], ll[1]], edges: [] };
+      return k;
+    }
+    function addEdge(a, b) {
+      var ka = addNode(a), kb = addNode(b);
+      if (ka === kb) return;
+      var w = haversineM(a, b);
+      if (!(w > 0)) return;
+      nodes[ka].edges.push({ to: kb, w: w });
+      nodes[kb].edges.push({ to: ka, w: w });
+    }
+    var EXTRA_SEA = [
+      [[51.5, -5], [48, -15], [42, -25], [35, -30], [25, -30], [15, -25], [8, -15], [6.4, 2.0]],
+      [[6.4, 2.0], [8, -20], [12, -35], [15, -45], [17, -55], [18, -65], [18, -70], [19.9, -73.9]],
+      [[19.9, -73.9], [22, -72], [25, -74], [28, -77], [32, -76], [36, -74], [40, -72], [41.5, -70], [41.9, -70]],
+      [[51.5, -0.1], [50, -8], [48, -15], [45, -30], [42, -45], [40, -60], [40.4, -73.6]],
+      [[-34.8, 19], [-30, 5], [-20, -10], [-5, -20], [6, -15], [6.4, 2.0]]
+    ];
+    LANES.forEach(function (lane) {
+      for (var i = 1; i < lane.pts.length; i++) addEdge(lane.pts[i - 1], lane.pts[i]);
+    });
+    EXTRA_SEA.forEach(function (line) {
+      for (var i = 1; i < line.length; i++) addEdge(line[i - 1], line[i]);
+    });
+    var keys = Object.keys(nodes);
+    for (var i = 0; i < keys.length; i++) {
+      for (var j = i + 1; j < keys.length; j++) {
+        var d = haversineM(nodes[keys[i]].ll, nodes[keys[j]].ll);
+        if (d > 0 && d < 90000) {
+          nodes[keys[i]].edges.push({ to: keys[j], w: d });
+          nodes[keys[j]].edges.push({ to: keys[i], w: d });
+        }
+      }
+    }
+    seaGraphCache = { nodes: nodes, keys: keys };
+    return seaGraphCache;
+  }
+  function nearestSeaNode(ll, graph) {
+    var best = null, bestD = Infinity;
+    for (var i = 0; i < graph.keys.length; i++) {
+      var k = graph.keys[i];
+      var d = haversineM(ll, graph.nodes[k].ll);
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    return { key: best, dist: bestD };
+  }
+  function dijkstraSea(graph, startKey, endKey) {
+    if (!startKey || !endKey) return null;
+    if (startKey === endKey) return [startKey];
+    var dist = {}, prev = {}, used = {};
+    graph.keys.forEach(function (k) { dist[k] = Infinity; });
+    dist[startKey] = 0;
+    for (;;) {
+      var u = null, best = Infinity;
+      for (var i = 0; i < graph.keys.length; i++) {
+        var k = graph.keys[i];
+        if (!used[k] && dist[k] < best) { best = dist[k]; u = k; }
+      }
+      if (u === null || u === endKey) break;
+      used[u] = true;
+      var edges = graph.nodes[u].edges;
+      for (var e = 0; e < edges.length; e++) {
+        var v = edges[e].to, alt = dist[u] + edges[e].w;
+        if (alt < dist[v]) { dist[v] = alt; prev[v] = u; }
+      }
+    }
+    if (!isFinite(dist[endKey])) return null;
+    var path = [];
+    for (var cur = endKey; cur; cur = prev[cur]) {
+      path.push(cur);
+      if (cur === startKey) break;
+    }
+    path.reverse();
+    if (path[0] !== startKey) return null;
+    return path;
+  }
+  function seaRouteBetween(a, b) {
+    var graph = ensureSeaGraph();
+    var aa = [a.lat, a.lng], bb = [b.lat, b.lng];
+    var na = nearestSeaNode(aa, graph), nb = nearestSeaNode(bb, graph);
+    var keys = dijkstraSea(graph, na.key, nb.key);
+    var out = [L.latLng(a)];
+    if (keys) {
+      keys.forEach(function (k) {
+        var ll = graph.nodes[k].ll;
+        out.push(L.latLng(ll[0], ll[1]));
+      });
+    }
+    out.push(L.latLng(b));
+    var cleaned = [out[0]];
+    for (var i = 1; i < out.length; i++) {
+      if (cleaned[cleaned.length - 1].distanceTo(out[i]) > 2000) cleaned.push(out[i]);
+      else cleaned[cleaned.length - 1] = out[i];
+    }
+    return cleaned;
+  }
+  function seaRouteThroughPins(pins) {
+    if (typeof haversineM !== 'function' || typeof LANES === 'undefined') return null;
+    var all = [];
+    for (var i = 0; i < pins.length - 1; i++) {
+      var leg = seaRouteBetween(pins[i].getLatLng(), pins[i + 1].getLatLng());
+      if (!leg || leg.length < 2) return null;
+      if (i > 0) leg = leg.slice(1);
+      all = all.concat(leg);
+    }
+    return all;
   }
 
   /* ---------- The Whydah's voyage overlay (world mode) ---------- */
@@ -1501,8 +1894,9 @@
 
   /* ---------- Save / restore (this device) ---------- */
   function serialize() {
-    var out = { project: project, version: 2 };
+    var out = { project: project, version: 3 };
     ['world', 'chart'].forEach(function (k) {
+      ensureRoutesShape(work[k]);
       out[k] = {
         pins: work[k].pins.map(function (m) {
           if (m instanceof L.Marker) {
@@ -1511,7 +1905,10 @@
           }
           return { lat: m.lat, lng: m.lng, label: m.label || '', voice: m.voice || '', journal: m.journal || '', kind: m.kind || '', n: m.n || 0 };
         }),
-        route: work[k].route.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; })
+        routes: work[k].routes.map(function (track) {
+          return track.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; });
+        }),
+        activeRoute: work[k].activeRoute || 0
       };
     });
     return out;
@@ -1543,7 +1940,18 @@
           n: p.n || 0
         };
       });
-      work[k].route = (raw[k].route || []).map(function (a) { return L.latLng(a[0], a[1]); });
+      if (raw[k].routes && raw[k].routes.length) {
+        work[k].routes = raw[k].routes.map(function (track) {
+          return (track || []).map(function (a) { return L.latLng(a[0], a[1]); });
+        });
+      } else if (raw[k].route && raw[k].route.length) {
+        /* migrate v1/v2 single route */
+        work[k].routes = [raw[k].route.map(function (a) { return L.latLng(a[0], a[1]); })];
+      } else {
+        work[k].routes = [];
+      }
+      work[k].activeRoute = raw[k].activeRoute || 0;
+      ensureRoutesShape(work[k]);
     });
   }
   loadSaved();
@@ -1637,8 +2045,9 @@
       addPin(s.ll, { label: s.t, voice: '', journal: '' }, true);
     });
     /* connect starters with a rough route if empty */
-    if (!work.world.route.length) {
-      pack.forEach(function (s) { work.world.route.push(L.latLng(s.ll[0], s.ll[1])); });
+    if (!work.world.routes.length) {
+      work.world.routes = [pack.map(function (s) { return L.latLng(s.ll[0], s.ll[1]); })];
+      work.world.activeRoute = 0;
       drawRoute();
     }
     renumberPins();
@@ -1672,7 +2081,12 @@
     document.getElementById('tool-measure').classList.toggle('on', t === 'measure');
     updateMapCursor();
     if (t === 'pin') document.getElementById('hint').textContent = '📌 Tap-stop mode: tap the map to drop a numbered story stop, then write their voice.';
-    if (t === 'route') document.getElementById('hint').textContent = '✏️ Draw-route mode: tap leg by leg — or use 🔗 Route from stops to connect pins in order.';
+    if (t === 'route') document.getElementById('hint').textContent = '✏️ Route edit: tap to add on the active track · ➕ New route for a separate track · tap a leg → Split into two routes.';
+    if (t !== 'route') {
+      startNewRouteNext = false;
+      var nr = document.getElementById('tool-new-route');
+      if (nr) nr.classList.remove('on');
+    }
     if (t === 'measure') document.getElementById('hint').textContent = '📏 Measure mode: tap two points. Distance is in nautical miles (nm) — the unit sailors use.';
   }
   document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
@@ -1721,9 +2135,32 @@
     if (openSide('stops')) renderStopsList();
   };
   document.getElementById('stops-close').onclick = function () { closeSidePanels(); };
-  document.getElementById('stops-connect').onclick = connectPinsRoute;
+  document.getElementById('stops-connect').onclick = function () { connectPinsRoute(false); };
+  document.getElementById('stops-sea').onclick = function () {
+    if (mode !== 'world') { notice('Sea route needs the World map.'); return; }
+    connectPinsRoute(true);
+  };
   document.getElementById('stops-fit').onclick = fitAllStops;
-  document.getElementById('tool-connect').onclick = connectPinsRoute;
+  document.getElementById('tool-connect').onclick = function () { connectPinsRoute(false); };
+  document.getElementById('tool-sea').onclick = function () {
+    if (mode !== 'world') { notice('Sea route needs the World map (shipping lanes are lat/long).'); return; }
+    connectPinsRoute(true);
+  };
+  document.getElementById('tool-clear-route').onclick = clearRouteOnly;
+  document.getElementById('tool-new-route').onclick = beginNewRoute;
+  document.getElementById('seg-bend').onclick = function () {
+    if (!segMenuState) return;
+    insertRouteBend(segMenuState.routeIdx, segMenuState.i, segMenuState.latlng);
+  };
+  document.getElementById('seg-split').onclick = function () {
+    if (!segMenuState) return;
+    splitRouteAtLeg(segMenuState.routeIdx, segMenuState.i);
+  };
+  document.getElementById('seg-delete').onclick = function () {
+    if (!segMenuState) return;
+    deleteRouteLegPoint(segMenuState.routeIdx, segMenuState.i);
+  };
+  document.getElementById('seg-cancel').onclick = hideSegMenu;
   document.getElementById('tool-copy-voyage').onclick = copyWhydahVoyage;
   ['proj-student', 'proj-person', 'proj-title'].forEach(function (id) {
     document.getElementById(id).addEventListener('change', readProjectFields);
@@ -1757,6 +2194,7 @@
     if (e.key === 'Escape') {
       if (document.getElementById('pin-modal').classList.contains('open')) { closePinEditor(); return; }
       if (document.getElementById('tour-panel').classList.contains('open')) { exitTour(); return; }
+      if (document.getElementById('seg-menu').classList.contains('open')) { hideSegMenu(); return; }
       closeSidePanels();
     }
     if (document.getElementById('tour-panel').classList.contains('open')) {
@@ -1771,7 +2209,16 @@
     setTool(tool === 'measure' ? 'pin' : 'measure');
   };
   document.getElementById('tool-undo').onclick = function () {
-    if (tool === 'route' && work[mode].route.length) { work[mode].route.pop(); drawRoute(); saveNow(); return; }
+    if (tool === 'route') {
+      ensureRoutesShape(work[mode]);
+      var track = activeTrack();
+      if (track.length) {
+        track.pop();
+        if (!track.length) pruneEmptyRoutes();
+        drawRoute(); saveNow();
+        return;
+      }
+    }
     if (tool === 'measure') { clearMeasure(); document.getElementById('hint').textContent = '📏 Measure cleared. Tap two new points.'; return; }
     var arr = work[mode].pins;
     if (arr.length) { pinLayer.removeLayer(arr.pop()); renumberPins(); saveNow(); updateStat(); }
@@ -1780,7 +2227,8 @@
   document.getElementById('tool-clear').onclick = function () {
     if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. This cannot be undone.')) return;
     work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
-    work[mode] = { pins: [], route: [] };
+    work[mode] = { pins: [], routes: [], activeRoute: 0 };
+    startNewRouteNext = false;
     drawRoute(); saveNow(); updateStat(); exitTour(); clearMeasure(); renderStopsList();
   };
   document.getElementById('tool-export').onclick = function () {
@@ -1794,9 +2242,15 @@
           geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
         });
       });
-      if (d[k].route.length > 1) {
-        gj.features.push({ type: 'Feature', properties: { name: 'route', canvas: k }, geometry: { type: 'LineString', coordinates: d[k].route.map(function (a) { return [a[1], a[0]]; }) } });
-      }
+      (d[k].routes || []).forEach(function (track, ri) {
+        if (track.length > 1) {
+          gj.features.push({
+            type: 'Feature',
+            properties: { name: 'route', routeIndex: ri, canvas: k },
+            geometry: { type: 'LineString', coordinates: track.map(function (a) { return [a[1], a[0]]; }) }
+          });
+        }
+      });
     });
     var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
     var a = document.createElement('a');
@@ -1812,6 +2266,7 @@
       if (pirate.armed) parkPirate(e.latlng);
       return;
     }
+    hideSegMenu();
     if (tool === 'measure') {
       onMeasureClick(e.latlng);
       return;
