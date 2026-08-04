@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Map Studio · Navigating Piracy</title>
-<meta name="description" content="Build your own map of the Whydah story: drop pins, draw the route, measure the distance — on a modern map or the real 1717 chart. No account needed.">
+<meta name="description" content="Build your Showcase story map: pick your person, drop 8–10 pins in their voice, cite Journal pages, rehearse a live tour — on a modern map or the real 1717 chart. No account needed.">
 <script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
@@ -27,8 +27,14 @@
   .tbtn.on{background:var(--ox); color:var(--parch); border-color:var(--ox);}
   .tbtn.danger{border-color:var(--ox); color:var(--ox);}
   .tbtn.danger:hover{background:var(--ox); color:var(--parch);}
+  .tbtn:disabled{opacity:.45;cursor:not-allowed;}
+  .tgrp{display:inline-flex;flex-wrap:wrap;gap:.35em;align-items:center;padding:.15em .35em;border-radius:10px;background:rgba(255,255,255,.35);border:1px solid rgba(169,120,31,.35);}
+  .tgrp .tg{font-size:.68em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ox);padding:0 .25em;}
   .stat{font-size:.88em; font-weight:700; color:var(--ink2); background:#FBF4E2; border:1.5px dashed var(--brass); border-radius:8px; padding:.45em .7em;}
   #map{flex:1; min-height:340px; background:#cfe3ec;}
+  #map.cursor-pin{cursor:crosshair;}
+  #map.cursor-route{cursor:cell;}
+  #map.cursor-measure{cursor:crosshair;}
   .notice{position:absolute; z-index:1200; left:50%; transform:translateX(-50%); top:.6em; max-width:min(92vw,560px); background:var(--ox); color:var(--parch); font-size:.9em; font-weight:600; padding:.6em .9em; border-radius:8px; display:none; box-shadow:0 3px 10px rgba(0,0,0,.3);}
   .notice button{float:right; margin-left:.8em; background:none; border:1px solid var(--parch); color:var(--parch); border-radius:6px; cursor:pointer; font-weight:700;}
   .mapwrap{position:relative; flex:1; display:flex;}
@@ -48,31 +54,144 @@
   .leaflet-popup-content{font-family:"Segoe UI",system-ui,sans-serif;}
   .leaflet-popup-content b{color:var(--ox);}
   .pbtn{display:inline-block; margin:.35em .35em 0 0; padding:.3em .6em; border:1.5px solid var(--brass); border-radius:6px; background:#FBF4E2; font-weight:700; font-size:.85em; cursor:pointer;}
-  @media (max-width:560px){ .toolbar{gap:.3em;} .tbtn{font-size:.85em; padding:.45em .6em;} .stat{font-size:.8em;} }
+  .story-pin{background:var(--ox);color:var(--brassl);font:700 12px Georgia,serif;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brassl);box-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .story-pin.empty{background:var(--ink2);opacity:.85;}
+  .route-dot{width:12px;height:12px;border-radius:50%;background:#D8B25A;border:2px solid #12222B;box-shadow:0 1px 3px rgba(0,0,0,.45);}
+  .route-dot:hover{background:#F3E8CE;transform:scale(1.15);}
+  .seg-menu{position:absolute;z-index:1190;background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.35);padding:.55em .65em;display:none;min-width:11em;}
+  .seg-menu.open{display:block;}
+  .seg-menu p{font-size:.8em;color:var(--muted);font-style:italic;margin:0 0 .4em;}
+  .seg-menu .tbtn{display:block;width:100%;margin:.25em 0;font-size:.85em;}
+  .side{position:absolute;z-index:1160;top:.6em;width:min(92vw,360px);max-height:calc(100% - 1.2em);background:var(--parch);border:2px solid var(--brass);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;overflow:hidden;flex-direction:column;}
+  .side.open{display:flex;}
+  .side.left{left:.6em;}
+  .side.right{right:.6em;}
+  .side-head{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-weight:700;padding:.55em .8em;font-size:1.02em;flex:0 0 auto;}
+  .side-head .lb-sub{display:block;color:#C7BCA0;font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;font-style:italic;font-size:.78em;}
+  .side-head button{float:right;background:none;border:1px solid var(--brassl);color:var(--brassl);border-radius:6px;cursor:pointer;font-weight:700;margin:-.1em 0 0;}
+  .side-body{padding:.7em .8em .9em;overflow-y:auto;flex:1;}
+  .side label{display:block;font-size:.78em;font-weight:800;color:var(--ox);letter-spacing:.04em;text-transform:uppercase;margin:.55em 0 .2em;}
+  .side label:first-child{margin-top:0;}
+  .side input,.side select,.side textarea{width:100%;font:inherit;font-size:.95em;padding:.45em .55em;border:1.5px solid var(--brass);border-radius:6px;background:#FBF4E2;color:var(--inktx);}
+  .check{list-style:none;margin:.55em 0 0;padding:0;}
+  .check li{font-size:.88em;padding:.28em 0;border-bottom:1px dashed var(--parch2);display:flex;gap:.45em;align-items:flex-start;}
+  .check .mark{flex:0 0 auto;font-weight:800;color:var(--muted);}
+  .check .mark.ok{color:#2d6a3e;}
+  .check .mark.no{color:var(--ox);}
+  .starter{margin-top:.7em;padding-top:.55em;border-top:1px solid var(--parch2);}
+  .starter p{font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;}
+  .place-search{margin-bottom:.55em;}
+  .place-cat{font-size:.72em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ox);margin:.7em 0 .3em;border-bottom:1px solid var(--parch2);padding-bottom:.15em;}
+  .place-row{display:flex;gap:.35em;align-items:flex-start;padding:.4em 0;border-bottom:1px dashed var(--parch2);}
+  .place-row .info{flex:1;min-width:0;}
+  .place-row .info b{display:block;font-size:.92em;color:var(--ink2);}
+  .place-row .info span{display:block;font-size:.78em;color:var(--muted);font-style:italic;}
+  .place-row .acts{display:flex;flex-direction:column;gap:.25em;flex:0 0 auto;}
+  .place-row .acts .tbtn{font-size:.78em;padding:.28em .5em;}
+  .stop-row{display:flex;gap:.4em;align-items:flex-start;padding:.45em 0;border-bottom:1px dashed var(--parch2);}
+  .stop-row .num{flex:0 0 auto;width:1.6em;height:1.6em;border-radius:50%;background:var(--ox);color:var(--brassl);font:700 12px Georgia,serif;display:flex;align-items:center;justify-content:center;}
+  .stop-row .num.miss{background:var(--ink2);}
+  .stop-row .info{flex:1;min-width:0;}
+  .stop-row .info b{display:block;font-size:.92em;}
+  .stop-row .info span{display:block;font-size:.78em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stop-row .acts{display:flex;flex-wrap:wrap;gap:.2em;flex:0 0 auto;max-width:7.5em;justify-content:flex-end;}
+  .stop-row .acts .tbtn{font-size:.75em;padding:.22em .4em;}
+  .kind-row{display:flex;flex-wrap:wrap;gap:.3em;margin:.25em 0 .4em;}
+  .kind{border:1.5px solid var(--brass);background:#FBF4E2;color:var(--inktx);font-size:.78em;font-weight:700;padding:.28em .55em;border-radius:999px;cursor:pointer;}
+  .kind.on{background:var(--ox);color:var(--parch);border-color:var(--ox);}
+  .modal-bg{position:fixed;inset:0;z-index:2000;background:rgba(18,34,43,.55);display:none;align-items:center;justify-content:center;padding:1em;}
+  .modal-bg.open{display:flex;}
+  .modal{width:min(94vw,440px);background:var(--parch);border:2px solid var(--brass);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);overflow:hidden;}
+  .modal h2{background:var(--ink);color:var(--brassl);font-family:Georgia,serif;font-size:1.1em;padding:.65em .9em;}
+  .modal .body{padding:.85em .9em 1em;}
+  .modal label{display:block;font-size:.78em;font-weight:800;color:var(--ox);letter-spacing:.04em;text-transform:uppercase;margin:.5em 0 .2em;}
+  .modal input,.modal textarea{width:100%;font:inherit;font-size:.95em;padding:.45em .55em;border:1.5px solid var(--brass);border-radius:6px;background:#FBF4E2;color:var(--inktx);}
+  .modal textarea{min-height:5.5em;resize:vertical;}
+  .modal .hint-sm{font-size:.78em;color:var(--muted);font-style:italic;margin:.2em 0 .1em;}
+  .modal .actions{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.85em;}
+  .tour{position:absolute;z-index:1180;left:50%;transform:translateX(-50%);bottom:.7em;width:min(94vw,560px);background:var(--ink);color:var(--parch);border:2px solid var(--brassl);border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.45);display:none;padding:.85em 1em;}
+  .tour.open{display:block;}
+  .tour .who{color:var(--brassl);font-size:.78em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+  .tour .stop{font-family:Georgia,serif;font-size:1.15em;margin:.15em 0 .35em;}
+  .tour .voice{font-size:.95em;line-height:1.4;color:#EAD9B4;font-style:italic;}
+  .tour .cite{font-size:.8em;color:#C7BCA0;margin-top:.45em;}
+  .tour .nav{display:flex;gap:.4em;margin-top:.7em;flex-wrap:wrap;align-items:center;}
+  .tour .nav .tbtn{background:#1C3743;color:var(--parch);border-color:var(--brassl);}
+  .tour .nav .tbtn:hover{background:var(--brass);}
+  .tour .count{margin-left:auto;font-size:.85em;color:var(--brassl);font-weight:700;}
+  .measure-tip{position:absolute;z-index:1170;pointer-events:none;background:var(--ink);color:var(--brassl);font-weight:700;font-size:.85em;padding:.35em .55em;border-radius:6px;border:1px solid var(--brassl);display:none;}
+  .sheet{display:none;}
+  @media print{
+    body *{visibility:hidden !important;}
+    .sheet,.sheet *{visibility:visible !important;}
+    .sheet{display:block !important;position:absolute;left:0;top:0;width:100%;padding:0;background:white;color:#000;}
+    .sheet h1{font-family:Georgia,serif;font-size:1.6em;margin:0 0 .2em;}
+    .sheet .meta{color:#444;font-style:italic;margin-bottom:1em;}
+    .sheet .stop{border-top:1px solid #999;padding:.7em 0;page-break-inside:avoid;}
+    .sheet .stop h3{margin:0 0 .25em;font-family:Georgia,serif;}
+    .sheet .voice{font-style:italic;margin:.2em 0;}
+    .sheet .cite{font-size:.9em;color:#444;}
+  }
+  @media (max-width:720px){
+    .toolbar{gap:.3em;justify-content:flex-start;}
+    .tbtn{font-size:.82em; padding:.42em .55em;}
+    .stat{font-size:.78em;}
+    .tgrp{width:100%;}
+    .side.left,.side.right{left:.35em;right:.35em;width:auto;}
+  }
 </style>
 </head>
 <body>
 
 <header class="hero">
   <h1>🗺️ Map Studio</h1>
-  <span class="sub">Your map. Your pins. Your story. Everything saves on this device — no account, no login.</span>
+  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Autosaves here · Download a backup for shared Chromebooks.</span>
 </header>
 
-<div class="toolbar" role="toolbar" aria-label="Map tools">
-  <button class="tbtn" id="mode-world" title="Modern world map">🌍 World</button>
-  <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart">📜 1717 Chart</button>
-  <button class="tbtn" id="mode-doors" title="Where the world's ships squeeze through">🚢 Chokepoints</button>
-  <button class="tbtn" id="mode-globe" title="The same ocean, as a planet">🌐 Globe</button>
-  <span style="width:.6em"></span>
-  <button class="tbtn" id="tool-pin">📌 Pin</button>
-  <button class="tbtn" id="tool-route">✏️ Route</button>
-  <button class="tbtn" id="tool-undo">↩ Undo</button>
-  <button class="tbtn" id="tool-voyage">⚓ Whydah's voyage</button>
-  <button class="tbtn" id="tool-export">💾 Download</button>
-  <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
-  <span class="stat" id="stat">0 pins · route 0 nm</span>
+<div class="toolbar" role="toolbar" aria-label="Choose a map">
+  <span class="tgrp" id="build-modes">
+    <span class="tg">Build</span>
+    <button class="tbtn" id="mode-world" title="Modern world map — best for story maps">🌍 World</button>
+    <button class="tbtn" id="mode-chart" title="Cyprian Southack's 1717 chart — offline">📜 1717 Chart</button>
+  </span>
+  <span class="tgrp" id="explore-modes">
+    <span class="tg">Explore</span>
+    <button class="tbtn" id="mode-doors" title="Watch modern shipping choke points (not for drawing)">🚢 Chokepoints</button>
+    <button class="tbtn" id="mode-globe" title="Spin the same ocean as a planet">🌐 Globe</button>
+  </span>
+  <span class="stat" id="stat">0 pins · need 8</span>
 </div>
-<div class="hint" id="hint">Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship's track leg by leg.</div>
+<div class="toolbar" id="studio-bar" role="toolbar" aria-label="Add to your map">
+  <span class="tgrp">
+    <span class="tg">Add</span>
+    <button class="tbtn" id="tool-pin" title="Tap the map to drop a numbered story stop">📌 Tap stop</button>
+    <button class="tbtn" id="tool-places" title="Pick a known place from the Whydah story">📍 Places</button>
+    <button class="tbtn" id="tool-route" title="Draw on the active track — tap dots to delete, tap a leg to bend/split">✏️ Draw route</button>
+    <button class="tbtn" id="tool-new-route" title="Start a separate route (doesn’t connect to the last one)">➕ New route</button>
+    <button class="tbtn" id="tool-connect" title="Straight lines through your stops in order">🔗 Straight route</button>
+    <button class="tbtn" id="tool-sea" title="Route between stops along sea lanes — goes around land">🌊 Sea route</button>
+    <button class="tbtn" id="tool-clear-route" title="Clear all routes (keeps your pins)">✂ Clear routes</button>
+    <button class="tbtn" id="tool-measure" title="Tap two points to measure nautical miles">📏 Measure</button>
+    <button class="tbtn" id="tool-undo" title="Undo last route point or stop">↩ Undo</button>
+  </span>
+  <span class="tgrp">
+    <span class="tg">Reference</span>
+    <button class="tbtn" id="tool-voyage" title="Show the documented Whydah voyage (read-only)">⚓ Whydah voyage</button>
+    <button class="tbtn" id="tool-copy-voyage" title="Copy the 8 Whydah stops into YOUR editable map">⧉ Copy voyage</button>
+  </span>
+  <span class="tgrp">
+    <span class="tg">Project</span>
+    <button class="tbtn" id="tool-project" title="Your person, title, and Showcase checklist">📋 My project</button>
+    <button class="tbtn" id="tool-stops" title="List, reorder, and edit your stops">📑 Stops</button>
+    <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
+    <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
+    <button class="tbtn" id="tool-export" title="Save a backup file you can bring to any Chromebook">💾 Download</button>
+    <button class="tbtn" id="tool-import" title="Open a story-map file you downloaded earlier">📂 Import</button>
+    <input type="file" id="import-file" accept=".geojson,.json,application/geo+json,application/json" hidden>
+    <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
+  </span>
+</div>
+<div class="hint" id="hint">Start with <b>📍 Places</b> or <b>📌 Tap stop</b>. Aim for 8–10 numbered stops in your person’s voice.</div>
 <div class="toolbar" id="doors-bar" style="display:none; border-bottom:2px solid var(--ox);">
   <button class="tbtn" id="jump-all">🌍 Whole ocean</button>
   <button class="tbtn" id="jump-suez">Suez</button>
@@ -95,18 +214,129 @@
 </div>
 
 <div class="mapwrap">
-  <div class="notice" id="notice"><button onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
+  <div class="notice" id="notice"><button type="button" onclick="this.parentNode.style.display='none'">✕</button><span id="notice-text"></span></div>
+  <div class="measure-tip" id="measure-tip"></div>
+
+  <div class="side left" id="proj-panel" role="dialog" aria-label="My story-map project">
+    <div class="side-head">📋 My story map <span class="lb-sub">for the Showcase · autosaves here</span>
+      <button type="button" id="proj-close" aria-label="Close">✕</button></div>
+    <div class="side-body">
+      <label for="proj-student">Your name</label>
+      <input id="proj-student" type="text" maxlength="48" placeholder="What visitors should see on the sheet" autocomplete="name">
+      <label for="proj-person">Your person</label>
+      <select id="proj-person">
+        <option value="">— pick whose story you’re telling —</option>
+        <option>Sam Bellamy</option>
+        <option>John King</option>
+        <option>John Julian</option>
+        <option>Thomas Davis</option>
+        <option>Paulsgrave Williams</option>
+        <option>Maria Hallett</option>
+        <option>Philip Ashton</option>
+        <option>Cyprian Southack</option>
+        <option>Barry Clifford</option>
+        <option>Sir Humphrey Morice</option>
+        <option>Hendrick Quintor</option>
+        <option>John Lambert</option>
+        <option>Other / pitch my own</option>
+      </select>
+      <label for="proj-title">Map title</label>
+      <input id="proj-title" type="text" maxlength="80" placeholder="e.g. John Julian’s Course — in his voice">
+      <label>Showcase checklist</label>
+      <ul class="check" id="proj-check"></ul>
+      <div class="starter" id="starter-box">
+        <p>Stuck on where to pin? Drop a starter pack of places for your person — then rewrite every stop in their voice.</p>
+        <button type="button" class="tbtn" id="tool-starter">📍 Drop starter pins</button>
+      </div>
+      <div class="starter" id="backup-box">
+        <p><b>Shared Chromebook?</b> Download a backup file before you log out. On the next machine, Import that same file to pick up where you left off.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.35em;">
+          <button type="button" class="tbtn" id="proj-export">💾 Download backup</button>
+          <button type="button" class="tbtn on" id="proj-import">📂 Import backup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="side left" id="places-panel" role="dialog" aria-label="Places library">
+    <div class="side-head">📍 Places <span class="lb-sub">tap Add — then write the voice</span>
+      <button type="button" id="places-close" aria-label="Close">✕</button></div>
+    <div class="side-body">
+      <input class="place-search" id="place-search" type="search" placeholder="Search places…" aria-label="Search places">
+      <div id="places-list"></div>
+    </div>
+  </div>
+
+  <div class="side right" id="stops-panel" role="dialog" aria-label="Your story stops">
+    <div class="side-head">📑 Your stops <span class="lb-sub">reorder = Showcase story order</span>
+      <button type="button" id="stops-close" aria-label="Close">✕</button></div>
+    <div class="side-body">
+      <p class="hint-sm" style="font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;">Up/down changes the tour order. Incomplete stops stay dark until voice + Journal are filled.</p>
+      <div id="stops-list"></div>
+      <div class="starter" style="display:flex;flex-wrap:wrap;gap:.35em;">
+        <button type="button" class="tbtn" id="stops-connect">🔗 Straight route</button>
+        <button type="button" class="tbtn" id="stops-sea">🌊 Sea route</button>
+        <button type="button" class="tbtn" id="stops-fit">⤢ Fit all</button>
+      </div>
+    </div>
+  </div>
+
   <div class="lb" id="lb-panel">
     <div class="lb-head">🏆 Pirate Leaderboard <span class="lb-sub">best 60-second voyages on this device</span>
-      <button onclick="document.getElementById('lb-panel').style.display='none'">✕</button></div>
+      <button type="button" onclick="document.getElementById('lb-panel').style.display='none'">✕</button></div>
     <ol id="lb-list"></ol>
     <div class="lb-foot">Park your pirate to start a 60-second voyage. 🟡 cargo = 1 · ⬛ tanker = 2 · 🟣 treasure = 5.</div>
+  </div>
+  <div class="tour" id="tour-panel" role="dialog" aria-label="Story tour">
+    <div class="who" id="tour-who"></div>
+    <div class="stop" id="tour-stop"></div>
+    <div class="voice" id="tour-voice"></div>
+    <div class="cite" id="tour-cite"></div>
+    <div class="nav">
+      <button type="button" class="tbtn" id="tour-prev">← Prev</button>
+      <button type="button" class="tbtn" id="tour-next">Next →</button>
+      <button type="button" class="tbtn" id="tour-exit">Exit tour</button>
+      <span class="count" id="tour-count"></span>
+    </div>
+  </div>
+  <div class="seg-menu" id="seg-menu" role="dialog" aria-label="Edit route leg">
+    <p id="seg-menu-label">This route leg</p>
+    <button type="button" class="tbtn on" id="seg-bend">⤵ Add bend (drag around land)</button>
+    <button type="button" class="tbtn danger" id="seg-split">✂ Split into two routes</button>
+    <button type="button" class="tbtn danger" id="seg-delete">🗑 Delete this leg’s point</button>
+    <button type="button" class="tbtn" id="seg-cancel">Cancel</button>
   </div>
   <div id="map"></div>
 </div>
 
+<div class="modal-bg" id="pin-modal" role="dialog" aria-modal="true" aria-labelledby="pin-modal-title">
+  <div class="modal">
+    <h2 id="pin-modal-title">Story pin</h2>
+    <div class="body">
+      <label for="pin-label">Place / stop name</label>
+      <input id="pin-label" type="text" maxlength="80" placeholder="Where is this stop?">
+      <label>Stop type <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">(optional)</span></label>
+      <div class="kind-row" id="pin-kinds" role="group" aria-label="Stop type"></div>
+      <label for="pin-voice">In their voice</label>
+      <p class="hint-sm">2–4 sentences as your person. What do they see, fear, choose, or remember here?</p>
+      <textarea id="pin-voice" maxlength="600" placeholder="Write as them — not about them."></textarea>
+      <label for="pin-journal">Journal evidence</label>
+      <p class="hint-sm">Which Voyage Journal page backs this stop? (e.g. Day 9 · push/pull card)</p>
+      <input id="pin-journal" type="text" maxlength="80" placeholder="Day __ · page / artifact">
+      <div class="actions">
+        <button type="button" class="tbtn on" id="pin-save">Save pin</button>
+        <button type="button" class="tbtn" id="pin-cancel">Cancel</button>
+        <button type="button" class="tbtn danger" id="pin-delete" style="display:none">🗑 Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="story-sheet" aria-hidden="true"></div>
+
 <footer class="foot">
-  Building the story-map format? You want 8–10 pins, each in your person's voice. <a href="choose-your-project.html">The project menu →</a> · <a href="/">⚓ Crew deck</a>
+  <b>Add</b> stops · <b>💾 Download</b> a backup for shared Chromebooks · <b>📂 Import</b> to continue on another machine.
+  <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
 <script>
@@ -114,7 +344,10 @@
   'use strict';
   L.Icon.Default.imagePath = 'vendor/leaflet/images/';
 
-  var SAVE_KEY = 'whydah-map-studio-v1';
+  var SAVE_KEY = 'whydah-map-studio-v2';
+  var SAVE_KEY_LEGACY = 'whydah-map-studio-v1';
+
+  var project = { student: '', person: '', title: '' };
 
   /* ---------- The Whydah's documented voyage, 1715–1984 ---------- */
   var VOYAGE = [
@@ -128,6 +361,155 @@
     { n: 8, ll: [42.522, -70.895], t: 'Salem · found again',  d: '1984: Barry Clifford reads Southack’s 267-year-old mark and finds her. The bell proves it: THE WHYDAH GALLY 1716. You met the finds at Real Pirates.' }
   ];
   var VOYAGE_LINE = VOYAGE.map(function (w) { return w.ll; });
+
+  var PIN_KINDS = [
+    { id: '', label: 'None' },
+    { id: 'begin', label: 'Beginning' },
+    { id: 'choice', label: 'Choice' },
+    { id: 'capture', label: 'Capture' },
+    { id: 'voyage', label: 'At sea' },
+    { id: 'storm', label: 'Storm / wreck' },
+    { id: 'aftermath', label: 'Aftermath' },
+    { id: 'modern', label: 'Modern' },
+    { id: 'evidence', label: 'Evidence' }
+  ];
+  var kindLabel = {};
+  PIN_KINDS.forEach(function (k) { if (k.id) kindLabel[k.id] = k.label; });
+
+  /* Curated places students can add without hunting the ocean. World mode only. */
+  var PLACES = [
+    { cat: 'Whydah voyage', t: 'London, 1715', ll: [51.507, -0.128], note: 'Built as a slave ship' },
+    { cat: 'Whydah voyage', t: 'Ouidah, West Africa', ll: [6.367, 2.083], note: 'The port she was named for' },
+    { cat: 'Whydah voyage', t: 'Caribbean hunting grounds', ll: [17.97, -76.87], note: '1716–17 prizes' },
+    { cat: 'Whydah voyage', t: 'Windward Passage', ll: [19.9, -73.9], note: 'Where the Whydah was taken' },
+    { cat: 'Whydah voyage', t: 'Carolinas run north', ll: [33.9, -76.5], note: 'Dead reckoning coast' },
+    { cat: 'Whydah voyage', t: 'Wreck · Wellfleet', ll: [41.891, -69.957], note: '26 April 1717' },
+    { cat: 'Whydah voyage', t: 'Southack’s mark', ll: [41.93, -69.98], note: 'May 1717 chart mark' },
+    { cat: 'Whydah voyage', t: 'Salem · found again', ll: [42.522, -70.895], note: '1984 discovery / museum' },
+    { cat: 'Cape & Salem', t: 'Boston', ll: [42.36, -71.06], note: 'Trial, gallows, papers' },
+    { cat: 'Cape & Salem', t: 'Wellfleet dunes', ll: [41.93, -70.03], note: 'Cape Cod shore' },
+    { cat: 'Cape & Salem', t: 'Provincetown', ll: [42.058, -70.179], note: 'Southack’s salvage start' },
+    { cat: 'Cape & Salem', t: 'Marblehead', ll: [42.5, -70.86], note: 'Philip Ashton’s home' },
+    { cat: 'Cape & Salem', t: 'Block Island', ll: [41.17, -71.58], note: 'Williams visits family' },
+    { cat: 'Cape & Salem', t: 'Rhode Island', ll: [41.49, -71.31], note: 'Williams’s world' },
+    { cat: 'Cape & Salem', t: 'Real Pirates Salem', ll: [42.521, -70.888], note: '285 Derby St museum' },
+    { cat: 'Caribbean', t: 'Nassau / New Providence', ll: [25.06, -77.345], note: 'Pirate republic waters' },
+    { cat: 'Caribbean', t: 'Jamaica', ll: [17.97, -76.79], note: 'Sugar & navy base' },
+    { cat: 'Caribbean', t: 'Hispaniola north coast', ll: [19.8, -72.7], note: 'Near the Passage' },
+    { cat: 'Caribbean', t: 'Antigua', ll: [17.12, -61.85], note: 'John King’s mother’s ship' },
+    { cat: 'Caribbean', t: 'Florida wreck coast', ll: [27.5, -80.3], note: '1715 treasure fleet' },
+    { cat: 'Atlantic doors', t: 'Straits of Florida', ll: [23.9, -81.0], note: 'Treasure highway' },
+    { cat: 'Atlantic doors', t: 'Gibraltar', ll: [35.95, -5.6], note: 'Med door' },
+    { cat: 'Atlantic doors', t: 'Cape of Good Hope', ll: [-34.8, 19.0], note: 'The long way' },
+    { cat: 'People & origins', t: 'Hittisleigh, Devon', ll: [50.77, -3.75], note: 'Bellamy’s birthplace' },
+    { cat: 'People & origins', t: 'Mosquito Coast', ll: [14.5, -83.5], note: 'Julian’s home waters' },
+    { cat: 'People & origins', t: 'Wales', ll: [51.48, -3.18], note: 'Thomas Davis' },
+    { cat: 'People & origins', t: 'Roatán', ll: [16.3, -86.55], note: 'Ashton’s island exile' }
+  ];
+
+  /* Suggested stops for Showcase story maps — places only; students write the voice. */
+  var STARTERS = {
+    'Sam Bellamy': [
+      { ll: [50.77, -3.75], t: 'Hittisleigh, Devon' },
+      { ll: [41.7, -70.2], t: 'Cape Cod salvage dreams' },
+      { ll: [27.0, -80.2], t: 'Florida wreck gold rush' },
+      { ll: [19.9, -73.9], t: 'Windward Passage — taking the Whydah' },
+      { ll: [17.97, -76.87], t: 'Caribbean hunting grounds' },
+      { ll: [33.9, -76.5], t: 'North along the Carolinas' },
+      { ll: [41.891, -69.957], t: 'Wrecked off Wellfleet' },
+      { ll: [42.36, -71.06], t: 'Boston — the legend after' }
+    ],
+    'John King': [
+      { ll: [17.12, -61.85], t: 'Antigua — mother’s ship' },
+      { ll: [18.2, -63.0], t: 'Choosing the pirate life' },
+      { ll: [19.9, -73.9], t: 'Aboard the Whydah' },
+      { ll: [25.0, -77.4], t: 'Bahamas prizes' },
+      { ll: [33.9, -76.5], t: 'The run north' },
+      { ll: [41.891, -69.957], t: 'The storm' },
+      { ll: [41.93, -69.98], t: 'Shoe and stocking on the sand' },
+      { ll: [42.52, -70.89], t: 'Seen again at Real Pirates' }
+    ],
+    'John Julian': [
+      { ll: [14.5, -83.5], t: 'Mosquito Coast — home' },
+      { ll: [17.97, -76.87], t: 'Caribbean — hired as pilot' },
+      { ll: [19.9, -73.9], t: 'Steering the Whydah' },
+      { ll: [41.891, -69.957], t: 'Surviving the wreck' },
+      { ll: [42.36, -71.06], t: 'Boston — sold, not tried' },
+      { ll: [42.25, -71.0], t: 'Braintree — John Quincy’s household' },
+      { ll: [42.40, -71.05], t: 'Escape attempts' },
+      { ll: [42.358, -71.059], t: 'Hanged, 1733' }
+    ],
+    'Thomas Davis': [
+      { ll: [51.48, -3.18], t: 'Wales — a carpenter’s life' },
+      { ll: [19.9, -73.9], t: 'Forced aboard' },
+      { ll: [17.97, -76.87], t: 'Working the prizes' },
+      { ll: [33.9, -76.5], t: 'North with the fleet' },
+      { ll: [41.891, -69.957], t: 'Surviving Wellfleet' },
+      { ll: [42.36, -71.06], t: 'Boston trial' },
+      { ll: [42.36, -71.06], t: 'Proving he never chose it' },
+      { ll: [42.52, -70.89], t: 'What the record kept' }
+    ],
+    'Paulsgrave Williams': [
+      { ll: [41.49, -71.31], t: 'Rhode Island — silversmith’s son' },
+      { ll: [27.0, -80.2], t: 'Florida salvage partnership' },
+      { ll: [19.9, -73.9], t: 'With Bellamy in the Passage' },
+      { ll: [17.97, -76.87], t: 'Marianne — partner captain' },
+      { ll: [41.17, -71.58], t: 'Block Island — visiting family' },
+      { ll: [41.891, -69.957], t: 'The storm he missed' },
+      { ll: [42.36, -71.06], t: 'Boston hears of the wreck' },
+      { ll: [41.49, -71.31], t: 'Vanished from the record' }
+    ],
+    'Maria Hallett': [
+      { ll: [41.93, -70.03], t: 'Cape Cod dunes' },
+      { ll: [41.7, -70.2], t: 'Where legend says they met' },
+      { ll: [41.891, -69.957], t: 'Watching the wreck?' },
+      { ll: [41.93, -69.98], t: 'Southack’s mark nearby' },
+      { ll: [42.36, -71.06], t: 'Boston papers — no Maria' },
+      { ll: [41.93, -70.03], t: 'The legend vs. the record' },
+      { ll: [42.52, -70.89], t: 'Museum retellings' },
+      { ll: [41.93, -70.03], t: 'Whose story is this?' }
+    ],
+    'Philip Ashton': [
+      { ll: [42.5, -70.86], t: 'Marblehead — fisherman' },
+      { ll: [42.5, -70.86], t: 'Seized by pirates' },
+      { ll: [17.97, -76.87], t: 'Refusing to join' },
+      { ll: [16.7, -62.2], t: 'Roatán — two years alone' },
+      { ll: [16.7, -62.2], t: 'Surviving the island' },
+      { ll: [42.5, -70.86], t: 'Home to a town that thought him dead' },
+      { ll: [42.36, -71.06], t: 'The 1725 memoir' },
+      { ll: [42.52, -70.89], t: 'Salem’s living memory of piracy' }
+    ],
+    'Cyprian Southack': [
+      { ll: [42.36, -71.06], t: 'Boston — ordered to salvage' },
+      { ll: [41.93, -69.98], t: 'Wellfleet — too late' },
+      { ll: [41.891, -69.957], t: 'Marking the wreck' },
+      { ll: [41.7, -70.2], t: 'Cape Cod chart work' },
+      { ll: [44.6, -66.0], t: 'Bay of Fundy charts' },
+      { ll: [42.36, -71.06], t: 'Report to the governor' },
+      { ll: [41.93, -69.98], t: 'The ink that outlived him' },
+      { ll: [42.52, -70.89], t: '1984 — Clifford reads the mark' }
+    ],
+    'Barry Clifford': [
+      { ll: [41.93, -70.03], t: 'Cape Cod — believing the legend' },
+      { ll: [41.93, -69.98], t: 'Reading Southack’s chart' },
+      { ll: [41.891, -69.957], t: '1984 — the find' },
+      { ll: [41.891, -69.957], t: 'THE WHYDAH GALLY 1716' },
+      { ll: [41.93, -69.98], t: 'Decades of raising her' },
+      { ll: [42.52, -70.89], t: 'Real Pirates Salem' },
+      { ll: [42.36, -71.06], t: 'Telling the crew’s story' },
+      { ll: [41.891, -69.957], t: 'What still lies below' }
+    ],
+    'Sir Humphrey Morice': [
+      { ll: [51.507, -0.128], t: 'London — MP and money' },
+      { ll: [51.507, -0.128], t: 'Ordering a slave ship built' },
+      { ll: [6.367, 2.083], t: 'Ouidah — the name on the stern' },
+      { ll: [13.0, -59.5], t: 'Middle Passage routes' },
+      { ll: [19.9, -73.9], t: 'Lost to Bellamy, Feb 1717' },
+      { ll: [51.507, -0.128], t: 'The investment written off' },
+      { ll: [51.507, -0.128], t: 'Never touched a deck' },
+      { ll: [41.891, -69.957], t: 'The wreck that outlived the ledger' }
+    ]
+  };
 
   /* ---------- Basemaps (several hosts — if school wifi blocks one, try another) ---------- */
   var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Imagery © Esri' });
@@ -143,14 +525,21 @@
   var mode = 'world';                       /* 'world' | 'chart' */
   var chartImg = null;
 
-  /* per-mode student work (doors mode has no pins — it's for watching, not drawing) */
-  var work = { world: { pins: [], route: [] }, chart: { pins: [], route: [] }, doors: { pins: [], route: [] } };
+  /* per-mode student work (doors mode has no pins — it's for watching, not drawing)
+     routes: array of independent tracks; each track is an array of LatLngs */
+  var work = {
+    world: { pins: [], routes: [], activeRoute: 0 },
+    chart: { pins: [], routes: [], activeRoute: 0 },
+    doors: { pins: [], routes: [], activeRoute: 0 }
+  };
   var pinLayer = null;
-  var routeLine = null;
+  var routeLine = null; /* unused; kept null — multi-route lives on routeEditLayer */
+  var routeEditLayer = null;
   var voyageLayer = null;
   var voyageOn = false;
   var tool = 'pin';
   var tileFailures = 0;
+  var startNewRouteNext = false; /* next draw tap begins a fresh independent track */
 
   function notice(msg) {
     document.getElementById('notice-text').textContent = msg;
@@ -169,14 +558,18 @@
   function freshMap(crs) {
     /* Leaflet can't change CRS on a live map — tear down and rebuild */
     stopTraffic();
+    clearMeasure();
+    hideSegMenu();
     if (map) { try { map.remove(); } catch (_) {} }
     detachPins();
     routeLine = null;
+    routeEditLayer = null;
     voyageLayer = null;
     chartImg = null;
     map = L.map('map', { zoomControl: true, worldCopyJump: crs !== L.CRS.Simple, crs: crs, preferCanvas: true });
     pinLayer = L.layerGroup().addTo(map);
     map.on('click', onMapClick);
+    updateMapCursor();
     return map;
   }
 
@@ -184,7 +577,10 @@
     /* live markers survive as plain data so they can rehydrate later */
     ['world', 'chart'].forEach(function (k) {
       work[k].pins = work[k].pins.map(function (m) {
-        if (m instanceof L.Marker) { var ll = m.getLatLng(); return { lat: ll.lat, lng: ll.lng, label: m._label || '' }; }
+        if (m instanceof L.Marker) {
+          var ll = m.getLatLng();
+          return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', kind: m._kind || '', n: m._n || 0 };
+        }
         return m;
       });
     });
@@ -192,6 +588,8 @@
 
   function enterWorld() {
     saveNow();
+    exitTour();
+    clearMeasure();
     mode = 'world';
     freshMap(L.CRS.EPSG3857);
     map.setMinZoom(2); map.setMaxZoom(19);
@@ -201,11 +599,13 @@
     restoreWork();
     if (voyageOn) { voyageOn = false; showVoyage(); }
     setModeButtons();
-    document.getElementById('hint').textContent = 'Pick a tool, then tap the map. 📌 Pin drops a labeled marker · ✏️ Route draws your ship’s track leg by leg.';
+    document.getElementById('hint').textContent = 'Start with 📍 Places or 📌 Tap stop. Aim for 8–10 numbered stops in your person’s voice.';
   }
 
   function enterChart() {
     saveNow();
+    exitTour();
+    clearMeasure();
     mode = 'chart';
     freshMap(L.CRS.Simple);
     map.setMinZoom(-2); map.setMaxZoom(3);
@@ -221,13 +621,28 @@
     document.getElementById('mode-chart').classList.toggle('on', mode === 'chart');
     document.getElementById('mode-doors').classList.toggle('on', mode === 'doors');
     document.getElementById('mode-globe').classList.toggle('on', mode === 'globe');
-    document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
     var studio = (mode !== 'doors' && mode !== 'globe');
-    ['tool-pin', 'tool-route', 'tool-undo', 'tool-export', 'tool-clear'].forEach(function (id) {
-      document.getElementById(id).style.display = studio ? '' : 'none';
-    });
+    document.getElementById('studio-bar').style.display = studio ? 'flex' : 'none';
     document.getElementById('doors-bar').style.display = studio ? 'none' : 'flex';
-    if (studio) document.getElementById('lb-panel').style.display = 'none';
+    document.getElementById('tool-voyage').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-copy-voyage').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-places').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-measure').style.display = (mode === 'world') ? '' : 'none';
+    document.getElementById('tool-sea').style.display = (mode === 'world') ? '' : 'none';
+    var stopsSea = document.getElementById('stops-sea');
+    if (stopsSea) stopsSea.style.display = (mode === 'world') ? '' : 'none';
+    if (!studio) {
+      document.getElementById('lb-panel').style.display = 'none';
+      closeSidePanels();
+      exitTour();
+      clearMeasure();
+      hideSegMenu();
+    } else if (mode === 'chart') {
+      document.getElementById('places-panel').classList.remove('open');
+      document.getElementById('tool-places').classList.remove('on');
+    }
+    renderChecklist();
+    updateMapCursor();
   }
   function applyToggles() {
     document.getElementById('toggle-ports').classList.toggle('on', showPorts);
@@ -241,63 +656,785 @@
     }
   }
 
-  /* ---------- Pins ---------- */
-  function addPin(latlng, label, skipSave) {
-    var m = L.marker(latlng, { draggable: true }).addTo(pinLayer);
+  /* ---------- Pins (story-map stops) ---------- */
+  var editingPin = null;
+  var pendingLatLng = null;
+  var pendingKind = '';
+  var tourIdx = -1;
+  var measurePts = [];
+  var measureLayer = null;
+
+  function pinData(m) {
+    return {
+      label: m._label || '',
+      voice: m._voice || '',
+      journal: m._journal || '',
+      kind: m._kind || '',
+      n: typeof m._n === 'number' ? m._n : 0
+    };
+  }
+  function pinIsComplete(m) {
+    var d = (m instanceof L.Marker) ? pinData(m) : m;
+    return !!(d.label && d.label.trim() && d.voice && d.voice.trim() && d.journal && d.journal.trim());
+  }
+  function storyIcon(n, complete) {
+    return L.divIcon({
+      className: '',
+      html: '<div class="story-pin' + (complete ? '' : ' empty') + '">' + (n || '·') + '</div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+  }
+  function renumberPins() {
+    work[mode].pins.forEach(function (m, i) {
+      if (!(m instanceof L.Marker)) return;
+      m._n = i + 1;
+      m.setIcon(storyIcon(m._n, pinIsComplete(m)));
+    });
+    renderStopsList();
+  }
+  function addPin(latlng, data, skipSave) {
+    data = data || {};
+    var label = data.label || '';
+    var voice = data.voice || '';
+    var journal = data.journal || '';
+    var kind = data.kind || '';
+    var n = data.n || (work[mode].pins.length + 1);
+    var complete = !!(label && voice && journal);
+    var m = L.marker(latlng, { draggable: true, icon: storyIcon(n, complete) }).addTo(pinLayer);
     m._label = label;
+    m._voice = voice;
+    m._journal = journal;
+    m._kind = kind;
+    m._n = n;
     bindPinPopup(m);
-    m.on('dragend', saveNow);
+    m.on('dragend', function () { saveNow(); renderStopsList(); });
     work[mode].pins.push(m);
+    renumberPins();
     if (!skipSave) saveNow();
     updateStat();
     return m;
   }
   function bindPinPopup(m) {
+    var d = pinData(m);
     var div = document.createElement('div');
-    div.innerHTML = '<b>' + escapeHtml(m._label || 'My pin') + '</b><br>';
-    var rn = document.createElement('span'); rn.className = 'pbtn'; rn.textContent = '✏️ Rename';
+    var kindHtml = d.kind && kindLabel[d.kind]
+      ? '<div style="font-size:.78em;font-weight:800;color:#A9781F;margin:.15em 0;">' + escapeHtml(kindLabel[d.kind]) + '</div>'
+      : '';
+    var voiceHtml = d.voice
+      ? '<div style="margin:.35em 0;font-style:italic;max-width:240px;">“' + escapeHtml(d.voice) + '”</div>'
+      : '<div style="margin:.35em 0;color:#6E5B3C;font-style:italic;font-size:.9em;">No voice yet — tap Edit.</div>';
+    var citeHtml = d.journal
+      ? '<div style="font-size:.82em;color:#6E5B3C;">Journal: ' + escapeHtml(d.journal) + '</div>'
+      : '';
+    div.innerHTML = '<b>' + (d.n || '') + ' · ' + escapeHtml(d.label || 'Untitled stop') + '</b>' + kindHtml + voiceHtml + citeHtml;
+    var ed = document.createElement('span'); ed.className = 'pbtn'; ed.textContent = '✏️ Edit';
     var del = document.createElement('span'); del.className = 'pbtn'; del.textContent = '🗑 Remove';
-    rn.onclick = function () {
-      var v = window.prompt('New label for this pin:', m._label || '');
-      if (v !== null && v.trim()) { m._label = v.trim(); bindPinPopup(m); m.openPopup(); saveNow(); }
-    };
+    ed.onclick = function () { openPinEditor(m); };
     del.onclick = function () {
       pinLayer.removeLayer(m);
       var arr = work[mode].pins; var i = arr.indexOf(m); if (i > -1) arr.splice(i, 1);
-      saveNow(); updateStat();
+      renumberPins(); saveNow(); updateStat();
     };
-    div.appendChild(rn); div.appendChild(del);
+    div.appendChild(ed); div.appendChild(del);
     m.bindPopup(div);
   }
   function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-  /* ---------- Route ---------- */
+  function renderKindChips(selected) {
+    var wrap = document.getElementById('pin-kinds');
+    wrap.innerHTML = '';
+    pendingKind = selected || '';
+    PIN_KINDS.forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'kind' + ((pendingKind === k.id) ? ' on' : '');
+      b.textContent = k.label;
+      b.onclick = function () {
+        pendingKind = k.id;
+        Array.prototype.forEach.call(wrap.querySelectorAll('.kind'), function (el) { el.classList.remove('on'); });
+        b.classList.add('on');
+      };
+      wrap.appendChild(b);
+    });
+  }
+  function openPinEditor(markerOrNull, latlng, preset) {
+    editingPin = markerOrNull || null;
+    pendingLatLng = latlng || null;
+    preset = preset || {};
+    document.getElementById('pin-modal-title').textContent = editingPin ? ('Edit stop ' + (editingPin._n || '')) : 'New story stop';
+    document.getElementById('pin-label').value = editingPin ? (editingPin._label || '') : (preset.label || '');
+    document.getElementById('pin-voice').value = editingPin ? (editingPin._voice || '') : (preset.voice || '');
+    document.getElementById('pin-journal').value = editingPin ? (editingPin._journal || '') : (preset.journal || '');
+    renderKindChips(editingPin ? (editingPin._kind || '') : (preset.kind || ''));
+    document.getElementById('pin-delete').style.display = editingPin ? '' : 'none';
+    document.getElementById('pin-modal').classList.add('open');
+    setTimeout(function () { document.getElementById('pin-label').focus(); }, 50);
+  }
+  function closePinEditor() {
+    document.getElementById('pin-modal').classList.remove('open');
+    editingPin = null;
+    pendingLatLng = null;
+  }
+  function savePinEditor() {
+    var label = document.getElementById('pin-label').value.trim() || 'Untitled stop';
+    var voice = document.getElementById('pin-voice').value.trim();
+    var journal = document.getElementById('pin-journal').value.trim();
+    var kind = pendingKind || '';
+    if (editingPin) {
+      editingPin._label = label;
+      editingPin._voice = voice;
+      editingPin._journal = journal;
+      editingPin._kind = kind;
+      editingPin.setIcon(storyIcon(editingPin._n, pinIsComplete(editingPin)));
+      bindPinPopup(editingPin);
+      saveNow(); updateStat(); renderStopsList();
+      closePinEditor();
+      return;
+    }
+    if (!pendingLatLng) { closePinEditor(); return; }
+    var m = addPin(pendingLatLng, { label: label, voice: voice, journal: journal, kind: kind });
+    closePinEditor();
+    m.openPopup();
+  }
+
+  function livePins() {
+    return work[mode].pins.filter(function (m) { return m instanceof L.Marker; });
+  }
+  function movePin(i, dir) {
+    var arr = work[mode].pins;
+    var j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    renumberPins(); saveNow(); updateStat();
+  }
+  function removePinAt(i) {
+    var arr = work[mode].pins;
+    var m = arr[i];
+    if (!m) return;
+    if (m instanceof L.Marker) pinLayer.removeLayer(m);
+    arr.splice(i, 1);
+    renumberPins(); saveNow(); updateStat();
+  }
+  function jumpToPin(m) {
+    if (!map || !(m instanceof L.Marker)) return;
+    try {
+      map.flyTo(m.getLatLng(), Math.max(map.getZoom(), mode === 'chart' ? 0 : 5), { duration: 0.6 });
+      setTimeout(function () { m.openPopup(); }, 400);
+    } catch (_) {}
+  }
+  function renderStopsList() {
+    var list = document.getElementById('stops-list');
+    if (!list) return;
+    var pins = livePins();
+    list.innerHTML = '';
+    if (!pins.length) {
+      list.innerHTML = '<p style="font-size:.9em;color:var(--muted);font-style:italic;">No stops yet. Use <b>📍 Places</b> or <b>📌 Tap stop</b>.</p>';
+      return;
+    }
+    pins.forEach(function (m, i) {
+      var d = pinData(m);
+      var row = document.createElement('div');
+      row.className = 'stop-row';
+      var miss = !pinIsComplete(m);
+      var preview = d.voice ? d.voice : (d.kind && kindLabel[d.kind] ? kindLabel[d.kind] + ' · needs voice' : 'needs voice + Journal');
+      row.innerHTML = '<div class="num' + (miss ? ' miss' : '') + '">' + d.n + '</div><div class="info"><b></b><span></span></div>';
+      row.querySelector('b').textContent = d.label || 'Untitled stop';
+      row.querySelector('span').textContent = preview;
+      var acts = document.createElement('div');
+      acts.className = 'acts';
+      function mk(label, fn) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = label; b.onclick = fn; return b;
+      }
+      acts.appendChild(mk('↑', function () { movePin(i, -1); }));
+      acts.appendChild(mk('↓', function () { movePin(i, 1); }));
+      acts.appendChild(mk('Go', function () { jumpToPin(m); }));
+      acts.appendChild(mk('Edit', function () { openPinEditor(m); }));
+      acts.appendChild(mk('✕', function () { if (window.confirm('Remove stop ' + d.n + '?')) removePinAt(i); }));
+      row.appendChild(acts);
+      list.appendChild(row);
+    });
+  }
+
+  function closeSidePanels() {
+    ['proj-panel', 'places-panel', 'stops-panel'].forEach(function (id) {
+      document.getElementById(id).classList.remove('open');
+    });
+    ['tool-project', 'tool-places', 'tool-stops'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.classList.remove('on');
+    });
+  }
+  function openSide(which) {
+    var mapIds = { project: 'proj-panel', places: 'places-panel', stops: 'stops-panel' };
+    var toolIds = { project: 'tool-project', places: 'tool-places', stops: 'tool-stops' };
+    var panel = document.getElementById(mapIds[which]);
+    var wasOpen = panel.classList.contains('open');
+    closeSidePanels();
+    exitTour();
+    if (wasOpen) return false;
+    panel.classList.add('open');
+    document.getElementById(toolIds[which]).classList.add('on');
+    return true;
+  }
+
+  function renderPlacesList() {
+    var q = (document.getElementById('place-search').value || '').trim().toLowerCase();
+    var wrap = document.getElementById('places-list');
+    wrap.innerHTML = '';
+    var cats = [];
+    var byCat = {};
+    PLACES.forEach(function (p) {
+      var hay = (p.t + ' ' + p.note + ' ' + p.cat).toLowerCase();
+      if (q && hay.indexOf(q) === -1) return;
+      if (!byCat[p.cat]) { byCat[p.cat] = []; cats.push(p.cat); }
+      byCat[p.cat].push(p);
+    });
+    if (!cats.length) {
+      wrap.innerHTML = '<p style="font-size:.9em;color:var(--muted);font-style:italic;">No places match that search.</p>';
+      return;
+    }
+    cats.forEach(function (cat) {
+      var h = document.createElement('div');
+      h.className = 'place-cat';
+      h.textContent = cat;
+      wrap.appendChild(h);
+      byCat[cat].forEach(function (p) {
+        var row = document.createElement('div');
+        row.className = 'place-row';
+        row.innerHTML = '<div class="info"><b></b><span></span></div>';
+        row.querySelector('b').textContent = p.t;
+        row.querySelector('span').textContent = p.note;
+        var acts = document.createElement('div');
+        acts.className = 'acts';
+        var go = document.createElement('button'); go.type = 'button'; go.className = 'tbtn'; go.textContent = 'Go';
+        go.onclick = function () {
+          if (mode !== 'world') { notice('Places work on the World map — switch to 🌍 World.'); return; }
+          map.flyTo(p.ll, 6);
+        };
+        var add = document.createElement('button'); add.type = 'button'; add.className = 'tbtn on'; add.textContent = 'Add';
+        add.onclick = function () { addPlaceAsPin(p); };
+        acts.appendChild(add); acts.appendChild(go);
+        row.appendChild(acts);
+        wrap.appendChild(row);
+      });
+    });
+  }
+  function addPlaceAsPin(p) {
+    if (mode !== 'world') { notice('Switch to 🌍 World to add Places as story stops.'); return; }
+    map.flyTo(p.ll, Math.max(map.getZoom(), 5), { duration: 0.5 });
+    openPinEditor(null, L.latLng(p.ll[0], p.ll[1]), { label: p.t });
+  }
+
+  function connectPinsRoute(sea) {
+    var pins = livePins();
+    if (pins.length < 2) { notice('Add at least 2 stops first — then Straight route or 🌊 Sea route can connect them.'); return; }
+    var track;
+    if (sea) {
+      track = seaRouteThroughPins(pins);
+      if (!track || track.length < 2) {
+        notice('Couldn’t find a sea-lane path between those stops — falling back to straight lines. Tap a leg to add bends around land.');
+        track = pins.map(function (m) { return m.getLatLng(); });
+      } else {
+        notice('🌊 Sea route follows shipping lanes around land. Use ➕ New route for another independent track.');
+      }
+    } else {
+      track = pins.map(function (m) { return m.getLatLng(); });
+      notice('Straight route through ' + pins.length + ' stops. Crosses land? Use 🌊 Sea route — or ➕ New route to draw a separate track.');
+    }
+    /* Replace tracks with this one connection (pins→one voyage). Other independent routes stay if student drew them — actually replace all for clarity when using connect. */
+    work[mode].routes = [track];
+    work[mode].activeRoute = 0;
+    startNewRouteNext = false;
+    drawRoute();
+    saveNow();
+    setTool('route');
+    document.getElementById('hint').textContent = 'One track through your stops. ➕ New route starts another independent track · tap a leg → Split into two routes.';
+  }
+  function copyWhydahVoyage() {
+    if (mode !== 'world') { notice('Copy voyage works on the World map.'); return; }
+    if (livePins().length && !window.confirm('Add the 8 documented Whydah voyage stops to YOUR map? (Keeps pins you already have.)')) return;
+    VOYAGE.forEach(function (w) {
+      addPin(w.ll, { label: w.t, voice: '', journal: '', kind: w.n <= 2 ? 'begin' : (w.n === 6 || w.n === 7 ? 'storm' : (w.n === 8 ? 'modern' : 'voyage')) }, true);
+    });
+    if (!work.world.routes.length) {
+      work.world.routes = [VOYAGE.map(function (w) { return L.latLng(w.ll[0], w.ll[1]); })];
+      work.world.activeRoute = 0;
+      drawRoute();
+    }
+    renumberPins(); saveNow(); updateStat();
+    try { map.fitBounds(L.featureGroup(livePins()).getBounds().pad(0.2)); } catch (_) {}
+    notice('Copied. Those captions were the ship’s story — now rewrite each stop in YOUR person’s voice.');
+    openSide('stops');
+    renderStopsList();
+  }
+  function fitAllStops() {
+    var pins = livePins();
+    if (!pins.length) { notice('No stops to fit yet.'); return; }
+    try { map.fitBounds(L.featureGroup(pins).getBounds().pad(0.25)); } catch (_) {}
+  }
+
+  function clearMeasure() {
+    measurePts = [];
+    if (measureLayer && map) { try { map.removeLayer(measureLayer); } catch (_) {} }
+    measureLayer = null;
+    var tip = document.getElementById('measure-tip');
+    if (tip) tip.style.display = 'none';
+  }
+  function onMeasureClick(latlng) {
+    if (!measureLayer) measureLayer = L.layerGroup().addTo(map);
+    measurePts.push(latlng);
+    L.circleMarker(latlng, { radius: 5, color: '#A9781F', weight: 2, fillColor: '#D8B25A', fillOpacity: 1 }).addTo(measureLayer);
+    if (measurePts.length === 1) {
+      document.getElementById('hint').textContent = '📏 Tap the second point — distance shows in nautical miles (nm).';
+      return;
+    }
+    var a = measurePts[0], b = measurePts[1];
+    L.polyline([a, b], { color: '#A9781F', weight: 3, dashArray: '4 6' }).addTo(measureLayer);
+    var nm = L.latLng(a).distanceTo(L.latLng(b)) / 1852;
+    var tip = document.getElementById('measure-tip');
+    tip.textContent = (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
+    tip.style.display = 'block';
+    tip.style.left = '50%';
+    tip.style.top = '1em';
+    tip.style.transform = 'translateX(-50%)';
+    document.getElementById('stat').textContent = '📏 ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm between taps · tap again to measure a new pair';
+    measurePts = [];
+  }
+
+  function checklistState() {
+    var pins = livePins();
+    var withVoice = pins.filter(function (m) { return m._voice && m._voice.trim(); }).length;
+    var withJournal = pins.filter(function (m) { return m._journal && m._journal.trim(); }).length;
+    var complete = pins.filter(pinIsComplete).length;
+    var journals = {};
+    pins.forEach(function (m) {
+      var j = (m._journal || '').trim().toLowerCase();
+      if (j) journals[j] = true;
+    });
+    return {
+      pins: pins.length,
+      withVoice: withVoice,
+      withJournal: withJournal,
+      complete: complete,
+      distinctJournals: Object.keys(journals).length,
+      person: !!(project.person && project.person.trim()),
+      title: !!(project.title && project.title.trim()),
+      student: !!(project.student && project.student.trim())
+    };
+  }
+  function renderChecklist() {
+    var c = checklistState();
+    var items = [
+      { ok: c.person, text: 'Pick your person' },
+      { ok: c.pins >= 8, text: '8–10 pins on the map (' + c.pins + ')' },
+      { ok: c.withVoice >= 8, text: 'Voice written on each stop (' + c.withVoice + ')' },
+      { ok: c.distinctJournals >= 3, text: 'At least 3 Journal pages cited (' + c.distinctJournals + ')' },
+      { ok: c.title, text: 'Give your map a title' }
+    ];
+    var ul = document.getElementById('proj-check');
+    ul.innerHTML = '';
+    items.forEach(function (it) {
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="mark ' + (it.ok ? 'ok' : 'no') + '">' + (it.ok ? '✓' : '○') + '</span><span>' + escapeHtml(it.text) + '</span>';
+      ul.appendChild(li);
+    });
+    document.getElementById('starter-box').style.display =
+      (mode === 'world' && project.person && STARTERS[project.person]) ? '' : 'none';
+  }
+  function syncProjectFields() {
+    document.getElementById('proj-student').value = project.student || '';
+    document.getElementById('proj-person').value = project.person || '';
+    document.getElementById('proj-title').value = project.title || '';
+    renderChecklist();
+  }
+  function readProjectFields() {
+    project.student = document.getElementById('proj-student').value.trim();
+    project.person = document.getElementById('proj-person').value;
+    project.title = document.getElementById('proj-title').value.trim();
+    saveNow();
+    renderChecklist();
+    updateStat();
+  }
+
+  /* ---------- Route (multiple independent tracks) ---------- */
+  var segMenuState = null; /* { routeIdx, segStart, latlng } */
+  var seaGraphCache = null;
+  var ROUTE_COLORS = ['#8C2C1E', '#1C3743', '#A9781F', '#5B2C6F', '#1A5276', '#784212'];
+
+  function ensureRoutesShape(bucket) {
+    if (!bucket.routes) bucket.routes = [];
+    if (typeof bucket.activeRoute !== 'number') bucket.activeRoute = 0;
+    /* migrate legacy single route: [] */
+    if (bucket.route && bucket.route.length && !bucket.routes.length) {
+      bucket.routes = [bucket.route];
+    }
+    delete bucket.route;
+    if (bucket.activeRoute >= bucket.routes.length) bucket.activeRoute = Math.max(0, bucket.routes.length - 1);
+  }
+  function routesOf(m) {
+    m = m || mode;
+    ensureRoutesShape(work[m]);
+    return work[m].routes;
+  }
+  function activeTrack() {
+    ensureRoutesShape(work[mode]);
+    var routes = work[mode].routes;
+    if (!routes.length) {
+      routes.push([]);
+      work[mode].activeRoute = 0;
+    }
+    if (work[mode].activeRoute < 0 || work[mode].activeRoute >= routes.length) work[mode].activeRoute = routes.length - 1;
+    return routes[work[mode].activeRoute];
+  }
+  function pruneEmptyRoutes() {
+    ensureRoutesShape(work[mode]);
+    work[mode].routes = work[mode].routes.filter(function (t) { return t && t.length > 0; });
+    if (work[mode].activeRoute >= work[mode].routes.length) work[mode].activeRoute = Math.max(0, work[mode].routes.length - 1);
+  }
+  function routePointCount() {
+    return routesOf().reduce(function (n, t) { return n + t.length; }, 0);
+  }
+
+  function clearRouteLayers() {
+    if (routeEditLayer && map) { try { map.removeLayer(routeEditLayer); } catch (_) {} }
+    routeEditLayer = null;
+    routeLine = null;
+    hideSegMenu();
+  }
+  function hideSegMenu() {
+    var m = document.getElementById('seg-menu');
+    if (m) m.classList.remove('open');
+    segMenuState = null;
+  }
+  function showSegMenu(routeIdx, segStart, latlng, containerPoint) {
+    segMenuState = { routeIdx: routeIdx, i: segStart, latlng: latlng };
+    var menu = document.getElementById('seg-menu');
+    var label = document.getElementById('seg-menu-label');
+    if (label) label.textContent = 'Route ' + (routeIdx + 1) + ' · this leg';
+    var wrap = document.querySelector('.mapwrap');
+    var x = containerPoint.x, y = containerPoint.y;
+    menu.classList.add('open');
+    var mw = menu.offsetWidth || 180, mh = menu.offsetHeight || 140;
+    var maxX = (wrap && wrap.clientWidth ? wrap.clientWidth : window.innerWidth) - mw - 8;
+    var maxY = (wrap && wrap.clientHeight ? wrap.clientHeight : window.innerHeight) - mh - 8;
+    menu.style.left = Math.max(8, Math.min(x + 8, maxX)) + 'px';
+    menu.style.top = Math.max(8, Math.min(y + 8, maxY)) + 'px';
+  }
+  function beginNewRoute() {
+    ensureRoutesShape(work[mode]);
+    /* If active track is empty, just keep drawing on it */
+    var cur = activeTrack();
+    if (cur.length === 0) {
+      startNewRouteNext = false;
+      setTool('route');
+      notice('Draw your route — tap the map. This track is already empty and ready.');
+      return;
+    }
+    startNewRouteNext = true;
+    setTool('route');
+    document.getElementById('tool-new-route').classList.add('on');
+    document.getElementById('hint').textContent = '➕ Next tap starts a NEW independent route (won’t connect to the last track).';
+    notice('New route armed. Tap the map to place the first point of a separate track.');
+  }
   function addRoutePoint(latlng, skipSave) {
-    work[mode].route.push(latlng);
+    hideSegMenu();
+    ensureRoutesShape(work[mode]);
+    if (startNewRouteNext) {
+      work[mode].routes.push([]);
+      work[mode].activeRoute = work[mode].routes.length - 1;
+      startNewRouteNext = false;
+      document.getElementById('tool-new-route').classList.remove('on');
+    }
+    activeTrack().push(latlng);
     drawRoute();
     if (!skipSave) saveNow();
   }
-  function drawRoute() {
-    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
-    var pts = work[mode].route;
-    if (pts.length > 0) {
-      routeLine = L.polyline(pts, { color: '#8C2C1E', weight: 4, dashArray: '8 6' }).addTo(map);
+  function deleteRouteVertex(routeIdx, idx) {
+    hideSegMenu();
+    var routes = routesOf();
+    if (!routes[routeIdx] || idx < 0 || idx >= routes[routeIdx].length) return;
+    routes[routeIdx].splice(idx, 1);
+    if (routes[routeIdx].length < 2) routes[routeIdx] = routes[routeIdx].length ? [] : [];
+    pruneEmptyRoutes();
+    drawRoute();
+    saveNow();
+    document.getElementById('hint').textContent = 'Deleted a route point. Tracks stay independent — ➕ New route to start another.';
+  }
+  function splitRouteAtLeg(routeIdx, segStart) {
+    /* Cut the connection: left part keeps 0..segStart, right part keeps segStart+1..end — two independent routes */
+    hideSegMenu();
+    var routes = routesOf();
+    var pts = routes[routeIdx];
+    if (!pts || pts.length < 2) return;
+    var left = pts.slice(0, segStart + 1);
+    var right = pts.slice(segStart + 1);
+    var next = [];
+    if (left.length) next.push(left);
+    if (right.length) next.push(right);
+    /* rebuild routes array replacing the one track with 0–2 parts */
+    var out = [];
+    for (var i = 0; i < routes.length; i++) {
+      if (i === routeIdx) {
+        next.forEach(function (t) { if (t.length) out.push(t); });
+      } else if (routes[i].length) {
+        out.push(routes[i]);
+      }
     }
+    work[mode].routes = out;
+    work[mode].activeRoute = Math.min(routeIdx, Math.max(0, out.length - 1));
+    pruneEmptyRoutes();
+    drawRoute();
+    saveNow();
+    notice('Split into independent routes (' + work[mode].routes.length + ' tracks). Each can be edited on its own.');
+    document.getElementById('hint').textContent = work[mode].routes.length + ' independent route' + (work[mode].routes.length === 1 ? '' : 's') + ' on the map. ➕ New route adds another.';
+  }
+  function deleteRouteLegPoint(routeIdx, segStart) {
+    /* Remove the later vertex of this leg (does not split — shortens the track) */
+    hideSegMenu();
+    var routes = routesOf();
+    var pts = routes[routeIdx];
+    if (!pts) return;
+    if (pts.length <= 2) {
+      routes.splice(routeIdx, 1);
+      pruneEmptyRoutes();
+      drawRoute(); saveNow();
+      notice('That short route was removed. Others stay.');
+      return;
+    }
+    var removeIdx = segStart + 1;
+    if (removeIdx >= pts.length) removeIdx = segStart;
+    pts.splice(removeIdx, 1);
+    pruneEmptyRoutes();
+    drawRoute(); saveNow();
+    document.getElementById('hint').textContent = 'Point removed from route ' + (routeIdx + 1) + '. Use Split to break into two independent tracks.';
+  }
+  function insertRouteBend(routeIdx, segStart, latlng) {
+    hideSegMenu();
+    var routes = routesOf();
+    if (!routes[routeIdx]) return;
+    routes[routeIdx].splice(segStart + 1, 0, L.latLng(latlng));
+    work[mode].activeRoute = routeIdx;
+    drawRoute(); saveNow();
+    setTool('route');
+    document.getElementById('hint').textContent = 'Bend added on route ' + (routeIdx + 1) + ' — drag the new gold dot into open water.';
+  }
+  function clearRouteOnly() {
+    hideSegMenu();
+    ensureRoutesShape(work[mode]);
+    if (!routePointCount()) { notice('No routes to clear.'); return; }
+    var n = work[mode].routes.length;
+    if (!window.confirm('Clear all ' + n + ' route' + (n === 1 ? '' : 's') + '? Your pins stay put.')) return;
+    work[mode].routes = [];
+    work[mode].activeRoute = 0;
+    startNewRouteNext = false;
+    document.getElementById('tool-new-route').classList.remove('on');
+    drawRoute(); saveNow();
+    notice('All routes cleared. Pins untouched.');
+  }
+  function drawRoute() {
+    clearRouteLayers();
+    if (!map) { updateStat(); return; }
+    ensureRoutesShape(work[mode]);
+    var routes = work[mode].routes;
+    if (!routes.length) { updateStat(); return; }
+    routeEditLayer = L.layerGroup().addTo(map);
+    var vtxIcon = L.divIcon({
+      className: '',
+      html: '<div class="route-dot" title="Tap to delete · drag to move"></div>',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+    routes.forEach(function (pts, routeIdx) {
+      if (!pts || pts.length < 1) return;
+      var color = ROUTE_COLORS[routeIdx % ROUTE_COLORS.length];
+      var isActive = routeIdx === work[mode].activeRoute;
+      if (pts.length >= 2) {
+        for (var i = 1; i < pts.length; i++) {
+          (function (rIdx, segStart) {
+            var hit = L.polyline([pts[segStart], pts[segStart + 1]], {
+              weight: 18, opacity: 0, interactive: true, bubblingMouseEvents: false
+            });
+            hit.on('click', function (e) {
+              L.DomEvent.stopPropagation(e);
+              if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent);
+              work[mode].activeRoute = rIdx;
+              showSegMenu(rIdx, segStart, e.latlng, e.containerPoint || map.latLngToContainerPoint(e.latlng));
+            });
+            hit.addTo(routeEditLayer);
+          })(routeIdx, i - 1);
+        }
+        L.polyline(pts, {
+          color: color, weight: isActive ? 5 : 3.5, dashArray: '8 6',
+          opacity: isActive ? 1 : 0.85, interactive: false
+        }).addTo(routeEditLayer);
+      }
+      pts.forEach(function (p, idx) {
+        var mk = L.marker(p, { draggable: true, icon: vtxIcon, bubblingMouseEvents: false });
+        mk._routeIdx = routeIdx;
+        mk._ptIdx = idx;
+        mk.on('click', function (e) {
+          L.DomEvent.stopPropagation(e);
+          if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent);
+          deleteRouteVertex(mk._routeIdx, mk._ptIdx);
+        });
+        mk.on('mousedown', function () { work[mode].activeRoute = mk._routeIdx; });
+        mk.on('drag', function () {
+          var r = routesOf()[mk._routeIdx];
+          if (r && mk._ptIdx >= 0 && mk._ptIdx < r.length) r[mk._ptIdx] = mk.getLatLng();
+        });
+        mk.on('dragend', function () {
+          var r = routesOf()[mk._routeIdx];
+          if (r && mk._ptIdx >= 0 && mk._ptIdx < r.length) r[mk._ptIdx] = mk.getLatLng();
+          drawRoute();
+          saveNow();
+          updateStat();
+        });
+        mk.addTo(routeEditLayer);
+      });
+    });
     updateStat();
   }
   function routeDistanceNm() {
-    if (mode !== 'world') return null; /* the 1717 chart has no honest scale — that's a lesson in itself */
-    var pts = work.world.route, m = 0;
-    for (var i = 1; i < pts.length; i++) m += L.latLng(pts[i - 1]).distanceTo(L.latLng(pts[i]));
-    return m / 1852;
+    if (mode !== 'world') return null;
+    var m = 0;
+    routesOf('world').forEach(function (pts) {
+      for (var i = 1; i < pts.length; i++) m += L.latLng(pts[i - 1]).distanceTo(L.latLng(pts[i]));
+    });
+    return m;
   }
   function updateStat() {
-    var nPins = work[mode].pins.length;
-    var s = nPins + ' pin' + (nPins === 1 ? '' : 's');
-    var nm = routeDistanceNm();
-    if (nm !== null) s += ' · route ' + (nm >= 100 ? Math.round(nm) : nm.toFixed(1)) + ' nm';
-    else if (work[mode].route.length) s += ' · route: ' + work[mode].route.length + ' point' + (work[mode].route.length === 1 ? '' : 's') + ' (no scale on a 1717 chart!)';
+    if (mode === 'doors' || mode === 'globe') return;
+    var c = checklistState();
+    var s = c.pins + ' pin' + (c.pins === 1 ? '' : 's');
+    if (c.pins < 8) s += ' · need ' + (8 - c.pins) + ' more for story map';
+    else if (c.pins <= 10 && c.complete >= 8) s += ' · Showcase-ready ✓';
+    else if (c.pins > 10) s += ' · trim to 8–10?';
+    else s += ' · fill in voice + Journal';
+    var nRoutes = routesOf().length;
+    var nPts = routePointCount();
+    if (nRoutes) {
+      s += ' · ' + nRoutes + ' route' + (nRoutes === 1 ? '' : 's');
+      var nm = routeDistanceNm();
+      if (nm !== null) s += ' ' + ((nm / 1852) >= 100 ? Math.round(nm / 1852) : (nm / 1852).toFixed(1)) + ' nm';
+      else s += ' (' + nPts + ' pts, no scale!)';
+    }
     document.getElementById('stat').textContent = s;
+    renderChecklist();
+  }
+
+  /* Sea routing along the same shipping-lane shapes used in Chokepoints (offline, no API). */
+  function ensureSeaGraph() {
+    if (seaGraphCache) return seaGraphCache;
+    var nodes = {};
+    function key(ll) { return ll[0].toFixed(3) + ',' + ll[1].toFixed(3); }
+    function addNode(ll) {
+      var k = key(ll);
+      if (!nodes[k]) nodes[k] = { ll: [ll[0], ll[1]], edges: [] };
+      return k;
+    }
+    function addEdge(a, b) {
+      var ka = addNode(a), kb = addNode(b);
+      if (ka === kb) return;
+      var w = haversineM(a, b);
+      if (!(w > 0)) return;
+      nodes[ka].edges.push({ to: kb, w: w });
+      nodes[kb].edges.push({ to: ka, w: w });
+    }
+    var EXTRA_SEA = [
+      [[51.5, -5], [48, -15], [42, -25], [35, -30], [25, -30], [15, -25], [8, -15], [6.4, 2.0]],
+      [[6.4, 2.0], [8, -20], [12, -35], [15, -45], [17, -55], [18, -65], [18, -70], [19.9, -73.9]],
+      [[19.9, -73.9], [22, -72], [25, -74], [28, -77], [32, -76], [36, -74], [40, -72], [41.5, -70], [41.9, -70]],
+      [[51.5, -0.1], [50, -8], [48, -15], [45, -30], [42, -45], [40, -60], [40.4, -73.6]],
+      [[-34.8, 19], [-30, 5], [-20, -10], [-5, -20], [6, -15], [6.4, 2.0]]
+    ];
+    LANES.forEach(function (lane) {
+      for (var i = 1; i < lane.pts.length; i++) addEdge(lane.pts[i - 1], lane.pts[i]);
+    });
+    EXTRA_SEA.forEach(function (line) {
+      for (var i = 1; i < line.length; i++) addEdge(line[i - 1], line[i]);
+    });
+    var keys = Object.keys(nodes);
+    for (var i = 0; i < keys.length; i++) {
+      for (var j = i + 1; j < keys.length; j++) {
+        var d = haversineM(nodes[keys[i]].ll, nodes[keys[j]].ll);
+        if (d > 0 && d < 90000) {
+          nodes[keys[i]].edges.push({ to: keys[j], w: d });
+          nodes[keys[j]].edges.push({ to: keys[i], w: d });
+        }
+      }
+    }
+    seaGraphCache = { nodes: nodes, keys: keys };
+    return seaGraphCache;
+  }
+  function nearestSeaNode(ll, graph) {
+    var best = null, bestD = Infinity;
+    for (var i = 0; i < graph.keys.length; i++) {
+      var k = graph.keys[i];
+      var d = haversineM(ll, graph.nodes[k].ll);
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    return { key: best, dist: bestD };
+  }
+  function dijkstraSea(graph, startKey, endKey) {
+    if (!startKey || !endKey) return null;
+    if (startKey === endKey) return [startKey];
+    var dist = {}, prev = {}, used = {};
+    graph.keys.forEach(function (k) { dist[k] = Infinity; });
+    dist[startKey] = 0;
+    for (;;) {
+      var u = null, best = Infinity;
+      for (var i = 0; i < graph.keys.length; i++) {
+        var k = graph.keys[i];
+        if (!used[k] && dist[k] < best) { best = dist[k]; u = k; }
+      }
+      if (u === null || u === endKey) break;
+      used[u] = true;
+      var edges = graph.nodes[u].edges;
+      for (var e = 0; e < edges.length; e++) {
+        var v = edges[e].to, alt = dist[u] + edges[e].w;
+        if (alt < dist[v]) { dist[v] = alt; prev[v] = u; }
+      }
+    }
+    if (!isFinite(dist[endKey])) return null;
+    var path = [];
+    for (var cur = endKey; cur; cur = prev[cur]) {
+      path.push(cur);
+      if (cur === startKey) break;
+    }
+    path.reverse();
+    if (path[0] !== startKey) return null;
+    return path;
+  }
+  function seaRouteBetween(a, b) {
+    var graph = ensureSeaGraph();
+    var aa = [a.lat, a.lng], bb = [b.lat, b.lng];
+    var na = nearestSeaNode(aa, graph), nb = nearestSeaNode(bb, graph);
+    var keys = dijkstraSea(graph, na.key, nb.key);
+    var out = [L.latLng(a)];
+    if (keys) {
+      keys.forEach(function (k) {
+        var ll = graph.nodes[k].ll;
+        out.push(L.latLng(ll[0], ll[1]));
+      });
+    }
+    out.push(L.latLng(b));
+    var cleaned = [out[0]];
+    for (var i = 1; i < out.length; i++) {
+      if (cleaned[cleaned.length - 1].distanceTo(out[i]) > 2000) cleaned.push(out[i]);
+      else cleaned[cleaned.length - 1] = out[i];
+    }
+    return cleaned;
+  }
+  function seaRouteThroughPins(pins) {
+    if (typeof haversineM !== 'function' || typeof LANES === 'undefined') return null;
+    var all = [];
+    for (var i = 0; i < pins.length - 1; i++) {
+      var leg = seaRouteBetween(pins[i].getLatLng(), pins[i + 1].getLatLng());
+      if (!leg || leg.length < 2) return null;
+      if (i > 0) leg = leg.slice(1);
+      all = all.concat(leg);
+    }
+    return all;
   }
 
   /* ---------- The Whydah's voyage overlay (world mode) ---------- */
@@ -312,6 +1449,7 @@
     voyageLayer.addTo(map);
     voyageOn = true;
     document.getElementById('tool-voyage').classList.add('on');
+    document.getElementById('hint').textContent = '⚓ Read-only reference voyage. Want these as YOUR editable stops? Tap ⧉ Copy voyage.';
   }
   function hideVoyage() {
     if (voyageLayer) { map.removeLayer(voyageLayer); voyageLayer = null; }
@@ -765,14 +1903,21 @@
 
   /* ---------- Save / restore (this device) ---------- */
   function serialize() {
-    var out = {};
+    var out = { project: project, version: 3 };
     ['world', 'chart'].forEach(function (k) {
+      ensureRoutesShape(work[k]);
       out[k] = {
         pins: work[k].pins.map(function (m) {
-          if (m instanceof L.Marker) { var ll = m.getLatLng(); return { lat: ll.lat, lng: ll.lng, label: m._label || '' }; }
-          return { lat: m.lat, lng: m.lng, label: m.label || '' };
+          if (m instanceof L.Marker) {
+            var ll = m.getLatLng();
+            return { lat: ll.lat, lng: ll.lng, label: m._label || '', voice: m._voice || '', journal: m._journal || '', kind: m._kind || '', n: m._n || 0 };
+          }
+          return { lat: m.lat, lng: m.lng, label: m.label || '', voice: m.voice || '', journal: m.journal || '', kind: m.kind || '', n: m.n || 0 };
         }),
-        route: work[k].route.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; })
+        routes: work[k].routes.map(function (track) {
+          return track.map(function (p) { var ll = L.latLng(p); return [ll.lat, ll.lng]; });
+        }),
+        activeRoute: work[k].activeRoute || 0
       };
     });
     return out;
@@ -780,32 +1925,371 @@
   function saveNow() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); } catch (_) {}
   }
-  var savedData = null;
-  try { savedData = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) {}
-  if (savedData) {
+  function loadSaved() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) {}
+    if (!raw) {
+      try { raw = JSON.parse(localStorage.getItem(SAVE_KEY_LEGACY) || 'null'); } catch (_) {}
+    }
+    if (!raw) return;
+    if (raw.project) {
+      project.student = raw.project.student || '';
+      project.person = raw.project.person || '';
+      project.title = raw.project.title || '';
+    }
     ['world', 'chart'].forEach(function (k) {
-      if (!savedData[k]) return;
-      work[k].pins = savedData[k].pins || [];   /* raw objects until that mode opens */
-      work[k].route = (savedData[k].route || []).map(function (a) { return L.latLng(a[0], a[1]); });
+      if (!raw[k]) return;
+      work[k].pins = (raw[k].pins || []).map(function (p) {
+        return {
+          lat: p.lat, lng: p.lng,
+          label: p.label || '',
+          voice: p.voice || '',
+          journal: p.journal || '',
+          kind: p.kind || '',
+          n: p.n || 0
+        };
+      });
+      if (raw[k].routes && raw[k].routes.length) {
+        work[k].routes = raw[k].routes.map(function (track) {
+          return (track || []).map(function (a) { return L.latLng(a[0], a[1]); });
+        });
+      } else if (raw[k].route && raw[k].route.length) {
+        /* migrate v1/v2 single route */
+        work[k].routes = [raw[k].route.map(function (a) { return L.latLng(a[0], a[1]); })];
+      } else {
+        work[k].routes = [];
+      }
+      work[k].activeRoute = raw[k].activeRoute || 0;
+      ensureRoutesShape(work[k]);
     });
   }
+  loadSaved();
   function restoreWork() {
     /* raw saved pin objects -> live markers, once, when their mode first opens */
     var pins = work[mode].pins;
     work[mode].pins = [];
     pins.forEach(function (p) {
       if (p instanceof L.Marker) { p.addTo(pinLayer); work[mode].pins.push(p); }
-      else addPin([p.lat, p.lng], p.label, true);
+      else addPin([p.lat, p.lng], { label: p.label, voice: p.voice, journal: p.journal, kind: p.kind, n: p.n }, true);
     });
+    renumberPins();
     drawRoute();
     updateStat();
   }
 
+  function applyProjectState(state) {
+    /* Load a full serialize()-shaped object into work + project, then redraw the live map. */
+    if (!state || typeof state !== 'object') throw new Error('Not a Whydah story-map file.');
+    if (state.project) {
+      project.student = state.project.student || '';
+      project.person = state.project.person || '';
+      project.title = state.project.title || '';
+    }
+    ['world', 'chart'].forEach(function (k) {
+      var src = state[k] || {};
+      work[k].pins = (src.pins || []).map(function (p) {
+        return {
+          lat: p.lat, lng: p.lng,
+          label: p.label || '',
+          voice: p.voice || '',
+          journal: p.journal || '',
+          kind: p.kind || '',
+          n: p.n || 0
+        };
+      });
+      if (src.routes && src.routes.length) {
+        work[k].routes = src.routes.map(function (track) {
+          return (track || []).map(function (a) { return L.latLng(a[0], a[1]); });
+        });
+      } else if (src.route && src.route.length) {
+        work[k].routes = [src.route.map(function (a) { return L.latLng(a[0], a[1]); })];
+      } else {
+        work[k].routes = [];
+      }
+      work[k].activeRoute = src.activeRoute || 0;
+      ensureRoutesShape(work[k]);
+    });
+  }
+  function geojsonToState(gj) {
+    /* Turn a Map Studio .geojson download (or embedded whydahState) back into serialize() shape. */
+    if (gj && gj.whydahState && gj.whydahState.world) return gj.whydahState;
+    if (gj && gj.world && (gj.world.pins || gj.world.routes || gj.world.route)) {
+      return {
+        project: gj.project || {},
+        version: gj.version || 3,
+        world: gj.world,
+        chart: gj.chart || { pins: [], routes: [] }
+      };
+    }
+    if (!gj || gj.type !== 'FeatureCollection' || !Array.isArray(gj.features)) {
+      throw new Error('Pick a story-map file from 💾 Download (.geojson or .json).');
+    }
+    var state = {
+      project: gj.whydahProject || {},
+      version: 3,
+      world: { pins: [], routes: [], activeRoute: 0 },
+      chart: { pins: [], routes: [], activeRoute: 0 }
+    };
+    var routeBuckets = { world: {}, chart: {} };
+    gj.features.forEach(function (f) {
+      if (!f || !f.geometry) return;
+      var props = f.properties || {};
+      var canvas = (props.canvas === 'chart') ? 'chart' : 'world';
+      if (f.geometry.type === 'Point' && f.geometry.coordinates && f.geometry.coordinates.length >= 2) {
+        state[canvas].pins.push({
+          lng: f.geometry.coordinates[0],
+          lat: f.geometry.coordinates[1],
+          label: props.label || '',
+          voice: props.voice || '',
+          journal: props.journal || '',
+          kind: props.kind || '',
+          n: props.n || 0
+        });
+      } else if (f.geometry.type === 'LineString' && f.geometry.coordinates && f.geometry.coordinates.length >= 2) {
+        var ri = (typeof props.routeIndex === 'number') ? props.routeIndex : 0;
+        if (!routeBuckets[canvas][ri]) routeBuckets[canvas][ri] = [];
+        routeBuckets[canvas][ri] = f.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+      }
+    });
+    ['world', 'chart'].forEach(function (k) {
+      state[k].pins.sort(function (a, b) { return (a.n || 0) - (b.n || 0); });
+      var keys = Object.keys(routeBuckets[k]).map(Number).sort(function (a, b) { return a - b; });
+      state[k].routes = keys.map(function (ri) { return routeBuckets[k][ri]; });
+    });
+    if (!state.world.pins.length && !state.chart.pins.length &&
+        !state.world.routes.length && !state.chart.routes.length &&
+        !state.project.person && !state.project.title && !state.project.student) {
+      throw new Error('That file doesn’t look like a Map Studio story map.');
+    }
+    return state;
+  }
+  function reloadLiveMapFromWork() {
+    /* Tear down live markers and rebuild from work[mode] plain data. */
+    if (mode === 'doors' || mode === 'globe') {
+      enterWorld();
+      return;
+    }
+    if (pinLayer) pinLayer.clearLayers();
+    work[mode].pins = work[mode].pins.map(function (p) {
+      if (p instanceof L.Marker) {
+        var ll = p.getLatLng();
+        return { lat: ll.lat, lng: ll.lng, label: p._label || '', voice: p._voice || '', journal: p._journal || '', kind: p._kind || '', n: p._n || 0 };
+      }
+      return p;
+    });
+    restoreWork();
+    syncProjectFields();
+    saveNow();
+    try {
+      var pins = livePins();
+      if (pins.length) map.fitBounds(L.featureGroup(pins).getBounds().pad(0.25));
+      else if (routesOf().length) {
+        var latlngs = [];
+        routesOf().forEach(function (t) { t.forEach(function (p) { latlngs.push(p); }); });
+        if (latlngs.length) map.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+      }
+    } catch (_) {}
+  }
+  function importStoryMapText(text) {
+    var parsed;
+    try { parsed = JSON.parse(text); }
+    catch (_) { throw new Error('Couldn’t read that file — is it the .geojson from 💾 Download?'); }
+    var state = geojsonToState(parsed);
+    applyProjectState(state);
+    /* Prefer World if it has content; otherwise chart */
+    var worldHas = (work.world.pins && work.world.pins.length) || (work.world.routes && work.world.routes.length);
+    var chartHas = (work.chart.pins && work.chart.pins.length) || (work.chart.routes && work.chart.routes.length);
+    if (mode === 'doors' || mode === 'globe') {
+      if (worldHas || !chartHas) enterWorld();
+      else enterChart();
+      return;
+    }
+    if (chartHas && !worldHas && mode !== 'chart') enterChart();
+    else if (worldHas && mode !== 'world') enterWorld();
+    else reloadLiveMapFromWork();
+  }
+  function downloadStoryMap() {
+    var d = serialize();
+    var gj = {
+      type: 'FeatureCollection',
+      whydahProject: d.project || null,
+      whydahState: d,
+      features: []
+    };
+    ['world', 'chart'].forEach(function (k) {
+      d[k].pins.forEach(function (p) {
+        gj.features.push({
+          type: 'Feature',
+          properties: { label: p.label, voice: p.voice, journal: p.journal, kind: p.kind || '', n: p.n, canvas: k },
+          geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
+        });
+      });
+      (d[k].routes || []).forEach(function (track, ri) {
+        if (track.length > 1) {
+          gj.features.push({
+            type: 'Feature',
+            properties: { name: 'route', routeIndex: ri, canvas: k },
+            geometry: { type: 'LineString', coordinates: track.map(function (a) { return [a[1], a[0]]; }) }
+          });
+        }
+      });
+    });
+    var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    var slug = (project.person || project.student || 'whydah').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    a.download = 'story-map-' + (slug || 'whydah') + '.geojson';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    notice('Backup downloaded. On a shared Chromebook, use 📂 Import with this same file to continue later.');
+  }
+  function promptImportFile() {
+    document.getElementById('import-file').value = '';
+    document.getElementById('import-file').click();
+  }
+  function handleImportFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var hasWork = livePins().length || routePointCount() ||
+          (work.world.pins && work.world.pins.length) || (work.chart.pins && work.chart.pins.length);
+        if (hasWork && !window.confirm('Import replaces what’s on this Chromebook with the file. Continue?')) return;
+        importStoryMapText(String(reader.result || ''));
+        var n = (work.world.pins.length || 0) + (work.chart.pins.length || 0);
+        notice('Imported! ' + n + ' stop' + (n === 1 ? '' : 's') + ' restored' +
+          (project.person ? ' · ' + project.person : '') +
+          '. It also saved on this device for the rest of class.');
+        document.getElementById('hint').textContent = 'Backup restored. Keep downloading after big edits — shared Chromebooks forget local saves.';
+        openSide('stops');
+        renderStopsList();
+      } catch (err) {
+        notice(err.message || 'Import failed.');
+      }
+    };
+    reader.onerror = function () { notice('Couldn’t read that file.'); };
+    reader.readAsText(file);
+  }
+
+  /* ---------- Showcase tour + story sheet ---------- */
+  function exitTour() {
+    tourIdx = -1;
+    document.getElementById('tour-panel').classList.remove('open');
+    document.getElementById('tool-tour').classList.remove('on');
+  }
+  function showTourStop(i) {
+    var pins = livePins();
+    if (!pins.length) { exitTour(); notice('Drop some story pins first — then Tour walks visitors through them.'); return; }
+    if (i < 0) i = pins.length - 1;
+    if (i >= pins.length) i = 0;
+    tourIdx = i;
+    var m = pins[i];
+    var d = pinData(m);
+    document.getElementById('tour-who').textContent =
+      (project.person ? project.person + ' · ' : '') + 'Stop ' + d.n + ' of ' + pins.length;
+    document.getElementById('tour-stop').textContent = d.label || 'Untitled stop';
+    document.getElementById('tour-voice').textContent = d.voice
+      ? '“' + d.voice + '”'
+      : '(No voice yet — edit this pin before Showcase.)';
+    document.getElementById('tour-cite').textContent = d.journal
+      ? 'Journal: ' + d.journal
+      : 'Journal: — add a Voyage Journal page citation';
+    document.getElementById('tour-count').textContent = d.n + ' / ' + pins.length;
+    document.getElementById('tour-panel').classList.add('open');
+    document.getElementById('tool-tour').classList.add('on');
+    if (map && mode !== 'doors' && mode !== 'globe') {
+      map.closePopup();
+      try { map.flyTo(m.getLatLng(), Math.max(map.getZoom(), mode === 'chart' ? 0 : 5), { duration: 0.85 }); } catch (_) {}
+      setTimeout(function () { try { m.openPopup(); } catch (_) {} }, 500);
+    }
+  }
+  function startTour() {
+    if (mode === 'doors' || mode === 'globe') return;
+    document.getElementById('proj-panel').classList.remove('open');
+    showTourStop(0);
+    document.getElementById('hint').textContent = 'Tour mode — use Next / Prev (or ← → keys). Exit when you’re done rehearsing for Showcase.';
+  }
+  function buildStorySheet() {
+    var pins = livePins();
+    var title = project.title || ((project.person ? project.person + ' — ' : '') + 'Story Map');
+    var html = '<h1>' + escapeHtml(title) + '</h1>';
+    html += '<div class="meta">';
+    if (project.student) html += escapeHtml(project.student);
+    if (project.student && project.person) html += ' · ';
+    if (project.person) html += 'Told as ' + escapeHtml(project.person);
+    html += ' · Navigating Piracy · WhydahStory Showcase</div>';
+    if (!pins.length) {
+      html += '<p>No pins yet. Build your 8–10 stops in Map Studio, then print this sheet for the gallery table.</p>';
+    } else {
+      pins.forEach(function (m) {
+        var d = pinData(m);
+        html += '<div class="stop"><h3>' + escapeHtml(String(d.n)) + '. ' + escapeHtml(d.label || 'Untitled');
+        if (d.kind && kindLabel[d.kind]) html += ' <span style="font-weight:400;font-size:.85em;">(' + escapeHtml(kindLabel[d.kind]) + ')</span>';
+        html += '</h3>';
+        if (d.voice) html += '<div class="voice">“' + escapeHtml(d.voice) + '”</div>';
+        else html += '<div class="voice">(voice still needed)</div>';
+        if (d.journal) html += '<div class="cite">Journal evidence: ' + escapeHtml(d.journal) + '</div>';
+        else html += '<div class="cite">Journal evidence: —</div>';
+        html += '</div>';
+      });
+    }
+    document.getElementById('story-sheet').innerHTML = html;
+  }
+  function printStorySheet() {
+    buildStorySheet();
+    window.print();
+  }
+  function dropStarters() {
+    if (mode !== 'world') { notice('Starter pins only work on the World map — switch to 🌍 World first.'); return; }
+    var pack = STARTERS[project.person];
+    if (!pack) { notice('Pick a person in My project first — then we can drop starter places for them.'); return; }
+    if (livePins().length && !window.confirm('Add ' + pack.length + ' starter places for ' + project.person + '? (Keeps any pins you already have.)')) return;
+    pack.forEach(function (s) {
+      addPin(s.ll, { label: s.t, voice: '', journal: '' }, true);
+    });
+    /* connect starters with a rough route if empty */
+    if (!work.world.routes.length) {
+      work.world.routes = [pack.map(function (s) { return L.latLng(s.ll[0], s.ll[1]); })];
+      work.world.activeRoute = 0;
+      drawRoute();
+    }
+    renumberPins();
+    saveNow();
+    updateStat();
+    try {
+      var group = L.featureGroup(livePins());
+      map.fitBounds(group.getBounds().pad(0.25));
+    } catch (_) {}
+    notice('Starter places dropped for ' + project.person + '. Now rewrite each stop in their voice and cite Journal pages.');
+    document.getElementById('hint').textContent = 'Open 📑 Stops to reorder · tap a pin to Edit voice + Journal. Aim for 8–10 complete stops.';
+    openSide('stops');
+    renderStopsList();
+  }
+
   /* ---------- Toolbar wiring ---------- */
+  function updateMapCursor() {
+    var el = document.getElementById('map');
+    if (!el) return;
+    el.classList.remove('cursor-pin', 'cursor-route', 'cursor-measure');
+    if (mode === 'doors' || mode === 'globe') return;
+    if (tool === 'pin') el.classList.add('cursor-pin');
+    else if (tool === 'route') el.classList.add('cursor-route');
+    else if (tool === 'measure') el.classList.add('cursor-measure');
+  }
   function setTool(t) {
+    if (t !== 'measure') clearMeasure();
     tool = t;
     document.getElementById('tool-pin').classList.toggle('on', t === 'pin');
     document.getElementById('tool-route').classList.toggle('on', t === 'route');
+    document.getElementById('tool-measure').classList.toggle('on', t === 'measure');
+    updateMapCursor();
+    if (t === 'pin') document.getElementById('hint').textContent = '📌 Tap-stop mode: tap the map to drop a numbered story stop, then write their voice.';
+    if (t === 'route') document.getElementById('hint').textContent = '✏️ Route edit: tap to add on the active track · ➕ New route for a separate track · tap a leg → Split into two routes.';
+    if (t !== 'route') {
+      startNewRouteNext = false;
+      var nr = document.getElementById('tool-new-route');
+      if (nr) nr.classList.remove('on');
+    }
+    if (t === 'measure') document.getElementById('hint').textContent = '📏 Measure mode: tap two points. Distance is in nautical miles (nm) — the unit sailors use.';
   }
   document.getElementById('mode-world').onclick = function () { if (mode !== 'world') enterWorld(); };
   document.getElementById('mode-chart').onclick = function () { if (mode !== 'chart') enterChart(); };
@@ -835,48 +2319,141 @@
     renderLb();
     p.style.display = 'block';
   };
+  document.getElementById('tool-project').onclick = function () {
+    if (openSide('project')) syncProjectFields();
+  };
+  document.getElementById('proj-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('tool-places').onclick = function () {
+    if (mode !== 'world') { notice('Places library works on 🌍 World (lat/long places don’t map onto the 1717 chart image).'); return; }
+    if (openSide('places')) {
+      document.getElementById('place-search').value = '';
+      renderPlacesList();
+      setTool('pin');
+    }
+  };
+  document.getElementById('places-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('place-search').addEventListener('input', renderPlacesList);
+  document.getElementById('tool-stops').onclick = function () {
+    if (openSide('stops')) renderStopsList();
+  };
+  document.getElementById('stops-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('stops-connect').onclick = function () { connectPinsRoute(false); };
+  document.getElementById('stops-sea').onclick = function () {
+    if (mode !== 'world') { notice('Sea route needs the World map.'); return; }
+    connectPinsRoute(true);
+  };
+  document.getElementById('stops-fit').onclick = fitAllStops;
+  document.getElementById('tool-connect').onclick = function () { connectPinsRoute(false); };
+  document.getElementById('tool-sea').onclick = function () {
+    if (mode !== 'world') { notice('Sea route needs the World map (shipping lanes are lat/long).'); return; }
+    connectPinsRoute(true);
+  };
+  document.getElementById('tool-clear-route').onclick = clearRouteOnly;
+  document.getElementById('tool-new-route').onclick = beginNewRoute;
+  document.getElementById('seg-bend').onclick = function () {
+    if (!segMenuState) return;
+    insertRouteBend(segMenuState.routeIdx, segMenuState.i, segMenuState.latlng);
+  };
+  document.getElementById('seg-split').onclick = function () {
+    if (!segMenuState) return;
+    splitRouteAtLeg(segMenuState.routeIdx, segMenuState.i);
+  };
+  document.getElementById('seg-delete').onclick = function () {
+    if (!segMenuState) return;
+    deleteRouteLegPoint(segMenuState.routeIdx, segMenuState.i);
+  };
+  document.getElementById('seg-cancel').onclick = hideSegMenu;
+  document.getElementById('tool-copy-voyage').onclick = copyWhydahVoyage;
+  ['proj-student', 'proj-person', 'proj-title'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', readProjectFields);
+    document.getElementById(id).addEventListener('input', function () {
+      if (id === 'proj-person') readProjectFields();
+    });
+  });
+  document.getElementById('proj-student').addEventListener('blur', readProjectFields);
+  document.getElementById('proj-title').addEventListener('blur', readProjectFields);
+  document.getElementById('tool-starter').onclick = dropStarters;
+  document.getElementById('tool-tour').onclick = function () {
+    if (document.getElementById('tour-panel').classList.contains('open')) exitTour();
+    else { closeSidePanels(); startTour(); }
+  };
+  document.getElementById('tour-prev').onclick = function () { showTourStop(tourIdx - 1); };
+  document.getElementById('tour-next').onclick = function () { showTourStop(tourIdx + 1); };
+  document.getElementById('tour-exit').onclick = exitTour;
+  document.getElementById('tool-sheet').onclick = printStorySheet;
+  document.getElementById('pin-save').onclick = savePinEditor;
+  document.getElementById('pin-cancel').onclick = closePinEditor;
+  document.getElementById('pin-delete').onclick = function () {
+    if (!editingPin) return;
+    pinLayer.removeLayer(editingPin);
+    var arr = work[mode].pins; var i = arr.indexOf(editingPin); if (i > -1) arr.splice(i, 1);
+    renumberPins(); saveNow(); updateStat(); closePinEditor();
+  };
+  document.getElementById('pin-modal').addEventListener('click', function (e) {
+    if (e.target === this) closePinEditor();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (document.getElementById('pin-modal').classList.contains('open')) { closePinEditor(); return; }
+      if (document.getElementById('tour-panel').classList.contains('open')) { exitTour(); return; }
+      if (document.getElementById('seg-menu').classList.contains('open')) { hideSegMenu(); return; }
+      closeSidePanels();
+    }
+    if (document.getElementById('tour-panel').classList.contains('open')) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); showTourStop(tourIdx + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); showTourStop(tourIdx - 1); }
+    }
+  });
   document.getElementById('tool-pin').onclick = function () { setTool('pin'); };
   document.getElementById('tool-route').onclick = function () { setTool('route'); };
+  document.getElementById('tool-measure').onclick = function () {
+    if (mode !== 'world') { notice('Measure needs the World map (the 1717 chart has no honest scale).'); return; }
+    setTool(tool === 'measure' ? 'pin' : 'measure');
+  };
   document.getElementById('tool-undo').onclick = function () {
-    if (tool === 'route' && work[mode].route.length) { work[mode].route.pop(); drawRoute(); saveNow(); return; }
+    if (tool === 'route') {
+      ensureRoutesShape(work[mode]);
+      var track = activeTrack();
+      if (track.length) {
+        track.pop();
+        if (!track.length) pruneEmptyRoutes();
+        drawRoute(); saveNow();
+        return;
+      }
+    }
+    if (tool === 'measure') { clearMeasure(); document.getElementById('hint').textContent = '📏 Measure cleared. Tap two new points.'; return; }
     var arr = work[mode].pins;
-    if (arr.length) { pinLayer.removeLayer(arr.pop()); saveNow(); updateStat(); }
+    if (arr.length) { pinLayer.removeLayer(arr.pop()); renumberPins(); saveNow(); updateStat(); }
   };
   document.getElementById('tool-voyage').onclick = function () { voyageOn ? hideVoyage() : showVoyage(); };
   document.getElementById('tool-clear').onclick = function () {
-    if (!window.confirm('Clear ALL your pins and routes on this device? This cannot be undone.')) return;
+    if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. This cannot be undone.')) return;
     work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
-    work[mode] = { pins: [], route: [] };
-    drawRoute(); saveNow(); updateStat();
+    work[mode] = { pins: [], routes: [], activeRoute: 0 };
+    startNewRouteNext = false;
+    drawRoute(); saveNow(); updateStat(); exitTour(); clearMeasure(); renderStopsList();
   };
-  document.getElementById('tool-export').onclick = function () {
-    var d = serialize();
-    var gj = { type: 'FeatureCollection', features: [] };
-    ['world', 'chart'].forEach(function (k) {
-      d[k].pins.forEach(function (p) {
-        gj.features.push({ type: 'Feature', properties: { label: p.label, canvas: k }, geometry: { type: 'Point', coordinates: [p.lng, p.lat] } });
-      });
-      if (d[k].route.length > 1) {
-        gj.features.push({ type: 'Feature', properties: { name: 'route', canvas: k }, geometry: { type: 'LineString', coordinates: d[k].route.map(function (a) { return [a[1], a[0]]; }) } });
-      }
-    });
-    var blob = new Blob([JSON.stringify(gj, null, 2)], { type: 'application/geo+json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'my-whydah-map.geojson';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    notice('Downloaded! That file is real GIS data — the same format professionals use. Keep it: it’s your project backup.');
-  };
+  document.getElementById('tool-export').onclick = downloadStoryMap;
+  document.getElementById('tool-import').onclick = promptImportFile;
+  document.getElementById('proj-export').onclick = downloadStoryMap;
+  document.getElementById('proj-import').onclick = promptImportFile;
+  document.getElementById('import-file').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (f) handleImportFile(f);
+  });
 
   function onMapClick(e) {
     if (mode === 'doors') {
       if (pirate.armed) parkPirate(e.latlng);
       return;
     }
+    hideSegMenu();
+    if (tool === 'measure') {
+      onMeasureClick(e.latlng);
+      return;
+    }
     if (tool === 'pin') {
-      var label = window.prompt('Label this pin (who / what / when):', '');
-      if (label === null) return;
-      addPin(e.latlng, label.trim() || 'My pin');
+      openPinEditor(null, e.latlng);
     } else if (tool === 'route') {
       addRoutePoint(e.latlng);
     }
@@ -898,12 +2475,15 @@
     return { mode: mode, center: c ? [c.lat.toFixed(2), c.lng.toFixed(2)] : null, zoom: m ? +m.getZoom().toFixed(1) : null,
              ships: ships.length, pirate: pirate.ll ? [pirate.ll[0].toFixed(2), pirate.ll[1].toFixed(2)] : null,
              spotted: pirate.count, pts: pirate.pts, showPorts: showPorts, showLanes: showLanes,
+             project: project, checklist: checklistState(), tool: tool,
              globe: gmap ? { styleLoaded: gmap.isStyleLoaded(), shipsSrc: !!gmap.getSource('ships'), loaded: gmap.loaded() } : null };
   };
 
   /* go */
   setTool('pin');
   applyToggles();
+  syncProjectFields();
+  renderPlacesList();
   var doorParam = null, viewParam = null;
   try {
     var qs = new URLSearchParams(window.location.search);

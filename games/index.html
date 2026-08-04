@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Whydah Games — WhydahStory</title>
-<meta name="description" content="Whydah Games: Whydah's Voyage and Black Sam tell Bellamy's story two ways — plus Parrot Flip and Chokepoints for the crew.">
+<meta name="description" content="Whydah Games: Whydah's Voyage tells Bellamy's story on the coast — plus Parrot Flip and Chokepoints for the crew.">
 <meta name="theme-color" content="#142333">
 <link rel="canonical" href="https://whydahstory.com/games/">
 <link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
@@ -24,6 +24,7 @@ h1{margin:0;font:700 clamp(40px,6vw,66px)/.96 var(--serif);letter-spacing:-.04em
 .card{display:flex;min-height:280px;flex-direction:column;padding:28px;border:1px solid var(--line);background:rgba(255,255,255,.42);text-decoration:none;transition:transform .15s ease,background .15s ease}
 .card:hover{transform:translateY(-3px);background:white}
 .card.mode{min-height:320px;background:linear-gradient(165deg,rgba(255,255,255,.55),rgba(228,236,242,.35))}
+.grid.featured{grid-template-columns:1fr;max-width:640px}
 .num{color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.14em}
 .mode-tag{display:inline-block;margin-top:10px;padding:4px 10px;border:1px solid var(--line);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
 .card h3{margin:22px 0 12px;color:var(--navy);font:700 27px/1.05 var(--serif)}.card h3 .emoji{font-size:.85em}
@@ -40,28 +41,20 @@ h1{margin:0;font:700 clamp(40px,6vw,66px)/.96 var(--serif);letter-spacing:-.04em
 <main class="wrap">
   <div class="head">
     <p class="eyebrow">Whydah Games</p>
-    <h1>Same story. Two ways to sail it.</h1>
-    <p class="lede">Bellamy&rsquo;s road from Cape Cod to the Whydah to the nor&rsquo;easter &mdash; told twice, on purpose. Pick the mode that fits the hour.</p>
-    <p class="pair-label"><strong>Whydah&rsquo;s Voyage</strong> is the replayable coast campaign. <strong>Black Sam</strong> is the one-pass life story. Different engines, same history.</p>
+    <h1>Bellamy&rsquo;s road, playable.</h1>
+    <p class="lede">Cape Cod to the Whydah to the nor&rsquo;easter &mdash; replay the coast, then flip a parrot with the crew.</p>
+    <p class="pair-label"><strong>Whydah&rsquo;s Voyage</strong> is the replayable coast campaign. Missions, ports, bosses, and the storm the real crew never beat.</p>
   </div>
 
   <p class="section-label">Bellamy&rsquo;s story</p>
-  <div class="grid">
+  <div class="grid featured">
     <a class="card mode" href="/navigator/">
-      <span class="num">⛵ MODE 1</span>
+      <span class="num">⛵ VOYAGE</span>
       <span class="mode-tag">Replay the coast</span>
       <h3>Whydah&rsquo;s Voyage</h3>
       <p>Take the ship, fight your way north mission by mission, upgrade at port, and try to beat the storm the real crew never did.</p>
       <p class="how">Best for: skill runs, bosses, difficulty tiers, and coming back again tomorrow.</p>
       <span class="go">Set sail →</span>
-    </a>
-    <a class="card mode" href="/black-sam/">
-      <span class="num">🏴‍☠️ MODE 2</span>
-      <span class="mode-tag">Live the life</span>
-      <h3>Black Sam</h3>
-      <p>Walk Bellamy&rsquo;s whole road once &mdash; Cape Cod, the Florida dive, the vote, the chase, the northbound run, and the storm that ended it.</p>
-      <p class="how">Best for: one clean biography playthrough, the crew, and the dual ending (beat history&hellip; or don&rsquo;t).</p>
-      <span class="go">Take the wheel →</span>
     </a>
   </div>
 
@@ -71,7 +64,7 @@ h1{margin:0;font:700 clamp(40px,6vw,66px)/.96 var(--serif);letter-spacing:-.04em
     <a class="card" href="/map-studio.html?door=windward"><span class="num">🚪 CHOKEPOINTS</span><h3>Chokepoints</h3><p>Watch where the world&rsquo;s shipping squeezes through eleven real doors, then park your pirate and see why Bellamy&rsquo;s crew never had to chase far.</p><span class="go">Find the doors →</span></a>
   </div>
 
-  <p class="note">Built for a Summer 2026 middle-school program in Salem, Massachusetts. They run in the browser, work offline once loaded, and collect no student data. Your teacher opens Voyage and Black Sam during class.</p>
+  <p class="note">Built for a Summer 2026 middle-school program in Salem, Massachusetts. They run in the browser, work offline once loaded, and collect no student data. Your teacher opens Voyage during class.</p>
 </main>
 <footer class="wrap footer"><span>Part of the WhydahStory project.</span><span><a href="/">Home</a> · <a href="/curriculum-guide.html">Curriculum</a></span></footer>
 </body>

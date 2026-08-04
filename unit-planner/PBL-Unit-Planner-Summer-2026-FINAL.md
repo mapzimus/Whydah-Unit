@@ -165,7 +165,6 @@ required for any student-facing page.
 | **Flythrough** | Google-Earth-style tour of the Whydah's route | https://whydahstory.com/flythrough.html |
 | **Games hub** | Student game hub (teacher-gated) | https://whydahstory.com/games/ |
 | — *Whydah's Voyage* | Replay the coast — the voyage as a game | https://whydahstory.com/navigator/ |
-| — *Black Sam* | One biography run through Bellamy's life | https://whydahstory.com/black-sam/ |
 
 ### Dashboard reference tabs (used daily in lessons)
 | Tab | Link |
