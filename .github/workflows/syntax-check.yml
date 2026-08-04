@@ -40,7 +40,7 @@ jobs:
       - name: Check every game page still references its script
         run: |
           fail=0
-          for page in navigator/index.html black-sam/index.html parrot-flip/index.html; do
+          for page in navigator/index.html parrot-flip/index.html; do
             [ -f "$page" ] || { echo "MISSING $page"; fail=1; continue; }
             # pull each local src="..." out of the page and confirm the file exists
             for src in $(grep -o 'src="[^"]*\.js[^"]*"' "$page" | sed 's/src="//;s/"//' | sed 's/?.*//'); do

@@ -8,7 +8,7 @@
  *   never in this file, so the publishable key alone can't unlock anything.
  *
  * HOW IT'S USED
- *   - On a game page (parrot-flip / navigator / black-sam index.html), include:
+ *   - On a game page (parrot-flip / navigator index.html), include:
  *       <script src="/games-gate.js" data-enforce="parrot-flip"></script>
  *     placed in <head> (NOT deferred) so the page is covered before it renders.
  *     Fail-closed: the game stays hidden behind a lock overlay until a live read
@@ -28,8 +28,8 @@
   var SB_KEY = 'sb_publishable_fBBZAVo-ljKvaBKNVMukmA_TopYb6D8';
   var HEADERS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
 
-  var GAMES = ['navigator', 'black-sam', 'parrot-flip'];
-  var GAME_NAMES = { 'navigator': "Whydah's Voyage", 'black-sam': 'Black Sam', 'parrot-flip': 'Parrot Flip' };
+  var GAMES = ['navigator', 'parrot-flip'];
+  var GAME_NAMES = { 'navigator': "Whydah's Voyage", 'parrot-flip': 'Parrot Flip' };
 
   // state[slug] = true (open) | false (locked) | undefined (not yet known)
   var state = {};
