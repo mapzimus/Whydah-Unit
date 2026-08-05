@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Showcase Submission</title>
-<meta name="description" content="Submit three photos with captions for the photography showcase slideshow.">
+<meta name="description" content="Submit three photos with captions for the photography showcase slideshow. Replace or delete anytime.">
 <meta name="theme-color" content="#14161a">
 <link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
 <link rel="stylesheet" href="photo.css">
@@ -20,33 +20,27 @@
 
   <div class="card">
     <strong>Pick your best three.</strong>
-    <p class="muted" style="margin:0.4em 0 0;">Each student submits <strong>exactly three</strong> photos for tomorrow’s showcase slideshow. Every photo needs a short caption and your name. Once you’re in, they’re in the show.</p>
+    <p class="muted" style="margin:0.4em 0 0;">Each student gets <strong>three slots</strong> in tomorrow’s slideshow. Every photo needs a caption and your name. Uploaded the wrong one? <strong>Replace</strong> or <strong>Delete</strong> it and try again — mistakes are fine.</p>
   </div>
 
-  <div class="card" id="form-card">
+  <div class="card">
     <h2>Your name</h2>
     <div class="row">
       <input type="text" id="student-name" placeholder="First name + last initial (e.g. Maya R)" maxlength="60" style="flex:1; min-width:220px;">
+      <button id="load-btn" class="secondary">Find my photos</button>
     </div>
-
-    <h2 style="margin-top:1.4em;">Your three photos</h2>
-    <div id="slots" class="submit-slots"></div>
-
-    <div class="row" style="margin-top:1.2em;">
-      <button id="submit-btn">Submit my 3 photos</button>
-      <a class="btn secondary" href="showcase.html">Open showcase slideshow →</a>
-    </div>
-    <div id="status" class="muted" style="margin-top:0.7em;"></div>
-    <progress id="progress" max="3" value="0" style="display:none;"></progress>
+    <div id="name-status" class="muted" style="margin-top:0.5em;"></div>
   </div>
 
-  <div class="card" id="done-card" style="display:none;">
-    <h2 style="color:var(--green);">You’re in the showcase ✓</h2>
-    <p id="done-msg" class="muted"></p>
-    <div class="row">
-      <a class="btn" href="showcase.html">Preview the slideshow</a>
-      <button class="secondary" id="submit-another">Submit for a different student</button>
+  <div class="card" id="slots-card" hidden>
+    <h2>Your three photos</h2>
+    <p id="slots-hint" class="muted" style="margin-top:0;"></p>
+    <div id="slots" class="submit-slots"></div>
+    <div class="row" style="margin-top:1.2em;">
+      <a class="btn secondary" href="showcase.html">Open showcase slideshow →</a>
+      <button class="secondary" id="switch-student">Different student</button>
     </div>
+    <div id="status" class="muted" style="margin-top:0.7em;"></div>
   </div>
 
   <nav class="footer-nav"><a href="index.html">← Photo home</a></nav>
@@ -54,160 +48,269 @@
 
 <script src="photo.js"></script>
 <script>
-const SLOT_COUNT = 3;
-const PREFIX = 'showcase';
-
 const nameInput = document.getElementById('student-name');
+const nameStatus = document.getElementById('name-status');
+const slotsCard = document.getElementById('slots-card');
 const slotsBox = document.getElementById('slots');
+const slotsHint = document.getElementById('slots-hint');
 const statusEl = document.getElementById('status');
-const prog = document.getElementById('progress');
-const submitBtn = document.getElementById('submit-btn');
 
 nameInput.value = localStorage.getItem('photo-my-name') || '';
 
-const slots = [];
-for (let i = 0; i < SLOT_COUNT; i++) {
-  const file = el('input', { type: 'file', accept: 'image/*', id: 'file-' + i });
-  const caption = el('input', {
-    type: 'text',
-    placeholder: 'Caption — what should people notice?',
-    maxlength: '140',
-    id: 'caption-' + i,
-    style: 'flex:1; min-width:200px;',
-  });
-  const preview = el('div', { class: 'submit-preview muted', text: 'No photo yet' });
-  const card = el('div', { class: 'submit-slot card' },
-    el('div', { class: 'submit-slot-head' },
-      el('strong', { text: 'Photo ' + (i + 1) }),
-      preview),
-    el('div', { class: 'row', style: 'margin-top:0.6em;' }, file),
-    el('div', { class: 'row', style: 'margin-top:0.5em;' }, caption));
-  file.onchange = () => {
-    const f = file.files[0];
-    if (!f) { preview.textContent = 'No photo yet'; preview.className = 'submit-preview muted'; return; }
-    preview.textContent = f.name;
-    preview.className = 'submit-preview';
-  };
-  slots.push({ file, caption, preview });
-  slotsBox.appendChild(card);
+let currentStudent = '';
+let currentSlots = [null, null, null]; // resolved live entries
+let allMetas = [];
+
+function setStatus(msg, isError) {
+  statusEl.innerHTML = '';
+  if (!msg) return;
+  statusEl.appendChild(el('div', { class: isError ? 'error' : 'muted', text: msg }));
 }
 
-async function listShowcaseMeta() {
-  const items = await storageList(PREFIX);
-  // Sidecars are JSON text stored as .meta.jpg (bucket only allows image MIME types).
-  const sidecars = items.filter(i => i.id !== null && /\.meta\.jpe?g$/i.test(i.name) && !i.name.startsWith('_probe'));
-  const metas = [];
-  for (const j of sidecars) {
-    try {
-      const r = await fetch(publicUrl(PREFIX + '/' + j.name));
-      if (!r.ok) continue;
-      const meta = await r.json();
-      meta._sidecar = j.name;
-      metas.push(meta);
-    } catch (_) { /* skip bad sidecar */ }
-  }
-  return metas;
-}
+function renderSlots() {
+  slotsBox.innerHTML = '';
+  const filled = currentSlots.filter(Boolean).length;
+  slotsHint.textContent = filled === SHOWCASE_SLOTS
+    ? 'All three are in. Replace or delete any slot if you need a do-over.'
+    : filled === 0
+      ? 'Nothing in yet — add a photo to each slot below.'
+      : filled + ' of ' + SHOWCASE_SLOTS + ' in. Fill the empty slots (or fix one that went wrong).';
 
-async function countForStudent(name) {
-  const metas = await listShowcaseMeta();
-  const key = name.trim().toLowerCase();
-  return metas.filter(m => (m.student_name || '').trim().toLowerCase() === key).length;
-}
+  for (let i = 0; i < SHOWCASE_SLOTS; i++) {
+    const slotNum = i + 1;
+    const existing = currentSlots[i];
+    const card = el('div', { class: 'submit-slot card', 'data-slot': String(slotNum) });
 
-submitBtn.onclick = async () => {
-  const student = nameInput.value.trim();
-  if (!student) { statusEl.textContent = 'Put your name in first.'; return; }
+    if (existing) {
+      card.appendChild(el('div', { class: 'submit-slot-head' },
+        el('strong', { text: 'Photo ' + slotNum + ' ✓' }),
+        el('span', { class: 'claimed', text: 'In the showcase' })));
+      card.appendChild(el('div', { class: 'submit-current' },
+        el('img', {
+          src: existing.url,
+          alt: existing.caption,
+          onclick: () => openLightbox(existing.url, existing.caption + ' — ' + existing.student_name),
+        }),
+        el('div', { class: 'submit-current-meta' },
+          el('div', { class: 'submit-current-caption', text: existing.caption }),
+          el('div', { class: 'muted', text: existing.student_name }))));
 
-  const picks = [];
-  for (let i = 0; i < SLOT_COUNT; i++) {
-    const f = slots[i].file.files[0];
-    const cap = slots[i].caption.value.trim();
-    if (!f) { statusEl.textContent = 'Photo ' + (i + 1) + ' is missing — pick a file.'; return; }
-    if (!cap) { statusEl.textContent = 'Photo ' + (i + 1) + ' needs a caption.'; return; }
-    picks.push({ file: f, caption: cap });
-  }
+      const capEdit = el('input', {
+        type: 'text',
+        value: existing.caption,
+        maxlength: '140',
+        placeholder: 'Caption',
+        style: 'flex:1; min-width:200px;',
+      });
+      const file = el('input', { type: 'file', accept: 'image/*' });
+      const replaceBtn = el('button', { text: 'Replace photo' });
+      const captionBtn = el('button', { class: 'secondary', text: 'Update caption only' });
+      const deleteBtn = el('button', { class: 'secondary', text: 'Delete' });
 
-  submitBtn.disabled = true;
-  statusEl.textContent = 'Checking whether you already submitted…';
-  try {
-    const existing = await countForStudent(student);
-    if (existing >= SLOT_COUNT) {
-      statusEl.innerHTML = '';
-      statusEl.appendChild(el('div', {
-        class: 'error',
-        text: student + ' already has ' + existing + ' showcase photos in. Ask your teacher if you need to change them.',
-      }));
-      submitBtn.disabled = false;
-      return;
-    }
-    if (existing > 0) {
-      statusEl.innerHTML = '';
-      statusEl.appendChild(el('div', {
-        class: 'error',
-        text: student + ' already submitted ' + existing + ' photo(s). Showcase entries are exactly three — ask your teacher before trying again.',
-      }));
-      submitBtn.disabled = false;
-      return;
-    }
-  } catch (e) {
-    statusEl.textContent = 'Could not check existing submissions: ' + e.message;
-    submitBtn.disabled = false;
-    return;
-  }
+      replaceBtn.onclick = () => replaceSlot(slotNum, file, capEdit, replaceBtn);
+      captionBtn.onclick = () => updateCaptionOnly(slotNum, capEdit, captionBtn);
+      deleteBtn.onclick = () => deleteSlot(slotNum, deleteBtn);
 
-  localStorage.setItem('photo-my-name', student);
-  prog.style.display = '';
-  prog.max = SLOT_COUNT;
-  prog.value = 0;
-
-  const stamp = Date.now().toString(36);
-  const safeStudent = student.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 40) || 'student';
-  let ok = 0;
-  const failed = [];
-
-  for (let i = 0; i < picks.length; i++) {
-    statusEl.textContent = 'Uploading photo ' + (i + 1) + ' of ' + SLOT_COUNT + '…';
-    const id = stamp + '_' + (i + 1) + '_' + safeStudent;
-    try {
-      const blob = await shrinkImage(picks[i].file);
-      const photoName = id + '_' + uploadName(picks[i].file, blob);
-      const photoPath = PREFIX + '/' + photoName;
-      await storageUpload(photoPath, blob);
-      const meta = {
-        student_name: student,
-        caption: picks[i].caption,
-        photo_path: photoPath,
-        created_at: new Date().toISOString(),
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.7em;' }, file));
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.5em;' }, capEdit));
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.5em;' }, replaceBtn, captionBtn, deleteBtn));
+    } else {
+      card.appendChild(el('div', { class: 'submit-slot-head' },
+        el('strong', { text: 'Photo ' + slotNum }),
+        el('span', { class: 'badge', text: 'Empty' })));
+      const file = el('input', { type: 'file', accept: 'image/*' });
+      const caption = el('input', {
+        type: 'text',
+        placeholder: 'Caption — what should people notice?',
+        maxlength: '140',
+        style: 'flex:1; min-width:200px;',
+      });
+      const preview = el('div', { class: 'submit-preview muted', text: 'No photo yet' });
+      file.onchange = () => {
+        const f = file.files[0];
+        preview.textContent = f ? f.name : 'No photo yet';
+        preview.className = f ? 'submit-preview' : 'submit-preview muted';
       };
-      // Bucket rejects non-image MIME types — store JSON as image/jpeg bytes.
-      const metaBlob = new Blob([JSON.stringify(meta)], { type: 'image/jpeg' });
-      await storageUpload(PREFIX + '/' + id + '.meta.jpg', metaBlob);
-      ok++;
-    } catch (e) {
-      failed.push('Photo ' + (i + 1) + ': ' + e.message);
+      const addBtn = el('button', { text: 'Add to showcase' });
+      addBtn.onclick = () => addSlot(slotNum, file, caption, addBtn);
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.6em;' }, preview));
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.5em;' }, file));
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.5em;' }, caption));
+      card.appendChild(el('div', { class: 'row', style: 'margin-top:0.5em;' }, addBtn));
     }
-    prog.value = i + 1;
+    slotsBox.appendChild(card);
   }
+}
 
-  if (ok === SLOT_COUNT) {
-    document.getElementById('form-card').style.display = 'none';
-    document.getElementById('done-card').style.display = '';
-    document.getElementById('done-msg').textContent =
-      student + ' — all three photos are in the showcase. You can preview the slideshow anytime.';
-  } else {
-    statusEl.innerHTML = '';
-    statusEl.appendChild(el('div', {
-      class: 'error',
-      text: 'Uploaded ' + ok + ' of ' + SLOT_COUNT + '. ' + (failed.length ? failed.join(' · ') : 'Try again.'),
-    }));
-    submitBtn.disabled = false;
+async function refreshForStudent(student) {
+  allMetas = await listShowcaseMetas();
+  currentStudent = student;
+  currentSlots = slotsForStudent(allMetas, student);
+  localStorage.setItem('photo-my-name', student);
+  slotsCard.hidden = false;
+  renderSlots();
+  const filled = currentSlots.filter(Boolean).length;
+  nameStatus.textContent = filled
+    ? 'Found ' + filled + ' photo' + (filled === 1 ? '' : 's') + ' for ' + student + '.'
+    : 'No photos yet for ' + student + ' — add them below.';
+}
+
+async function ensureStudent() {
+  const student = nameInput.value.trim();
+  if (!student) {
+    nameStatus.textContent = 'Put your name in first.';
+    return null;
   }
+  if (student !== currentStudent || slotsCard.hidden) {
+    nameStatus.textContent = 'Loading…';
+    try { await refreshForStudent(student); }
+    catch (e) {
+      nameStatus.textContent = 'Could not load: ' + e.message;
+      return null;
+    }
+  }
+  return student;
+}
+
+document.getElementById('load-btn').onclick = () => ensureStudent();
+nameInput.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') { ev.preventDefault(); ensureStudent(); }
+});
+
+document.getElementById('switch-student').onclick = () => {
+  currentStudent = '';
+  currentSlots = [null, null, null];
+  slotsCard.hidden = true;
+  setStatus('');
+  nameStatus.textContent = 'Enter the other student’s name and hit Find my photos.';
+  nameInput.focus();
 };
 
-document.getElementById('submit-another').onclick = () => {
-  location.reload();
-};
+function newId(student, slot) {
+  const stamp = Date.now().toString(36);
+  const safe = student.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 40) || 'student';
+  return stamp + '_' + slot + '_' + safe;
+}
+
+async function addSlot(slotNum, fileInput, captionInput, btn) {
+  const student = await ensureStudent();
+  if (!student) return;
+  const file = fileInput.files[0];
+  const caption = captionInput.value.trim();
+  if (!file) { setStatus('Pick a photo for slot ' + slotNum + ' first.', true); return; }
+  if (!caption) { setStatus('Add a caption for slot ' + slotNum + '.', true); return; }
+
+  btn.disabled = true;
+  setStatus('Uploading photo ' + slotNum + '…');
+  try {
+    const id = newId(student, slotNum);
+    const blob = await shrinkImage(file);
+    const photoPath = SHOWCASE_PREFIX + '/' + id + '_' + uploadName(file, blob);
+    await storageUpload(photoPath, blob);
+    await uploadShowcaseMeta(id, {
+      student_name: student,
+      caption,
+      photo_path: photoPath,
+      slot: slotNum,
+      created_at: new Date().toISOString(),
+    });
+    await refreshForStudent(student);
+    setStatus('Photo ' + slotNum + ' is in the showcase.');
+  } catch (e) {
+    setStatus('Upload failed: ' + e.message, true);
+    btn.disabled = false;
+  }
+}
+
+async function replaceSlot(slotNum, fileInput, captionInput, btn) {
+  const student = await ensureStudent();
+  if (!student) return;
+  const file = fileInput.files[0];
+  const caption = captionInput.value.trim();
+  if (!file) { setStatus('Pick a new photo file to replace slot ' + slotNum + '.', true); return; }
+  if (!caption) { setStatus('Caption can’t be empty.', true); return; }
+
+  btn.disabled = true;
+  setStatus('Replacing photo ' + slotNum + '…');
+  try {
+    const id = newId(student, slotNum);
+    const blob = await shrinkImage(file);
+    const photoPath = SHOWCASE_PREFIX + '/' + id + '_' + uploadName(file, blob);
+    await storageUpload(photoPath, blob);
+    await uploadShowcaseMeta(id, {
+      student_name: student,
+      caption,
+      photo_path: photoPath,
+      slot: slotNum,
+      created_at: new Date().toISOString(),
+    });
+    await refreshForStudent(student);
+    setStatus('Photo ' + slotNum + ' replaced.');
+  } catch (e) {
+    setStatus('Replace failed: ' + e.message, true);
+    btn.disabled = false;
+  }
+}
+
+async function updateCaptionOnly(slotNum, captionInput, btn) {
+  const student = await ensureStudent();
+  if (!student) return;
+  const existing = currentSlots[slotNum - 1];
+  if (!existing) return;
+  const caption = captionInput.value.trim();
+  if (!caption) { setStatus('Caption can’t be empty.', true); return; }
+  if (caption === existing.caption) { setStatus('Caption is already up to date.'); return; }
+
+  btn.disabled = true;
+  setStatus('Updating caption…');
+  try {
+    const id = newId(student, slotNum);
+    await uploadShowcaseMeta(id, {
+      student_name: student,
+      caption,
+      photo_path: existing.photo_path,
+      slot: slotNum,
+      created_at: new Date().toISOString(),
+    });
+    await refreshForStudent(student);
+    setStatus('Caption updated for photo ' + slotNum + '.');
+  } catch (e) {
+    setStatus('Caption update failed: ' + e.message, true);
+    btn.disabled = false;
+  }
+}
+
+async function deleteSlot(slotNum, btn) {
+  const student = await ensureStudent();
+  if (!student) return;
+  const existing = currentSlots[slotNum - 1];
+  if (!existing) return;
+  if (!confirm('Remove photo ' + slotNum + ' from the showcase? You can add a new one after.')) return;
+
+  btn.disabled = true;
+  setStatus('Removing photo ' + slotNum + '…');
+  try {
+    const id = newId(student, slotNum);
+    await uploadShowcaseMeta(id, {
+      student_name: student,
+      caption: existing.caption || '',
+      photo_path: existing.photo_path || '',
+      slot: slotNum,
+      deleted: true,
+      created_at: new Date().toISOString(),
+    });
+    await refreshForStudent(student);
+    setStatus('Photo ' + slotNum + ' removed. Slot is empty — add a new one anytime.');
+  } catch (e) {
+    setStatus('Delete failed: ' + e.message, true);
+    btn.disabled = false;
+  }
+}
+
+// Auto-load if we already know their name from a prior visit.
+if (nameInput.value.trim()) {
+  ensureStudent().catch(() => {});
+}
 </script>
 </body>
 </html>
