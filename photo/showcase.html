@@ -69,7 +69,6 @@
 
 <script src="photo.js"></script>
 <script>
-const PREFIX = 'showcase';
 const TARGET_MS = 5 * 60 * 1000; // ~5 minutes
 const MIN_SLIDE_MS = 4000;
 const MAX_SLIDE_MS = 12000;
@@ -124,28 +123,8 @@ async function loadEntries() {
   lobbyGrid.innerHTML = '';
   playBtn.disabled = true;
   try {
-    const items = await storageList(PREFIX);
-    // Sidecars are JSON text stored as .meta.jpg (bucket only allows image MIME types).
-    const sidecars = items.filter(i => i.id !== null && /\.meta\.jpe?g$/i.test(i.name) && !i.name.startsWith('_probe'));
-    const loaded = [];
-    await Promise.all(sidecars.map(async (j) => {
-      try {
-        const r = await fetch(publicUrl(PREFIX + '/' + j.name));
-        if (!r.ok) return;
-        const meta = await r.json();
-        if (!meta.photo_path || !meta.student_name || !meta.caption) return;
-        if (/_probe|Smoke_Test/i.test(meta.photo_path) || /^Smoke Test$/i.test(meta.student_name)) return;
-        loaded.push({
-          student_name: meta.student_name,
-          caption: meta.caption,
-          photo_path: meta.photo_path,
-          created_at: meta.created_at || '',
-          url: publicUrl(meta.photo_path),
-        });
-      } catch (_) { /* skip */ }
-    }));
-    loaded.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-    entries = loaded;
+    const metas = await listShowcaseMetas();
+    entries = resolveShowcaseEntries(metas);
     const n = entries.length;
     const students = new Set(entries.map(e => e.student_name.trim().toLowerCase())).size;
     slideMs = computeSlideMs(n);

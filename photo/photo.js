@@ -171,3 +171,93 @@ function openLightbox(url, caption) {
   document.body.appendChild(box);
 }
 function isImage(name) { return /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(name); }
+
+/* ---------- Showcase submissions (storage sidecars under showcase/) ---------- */
+const SHOWCASE_PREFIX = 'showcase';
+const SHOWCASE_SLOTS = 3;
+
+function isShowcaseProbe(meta) {
+  const path = meta.photo_path || '';
+  const name = meta.student_name || '';
+  return /_probe|Smoke_Test/i.test(path) || /^Smoke Test$/i.test(name) || /^_probe/i.test(meta._sidecar || '');
+}
+
+/** Load every showcase sidecar. Bucket only allows image MIME types, so JSON is stored as .meta.jpg. */
+async function listShowcaseMetas() {
+  const items = await storageList(SHOWCASE_PREFIX);
+  const sidecars = items.filter(i => i.id !== null && /\.meta\.jpe?g$/i.test(i.name) && !i.name.startsWith('_probe'));
+  const metas = [];
+  await Promise.all(sidecars.map(async (j) => {
+    try {
+      const r = await fetch(publicUrl(SHOWCASE_PREFIX + '/' + j.name));
+      if (!r.ok) return;
+      const meta = await r.json();
+      meta._sidecar = j.name;
+      if (isShowcaseProbe(meta)) return;
+      metas.push(meta);
+    } catch (_) { /* skip bad sidecar */ }
+  }));
+  return metas;
+}
+
+/**
+ * Resolve the live showcase set: latest version per (student, slot).
+ * Tombstones (`deleted: true`) clear a slot. Entries without a slot (first version)
+ * get slots 1..3 in created_at order per student.
+ */
+function resolveShowcaseEntries(metas) {
+  const byStudent = new Map();
+  for (const m of metas) {
+    const key = (m.student_name || '').trim().toLowerCase();
+    if (!key) continue;
+    if (!byStudent.has(key)) byStudent.set(key, []);
+    byStudent.get(key).push(m);
+  }
+  const live = [];
+  for (const [, list] of byStudent) {
+    list.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+    // Backfill slot numbers for older uploads that didn't store one.
+    let nextSlot = 1;
+    for (const m of list) {
+      if (m.slot == null || m.slot < 1 || m.slot > SHOWCASE_SLOTS) {
+        if (!m.deleted) m.slot = nextSlot <= SHOWCASE_SLOTS ? nextSlot++ : SHOWCASE_SLOTS;
+      }
+    }
+    const latest = {};
+    for (const m of list) {
+      const slot = m.slot;
+      if (slot < 1 || slot > SHOWCASE_SLOTS) continue;
+      const prev = latest[slot];
+      if (!prev || (m.created_at || '') >= (prev.created_at || '')) latest[slot] = m;
+    }
+    for (let s = 1; s <= SHOWCASE_SLOTS; s++) {
+      const m = latest[s];
+      if (!m || m.deleted || !m.photo_path || !m.caption) continue;
+      live.push({
+        student_name: m.student_name,
+        caption: m.caption,
+        photo_path: m.photo_path,
+        created_at: m.created_at || '',
+        slot: s,
+        url: publicUrl(m.photo_path),
+      });
+    }
+  }
+  live.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  return live;
+}
+
+/** Latest live entry per slot (1..3) for one student name. Missing slots are null. */
+function slotsForStudent(metas, studentName) {
+  const key = studentName.trim().toLowerCase();
+  const mine = metas.filter(m => (m.student_name || '').trim().toLowerCase() === key);
+  const resolved = resolveShowcaseEntries(mine);
+  const out = [null, null, null];
+  for (const e of resolved) out[e.slot - 1] = e;
+  return out;
+}
+
+async function uploadShowcaseMeta(id, meta) {
+  const metaBlob = new Blob([JSON.stringify(meta)], { type: 'image/jpeg' });
+  await storageUpload(SHOWCASE_PREFIX + '/' + id + '.meta.jpg', metaBlob);
+}

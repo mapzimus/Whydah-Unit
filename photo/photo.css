@@ -81,6 +81,19 @@ progress { width: 100%; }
 .submit-slot { margin-bottom: 0; }
 .submit-slot-head { display: flex; justify-content: space-between; gap: 1em; align-items: baseline; }
 .submit-preview { font-size: 0.88em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+.submit-current {
+  display: grid; grid-template-columns: 110px 1fr; gap: 0.8em; align-items: center;
+  margin-top: 0.6em;
+}
+.submit-current img {
+  width: 110px; height: 110px; object-fit: cover; border-radius: 6px;
+  background: #0d0e11; cursor: pointer; border: 1px solid var(--border);
+}
+.submit-current-caption { font-family: Georgia, 'Times New Roman', serif; font-size: 1.05em; }
+@media (max-width: 520px) {
+  .submit-current { grid-template-columns: 1fr; }
+  .submit-current img { width: 100%; height: auto; aspect-ratio: 1; }
+}
 
 /* ---------- Showcase slideshow ---------- */
 .showcase-body.showcase-playing { overflow: hidden; background: #050607; }
