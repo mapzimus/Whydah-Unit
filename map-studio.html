@@ -738,10 +738,41 @@
   ];
   var placeFilter = 'all'; /* all | mine | characters | geo */
 
-  /* ---------- Basemaps (several hosts — if school wifi blocks one, try another) ---------- */
-  var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Imagery © Esri' });
-  var osm  = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
-  var carto = L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap · © CARTO' });
+  /* ---------- Basemaps (several hosts — if school wifi blocks one, try another) ----------
+     No free global “pirate parchment” Mercator exists without an API key.
+     Closest free fits: Esri Ocean (nautical), NatGeo (classic atlas), Physical (old relief). */
+  var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, attribution: 'Imagery © Esri'
+  });
+  var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+  });
+  var carto = L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap · © CARTO'
+  });
+  var oceanBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16, attribution: 'Ocean © Esri · GEBCO · NOAA'
+  });
+  var oceanLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16, attribution: 'Labels © Esri'
+  });
+  var ocean = L.layerGroup([oceanBase, oceanLabels]);
+  var natgeo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16, attribution: 'National Geographic · © Esri'
+  });
+  var physical = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 8, attribution: 'World Physical © Esri'
+  });
+  function basemapLayers() {
+    return {
+      '⚓ Ocean chart': ocean,
+      '📜 Atlas (NatGeo)': natgeo,
+      '🗺 Physical relief': physical,
+      'Satellite (Esri)': esri,
+      'Streets (OSM)': osm,
+      'Light (Carto)': carto
+    };
+  }
 
   /* ---------- Two canvases: the world (tiles) and the 1717 chart (image, works with NO internet) ---------- */
   var CHART_URL = 'pics/southack-1717-chart-clean.jpg';
@@ -773,7 +804,7 @@
     document.getElementById('notice').style.display = 'block';
   }
 
-  [esri, osm, carto].forEach(function (l) {
+  [esri, osm, carto, oceanBase, oceanLabels, natgeo, physical].forEach(function (l) {
     l.on('tileerror', function () {
       tileFailures++;
       if (tileFailures === 8) {
@@ -820,13 +851,13 @@
     mode = 'world';
     freshMap(L.CRS.EPSG3857);
     map.setMinZoom(2); map.setMaxZoom(19);
-    esri.addTo(map);
-    L.control.layers({ 'Satellite (Esri)': esri, 'Streets (OSM)': osm, 'Light (Carto)': carto }, null, { position: 'topright' }).addTo(map);
+    ocean.addTo(map);
+    L.control.layers(basemapLayers(), null, { position: 'topright' }).addTo(map);
     map.setView([32, -55], 3);
     restoreWork();
     if (voyageOn) { voyageOn = false; showVoyage(); }
     setModeButtons();
-    document.getElementById('hint').textContent = 'Start with 📍 Places or 📌 Tap stop. Aim for 8–10 numbered stops in your person’s voice.';
+    document.getElementById('hint').textContent = 'Start with 📍 Places or 📌 Tap stop. Aim for 8–10 numbered stops in your person’s voice. Layer switcher (top right): try ⚓ Ocean chart or 📜 Atlas.';
   }
 
   function enterChart() {
@@ -2159,8 +2190,8 @@
     mode = 'doors';
     freshMap(L.CRS.EPSG3857);
     map.setMinZoom(2); map.setMaxZoom(12);
-    carto.addTo(map);
-    L.control.layers({ 'Light (Carto)': carto, 'Satellite (Esri)': esri, 'Streets (OSM)': osm }, null, { position: 'topright' }).addTo(map);
+    ocean.addTo(map);
+    L.control.layers(basemapLayers(), null, { position: 'topright' }).addTo(map);
     var d = jumpKey && DOORS[jumpKey];
     if (d) map.setView(d.ll, d.z); else map.setView([22, 30], 2);
     startTraffic();
