@@ -97,6 +97,15 @@
   .check .mark.no{color:var(--ox);}
   .starter{margin-top:.7em;padding-top:.55em;border-top:1px solid var(--parch2);}
   .starter p{font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.4em;}
+  .lib-row{display:flex;gap:.35em;align-items:flex-start;padding:.5em 0;border-bottom:1px dashed var(--parch2);}
+  .lib-row.on{background:rgba(140,44,30,.08);margin:0 -.4em;padding:.5em .4em;border-radius:8px;}
+  .lib-row .info{flex:1;min-width:0;}
+  .lib-row .info b{display:block;font-size:.95em;color:var(--ink2);}
+  .lib-row .info span{display:block;font-size:.78em;color:var(--muted);font-style:italic;}
+  .lib-row .acts{display:flex;flex-direction:column;gap:.25em;flex:0 0 auto;}
+  .lib-row .acts .tbtn{font-size:.78em;padding:.28em .5em;}
+  .save-status{font-size:.85em;color:var(--ink2);margin:.35em 0 .15em;padding:.45em .55em;background:#FBF4E2;border:1.5px solid var(--brass);border-radius:8px;}
+  .save-status.empty{color:var(--muted);font-style:italic;}
   .place-search{margin-bottom:.55em;}
   .place-cat{font-size:.72em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ox);margin:.7em 0 .3em;border-bottom:1px solid var(--parch2);padding-bottom:.15em;}
   .place-row{display:flex;gap:.35em;align-items:flex-start;padding:.4em 0;border-bottom:1px dashed var(--parch2);}
@@ -162,7 +171,7 @@
 
 <header class="hero">
   <h1>🗺️ Map Studio</h1>
-  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Autosaves here · Download a backup for shared Chromebooks.</span>
+  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Autosaves here · 💾 Save here to keep a named copy on this Chromebook.</span>
 </header>
 
 <div class="toolbar" role="toolbar" aria-label="Choose a map">
@@ -201,9 +210,8 @@
     <button class="tbtn" id="tool-stops" title="List, reorder, and edit your stops">📑 Stops</button>
     <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
     <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
-    <button class="tbtn" id="tool-export" title="Save a backup file you can bring to any Chromebook">💾 Download</button>
-    <button class="tbtn" id="tool-import" title="Open a story-map file you downloaded earlier">📂 Import</button>
-    <input type="file" id="import-file" accept=".geojson,.json,application/geo+json,application/json" hidden>
+    <button class="tbtn" id="tool-save-lib" title="Save a named copy on this Chromebook — no download needed">💾 Save here</button>
+    <button class="tbtn" id="tool-library" title="Open story maps saved on this Chromebook">📂 My maps</button>
     <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
   </span>
 </div>
@@ -269,12 +277,27 @@
         <button type="button" class="tbtn" id="tool-starter">📍 Drop starter pins</button>
       </div>
       <div class="starter" id="backup-box">
-        <p><b>Shared Chromebook?</b> Download a backup file before you log out. On the next machine, Import that same file to pick up where you left off.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:.35em;">
-          <button type="button" class="tbtn" id="proj-export">💾 Download backup</button>
-          <button type="button" class="tbtn on" id="proj-import">📂 Import backup</button>
+        <p><b>Keep it on this Chromebook</b> — no download needed. Save a named copy, then open it later from 📂 My maps (even if someone else used the machine).</p>
+        <div id="save-status" class="save-status empty">Not saved as a named map yet — tap 💾 Save here.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35em;margin-top:.45em;">
+          <button type="button" class="tbtn on" id="proj-save-lib">💾 Save here</button>
+          <button type="button" class="tbtn" id="proj-save-as">Save as new…</button>
+          <button type="button" class="tbtn" id="proj-open-lib">📂 My maps</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="side left" id="library-panel" role="dialog" aria-label="My maps on this Chromebook">
+    <div class="side-head">📂 My maps <span class="lb-sub">saved on this Chromebook · no download</span>
+      <button type="button" id="library-close" aria-label="Close">✕</button></div>
+    <div class="side-body">
+      <p class="hint-sm" style="font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.5em;">Pick your name to open your story map. Shared machine? Everyone saves under their own name.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.35em;margin-bottom:.55em;">
+        <button type="button" class="tbtn on" id="lib-save-now">💾 Save what’s on the map</button>
+        <button type="button" class="tbtn" id="lib-save-as">Save as new…</button>
+      </div>
+      <div id="library-list"></div>
     </div>
   </div>
 
@@ -371,7 +394,7 @@
 <div class="sheet" id="story-sheet" aria-hidden="true"></div>
 
 <footer class="foot">
-  <b>Add</b> stops · <b>💾 Download</b> a backup for shared Chromebooks · <b>📂 Import</b> to continue on another machine.
+  <b>Add</b> stops · <b>💾 Save here</b> keeps a named copy on this Chromebook · <b>📂 My maps</b> opens it later.
   <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
@@ -382,8 +405,12 @@
 
   var SAVE_KEY = 'whydah-map-studio-v2';
   var SAVE_KEY_LEGACY = 'whydah-map-studio-v1';
+  var LIBRARY_KEY = 'whydah-map-studio-library-v1';
+  var ACTIVE_LIB_KEY = 'whydah-map-studio-active-lib';
 
   var project = { student: '', person: '', title: '' };
+  var activeLibraryId = null;
+  try { activeLibraryId = localStorage.getItem(ACTIVE_LIB_KEY) || null; } catch (_) { activeLibraryId = null; }
 
   /* ---------- The Whydah's documented voyage, 1715–1984 ---------- */
   var VOYAGE = [
@@ -901,23 +928,24 @@
   }
 
   function closeSidePanels() {
-    ['proj-panel', 'places-panel', 'stops-panel'].forEach(function (id) {
-      document.getElementById(id).classList.remove('open');
+    ['proj-panel', 'places-panel', 'stops-panel', 'library-panel'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.classList.remove('open');
     });
-    ['tool-project', 'tool-places', 'tool-stops'].forEach(function (id) {
+    ['tool-project', 'tool-places', 'tool-stops', 'tool-library'].forEach(function (id) {
       var el = document.getElementById(id); if (el) el.classList.remove('on');
     });
   }
   function openSide(which) {
-    var mapIds = { project: 'proj-panel', places: 'places-panel', stops: 'stops-panel' };
-    var toolIds = { project: 'tool-project', places: 'tool-places', stops: 'tool-stops' };
+    var mapIds = { project: 'proj-panel', places: 'places-panel', stops: 'stops-panel', library: 'library-panel' };
+    var toolIds = { project: 'tool-project', places: 'tool-places', stops: 'tool-stops', library: 'tool-library' };
     var panel = document.getElementById(mapIds[which]);
     var wasOpen = panel.classList.contains('open');
     closeSidePanels();
     exitTour();
     if (wasOpen) return false;
     panel.classList.add('open');
-    document.getElementById(toolIds[which]).classList.add('on');
+    var tool = document.getElementById(toolIds[which]);
+    if (tool) tool.classList.add('on');
     return true;
   }
 
@@ -2087,8 +2115,253 @@
     return out;
   }
   function saveNow() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(serialize())); } catch (_) {}
+    try {
+      var data = serialize();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      syncActiveLibrarySlot(data);
+    } catch (_) {}
   }
+
+  /* ---------- Named maps on this Chromebook (local library) ---------- */
+  function loadLibrary() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(LIBRARY_KEY) || 'null');
+      if (raw && Array.isArray(raw.maps)) return raw;
+    } catch (_) {}
+    return { maps: [] };
+  }
+  function writeLibrary(lib) {
+    try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib)); } catch (err) {
+      notice('Couldn’t save on this Chromebook — storage may be full. Delete an old map from 📂 My maps and try again.');
+      throw err;
+    }
+  }
+  function setActiveLibraryId(id) {
+    activeLibraryId = id || null;
+    try {
+      if (activeLibraryId) localStorage.setItem(ACTIVE_LIB_KEY, activeLibraryId);
+      else localStorage.removeItem(ACTIVE_LIB_KEY);
+    } catch (_) {}
+    updateSaveStatus();
+  }
+  function findLibraryMap(id) {
+    if (!id) return null;
+    var lib = loadLibrary();
+    for (var i = 0; i < lib.maps.length; i++) if (lib.maps[i].id === id) return lib.maps[i];
+    return null;
+  }
+  function countStatePins(state) {
+    if (!state) return 0;
+    var n = 0;
+    ['world', 'chart'].forEach(function (k) {
+      if (state[k] && state[k].pins) n += state[k].pins.length;
+    });
+    return n;
+  }
+  function defaultSaveName() {
+    var parts = [];
+    if (project.student && project.student.trim()) parts.push(project.student.trim());
+    if (project.person && project.person.trim()) parts.push(project.person.trim());
+    else if (project.title && project.title.trim()) parts.push(project.title.trim());
+    return parts.join(' — ').slice(0, 60) || 'My story map';
+  }
+  function formatSavedWhen(ts) {
+    if (!ts) return '';
+    try {
+      var d = new Date(ts);
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (_) { return ''; }
+  }
+  function syncActiveLibrarySlot(data) {
+    if (!activeLibraryId) return;
+    var lib = loadLibrary();
+    var slot = null;
+    for (var i = 0; i < lib.maps.length; i++) {
+      if (lib.maps[i].id === activeLibraryId) { slot = lib.maps[i]; break; }
+    }
+    if (!slot) { setActiveLibraryId(null); return; }
+    slot.state = data || serialize();
+    slot.updated = Date.now();
+    try { writeLibrary(lib); } catch (_) {}
+  }
+  function updateSaveStatus() {
+    var el = document.getElementById('save-status');
+    if (!el) return;
+    var slot = findLibraryMap(activeLibraryId);
+    if (!slot) {
+      el.className = 'save-status empty';
+      el.textContent = 'Not saved as a named map yet — tap 💾 Save here.';
+      return;
+    }
+    el.className = 'save-status';
+    var n = countStatePins(slot.state);
+    el.textContent = 'Saved as “' + slot.name + '” · ' + n + ' stop' + (n === 1 ? '' : 's') +
+      (slot.updated ? ' · ' + formatSavedWhen(slot.updated) : '') +
+      ' · keeps updating while you work';
+  }
+  function renderLibraryList() {
+    var wrap = document.getElementById('library-list');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    var lib = loadLibrary();
+    var maps = lib.maps.slice().sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
+    if (!maps.length) {
+      var empty = document.createElement('p');
+      empty.className = 'hint-sm';
+      empty.style.cssText = 'font-size:.88em;color:var(--muted);font-style:italic;';
+      empty.textContent = 'No named maps yet. Tap 💾 Save what’s on the map and type your name.';
+      wrap.appendChild(empty);
+      updateSaveStatus();
+      return;
+    }
+    maps.forEach(function (slot) {
+      var row = document.createElement('div');
+      row.className = 'lib-row' + (slot.id === activeLibraryId ? ' on' : '');
+      var info = document.createElement('div');
+      info.className = 'info';
+      var title = document.createElement('b');
+      title.textContent = slot.name + (slot.id === activeLibraryId ? ' · open now' : '');
+      info.appendChild(title);
+      var meta = document.createElement('span');
+      var n = countStatePins(slot.state);
+      var who = (slot.state && slot.state.project && (slot.state.project.person || slot.state.project.student)) || '';
+      meta.textContent = n + ' stop' + (n === 1 ? '' : 's') +
+        (who ? ' · ' + who : '') +
+        (slot.updated ? ' · ' + formatSavedWhen(slot.updated) : '');
+      info.appendChild(meta);
+      row.appendChild(info);
+      var acts = document.createElement('div');
+      acts.className = 'acts';
+      var openBtn = document.createElement('button');
+      openBtn.type = 'button';
+      openBtn.className = 'tbtn on';
+      openBtn.textContent = 'Open';
+      openBtn.onclick = function () { openLibraryMap(slot.id); };
+      var renBtn = document.createElement('button');
+      renBtn.type = 'button';
+      renBtn.className = 'tbtn';
+      renBtn.textContent = 'Rename';
+      renBtn.onclick = function () { renameLibraryMap(slot.id); };
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'tbtn danger';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = function () { deleteLibraryMap(slot.id); };
+      acts.appendChild(openBtn);
+      acts.appendChild(renBtn);
+      acts.appendChild(delBtn);
+      row.appendChild(acts);
+      wrap.appendChild(row);
+    });
+    updateSaveStatus();
+  }
+  function saveToLibrary(asNew) {
+    if (typeof readProjectFields === 'function') readProjectFields();
+    var data = serialize();
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (_) {}
+
+    var lib = loadLibrary();
+    if (!asNew && activeLibraryId) {
+      var slot = null;
+      for (var i = 0; i < lib.maps.length; i++) {
+        if (lib.maps[i].id === activeLibraryId) { slot = lib.maps[i]; break; }
+      }
+      if (slot) {
+        slot.state = data;
+        slot.updated = Date.now();
+        try { writeLibrary(lib); } catch (_) { return; }
+        notice('Saved “' + slot.name + '” on this Chromebook.');
+        renderLibraryList();
+        return;
+      }
+    }
+
+    var suggested = defaultSaveName();
+    var name = window.prompt('Name this story map (use your name so you can find it later on this Chromebook):', suggested);
+    if (name === null) return;
+    name = (name.trim() || suggested).slice(0, 60);
+
+    var existing = null;
+    for (var j = 0; j < lib.maps.length; j++) {
+      if ((lib.maps[j].name || '').toLowerCase() === name.toLowerCase()) { existing = lib.maps[j]; break; }
+    }
+    if (existing) {
+      if (!window.confirm('A map named “' + existing.name + '” is already on this Chromebook. Replace it with what’s on the map now?')) return;
+      existing.state = data;
+      existing.updated = Date.now();
+      existing.name = name;
+      try { writeLibrary(lib); } catch (_) { return; }
+      setActiveLibraryId(existing.id);
+      notice('Updated “' + existing.name + '” on this Chromebook.');
+    } else {
+      var id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      lib.maps.push({ id: id, name: name, updated: Date.now(), state: data });
+      try { writeLibrary(lib); } catch (_) { return; }
+      setActiveLibraryId(id);
+      notice('Saved “' + name + '” on this Chromebook. Open 📂 My maps anytime to get it back.');
+    }
+    renderLibraryList();
+  }
+  function openLibraryMap(id) {
+    var slot = findLibraryMap(id);
+    if (!slot || !slot.state) { notice('That map is missing — try saving again.'); return; }
+    var hasWork = livePins().length || routePointCount() ||
+      (work.world.pins && work.world.pins.length) || (work.chart.pins && work.chart.pins.length);
+    if (hasWork && activeLibraryId !== id) {
+      if (!window.confirm('Open “' + slot.name + '”? That replaces what’s on the map now. Save here first if you still need this one.')) return;
+    }
+    loadStateOntoMap(slot.state);
+    setActiveLibraryId(id);
+    notice('Opened “' + slot.name + '”. It will keep updating on this Chromebook while you work.');
+    document.getElementById('hint').textContent = 'Working on “' + slot.name + '”. Tap 💾 Save here after big changes — or just keep editing; this named map updates as you go.';
+    renderLibraryList();
+    if (mode !== 'doors' && mode !== 'globe') {
+      openSide('stops');
+      renderStopsList();
+    }
+  }
+  function renameLibraryMap(id) {
+    var lib = loadLibrary();
+    var slot = null;
+    for (var i = 0; i < lib.maps.length; i++) {
+      if (lib.maps[i].id === id) { slot = lib.maps[i]; break; }
+    }
+    if (!slot) return;
+    var name = window.prompt('Rename this story map:', slot.name);
+    if (name === null) return;
+    name = name.trim().slice(0, 60);
+    if (!name) return;
+    slot.name = name;
+    slot.updated = Date.now();
+    try { writeLibrary(lib); } catch (_) { return; }
+    notice('Renamed to “' + name + '”.');
+    renderLibraryList();
+  }
+  function deleteLibraryMap(id) {
+    var slot = findLibraryMap(id);
+    if (!slot) return;
+    if (!window.confirm('Delete “' + slot.name + '” from this Chromebook? This cannot be undone.')) return;
+    var lib = loadLibrary();
+    lib.maps = lib.maps.filter(function (m) { return m.id !== id; });
+    try { writeLibrary(lib); } catch (_) { return; }
+    if (activeLibraryId === id) setActiveLibraryId(null);
+    notice('Deleted “' + slot.name + '”.');
+    renderLibraryList();
+  }
+  function loadStateOntoMap(state) {
+    applyProjectState(state);
+    var worldHas = (work.world.pins && work.world.pins.length) || (work.world.routes && work.world.routes.length);
+    var chartHas = (work.chart.pins && work.chart.pins.length) || (work.chart.routes && work.chart.routes.length);
+    if (mode === 'doors' || mode === 'globe') {
+      if (worldHas || !chartHas) enterWorld();
+      else enterChart();
+      return;
+    }
+    if (chartHas && !worldHas && mode !== 'chart') enterChart();
+    else if (worldHas && mode !== 'world') enterWorld();
+    else reloadLiveMapFromWork();
+  }
+
   function loadSaved() {
     var raw = null;
     try { raw = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) {}
@@ -2186,7 +2459,7 @@
       };
     }
     if (!gj || gj.type !== 'FeatureCollection' || !Array.isArray(gj.features)) {
-      throw new Error('Pick a story-map file from 💾 Download (.geojson or .json).');
+      throw new Error('That doesn’t look like a Map Studio story map.');
     }
     var state = {
       project: gj.whydahProject || {},
@@ -2257,20 +2530,10 @@
   function importStoryMapText(text) {
     var parsed;
     try { parsed = JSON.parse(text); }
-    catch (_) { throw new Error('Couldn’t read that file — is it the .geojson from 💾 Download?'); }
+    catch (_) { throw new Error('Couldn’t read that file.'); }
     var state = geojsonToState(parsed);
-    applyProjectState(state);
-    /* Prefer World if it has content; otherwise chart */
-    var worldHas = (work.world.pins && work.world.pins.length) || (work.world.routes && work.world.routes.length);
-    var chartHas = (work.chart.pins && work.chart.pins.length) || (work.chart.routes && work.chart.routes.length);
-    if (mode === 'doors' || mode === 'globe') {
-      if (worldHas || !chartHas) enterWorld();
-      else enterChart();
-      return;
-    }
-    if (chartHas && !worldHas && mode !== 'chart') enterChart();
-    else if (worldHas && mode !== 'world') enterWorld();
-    else reloadLiveMapFromWork();
+    loadStateOntoMap(state);
+    setActiveLibraryId(null);
   }
   function downloadStoryMap() {
     var d = serialize();
@@ -2304,34 +2567,7 @@
     var slug = (project.person || project.student || 'whydah').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     a.download = 'story-map-' + (slug || 'whydah') + '.geojson';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    notice('Backup downloaded. On a shared Chromebook, use 📂 Import with this same file to continue later.');
-  }
-  function promptImportFile() {
-    document.getElementById('import-file').value = '';
-    document.getElementById('import-file').click();
-  }
-  function handleImportFile(file) {
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      try {
-        var hasWork = livePins().length || routePointCount() ||
-          (work.world.pins && work.world.pins.length) || (work.chart.pins && work.chart.pins.length);
-        if (hasWork && !window.confirm('Import replaces what’s on this Chromebook with the file. Continue?')) return;
-        importStoryMapText(String(reader.result || ''));
-        var n = (work.world.pins.length || 0) + (work.chart.pins.length || 0);
-        notice('Imported! ' + n + ' stop' + (n === 1 ? '' : 's') + ' restored' +
-          (project.person ? ' · ' + project.person : '') +
-          '. It also saved on this device for the rest of class.');
-        document.getElementById('hint').textContent = 'Backup restored. Keep downloading after big edits — shared Chromebooks forget local saves.';
-        openSide('stops');
-        renderStopsList();
-      } catch (err) {
-        notice(err.message || 'Import failed.');
-      }
-    };
-    reader.onerror = function () { notice('Couldn’t read that file.'); };
-    reader.readAsText(file);
+    notice('File download started (optional). Prefer 💾 Save here — that stays on this Chromebook without downloading.');
   }
 
   /* ---------- Showcase tour + story sheet ---------- */
@@ -2501,7 +2737,7 @@
     p.style.display = 'block';
   };
   document.getElementById('tool-project').onclick = function () {
-    if (openSide('project')) syncProjectFields();
+    if (openSide('project')) { syncProjectFields(); updateSaveStatus(); }
   };
   document.getElementById('proj-close').onclick = function () { closeSidePanels(); };
   document.getElementById('tool-places').onclick = function () {
@@ -2608,20 +2844,25 @@
   };
   document.getElementById('tool-voyage').onclick = function () { voyageOn ? hideVoyage() : showVoyage(); };
   document.getElementById('tool-clear').onclick = function () {
-    if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. This cannot be undone.')) return;
+    if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. Named maps in 📂 My maps are kept. This cannot be undone.')) return;
     work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
     work[mode] = { pins: [], routes: [], activeRoute: 0 };
     startNewRouteNext = false;
+    setActiveLibraryId(null);
     drawRoute(); saveNow(); updateStat(); exitTour(); clearMeasure(); renderStopsList();
   };
-  document.getElementById('tool-export').onclick = downloadStoryMap;
-  document.getElementById('tool-import').onclick = promptImportFile;
-  document.getElementById('proj-export').onclick = downloadStoryMap;
-  document.getElementById('proj-import').onclick = promptImportFile;
-  document.getElementById('import-file').addEventListener('change', function () {
-    var f = this.files && this.files[0];
-    if (f) handleImportFile(f);
-  });
+  document.getElementById('tool-save-lib').onclick = function () { saveToLibrary(false); };
+  document.getElementById('tool-library').onclick = function () {
+    if (openSide('library')) renderLibraryList();
+  };
+  document.getElementById('proj-save-lib').onclick = function () { saveToLibrary(false); };
+  document.getElementById('proj-save-as').onclick = function () { saveToLibrary(true); };
+  document.getElementById('proj-open-lib').onclick = function () {
+    if (openSide('library')) renderLibraryList();
+  };
+  document.getElementById('library-close').onclick = function () { closeSidePanels(); };
+  document.getElementById('lib-save-now').onclick = function () { saveToLibrary(false); };
+  document.getElementById('lib-save-as').onclick = function () { saveToLibrary(true); };
 
   function onMapClick(e) {
     if (mode === 'doors') {
@@ -2665,6 +2906,8 @@
   applyToggles();
   syncProjectFields();
   renderPlacesList();
+  if (activeLibraryId && !findLibraryMap(activeLibraryId)) setActiveLibraryId(null);
+  else updateSaveStatus();
   var doorParam = null, viewParam = null, playParam = null;
   try {
     var qs = new URLSearchParams(window.location.search);
