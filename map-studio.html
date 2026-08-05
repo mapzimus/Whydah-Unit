@@ -322,10 +322,17 @@
   </div>
 
   <div class="side left" id="places-panel" role="dialog" aria-label="Places library">
-    <div class="side-head">📍 Places <span class="lb-sub">tap Add — then write the voice</span>
+    <div class="side-head">📍 Places <span class="lb-sub">character story stops + map places</span>
       <button type="button" id="places-close" aria-label="Close">✕</button></div>
     <div class="side-body">
-      <input class="place-search" id="place-search" type="search" placeholder="Search places…" aria-label="Search places">
+      <input class="place-search" id="place-search" type="search" placeholder="Search places or a person…" aria-label="Search places">
+      <div class="kind-row" id="place-filters" role="group" aria-label="Filter places">
+        <button type="button" class="kind on" data-place-filter="all">All</button>
+        <button type="button" class="kind" data-place-filter="mine">Your person</button>
+        <button type="button" class="kind" data-place-filter="characters">Characters</button>
+        <button type="button" class="kind" data-place-filter="geo">Map places</button>
+      </div>
+      <p class="hint-sm" id="places-filter-hint" style="font-size:.82em;color:var(--muted);font-style:italic;margin:.15em 0 .45em;">Pick a person in My project to jump straight to their story pins.</p>
       <div id="places-list"></div>
     </div>
   </div>
@@ -673,13 +680,63 @@
       { ll: [51.507, -0.128], t: 'London — MP and money' },
       { ll: [51.507, -0.128], t: 'Ordering a slave ship built' },
       { ll: [6.367, 2.083], t: 'Ouidah — the name on the stern' },
-      { ll: [13.0, -59.5], t: 'Middle Passage routes' },
+      { ll: [13.0, -40.0], t: 'Middle Passage routes' },
       { ll: [19.9, -73.9], t: 'Lost to Bellamy, Feb 1717' },
       { ll: [51.507, -0.128], t: 'The investment written off' },
       { ll: [51.507, -0.128], t: 'Never touched a deck' },
       { ll: [41.891, -69.957], t: 'The wreck that outlived the ledger' }
+    ],
+    'Hendrick Quintor': [
+      { ll: [52.37, 4.90], t: 'Netherlands — before the sea' },
+      { ll: [17.97, -76.87], t: 'Caribbean — among the crew' },
+      { ll: [19.9, -73.9], t: 'Aboard when the Whydah was taken' },
+      { ll: [33.9, -76.5], t: 'The run north with Bellamy' },
+      { ll: [41.891, -69.957], t: 'Surviving the Wellfleet wreck' },
+      { ll: [42.359, -71.058], t: 'Boston trial — Old State House' },
+      { ll: [42.378, -71.063], t: 'Charlestown Ferry gallows, Nov 1717' },
+      { ll: [42.52, -70.89], t: 'Named again at Real Pirates' }
+    ],
+    'John Lambert': [
+      { ll: [17.97, -76.87], t: 'Caribbean — forced or free?' },
+      { ll: [19.9, -73.9], t: 'On the Whydah’s decks' },
+      { ll: [33.9, -76.5], t: 'North along the Carolinas' },
+      { ll: [41.891, -69.957], t: 'The storm off Wellfleet' },
+      { ll: [41.65, -69.95], t: 'Mary Anne survivors’ night' },
+      { ll: [42.359, -71.058], t: 'Boston Vice-Admiralty Court' },
+      { ll: [42.378, -71.063], t: 'The gallows mudflats' },
+      { ll: [42.52, -70.89], t: 'A name in the trial record' }
     ]
   };
+
+  /* Flatten character starter packs into Places entries (cat = person name). */
+  function characterPlaces() {
+    var out = [];
+    Object.keys(STARTERS).forEach(function (person) {
+      STARTERS[person].forEach(function (s, i) {
+        out.push({
+          cat: person,
+          t: s.t,
+          ll: s.ll,
+          note: 'Stop ' + (i + 1) + ' · ' + person + '’s story',
+          person: person,
+          kind: 'character'
+        });
+      });
+    });
+    return out;
+  }
+  function placesCatalog() {
+    var geo = PLACES.map(function (p) {
+      return { cat: p.cat, t: p.t, ll: p.ll, note: p.note, person: '', kind: 'geo' };
+    });
+    return characterPlaces().concat(geo);
+  }
+  var CHARACTER_ORDER = [
+    'Sam Bellamy', 'John King', 'John Julian', 'Thomas Davis', 'Paulsgrave Williams',
+    'Maria Hallett', 'Philip Ashton', 'Cyprian Southack', 'Barry Clifford',
+    'Sir Humphrey Morice', 'Hendrick Quintor', 'John Lambert'
+  ];
+  var placeFilter = 'all'; /* all | mine | characters | geo */
 
   /* ---------- Basemaps (several hosts — if school wifi blocks one, try another) ---------- */
   var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Imagery © Esri' });
@@ -1060,22 +1117,76 @@
     var q = (document.getElementById('place-search').value || '').trim().toLowerCase();
     var wrap = document.getElementById('places-list');
     wrap.innerHTML = '';
+    var hint = document.getElementById('places-filter-hint');
+    var mine = project.person || '';
+    if (hint) {
+      if (placeFilter === 'mine' && !mine) {
+        hint.textContent = 'Pick your person in 📋 My project first — then Your person shows only their story pins.';
+      } else if (placeFilter === 'mine' && mine) {
+        hint.textContent = 'Showing ' + mine + '’s story stops — tap Add, then write their voice.';
+      } else if (placeFilter === 'characters') {
+        hint.textContent = 'Every character’s story pins. Search a name (Julian, Hallett…) to narrow.';
+      } else if (placeFilter === 'geo') {
+        hint.textContent = 'Geographic places from the research map — voyage, Cape Cod, Salem, oceans…';
+      } else {
+        hint.textContent = mine
+          ? 'Your person is ' + mine + ' — try the Your person filter for their story pins first.'
+          : 'Pick a person in My project to jump straight to their story pins.';
+      }
+    }
+    document.querySelectorAll('#place-filters .kind').forEach(function (btn) {
+      btn.classList.toggle('on', btn.getAttribute('data-place-filter') === placeFilter);
+    });
+
     var cats = [];
     var byCat = {};
-    PLACES.forEach(function (p) {
-      var hay = (p.t + ' ' + p.note + ' ' + p.cat).toLowerCase();
+    placesCatalog().forEach(function (p) {
+      if (placeFilter === 'mine') {
+        if (!mine || p.person !== mine) return;
+      } else if (placeFilter === 'characters') {
+        if (p.kind !== 'character') return;
+      } else if (placeFilter === 'geo') {
+        if (p.kind !== 'geo') return;
+      }
+      var hay = (p.t + ' ' + p.note + ' ' + p.cat + ' ' + (p.person || '')).toLowerCase();
       if (q && hay.indexOf(q) === -1) return;
       if (!byCat[p.cat]) { byCat[p.cat] = []; cats.push(p.cat); }
       byCat[p.cat].push(p);
     });
+
+    /* Character categories in roster order; geographic cats keep discovery order. */
+    cats.sort(function (a, b) {
+      var ia = CHARACTER_ORDER.indexOf(a);
+      var ib = CHARACTER_ORDER.indexOf(b);
+      var aChar = ia >= 0, bChar = ib >= 0;
+      if (aChar && bChar) return ia - ib;
+      if (aChar && !bChar) return -1;
+      if (!aChar && bChar) return 1;
+      return 0;
+    });
+    if (mine && placeFilter === 'all') {
+      cats.sort(function (a, b) {
+        if (a === mine) return -1;
+        if (b === mine) return 1;
+        var ia = CHARACTER_ORDER.indexOf(a);
+        var ib = CHARACTER_ORDER.indexOf(b);
+        var aChar = ia >= 0, bChar = ib >= 0;
+        if (aChar && bChar) return ia - ib;
+        if (aChar && !bChar) return -1;
+        if (!aChar && bChar) return 1;
+        return 0;
+      });
+    }
+
     if (!cats.length) {
-      wrap.innerHTML = '<p style="font-size:.9em;color:var(--muted);font-style:italic;">No places match that search.</p>';
+      wrap.innerHTML = '<p style="font-size:.9em;color:var(--muted);font-style:italic;">No places match that filter. Try All, or clear the search.</p>';
       return;
     }
     cats.forEach(function (cat) {
       var h = document.createElement('div');
       h.className = 'place-cat';
-      h.textContent = cat;
+      h.textContent = (CHARACTER_ORDER.indexOf(cat) >= 0 ? '👤 ' : '') + cat +
+        (cat === mine ? ' · your person' : '');
       wrap.appendChild(h);
       byCat[cat].forEach(function (p) {
         var row = document.createElement('div');
@@ -3093,12 +3204,19 @@
     if (mode !== 'world') { notice('Places library works on 🌍 World (lat/long places don’t map onto the 1717 chart image).'); return; }
     if (openSide('places')) {
       document.getElementById('place-search').value = '';
+      if (project.person && STARTERS[project.person]) placeFilter = 'mine';
       renderPlacesList();
       setTool('pin');
     }
   };
   document.getElementById('places-close').onclick = function () { closeSidePanels(); };
   document.getElementById('place-search').addEventListener('input', renderPlacesList);
+  document.getElementById('place-filters').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-place-filter]');
+    if (!btn) return;
+    placeFilter = btn.getAttribute('data-place-filter') || 'all';
+    renderPlacesList();
+  });
   document.getElementById('tool-stops').onclick = function () {
     if (openSide('stops')) renderStopsList();
   };
@@ -3131,7 +3249,13 @@
   document.getElementById('seg-cancel').onclick = hideSegMenu;
   document.getElementById('tool-copy-voyage').onclick = copyWhydahVoyage;
   ['proj-student', 'proj-person', 'proj-title'].forEach(function (id) {
-    document.getElementById(id).addEventListener('change', readProjectFields);
+    document.getElementById(id).addEventListener('change', function () {
+      readProjectFields();
+      if (id === 'proj-person') {
+        if (project.person && STARTERS[project.person] && placeFilter === 'all') placeFilter = 'mine';
+        renderPlacesList();
+      }
+    });
     document.getElementById(id).addEventListener('input', function () {
       if (id === 'proj-person') readProjectFields();
     });
