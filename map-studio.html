@@ -171,7 +171,7 @@
 
 <header class="hero">
   <h1>🗺️ Map Studio</h1>
-  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Autosaves here · 💾 Save here to keep a named copy on this Chromebook.</span>
+  <span class="sub">Build your Showcase story map — 8–10 pins in your person’s voice. Autosaves here · 💾 Save for class so every Chromebook can open it.</span>
 </header>
 
 <div class="toolbar" role="toolbar" aria-label="Choose a map">
@@ -210,8 +210,8 @@
     <button class="tbtn" id="tool-stops" title="List, reorder, and edit your stops">📑 Stops</button>
     <button class="tbtn" id="tool-tour" title="Step through your pins for the Showcase">🎤 Tour</button>
     <button class="tbtn" id="tool-sheet" title="Printable story sheet for the gallery walk">📄 Story sheet</button>
-    <button class="tbtn" id="tool-save-lib" title="Save a named copy on this Chromebook — no download needed">💾 Save here</button>
-    <button class="tbtn" id="tool-library" title="Open story maps saved on this Chromebook">📂 My maps</button>
+    <button class="tbtn" id="tool-save-lib" title="Save this story map for the whole class — any Chromebook can open it">💾 Save for class</button>
+    <button class="tbtn" id="tool-library" title="Open story maps saved for the class">📂 Class maps</button>
     <button class="tbtn danger" id="tool-clear">🗑 Start over</button>
   </span>
 </div>
@@ -277,27 +277,28 @@
         <button type="button" class="tbtn" id="tool-starter">📍 Drop starter pins</button>
       </div>
       <div class="starter" id="backup-box">
-        <p><b>Keep it on this Chromebook</b> — no download needed. Save a named copy, then open it later from 📂 My maps (even if someone else used the machine).</p>
-        <div id="save-status" class="save-status empty">Not saved as a named map yet — tap 💾 Save here.</div>
+        <p><b>Save for the whole class</b> — any Chromebook can open it. Use your name in the title so the crew can find your map.</p>
+        <div id="save-status" class="save-status empty">Not on the class list yet — tap 💾 Save for class.</div>
         <div style="display:flex;flex-wrap:wrap;gap:.35em;margin-top:.45em;">
-          <button type="button" class="tbtn on" id="proj-save-lib">💾 Save here</button>
+          <button type="button" class="tbtn on" id="proj-save-lib">💾 Save for class</button>
           <button type="button" class="tbtn" id="proj-save-as">Save as new…</button>
-          <button type="button" class="tbtn" id="proj-open-lib">📂 My maps</button>
+          <button type="button" class="tbtn" id="proj-open-lib">📂 Class maps</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="side left" id="library-panel" role="dialog" aria-label="My maps on this Chromebook">
-    <div class="side-head">📂 My maps <span class="lb-sub">saved on this Chromebook · no download</span>
+  <div class="side left" id="library-panel" role="dialog" aria-label="Class maps">
+    <div class="side-head">📂 Class maps <span class="lb-sub">shared · any Chromebook can open these</span>
       <button type="button" id="library-close" aria-label="Close">✕</button></div>
     <div class="side-body">
-      <p class="hint-sm" style="font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.5em;">Pick your name to open your story map. Shared machine? Everyone saves under their own name.</p>
+      <p class="hint-sm" style="font-size:.82em;color:var(--muted);font-style:italic;margin-bottom:.5em;">Everyone’s story maps live here. Find your name, tap Open, keep building.</p>
       <div style="display:flex;flex-wrap:wrap;gap:.35em;margin-bottom:.55em;">
-        <button type="button" class="tbtn on" id="lib-save-now">💾 Save what’s on the map</button>
+        <button type="button" class="tbtn on" id="lib-save-now">💾 Save for class</button>
         <button type="button" class="tbtn" id="lib-save-as">Save as new…</button>
+        <button type="button" class="tbtn" id="lib-refresh">↻ Refresh</button>
       </div>
-      <div id="library-list"></div>
+      <div id="library-list"><p class="hint-sm" style="font-size:.88em;color:var(--muted);font-style:italic;">Loading class maps…</p></div>
     </div>
   </div>
 
@@ -394,7 +395,7 @@
 <div class="sheet" id="story-sheet" aria-hidden="true"></div>
 
 <footer class="foot">
-  <b>Add</b> stops · <b>💾 Save here</b> keeps a named copy on this Chromebook · <b>📂 My maps</b> opens it later.
+  <b>Add</b> stops · <b>💾 Save for class</b> so every Chromebook can open it · <b>📂 Class maps</b> to find yours.
   <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
 </footer>
 
@@ -407,10 +408,22 @@
   var SAVE_KEY_LEGACY = 'whydah-map-studio-v1';
   var LIBRARY_KEY = 'whydah-map-studio-library-v1';
   var ACTIVE_LIB_KEY = 'whydah-map-studio-active-lib';
+  var ACTIVE_CLOUD_KEY = 'whydah-map-studio-active-cloud';
+  var LAST_CLOUD_NAME_KEY = 'whydah-map-studio-cloud-name';
+  /* Same Supabase project as /photo and games-gate — publishable key only. */
+  var SB_URL = 'https://segzgdlqqymqlfuahosd.supabase.co';
+  var SB_KEY = 'sb_publishable_fBBZAVo-ljKvaBKNVMukmA_TopYb6D8';
+  var CLOUD_BUCKET = 'photos';
+  var CLOUD_PREFIX = 'story-maps/v1/';
 
   var project = { student: '', person: '', title: '' };
   var activeLibraryId = null;
+  var activeCloudId = null;
+  var lastCloudName = '';
+  var cloudListCache = [];
   try { activeLibraryId = localStorage.getItem(ACTIVE_LIB_KEY) || null; } catch (_) { activeLibraryId = null; }
+  try { activeCloudId = localStorage.getItem(ACTIVE_CLOUD_KEY) || null; } catch (_) { activeCloudId = null; }
+  try { lastCloudName = localStorage.getItem(LAST_CLOUD_NAME_KEY) || ''; } catch (_) { lastCloudName = ''; }
 
   /* ---------- The Whydah's documented voyage, 1715–1984 ---------- */
   var VOYAGE = [
@@ -2122,7 +2135,7 @@
     } catch (_) {}
   }
 
-  /* ---------- Named maps on this Chromebook (local library) ---------- */
+  /* ---------- Class maps (Supabase storage — every Chromebook) + local mirror ---------- */
   function loadLibrary() {
     try {
       var raw = JSON.parse(localStorage.getItem(LIBRARY_KEY) || 'null');
@@ -2131,10 +2144,7 @@
     return { maps: [] };
   }
   function writeLibrary(lib) {
-    try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib)); } catch (err) {
-      notice('Couldn’t save on this Chromebook — storage may be full. Delete an old map from 📂 My maps and try again.');
-      throw err;
-    }
+    try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib)); } catch (_) {}
   }
   function setActiveLibraryId(id) {
     activeLibraryId = id || null;
@@ -2142,13 +2152,41 @@
       if (activeLibraryId) localStorage.setItem(ACTIVE_LIB_KEY, activeLibraryId);
       else localStorage.removeItem(ACTIVE_LIB_KEY);
     } catch (_) {}
+  }
+  function setActiveCloudId(id) {
+    activeCloudId = id || null;
+    try {
+      if (activeCloudId) localStorage.setItem(ACTIVE_CLOUD_KEY, activeCloudId);
+      else localStorage.removeItem(ACTIVE_CLOUD_KEY);
+    } catch (_) {}
     updateSaveStatus();
+  }
+  function setLastCloudName(name) {
+    lastCloudName = name || '';
+    try {
+      if (lastCloudName) localStorage.setItem(LAST_CLOUD_NAME_KEY, lastCloudName);
+      else localStorage.removeItem(LAST_CLOUD_NAME_KEY);
+    } catch (_) {}
   }
   function findLibraryMap(id) {
     if (!id) return null;
     var lib = loadLibrary();
     for (var i = 0; i < lib.maps.length; i++) if (lib.maps[i].id === id) return lib.maps[i];
     return null;
+  }
+  function mirrorLocalSlot(id, name, data, updated) {
+    var lib = loadLibrary();
+    var slot = null;
+    for (var i = 0; i < lib.maps.length; i++) {
+      if (lib.maps[i].id === id) { slot = lib.maps[i]; break; }
+    }
+    if (slot) {
+      slot.name = name; slot.state = data; slot.updated = updated;
+    } else {
+      lib.maps.push({ id: id, name: name, updated: updated, state: data });
+    }
+    writeLibrary(lib);
+    setActiveLibraryId(id);
   }
   function countStatePins(state) {
     if (!state) return 0;
@@ -2187,167 +2225,305 @@
   function updateSaveStatus() {
     var el = document.getElementById('save-status');
     if (!el) return;
-    var slot = findLibraryMap(activeLibraryId);
-    if (!slot) {
-      el.className = 'save-status empty';
-      el.textContent = 'Not saved as a named map yet — tap 💾 Save here.';
+    if (activeCloudId && lastCloudName) {
+      el.className = 'save-status';
+      el.textContent = 'On the class list as “' + lastCloudName + '” · tap 💾 Save for class after big edits so everyone sees the latest.';
       return;
     }
-    el.className = 'save-status';
-    var n = countStatePins(slot.state);
-    el.textContent = 'Saved as “' + slot.name + '” · ' + n + ' stop' + (n === 1 ? '' : 's') +
-      (slot.updated ? ' · ' + formatSavedWhen(slot.updated) : '') +
-      ' · keeps updating while you work';
+    if (activeCloudId) {
+      el.className = 'save-status';
+      el.textContent = 'Linked to a class map · tap 💾 Save for class to publish your latest work for everyone.';
+      return;
+    }
+    el.className = 'save-status empty';
+    el.textContent = 'Not on the class list yet — tap 💾 Save for class.';
   }
+
+  function cloudSafeName(name) {
+    return String(name || 'map').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'map';
+  }
+  function cloudObjectPath(id, name, updated, deleted) {
+    var n = deleted ? 'DELETED' : cloudSafeName(name);
+    return CLOUD_PREFIX + id + '__' + n + '__' + updated + '.json.jpg';
+  }
+  function cloudPathUrl(path, publicRead) {
+    var enc = path.split('/').map(encodeURIComponent).join('/');
+    if (publicRead) return SB_URL + '/storage/v1/object/public/' + CLOUD_BUCKET + '/' + enc;
+    return SB_URL + '/storage/v1/object/' + CLOUD_BUCKET + '/' + enc;
+  }
+  function parseCloudFileName(name) {
+    var m = String(name || '').match(/^(m[a-z0-9]+)__([A-Za-z0-9-]+)__(\d+)\.json\.jpg$/i);
+    if (!m) return null;
+    return { id: m[1], nameKey: m[2], updated: +m[3], deleted: m[2] === 'DELETED' };
+  }
+  function cloudListObjects() {
+    return fetch(SB_URL + '/storage/v1/object/list/' + CLOUD_BUCKET, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ prefix: CLOUD_PREFIX, limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('Couldn’t load class maps (' + r.status + '). Check wifi and try ↻ Refresh.');
+      return r.json();
+    });
+  }
+  function cloudFetchRecord(path) {
+    return fetch(cloudPathUrl(path, true), { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('Couldn’t open that map (' + r.status + ').');
+      return r.json();
+    });
+  }
+  function cloudUploadRecord(record) {
+    var path = cloudObjectPath(record.id, record.name, record.updated, !!record.deleted);
+    return fetch(cloudPathUrl(path, false), {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'image/jpeg' },
+      body: JSON.stringify(record)
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.text().then(function (t) {
+          throw new Error('Couldn’t save for the class (' + r.status + '). Check wifi and try again.');
+        });
+      }
+      return record;
+    });
+  }
+  function listCloudMapsMeta() {
+    return cloudListObjects().then(function (files) {
+      var latest = {};
+      (files || []).forEach(function (f) {
+        if (!f || !f.name || !f.metadata) return;
+        var parsed = parseCloudFileName(f.name);
+        if (!parsed) return;
+        if (!latest[parsed.id] || parsed.updated > latest[parsed.id].updated) {
+          latest[parsed.id] = {
+            id: parsed.id,
+            nameKey: parsed.nameKey,
+            updated: parsed.updated,
+            deleted: parsed.deleted,
+            path: CLOUD_PREFIX + f.name
+          };
+        }
+      });
+      var alive = Object.keys(latest).map(function (k) { return latest[k]; })
+        .filter(function (m) { return !m.deleted; });
+      return Promise.all(alive.map(function (meta) {
+        return cloudFetchRecord(meta.path).then(function (rec) {
+          return {
+            id: rec.id || meta.id,
+            name: rec.name || meta.nameKey.replace(/-/g, ' '),
+            updated: rec.updated || meta.updated,
+            pinCount: typeof rec.pinCount === 'number' ? rec.pinCount : countStatePins(rec.state),
+            student: rec.student || '',
+            person: rec.person || '',
+            path: meta.path,
+            state: rec.state || null
+          };
+        }).catch(function () {
+          return {
+            id: meta.id,
+            name: meta.nameKey.replace(/-/g, ' '),
+            updated: meta.updated,
+            pinCount: 0,
+            student: '',
+            person: '',
+            path: meta.path,
+            state: null
+          };
+        });
+      })).then(function (rows) {
+        rows.sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
+        cloudListCache = rows;
+        return rows;
+      });
+    });
+  }
+
   function renderLibraryList() {
     var wrap = document.getElementById('library-list');
     if (!wrap) return;
-    wrap.innerHTML = '';
-    var lib = loadLibrary();
-    var maps = lib.maps.slice().sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
-    if (!maps.length) {
-      var empty = document.createElement('p');
-      empty.className = 'hint-sm';
-      empty.style.cssText = 'font-size:.88em;color:var(--muted);font-style:italic;';
-      empty.textContent = 'No named maps yet. Tap 💾 Save what’s on the map and type your name.';
-      wrap.appendChild(empty);
-      updateSaveStatus();
-      return;
-    }
-    maps.forEach(function (slot) {
-      var row = document.createElement('div');
-      row.className = 'lib-row' + (slot.id === activeLibraryId ? ' on' : '');
-      var info = document.createElement('div');
-      info.className = 'info';
-      var title = document.createElement('b');
-      title.textContent = slot.name + (slot.id === activeLibraryId ? ' · open now' : '');
-      info.appendChild(title);
-      var meta = document.createElement('span');
-      var n = countStatePins(slot.state);
-      var who = (slot.state && slot.state.project && (slot.state.project.person || slot.state.project.student)) || '';
-      meta.textContent = n + ' stop' + (n === 1 ? '' : 's') +
-        (who ? ' · ' + who : '') +
-        (slot.updated ? ' · ' + formatSavedWhen(slot.updated) : '');
-      info.appendChild(meta);
-      row.appendChild(info);
-      var acts = document.createElement('div');
-      acts.className = 'acts';
-      var openBtn = document.createElement('button');
-      openBtn.type = 'button';
-      openBtn.className = 'tbtn on';
-      openBtn.textContent = 'Open';
-      openBtn.onclick = function () { openLibraryMap(slot.id); };
-      var renBtn = document.createElement('button');
-      renBtn.type = 'button';
-      renBtn.className = 'tbtn';
-      renBtn.textContent = 'Rename';
-      renBtn.onclick = function () { renameLibraryMap(slot.id); };
-      var delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.className = 'tbtn danger';
-      delBtn.textContent = 'Delete';
-      delBtn.onclick = function () { deleteLibraryMap(slot.id); };
-      acts.appendChild(openBtn);
-      acts.appendChild(renBtn);
-      acts.appendChild(delBtn);
-      row.appendChild(acts);
-      wrap.appendChild(row);
-    });
+    wrap.innerHTML = '<p class="hint-sm" style="font-size:.88em;color:var(--muted);font-style:italic;">Loading class maps…</p>';
     updateSaveStatus();
+    listCloudMapsMeta().then(function (maps) {
+      wrap.innerHTML = '';
+      if (!maps.length) {
+        var empty = document.createElement('p');
+        empty.className = 'hint-sm';
+        empty.style.cssText = 'font-size:.88em;color:var(--muted);font-style:italic;';
+        empty.textContent = 'No class maps yet. Tap 💾 Save for class and type your name — then any Chromebook can open it.';
+        wrap.appendChild(empty);
+        return;
+      }
+      maps.forEach(function (slot) {
+        var row = document.createElement('div');
+        row.className = 'lib-row' + (slot.id === activeCloudId ? ' on' : '');
+        var info = document.createElement('div');
+        info.className = 'info';
+        var title = document.createElement('b');
+        title.textContent = slot.name + (slot.id === activeCloudId ? ' · open now' : '');
+        info.appendChild(title);
+        var meta = document.createElement('span');
+        var who = slot.person || slot.student || '';
+        meta.textContent = (slot.pinCount || 0) + ' stop' + (slot.pinCount === 1 ? '' : 's') +
+          (who ? ' · ' + who : '') +
+          (slot.updated ? ' · ' + formatSavedWhen(slot.updated) : '');
+        info.appendChild(meta);
+        row.appendChild(info);
+        var acts = document.createElement('div');
+        acts.className = 'acts';
+        var openBtn = document.createElement('button');
+        openBtn.type = 'button';
+        openBtn.className = 'tbtn on';
+        openBtn.textContent = 'Open';
+        openBtn.onclick = function () { openCloudMap(slot); };
+        var renBtn = document.createElement('button');
+        renBtn.type = 'button';
+        renBtn.className = 'tbtn';
+        renBtn.textContent = 'Rename';
+        renBtn.onclick = function () { renameCloudMap(slot); };
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'tbtn danger';
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = function () { deleteCloudMap(slot); };
+        acts.appendChild(openBtn);
+        acts.appendChild(renBtn);
+        acts.appendChild(delBtn);
+        row.appendChild(acts);
+        wrap.appendChild(row);
+      });
+    }).catch(function (err) {
+      wrap.innerHTML = '';
+      var fail = document.createElement('p');
+      fail.className = 'hint-sm';
+      fail.style.cssText = 'font-size:.88em;color:var(--ox);font-style:italic;';
+      fail.textContent = (err && err.message) || 'Couldn’t reach class maps. Check wifi, then ↻ Refresh.';
+      wrap.appendChild(fail);
+    });
   }
+
   function saveToLibrary(asNew) {
     if (typeof readProjectFields === 'function') readProjectFields();
     var data = serialize();
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (_) {}
 
-    var lib = loadLibrary();
-    if (!asNew && activeLibraryId) {
-      var slot = null;
-      for (var i = 0; i < lib.maps.length; i++) {
-        if (lib.maps[i].id === activeLibraryId) { slot = lib.maps[i]; break; }
-      }
-      if (slot) {
-        slot.state = data;
-        slot.updated = Date.now();
-        try { writeLibrary(lib); } catch (_) { return; }
-        notice('Saved “' + slot.name + '” on this Chromebook.');
-        renderLibraryList();
-        return;
-      }
-    }
-
-    var suggested = defaultSaveName();
-    var name = window.prompt('Name this story map (use your name so you can find it later on this Chromebook):', suggested);
-    if (name === null) return;
-    name = (name.trim() || suggested).slice(0, 60);
-
-    var existing = null;
-    for (var j = 0; j < lib.maps.length; j++) {
-      if ((lib.maps[j].name || '').toLowerCase() === name.toLowerCase()) { existing = lib.maps[j]; break; }
-    }
-    if (existing) {
-      if (!window.confirm('A map named “' + existing.name + '” is already on this Chromebook. Replace it with what’s on the map now?')) return;
-      existing.state = data;
-      existing.updated = Date.now();
-      existing.name = name;
-      try { writeLibrary(lib); } catch (_) { return; }
-      setActiveLibraryId(existing.id);
-      notice('Updated “' + existing.name + '” on this Chromebook.');
+    var name;
+    var id;
+    if (!asNew && activeCloudId) {
+      id = activeCloudId;
+      name = (lastCloudName || defaultSaveName()).slice(0, 60);
     } else {
-      var id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      lib.maps.push({ id: id, name: name, updated: Date.now(), state: data });
-      try { writeLibrary(lib); } catch (_) { return; }
-      setActiveLibraryId(id);
-      notice('Saved “' + name + '” on this Chromebook. Open 📂 My maps anytime to get it back.');
+      var suggested = defaultSaveName();
+      name = window.prompt('Name this story map for the class (use your name so everyone can find it):', suggested);
+      if (name === null) return;
+      name = (name.trim() || suggested).slice(0, 60);
+      id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
-    renderLibraryList();
+
+    var updated = Date.now();
+    var record = {
+      id: id,
+      name: name,
+      updated: updated,
+      student: project.student || '',
+      person: project.person || '',
+      pinCount: countStatePins(data),
+      state: data
+    };
+    notice('Saving “' + name + '” for the whole class…');
+    cloudUploadRecord(record).then(function () {
+      setActiveCloudId(id);
+      setLastCloudName(name);
+      mirrorLocalSlot(id, name, data, updated);
+      notice('Saved “' + name + '” for the class — any Chromebook can open it from 📂 Class maps.');
+      document.getElementById('hint').textContent = 'Class map “' + name + '” is live. After big edits, tap 💾 Save for class again so everyone gets your latest.';
+      renderLibraryList();
+    }).catch(function (err) {
+      /* Still keep a local mirror so work isn’t lost offline. */
+      mirrorLocalSlot(id, name, data, updated);
+      setActiveCloudId(id);
+      setLastCloudName(name);
+      notice((err && err.message) + ' A copy was kept on this Chromebook — try Save for class again when wifi is back.');
+      renderLibraryList();
+    });
   }
-  function openLibraryMap(id) {
-    var slot = findLibraryMap(id);
-    if (!slot || !slot.state) { notice('That map is missing — try saving again.'); return; }
+
+  function openCloudMap(slot) {
+    if (!slot) return;
     var hasWork = livePins().length || routePointCount() ||
       (work.world.pins && work.world.pins.length) || (work.chart.pins && work.chart.pins.length);
-    if (hasWork && activeLibraryId !== id) {
-      if (!window.confirm('Open “' + slot.name + '”? That replaces what’s on the map now. Save here first if you still need this one.')) return;
+    if (hasWork && activeCloudId !== slot.id) {
+      if (!window.confirm('Open “' + slot.name + '”? That replaces what’s on the map now. Save for class first if you still need this one.')) return;
     }
-    loadStateOntoMap(slot.state);
-    setActiveLibraryId(id);
-    notice('Opened “' + slot.name + '”. It will keep updating on this Chromebook while you work.');
-    document.getElementById('hint').textContent = 'Working on “' + slot.name + '”. Tap 💾 Save here after big changes — or just keep editing; this named map updates as you go.';
-    renderLibraryList();
-    if (mode !== 'doors' && mode !== 'globe') {
-      openSide('stops');
-      renderStopsList();
-    }
+    var apply = function (rec) {
+      if (!rec || !rec.state) { notice('That class map has no story data yet — try saving again.'); return; }
+      loadStateOntoMap(rec.state);
+      setActiveCloudId(rec.id || slot.id);
+      setLastCloudName(rec.name || slot.name);
+      mirrorLocalSlot(rec.id || slot.id, rec.name || slot.name, rec.state, rec.updated || Date.now());
+      notice('Opened “' + (rec.name || slot.name) + '” from the class list.');
+      document.getElementById('hint').textContent = 'Working on “' + (rec.name || slot.name) + '”. Tap 💾 Save for class after edits so every Chromebook stays in sync.';
+      renderLibraryList();
+      if (mode !== 'doors' && mode !== 'globe') {
+        openSide('stops');
+        renderStopsList();
+      }
+    };
+    if (slot.state) { apply(slot); return; }
+    notice('Opening “' + slot.name + '”…');
+    cloudFetchRecord(slot.path).then(apply).catch(function (err) {
+      notice(err.message || 'Couldn’t open that class map.');
+    });
   }
-  function renameLibraryMap(id) {
-    var lib = loadLibrary();
-    var slot = null;
-    for (var i = 0; i < lib.maps.length; i++) {
-      if (lib.maps[i].id === id) { slot = lib.maps[i]; break; }
-    }
+
+  function renameCloudMap(slot) {
     if (!slot) return;
-    var name = window.prompt('Rename this story map:', slot.name);
+    var name = window.prompt('Rename this class map:', slot.name);
     if (name === null) return;
     name = name.trim().slice(0, 60);
     if (!name) return;
-    slot.name = name;
-    slot.updated = Date.now();
-    try { writeLibrary(lib); } catch (_) { return; }
-    notice('Renamed to “' + name + '”.');
-    renderLibraryList();
+    var load = slot.state ? Promise.resolve(slot) : cloudFetchRecord(slot.path);
+    load.then(function (rec) {
+      var data = rec.state;
+      if (!data) throw new Error('Nothing to rename — open it and save again.');
+      var updated = Date.now();
+      var record = {
+        id: slot.id,
+        name: name,
+        updated: updated,
+        student: rec.student || (data.project && data.project.student) || '',
+        person: rec.person || (data.project && data.project.person) || '',
+        pinCount: typeof rec.pinCount === 'number' ? rec.pinCount : countStatePins(data),
+        state: data
+      };
+      return cloudUploadRecord(record).then(function () {
+        if (activeCloudId === slot.id) setLastCloudName(name);
+        mirrorLocalSlot(slot.id, name, data, updated);
+        notice('Renamed to “' + name + '” on the class list.');
+        renderLibraryList();
+      });
+    }).catch(function (err) {
+      notice(err.message || 'Rename failed.');
+    });
   }
-  function deleteLibraryMap(id) {
-    var slot = findLibraryMap(id);
+
+  function deleteCloudMap(slot) {
     if (!slot) return;
-    if (!window.confirm('Delete “' + slot.name + '” from this Chromebook? This cannot be undone.')) return;
-    var lib = loadLibrary();
-    lib.maps = lib.maps.filter(function (m) { return m.id !== id; });
-    try { writeLibrary(lib); } catch (_) { return; }
-    if (activeLibraryId === id) setActiveLibraryId(null);
-    notice('Deleted “' + slot.name + '”.');
-    renderLibraryList();
+    if (!window.confirm('Remove “' + slot.name + '” from the class list? Other Chromebooks will stop seeing it.')) return;
+    var updated = Date.now();
+    var record = { id: slot.id, name: slot.name, updated: updated, deleted: true };
+    cloudUploadRecord(record).then(function () {
+      if (activeCloudId === slot.id) {
+        setActiveCloudId(null);
+        setLastCloudName('');
+      }
+      notice('Removed “' + slot.name + '” from the class list.');
+      renderLibraryList();
+    }).catch(function (err) {
+      notice(err.message || 'Couldn’t remove that map.');
+    });
   }
+
   function loadStateOntoMap(state) {
     applyProjectState(state);
     var worldHas = (work.world.pins && work.world.pins.length) || (work.world.routes && work.world.routes.length);
@@ -2844,11 +3020,13 @@
   };
   document.getElementById('tool-voyage').onclick = function () { voyageOn ? hideVoyage() : showVoyage(); };
   document.getElementById('tool-clear').onclick = function () {
-    if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. Named maps in 📂 My maps are kept. This cannot be undone.')) return;
+    if (!window.confirm('Clear ALL your pins and routes on this map? Project name/person stay. Class maps already saved stay on the class list. This cannot be undone.')) return;
     work[mode].pins.forEach(function (m) { if (m instanceof L.Marker) pinLayer.removeLayer(m); });
     work[mode] = { pins: [], routes: [], activeRoute: 0 };
     startNewRouteNext = false;
     setActiveLibraryId(null);
+    setActiveCloudId(null);
+    setLastCloudName('');
     drawRoute(); saveNow(); updateStat(); exitTour(); clearMeasure(); renderStopsList();
   };
   document.getElementById('tool-save-lib').onclick = function () { saveToLibrary(false); };
@@ -2863,6 +3041,7 @@
   document.getElementById('library-close').onclick = function () { closeSidePanels(); };
   document.getElementById('lib-save-now').onclick = function () { saveToLibrary(false); };
   document.getElementById('lib-save-as').onclick = function () { saveToLibrary(true); };
+  document.getElementById('lib-refresh').onclick = function () { renderLibraryList(); };
 
   function onMapClick(e) {
     if (mode === 'doors') {
