@@ -135,16 +135,35 @@
   .modal textarea{min-height:5.5em;resize:vertical;}
   .modal .hint-sm{font-size:.78em;color:var(--muted);font-style:italic;margin:.2em 0 .1em;}
   .modal .actions{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.85em;}
-  .tour{position:absolute;z-index:1180;left:50%;transform:translateX(-50%);bottom:.7em;width:min(94vw,560px);background:var(--ink);color:var(--parch);border:2px solid var(--brassl);border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.45);display:none;padding:.85em 1em;}
+  .tour{position:absolute;z-index:1180;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:min(70vh,520px);overflow:auto;background:rgba(18,34,43,.92);color:var(--parch);border:2px solid var(--brassl);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.55);display:none;padding:1em 1.1em 1.05em;backdrop-filter:blur(4px);}
   .tour.open{display:block;}
   .tour .who{color:var(--brassl);font-size:.78em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
-  .tour .stop{font-family:Georgia,serif;font-size:1.15em;margin:.15em 0 .35em;}
-  .tour .voice{font-size:.95em;line-height:1.4;color:#EAD9B4;font-style:italic;}
-  .tour .cite{font-size:.8em;color:#C7BCA0;margin-top:.45em;}
-  .tour .nav{display:flex;gap:.4em;margin-top:.7em;flex-wrap:wrap;align-items:center;}
+  .tour .stop{font-family:Georgia,serif;font-size:clamp(1.15em,2.8vw,1.45em);margin:.2em 0 .4em;line-height:1.2;}
+  .tour .voice{font-size:clamp(.95em,2.2vw,1.08em);line-height:1.45;color:#EAD9B4;font-style:italic;}
+  .tour .cite{font-size:.8em;color:#C7BCA0;margin-top:.5em;}
+  .tour .nav{display:flex;gap:.4em;margin-top:.85em;flex-wrap:wrap;align-items:center;}
   .tour .nav .tbtn{background:#1C3743;color:var(--parch);border-color:var(--brassl);}
   .tour .nav .tbtn:hover{background:var(--brass);}
   .tour .count{margin-left:auto;font-size:.85em;color:var(--brassl);font-weight:700;}
+  body.touring{overflow:hidden;}
+  body.touring .hero,
+  body.touring .toolbar,
+  body.touring .hint,
+  body.touring .foot{display:none !important;}
+  body.touring .mapwrap{position:fixed;inset:0;z-index:1100;height:100vh;min-height:100vh;border:none;flex:none;}
+  body.touring #map{min-height:100vh;}
+  body.touring .side,
+  body.touring .lb,
+  body.touring .seg-menu,
+  body.touring .notice,
+  body.touring .howto{display:none !important;}
+  body.touring .tour{z-index:1200;}
+  .tour-exit-fab{display:none;position:fixed;z-index:1210;top:.7em;right:.7em;}
+  body.touring .tour-exit-fab{display:block;}
+  .tour-exit-fab .tbtn{background:rgba(18,34,43,.88);color:var(--brassl);border-color:var(--brassl);box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  @media (prefers-reduced-motion:reduce){
+    body.touring .tour{transition:none;}
+  }
   .measure-tip{position:absolute;z-index:1170;pointer-events:none;background:var(--ink);color:var(--brassl);font-weight:700;font-size:.85em;padding:.35em .55em;border-radius:6px;border:1px solid var(--brassl);display:none;}
   .sheet{display:none;}
   @media print{
@@ -359,6 +378,9 @@
       <span class="count" id="tour-count"></span>
     </div>
   </div>
+  <div class="tour-exit-fab" id="tour-exit-fab">
+    <button type="button" class="tbtn" id="tour-exit-top" title="Exit fullscreen tour">✕ Exit tour</button>
+  </div>
   <div class="seg-menu" id="seg-menu" role="dialog" aria-label="Edit route leg">
     <p id="seg-menu-label">This route leg</p>
     <button type="button" class="tbtn on" id="seg-bend">⤵ Add bend (drag around land)</button>
@@ -454,33 +476,105 @@
 
   /* Curated places students can add without hunting the ocean. World mode only. */
   var PLACES = [
-    { cat: 'Whydah voyage', t: 'London, 1715', ll: [51.507, -0.128], note: 'Built as a slave ship' },
-    { cat: 'Whydah voyage', t: 'Ouidah, West Africa', ll: [6.367, 2.083], note: 'The port she was named for' },
-    { cat: 'Whydah voyage', t: 'Caribbean hunting grounds', ll: [17.97, -76.87], note: '1716–17 prizes' },
-    { cat: 'Whydah voyage', t: 'Windward Passage', ll: [19.9, -73.9], note: 'Where the Whydah was taken' },
-    { cat: 'Whydah voyage', t: 'Carolinas run north', ll: [33.9, -76.5], note: 'Dead reckoning coast' },
-    { cat: 'Whydah voyage', t: 'Wreck · Wellfleet', ll: [41.891, -69.957], note: '26 April 1717' },
-    { cat: 'Whydah voyage', t: 'Southack’s mark', ll: [41.93, -69.98], note: 'May 1717 chart mark' },
-    { cat: 'Whydah voyage', t: 'Salem · found again', ll: [42.522, -70.895], note: '1984 discovery / museum' },
-    { cat: 'Cape & Salem', t: 'Boston', ll: [42.36, -71.06], note: 'Trial, gallows, papers' },
-    { cat: 'Cape & Salem', t: 'Wellfleet dunes', ll: [41.93, -70.03], note: 'Cape Cod shore' },
-    { cat: 'Cape & Salem', t: 'Provincetown', ll: [42.058, -70.179], note: 'Southack’s salvage start' },
-    { cat: 'Cape & Salem', t: 'Marblehead', ll: [42.5, -70.86], note: 'Philip Ashton’s home' },
-    { cat: 'Cape & Salem', t: 'Block Island', ll: [41.17, -71.58], note: 'Williams visits family' },
-    { cat: 'Cape & Salem', t: 'Rhode Island', ll: [41.49, -71.31], note: 'Williams’s world' },
-    { cat: 'Cape & Salem', t: 'Real Pirates Salem', ll: [42.521, -70.888], note: '285 Derby St museum' },
-    { cat: 'Caribbean', t: 'Nassau / New Providence', ll: [25.06, -77.345], note: 'Pirate republic waters' },
-    { cat: 'Caribbean', t: 'Jamaica', ll: [17.97, -76.79], note: 'Sugar & navy base' },
-    { cat: 'Caribbean', t: 'Hispaniola north coast', ll: [19.8, -72.7], note: 'Near the Passage' },
-    { cat: 'Caribbean', t: 'Antigua', ll: [17.12, -61.85], note: 'John King’s mother’s ship' },
-    { cat: 'Caribbean', t: 'Florida wreck coast', ll: [27.5, -80.3], note: '1715 treasure fleet' },
-    { cat: 'Atlantic doors', t: 'Straits of Florida', ll: [23.9, -81.0], note: 'Treasure highway' },
-    { cat: 'Atlantic doors', t: 'Gibraltar', ll: [35.95, -5.6], note: 'Med door' },
-    { cat: 'Atlantic doors', t: 'Cape of Good Hope', ll: [-34.8, 19.0], note: 'The long way' },
-    { cat: 'People & origins', t: 'Hittisleigh, Devon', ll: [50.77, -3.75], note: 'Bellamy’s birthplace' },
-    { cat: 'People & origins', t: 'Mosquito Coast', ll: [14.5, -83.5], note: 'Julian’s home waters' },
-    { cat: 'People & origins', t: 'Wales', ll: [51.48, -3.18], note: 'Thomas Davis' },
-    { cat: 'People & origins', t: 'Roatán', ll: [16.3, -86.55], note: 'Ashton’s island exile' }
+    /* ——— Whydah voyage ——— */
+    { cat: 'Whydah voyage', t: 'London, 1715', ll: [51.510, -0.099], note: 'Built as a slave ship for Sir Humphrey Morice' },
+    { cat: 'Whydah voyage', t: 'Ouidah, Benin', ll: [6.367, 2.083], note: 'Port she was named for · 367 captives forced aboard' },
+    { cat: 'Whydah voyage', t: 'Kingston / Port Royal, Jamaica', ll: [17.94, -76.84], note: '312 of 367 sold after the Middle Passage' },
+    { cat: 'Whydah voyage', t: 'Sebastian Inlet, Florida', ll: [27.86, -80.45], note: '1715 Spanish treasure fleet wrecks — Bellamy’s salvage pivot' },
+    { cat: 'Whydah voyage', t: 'Nassau, New Providence', ll: [25.04, -77.35], note: 'Flying Gang base · crew votes Bellamy captain' },
+    { cat: 'Whydah voyage', t: 'Windward Passage', ll: [19.9, -73.9], note: 'Three-day chase · Whydah taken Feb 1717' },
+    { cat: 'Whydah voyage', t: 'Caribbean hunting grounds', ll: [17.97, -76.87], note: '53+ prizes across about a year' },
+    { cat: 'Whydah voyage', t: 'Carolinas run north', ll: [33.9, -76.5], note: 'Dead-reckoning coast toward New England' },
+    { cat: 'Whydah voyage', t: 'Off Nantucket', ll: [41.28, -69.96], note: 'Mary Anne of Dublin taken morning of 26 Apr 1717' },
+    { cat: 'Whydah voyage', t: 'Block Island', ll: [41.18, -71.58], note: 'Williams peels off to visit family — and survives' },
+    { cat: 'Whydah voyage', t: 'Damariscove Island, Maine', ll: [43.760, -69.617], note: 'Regroup harbor they never reached' },
+    { cat: 'Whydah voyage', t: 'Wreck · Marconi Beach, Wellfleet', ll: [41.891, -69.957], note: '26–27 Apr 1717 · 144 of 146 die' },
+    { cat: 'Whydah voyage', t: 'Southack’s mark', ll: [41.93, -69.98], note: 'May 1717 chart mark that finds her in 1984' },
+
+    /* ——— Africa & Middle Passage ——— */
+    { cat: 'Africa & Middle Passage', t: 'Cape Coast Castle, Ghana', ll: [5.105, -1.241], note: 'Royal Africa Company HQ · Gold Coast network' },
+    { cat: 'Africa & Middle Passage', t: 'Akan / Asante heartland, Ghana', ll: [6.69, -1.62], note: 'Source of gold ornaments later found on the wreck' },
+    { cat: 'Africa & Middle Passage', t: 'Baule coast, Côte d’Ivoire', ll: [5.3, -4.0], note: 'Akan-speaking goldwork region in the artifact story' },
+    { cat: 'Africa & Middle Passage', t: 'Ouidah slave fort coast', ll: [6.36, 2.09], note: 'French fort 1704 · second-largest Atlantic slave port' },
+    { cat: 'Africa & Middle Passage', t: 'Abomey, Kingdom of Dahomey', ll: [7.18, 1.99], note: 'Dahomey conquers Ouidah 1727 · trade continues' },
+    { cat: 'Africa & Middle Passage', t: 'Middle Passage Atlantic', ll: [13.0, -40.0], note: 'Ouidah → Jamaica · 55 die before Kingston' },
+
+    /* ——— Caribbean & captures ——— */
+    { cat: 'Caribbean & captures', t: 'Antigua', ll: [17.12, -61.85], note: 'Bonetta’s destination · John King with his mother' },
+    { cat: 'Caribbean & captures', t: 'Jamaica waters', ll: [17.97, -76.79], note: 'Sugar navy base · Bonetta’s start' },
+    { cat: 'Caribbean & captures', t: 'Hispaniola north coast', ll: [19.8, -72.7], note: 'Eastern door of the Windward Passage chase' },
+    { cat: 'Caribbean & captures', t: 'Cuba — Windward Passage side', ll: [20.0, -74.5], note: 'Western shore of the gap where Whydah is taken' },
+    { cat: 'Caribbean & captures', t: 'Lower Bahamas', ll: [22.5, -75.5], note: 'Prince surrenders after the three-day chase' },
+    { cat: 'Caribbean & captures', t: 'Blanco (Blanquilla)', ll: [11.85, -64.60], note: 'Davis held captive before joining Whydah' },
+    { cat: 'Caribbean & captures', t: 'Bay of Honduras', ll: [16.0, -86.5], note: 'Ashton’s escape waters · Julian’s Miskito world' },
+    { cat: 'Caribbean & captures', t: 'Roatán', ll: [16.3, -86.55], note: 'Philip Ashton alone nearly two years, 1722–25' },
+    { cat: 'Caribbean & captures', t: 'Charleston, South Carolina', ll: [32.78, -79.93], note: 'Blackbeard’s 1718 blockade · Bonnet hanged' },
+    { cat: 'Caribbean & captures', t: 'Barbados', ll: [13.1, -59.5], note: 'Stede Bonnet’s plantation home — piracy by choice' },
+    { cat: 'Caribbean & captures', t: 'Ocracoke Island, NC', ll: [35.11, -75.98], note: 'Blackbeard killed 22 Nov 1718' },
+
+    /* ——— Cape Cod & wreck ——— */
+    { cat: 'Cape Cod & wreck', t: 'Wellfleet dunes', ll: [41.93, -70.03], note: 'Cape shore after the storm · Hallett folklore' },
+    { cat: 'Cape Cod & wreck', t: 'Marconi Beach', ll: [41.893, -69.964], note: 'Live beach cams · wreck beyond the surf' },
+    { cat: 'Cape Cod & wreck', t: 'Mary Anne wreck · off Chatham', ll: [41.65, -69.95], note: 'Shallow wreck same night · all 10 survive' },
+    { cat: 'Cape Cod & wreck', t: 'Eastham', ll: [41.83, -69.97], note: 'Mary Anne pirates arrested · Hallett folklore' },
+    { cat: 'Cape Cod & wreck', t: 'Provincetown / Cape Cod Harbor', ll: [42.058, -70.179], note: 'Southack arrives 2 May 1717 to salvage' },
+    { cat: 'Cape Cod & wreck', t: 'Jeremiah’s Gutter', ll: [41.79, -69.985], note: 'Lost tidal cut Southack used by whaleboat' },
+    { cat: 'Cape Cod & wreck', t: 'Whydah Pirate Museum, West Yarmouth', ll: [41.654, -70.224], note: '200,000+ artifacts · Clifford’s Cape museum' },
+    { cat: 'Cape Cod & wreck', t: 'Nantucket Sound approaches', ll: [41.4, -70.1], note: 'Last prizes · fleet into the nor’easter' },
+    { cat: 'Cape Cod & wreck', t: 'Cape Cod salvage dreams', ll: [41.7, -70.2], note: 'Where legend says Bellamy eyed the Cape' },
+
+    /* ——— Salem & New England ——— */
+    { cat: 'Salem & New England', t: 'Real Pirates Salem', ll: [42.520, -70.882], note: '285 Derby St · Whydah scavenger hunt' },
+    { cat: 'Salem & New England', t: 'Salem Maritime · Derby Wharf', ll: [42.521, -70.886], note: 'Friendship · Custom House · Hawkes House' },
+    { cat: 'Salem & New England', t: 'Salem · found again', ll: [42.522, -70.895], note: 'Story lands in students’ own city' },
+    { cat: 'Salem & New England', t: 'Peabody Essex Museum', ll: [42.522, -70.892], note: 'Ward Family Papers · Salem’s slave-trade role' },
+    { cat: 'Salem & New England', t: 'Collins Middle School, Salem', ll: [42.511, -70.901], note: 'Where this unit was taught summer 2026' },
+    { cat: 'Salem & New England', t: 'Marblehead', ll: [42.5, -70.86], note: 'Philip Ashton’s home port' },
+    { cat: 'Salem & New England', t: 'Old State House, Boston', ll: [42.359, -71.058], note: 'Vice-Admiralty Court · Oct 1717 pirate trials' },
+    { cat: 'Salem & New England', t: 'Charlestown Ferry gallows', ll: [42.378, -71.063], note: 'Six hanged 15 Nov 1717 on the tidal flats' },
+    { cat: 'Salem & New England', t: 'Boston', ll: [42.36, -71.06], note: 'Jail · papers · Julian hanged 1733' },
+    { cat: 'Salem & New England', t: 'Braintree', ll: [42.25, -71.0], note: 'John Quincy buys “Julian the Indian”' },
+    { cat: 'Salem & New England', t: 'Georges Island', ll: [42.320, -70.928], note: 'Harbor gateway · Fort Warren is a later layer' },
+    { cat: 'Salem & New England', t: 'Nix’s Mate', ll: [42.332, -70.944], note: 'Gibbet island · William Fly 1726' },
+    { cat: 'Salem & New England', t: 'Boston Light', ll: [42.328, -70.890], note: 'First lit 1716 — one year before the wreck' },
+    { cat: 'Salem & New England', t: 'Boston Harbor approach', ll: [42.3, -70.6], note: 'Ships into Boston/Salem thread these lanes' },
+    { cat: 'Salem & New England', t: 'Rhode Island', ll: [41.49, -71.31], note: 'Paulsgrave Williams — silversmith’s world' },
+    { cat: 'Salem & New England', t: 'Newport', ll: [41.490, -71.313], note: 'Pirate-nest port that later turned hostile' },
+    { cat: 'Salem & New England', t: 'Nova Scotia fishing grounds', ll: [44.5, -63.5], note: 'Ned Low seizes Ashton’s vessel, 1722' },
+    { cat: 'Salem & New England', t: 'Bay of Fundy', ll: [44.6, -66.0], note: 'Southack’s charting world beyond the Whydah mark' },
+    { cat: 'Salem & New England', t: 'Charlotte Forten Park, Salem', ll: [42.520, -70.883], note: 'Real Pirates site · Whydah arrives in town 2022' },
+
+    /* ——— People / side stories ——— */
+    { cat: 'People / side stories', t: 'Hittisleigh, Devon', ll: [50.745, -3.823], note: 'Bellamy born Feb 1689' },
+    { cat: 'People / side stories', t: 'Mosquito Coast', ll: [14.5, -83.5], note: 'John Julian’s Miskito home waters' },
+    { cat: 'People / side stories', t: 'Carmarthenshire, Wales', ll: [51.86, -4.31], note: 'Thomas Davis — forced carpenter, acquitted' },
+    { cat: 'People / side stories', t: 'Dublin', ll: [53.35, -6.26], note: 'Home port of the pink Mary Anne' },
+    { cat: 'People / side stories', t: 'Madeira', ll: [32.75, -16.95], note: '~7,000 gallons of wine in Mary Anne’s hold' },
+    { cat: 'People / side stories', t: 'Netherlands', ll: [52.37, 4.90], note: 'Recorded origin of Quintor and Thomas Baker' },
+    { cat: 'People / side stories', t: 'Sweden', ll: [59.33, 18.07], note: 'Peter Cornelius Hoof — treasure deposition' },
+    { cat: 'People / side stories', t: 'France', ll: [48.86, 2.35], note: 'John Shaun · La Buse’s French world' },
+    { cat: 'People / side stories', t: 'New York', ll: [40.71, -74.01], note: 'Simon van der Vorst — one of the hanged six' },
+    { cat: 'People / side stories', t: 'Utrecht', ll: [52.09, 5.12], note: '1713 peace ends privateering — push into piracy' },
+    { cat: 'People / side stories', t: 'North Carolina coast', ll: [35.2, -75.5], note: 'Eden protects Blackbeard until Virginia hunts him' },
+    { cat: 'People / side stories', t: 'Mauritius', ll: [-20.17, 57.50], note: 'Salem coda · Derby’s Grand Turk Far East route' },
+    { cat: 'People / side stories', t: 'Choosing the pirate life · Leewards', ll: [18.2, -63.0], note: 'John King’s choice waters near Antigua' },
+
+    /* ——— Modern oceans / chokepoints ——— */
+    { cat: 'Modern oceans / chokepoints', t: 'Suez Canal', ll: [30.5, 32.4], note: '~12% of world trade · Day 13 door' },
+    { cat: 'Modern oceans / chokepoints', t: 'Strait of Malacca', ll: [2.5, 101.5], note: 'About a third of global shipping' },
+    { cat: 'Modern oceans / chokepoints', t: 'Bab-el-Mandeb', ll: [12.6, 43.3], note: 'Red Sea south door · ships pushed around Africa' },
+    { cat: 'Modern oceans / chokepoints', t: 'Panama Canal', ll: [9.1, -79.7], note: '2023–24 drought cut daily traffic ~⅓' },
+    { cat: 'Modern oceans / chokepoints', t: 'Strait of Hormuz', ll: [26.6, 56.5], note: '~⅕ of world oil' },
+    { cat: 'Modern oceans / chokepoints', t: 'Strait of Dover', ll: [51.0, 1.4], note: 'Busiest shipping lane on Earth' },
+    { cat: 'Modern oceans / chokepoints', t: 'Straits of Florida', ll: [23.9, -81.0], note: '1717 treasure highway · Gulf Stream door' },
+    { cat: 'Modern oceans / chokepoints', t: 'Gibraltar', ll: [35.95, -5.6], note: 'Atlantic door into the Mediterranean' },
+    { cat: 'Modern oceans / chokepoints', t: 'Cape of Good Hope', ll: [-34.8, 19.0], note: 'The long way when Suez closes' },
+
+    /* ——— Archaeology / discovery ——— */
+    { cat: 'Archaeology / discovery', t: 'Wellfleet wreck site, 1984', ll: [41.891, -69.957], note: 'Clifford finds her via Southack’s mark' },
+    { cat: 'Archaeology / discovery', t: 'Expedition Whydah dig', ll: [41.892, -69.955], note: 'Bell 1985: THE WHYDAH GALLY 1716' },
+    { cat: 'Archaeology / discovery', t: 'University of New Haven', ll: [41.29, -72.96], note: '2021 DNA work on pirate skeletons' },
+    { cat: 'Archaeology / discovery', t: 'Salem Maritime Custom House', ll: [42.5205, -70.885], note: 'Where cargo got counted — same Atlantic machine' }
   ];
 
   /* Suggested stops for Showcase story maps — places only; students write the voice. */
@@ -516,7 +610,7 @@
       { ll: [42.358, -71.059], t: 'Hanged, 1733' }
     ],
     'Thomas Davis': [
-      { ll: [51.48, -3.18], t: 'Wales — a carpenter’s life' },
+      { ll: [51.86, -4.31], t: 'Wales — a carpenter’s life' },
       { ll: [19.9, -73.9], t: 'Forced aboard' },
       { ll: [17.97, -76.87], t: 'Working the prizes' },
       { ll: [33.9, -76.5], t: 'North with the fleet' },
@@ -549,8 +643,8 @@
       { ll: [42.5, -70.86], t: 'Marblehead — fisherman' },
       { ll: [42.5, -70.86], t: 'Seized by pirates' },
       { ll: [17.97, -76.87], t: 'Refusing to join' },
-      { ll: [16.7, -62.2], t: 'Roatán — two years alone' },
-      { ll: [16.7, -62.2], t: 'Surviving the island' },
+      { ll: [16.3, -86.55], t: 'Roatán — two years alone' },
+      { ll: [16.3, -86.55], t: 'Surviving the island' },
       { ll: [42.5, -70.86], t: 'Home to a town that thought him dead' },
       { ll: [42.36, -71.06], t: 'The 1725 memoir' },
       { ll: [42.52, -70.89], t: 'Salem’s living memory of piracy' }
@@ -2747,10 +2841,75 @@
   }
 
   /* ---------- Showcase tour + story sheet ---------- */
+  var tourOrbitTimer = null;
+  var tourOrbitAngle = 0;
+  var tourOrbitCenter = null;
+  var tourResizeHandler = null;
+
+  function prefersReducedMotion() {
+    try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    catch (_) { return false; }
+  }
+  function stopTourOrbit() {
+    if (tourOrbitTimer) { clearInterval(tourOrbitTimer); tourOrbitTimer = null; }
+    tourOrbitAngle = 0;
+    tourOrbitCenter = null;
+  }
+  function startTourOrbit(latlng) {
+    stopTourOrbit();
+    if (!map || mode === 'doors' || mode === 'globe' || mode === 'chart') return;
+    if (prefersReducedMotion()) return;
+    tourOrbitCenter = L.latLng(latlng);
+    /* Radius shrinks as you zoom in so the pin stays readable while the map turns. */
+    var zoom = map.getZoom();
+    var radiusDeg = Math.max(0.012, 0.22 / Math.pow(1.55, Math.max(0, zoom - 3)));
+    tourOrbitAngle = 0;
+    tourOrbitTimer = setInterval(function () {
+      if (!map || !tourOrbitCenter || !document.body.classList.contains('touring')) {
+        stopTourOrbit();
+        return;
+      }
+      tourOrbitAngle = (tourOrbitAngle + 3) % 360;
+      var rad = tourOrbitAngle * Math.PI / 180;
+      var cosLat = Math.max(0.2, Math.cos(tourOrbitCenter.lat * Math.PI / 180));
+      var lat = tourOrbitCenter.lat + Math.cos(rad) * radiusDeg * 0.65;
+      var lng = tourOrbitCenter.lng + Math.sin(rad) * radiusDeg / cosLat;
+      try { map.panTo([lat, lng], { animate: true, duration: 0.55, easeLinearity: 1, noMoveStart: true }); }
+      catch (_) {}
+    }, 500);
+  }
+  function enterTourChrome() {
+    document.body.classList.add('touring');
+    closeSidePanels();
+    hideSegMenu();
+    clearMeasure();
+    if (map) {
+      setTimeout(function () { try { map.invalidateSize(true); } catch (_) {} }, 60);
+      setTimeout(function () { try { map.invalidateSize(true); } catch (_) {} }, 320);
+    }
+    if (!tourResizeHandler) {
+      tourResizeHandler = function () {
+        if (map && document.body.classList.contains('touring')) {
+          try { map.invalidateSize(true); } catch (_) {}
+        }
+      };
+      window.addEventListener('resize', tourResizeHandler);
+    }
+  }
+  function exitTourChrome() {
+    document.body.classList.remove('touring');
+    stopTourOrbit();
+    if (map) {
+      setTimeout(function () { try { map.invalidateSize(true); } catch (_) {} }, 60);
+    }
+  }
   function exitTour() {
     tourIdx = -1;
+    stopTourOrbit();
+    exitTourChrome();
     document.getElementById('tour-panel').classList.remove('open');
     document.getElementById('tool-tour').classList.remove('on');
+    document.getElementById('hint').textContent = 'Tour ended. Edit pins, then run Tour again to rehearse for Showcase.';
   }
   function showTourStop(i) {
     var pins = livePins();
@@ -2760,6 +2919,7 @@
     tourIdx = i;
     var m = pins[i];
     var d = pinData(m);
+    var ll = m.getLatLng();
     document.getElementById('tour-who').textContent =
       (project.person ? project.person + ' · ' : '') + 'Stop ' + d.n + ' of ' + pins.length;
     document.getElementById('tour-stop').textContent = d.label || 'Untitled stop';
@@ -2772,17 +2932,30 @@
     document.getElementById('tour-count').textContent = d.n + ' / ' + pins.length;
     document.getElementById('tour-panel').classList.add('open');
     document.getElementById('tool-tour').classList.add('on');
+    enterTourChrome();
     if (map && mode !== 'doors' && mode !== 'globe') {
       map.closePopup();
-      try { map.flyTo(m.getLatLng(), Math.max(map.getZoom(), mode === 'chart' ? 0 : 5), { duration: 0.85 }); } catch (_) {}
-      setTimeout(function () { try { m.openPopup(); } catch (_) {} }, 500);
+      stopTourOrbit();
+      var targetZoom = mode === 'chart' ? Math.max(map.getZoom(), 0) : Math.max(map.getZoom(), 5);
+      try {
+        map.flyTo(ll, targetZoom, { duration: 1.05 });
+      } catch (_) {
+        try { map.setView(ll, targetZoom); } catch (__) {}
+      }
+      setTimeout(function () {
+        try { m.openPopup(); } catch (_) {}
+        startTourOrbit(ll);
+      }, 1100);
     }
   }
   function startTour() {
-    if (mode === 'doors' || mode === 'globe') return;
-    document.getElementById('proj-panel').classList.remove('open');
+    if (mode === 'doors' || mode === 'globe') {
+      notice('Tour works on 🌍 World or 📜 1717 Chart — switch back from Park Your Pirate first.');
+      return;
+    }
+    closeSidePanels();
     showTourStop(0);
-    document.getElementById('hint').textContent = 'Tour mode — use Next / Prev (or ← → keys). Exit when you’re done rehearsing for Showcase.';
+    document.getElementById('hint').textContent = 'Fullscreen tour — captions centered while the map orbits. Next / Prev or ← →. Exit when you’re done.';
   }
   function buildStorySheet() {
     var pins = livePins();
@@ -2973,6 +3146,7 @@
   document.getElementById('tour-prev').onclick = function () { showTourStop(tourIdx - 1); };
   document.getElementById('tour-next').onclick = function () { showTourStop(tourIdx + 1); };
   document.getElementById('tour-exit').onclick = exitTour;
+  document.getElementById('tour-exit-top').onclick = exitTour;
   document.getElementById('tool-sheet').onclick = printStorySheet;
   document.getElementById('pin-save').onclick = savePinEditor;
   document.getElementById('pin-cancel').onclick = closePinEditor;
