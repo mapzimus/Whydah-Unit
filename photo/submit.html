@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Showcase Submission</title>
+<meta name="description" content="Submit three photos with captions for the photography showcase slideshow.">
+<meta name="theme-color" content="#14161a">
+<link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
+<link rel="stylesheet" href="photo.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site-header">
+    <div class="kicker">Photography Unit</div>
+    <h1>🌟 Showcase Submission</h1>
+    <div class="crumbs"><a href="../">whydahstory.com</a> / <a href="index.html">photo</a> / submit</div>
+  </header>
+
+  <div class="card">
+    <strong>Pick your best three.</strong>
+    <p class="muted" style="margin:0.4em 0 0;">Each student submits <strong>exactly three</strong> photos for tomorrow’s showcase slideshow. Every photo needs a short caption and your name. Once you’re in, they’re in the show.</p>
+  </div>
+
+  <div class="card" id="form-card">
+    <h2>Your name</h2>
+    <div class="row">
+      <input type="text" id="student-name" placeholder="First name + last initial (e.g. Maya R)" maxlength="60" style="flex:1; min-width:220px;">
+    </div>
+
+    <h2 style="margin-top:1.4em;">Your three photos</h2>
+    <div id="slots" class="submit-slots"></div>
+
+    <div class="row" style="margin-top:1.2em;">
+      <button id="submit-btn">Submit my 3 photos</button>
+      <a class="btn secondary" href="showcase.html">Open showcase slideshow →</a>
+    </div>
+    <div id="status" class="muted" style="margin-top:0.7em;"></div>
+    <progress id="progress" max="3" value="0" style="display:none;"></progress>
+  </div>
+
+  <div class="card" id="done-card" style="display:none;">
+    <h2 style="color:var(--green);">You’re in the showcase ✓</h2>
+    <p id="done-msg" class="muted"></p>
+    <div class="row">
+      <a class="btn" href="showcase.html">Preview the slideshow</a>
+      <button class="secondary" id="submit-another">Submit for a different student</button>
+    </div>
+  </div>
+
+  <nav class="footer-nav"><a href="index.html">← Photo home</a></nav>
+</div>
+
+<script src="photo.js"></script>
+<script>
+const SLOT_COUNT = 3;
+const PREFIX = 'showcase';
+
+const nameInput = document.getElementById('student-name');
+const slotsBox = document.getElementById('slots');
+const statusEl = document.getElementById('status');
+const prog = document.getElementById('progress');
+const submitBtn = document.getElementById('submit-btn');
+
+nameInput.value = localStorage.getItem('photo-my-name') || '';
+
+const slots = [];
+for (let i = 0; i < SLOT_COUNT; i++) {
+  const file = el('input', { type: 'file', accept: 'image/*', id: 'file-' + i });
+  const caption = el('input', {
+    type: 'text',
+    placeholder: 'Caption — what should people notice?',
+    maxlength: '140',
+    id: 'caption-' + i,
+    style: 'flex:1; min-width:200px;',
+  });
+  const preview = el('div', { class: 'submit-preview muted', text: 'No photo yet' });
+  const card = el('div', { class: 'submit-slot card' },
+    el('div', { class: 'submit-slot-head' },
+      el('strong', { text: 'Photo ' + (i + 1) }),
+      preview),
+    el('div', { class: 'row', style: 'margin-top:0.6em;' }, file),
+    el('div', { class: 'row', style: 'margin-top:0.5em;' }, caption));
+  file.onchange = () => {
+    const f = file.files[0];
+    if (!f) { preview.textContent = 'No photo yet'; preview.className = 'submit-preview muted'; return; }
+    preview.textContent = f.name;
+    preview.className = 'submit-preview';
+  };
+  slots.push({ file, caption, preview });
+  slotsBox.appendChild(card);
+}
+
+async function listShowcaseMeta() {
+  const items = await storageList(PREFIX);
+  // Sidecars are JSON text stored as .meta.jpg (bucket only allows image MIME types).
+  const sidecars = items.filter(i => i.id !== null && /\.meta\.jpe?g$/i.test(i.name) && !i.name.startsWith('_probe'));
+  const metas = [];
+  for (const j of sidecars) {
+    try {
+      const r = await fetch(publicUrl(PREFIX + '/' + j.name));
+      if (!r.ok) continue;
+      const meta = await r.json();
+      meta._sidecar = j.name;
+      metas.push(meta);
+    } catch (_) { /* skip bad sidecar */ }
+  }
+  return metas;
+}
+
+async function countForStudent(name) {
+  const metas = await listShowcaseMeta();
+  const key = name.trim().toLowerCase();
+  return metas.filter(m => (m.student_name || '').trim().toLowerCase() === key).length;
+}
+
+submitBtn.onclick = async () => {
+  const student = nameInput.value.trim();
+  if (!student) { statusEl.textContent = 'Put your name in first.'; return; }
+
+  const picks = [];
+  for (let i = 0; i < SLOT_COUNT; i++) {
+    const f = slots[i].file.files[0];
+    const cap = slots[i].caption.value.trim();
+    if (!f) { statusEl.textContent = 'Photo ' + (i + 1) + ' is missing — pick a file.'; return; }
+    if (!cap) { statusEl.textContent = 'Photo ' + (i + 1) + ' needs a caption.'; return; }
+    picks.push({ file: f, caption: cap });
+  }
+
+  submitBtn.disabled = true;
+  statusEl.textContent = 'Checking whether you already submitted…';
+  try {
+    const existing = await countForStudent(student);
+    if (existing >= SLOT_COUNT) {
+      statusEl.innerHTML = '';
+      statusEl.appendChild(el('div', {
+        class: 'error',
+        text: student + ' already has ' + existing + ' showcase photos in. Ask your teacher if you need to change them.',
+      }));
+      submitBtn.disabled = false;
+      return;
+    }
+    if (existing > 0) {
+      statusEl.innerHTML = '';
+      statusEl.appendChild(el('div', {
+        class: 'error',
+        text: student + ' already submitted ' + existing + ' photo(s). Showcase entries are exactly three — ask your teacher before trying again.',
+      }));
+      submitBtn.disabled = false;
+      return;
+    }
+  } catch (e) {
+    statusEl.textContent = 'Could not check existing submissions: ' + e.message;
+    submitBtn.disabled = false;
+    return;
+  }
+
+  localStorage.setItem('photo-my-name', student);
+  prog.style.display = '';
+  prog.max = SLOT_COUNT;
+  prog.value = 0;
+
+  const stamp = Date.now().toString(36);
+  const safeStudent = student.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 40) || 'student';
+  let ok = 0;
+  const failed = [];
+
+  for (let i = 0; i < picks.length; i++) {
+    statusEl.textContent = 'Uploading photo ' + (i + 1) + ' of ' + SLOT_COUNT + '…';
+    const id = stamp + '_' + (i + 1) + '_' + safeStudent;
+    try {
+      const blob = await shrinkImage(picks[i].file);
+      const photoName = id + '_' + uploadName(picks[i].file, blob);
+      const photoPath = PREFIX + '/' + photoName;
+      await storageUpload(photoPath, blob);
+      const meta = {
+        student_name: student,
+        caption: picks[i].caption,
+        photo_path: photoPath,
+        created_at: new Date().toISOString(),
+      };
+      // Bucket rejects non-image MIME types — store JSON as image/jpeg bytes.
+      const metaBlob = new Blob([JSON.stringify(meta)], { type: 'image/jpeg' });
+      await storageUpload(PREFIX + '/' + id + '.meta.jpg', metaBlob);
+      ok++;
+    } catch (e) {
+      failed.push('Photo ' + (i + 1) + ': ' + e.message);
+    }
+    prog.value = i + 1;
+  }
+
+  if (ok === SLOT_COUNT) {
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('done-card').style.display = '';
+    document.getElementById('done-msg').textContent =
+      student + ' — all three photos are in the showcase. You can preview the slideshow anytime.';
+  } else {
+    statusEl.innerHTML = '';
+    statusEl.appendChild(el('div', {
+      class: 'error',
+      text: 'Uploaded ' + ok + ' of ' + SLOT_COUNT + '. ' + (failed.length ? failed.join(' · ') : 'Try again.'),
+    }));
+    submitBtn.disabled = false;
+  }
+};
+
+document.getElementById('submit-another').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
