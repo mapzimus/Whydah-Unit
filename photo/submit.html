@@ -63,27 +63,11 @@
 
   <details class="teacher" id="bulk-panel">
     <summary>Teacher: bulk upload into the slideshow</summary>
-    <p class="muted" style="margin:0.7em 0 0.9em;">Dump a whole folder into the showcase gallery — no 3-photo limit. Captions default to the file name (you can edit them). Optional credit line shows under the caption in the slideshow. Order is shuffled when you hit Play.</p>
+    <p class="muted" style="margin:0.7em 0 0.9em;">Moved to its own page so it’s easy to find.</p>
     <div class="row">
-      <input type="text" id="bulk-credit" placeholder="Credit / photographer (optional — applies to all)" maxlength="80" style="flex:1; min-width:220px;">
-    </div>
-    <div class="row" style="margin-top:0.6em;">
-      <label class="btn secondary" style="cursor:pointer;">
-        Choose photos
-        <input type="file" id="bulk-files" multiple accept="image/*" style="display:none;">
-      </label>
-      <label class="btn secondary" style="cursor:pointer;" title="Chrome / Edge: pick an entire folder">
-        Choose folder
-        <input type="file" id="bulk-folder" webkitdirectory multiple style="display:none;">
-      </label>
-    </div>
-    <div id="bulk-list" class="bulk-list" style="margin-top:0.9em;"></div>
-    <div class="row" style="margin-top:0.9em;">
-      <button type="button" id="bulk-upload-btn" disabled>Upload to slideshow</button>
+      <a class="btn" href="bulk.html">Open bulk upload →</a>
       <a class="btn secondary" href="showcase.html">Open slideshow →</a>
     </div>
-    <div id="bulk-status" class="muted" style="margin-top:0.6em;"></div>
-    <progress id="bulk-progress" max="100" value="0" style="display:none;"></progress>
   </details>
 
   <nav class="footer-nav"><a href="index.html">← Photo home</a></nav>
