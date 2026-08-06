@@ -61,6 +61,31 @@
     <progress id="teacher-progress" max="3" value="0" style="display:none;"></progress>
   </details>
 
+  <details class="teacher" id="bulk-panel">
+    <summary>Teacher: bulk upload into the slideshow</summary>
+    <p class="muted" style="margin:0.7em 0 0.9em;">Dump a whole folder into the showcase gallery — no 3-photo limit. Captions default to the file name (you can edit them). Optional credit line shows under the caption in the slideshow. Order is shuffled when you hit Play.</p>
+    <div class="row">
+      <input type="text" id="bulk-credit" placeholder="Credit / photographer (optional — applies to all)" maxlength="80" style="flex:1; min-width:220px;">
+    </div>
+    <div class="row" style="margin-top:0.6em;">
+      <label class="btn secondary" style="cursor:pointer;">
+        Choose photos
+        <input type="file" id="bulk-files" multiple accept="image/*" style="display:none;">
+      </label>
+      <label class="btn secondary" style="cursor:pointer;" title="Chrome / Edge: pick an entire folder">
+        Choose folder
+        <input type="file" id="bulk-folder" webkitdirectory multiple style="display:none;">
+      </label>
+    </div>
+    <div id="bulk-list" class="bulk-list" style="margin-top:0.9em;"></div>
+    <div class="row" style="margin-top:0.9em;">
+      <button type="button" id="bulk-upload-btn" disabled>Upload to slideshow</button>
+      <a class="btn secondary" href="showcase.html">Open slideshow →</a>
+    </div>
+    <div id="bulk-status" class="muted" style="margin-top:0.6em;"></div>
+    <progress id="bulk-progress" max="100" value="0" style="display:none;"></progress>
+  </details>
+
   <nav class="footer-nav"><a href="index.html">← Photo home</a></nav>
 </div>
 
@@ -448,14 +473,128 @@ teacherUploadBtn.onclick = async () => {
   teacherUploadBtn.disabled = false;
 };
 
-// Deep-link: /photo/submit.html#teacher or ?teacher=1 opens the teacher panel.
-if (location.hash === '#teacher' || new URLSearchParams(location.search).get('teacher') === '1') {
-  const panel = document.getElementById('teacher-panel');
+/* ---------- Bulk upload (folder dump → slideshow, no 3-slot limit) ---------- */
+const bulkFiles = document.getElementById('bulk-files');
+const bulkFolder = document.getElementById('bulk-folder');
+const bulkList = document.getElementById('bulk-list');
+const bulkCredit = document.getElementById('bulk-credit');
+const bulkUploadBtn = document.getElementById('bulk-upload-btn');
+const bulkStatus = document.getElementById('bulk-status');
+const bulkProg = document.getElementById('bulk-progress');
+let bulkItems = []; // { file, captionInput }
+
+function setBulkStatus(msg, isError) {
+  bulkStatus.innerHTML = '';
+  if (!msg) return;
+  bulkStatus.appendChild(el('div', { class: isError ? 'error' : 'muted', text: msg }));
+}
+
+function captionFromFilename(name) {
+  const base = name.split('/').pop().split('\\').pop();
+  return base.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Untitled';
+}
+
+function newBulkId() {
+  return 'b' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+function loadBulkFileList(fileList) {
+  bulkList.innerHTML = '';
+  bulkItems = [];
+  const files = Array.from(fileList || [])
+    .filter(f => isImage(f.name) || /^image\//.test(f.type))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  if (!files.length) {
+    bulkUploadBtn.disabled = true;
+    setBulkStatus('No image files selected.');
+    return;
+  }
+  setBulkStatus(files.length + ' photo' + (files.length === 1 ? '' : 's') + ' ready — edit captions if you want, then upload.');
+  for (const file of files) {
+    const caption = el('input', {
+      type: 'text',
+      value: captionFromFilename(file.name),
+      maxlength: '140',
+      style: 'flex:1; min-width:180px;',
+    });
+    const row = el('div', { class: 'bulk-row' },
+      el('div', { class: 'bulk-name muted', text: file.name }),
+      caption);
+    bulkList.appendChild(row);
+    bulkItems.push({ file, caption });
+  }
+  bulkUploadBtn.disabled = false;
+}
+
+bulkFiles.onchange = () => loadBulkFileList(bulkFiles.files);
+bulkFolder.onchange = () => loadBulkFileList(bulkFolder.files);
+
+bulkUploadBtn.onclick = async () => {
+  if (!bulkItems.length) { setBulkStatus('Pick some photos first.', true); return; }
+  for (let i = 0; i < bulkItems.length; i++) {
+    if (!bulkItems[i].caption.value.trim()) {
+      setBulkStatus('Photo ' + (i + 1) + ' needs a caption.', true);
+      return;
+    }
+  }
+
+  const credit = bulkCredit.value.trim();
+  bulkUploadBtn.disabled = true;
+  bulkProg.style.display = '';
+  bulkProg.max = bulkItems.length;
+  bulkProg.value = 0;
+  let ok = 0;
+  const failed = [];
+
+  for (let i = 0; i < bulkItems.length; i++) {
+    const item = bulkItems[i];
+    setBulkStatus('Uploading ' + (i + 1) + ' of ' + bulkItems.length + ' — ' + item.file.name);
+    const entryId = newBulkId();
+    const id = entryId;
+    try {
+      const blob = await shrinkImage(item.file);
+      const photoPath = SHOWCASE_PREFIX + '/' + id + '_' + uploadName(item.file, blob);
+      await storageUpload(photoPath, blob);
+      await uploadShowcaseMeta(id, {
+        bulk: true,
+        entry_id: entryId,
+        student_name: credit,
+        caption: item.caption.value.trim(),
+        photo_path: photoPath,
+        created_at: new Date().toISOString(),
+      });
+      ok++;
+    } catch (e) {
+      failed.push(item.file.name + ': ' + e.message);
+    }
+    bulkProg.value = i + 1;
+  }
+
+  if (failed.length) {
+    setBulkStatus('Uploaded ' + ok + ' of ' + bulkItems.length + '. Failed: ' + failed.slice(0, 5).join(' · ') + (failed.length > 5 ? '…' : ''), true);
+  } else {
+    setBulkStatus('Done — ' + ok + ' photo' + (ok === 1 ? '' : 's') + ' added to the slideshow. Open the slideshow and hit Play (order shuffles).');
+    bulkFiles.value = '';
+    bulkFolder.value = '';
+    bulkList.innerHTML = '';
+    bulkItems = [];
+    bulkUploadBtn.disabled = true;
+  }
+  // keep button enabled if some failed so they can retry remaining by re-picking
+  if (failed.length) bulkUploadBtn.disabled = false;
+};
+
+// Deep-link: #teacher / #bulk or ?teacher=1 / ?bulk=1
+(function openTeacherDeepLink() {
+  const params = new URLSearchParams(location.search);
+  let panel = null;
+  if (location.hash === '#bulk' || params.get('bulk') === '1') panel = document.getElementById('bulk-panel');
+  else if (location.hash === '#teacher' || params.get('teacher') === '1') panel = document.getElementById('teacher-panel');
   if (panel) {
     panel.open = true;
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-}
+})();
 
 // Auto-load if we already know their name from a prior visit.
 if (nameInput.value.trim()) {

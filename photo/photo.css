@@ -94,6 +94,15 @@ progress { width: 100%; }
   .submit-current { grid-template-columns: 1fr; }
   .submit-current img { width: 100%; height: auto; aspect-ratio: 1; }
 }
+.bulk-list { display: flex; flex-direction: column; gap: 0.45em; max-height: 320px; overflow: auto; padding-right: 0.2em; }
+.bulk-row {
+  display: grid; grid-template-columns: minmax(100px, 0.4fr) 1fr; gap: 0.6em; align-items: center;
+  background: var(--card-bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 0.45em 0.6em;
+}
+.bulk-name { font-size: 0.82em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+  .bulk-row { grid-template-columns: 1fr; }
+}
 
 /* ---------- Showcase slideshow ---------- */
 .showcase-body.showcase-playing { overflow: hidden; background: #050607; }

@@ -32,6 +32,7 @@
         <button id="refresh-btn" class="secondary">↻ Refresh</button>
         <a class="btn secondary" href="submit.html">Students submit here</a>
         <a class="btn secondary" href="submit.html#teacher">Teacher upload</a>
+        <a class="btn secondary" href="submit.html#bulk">Bulk upload</a>
         <button id="play-btn" disabled>▶ Play showcase</button>
       </div>
     </div>
@@ -127,11 +128,14 @@ async function loadEntries() {
     const metas = await listShowcaseMetas();
     entries = resolveShowcaseEntries(metas);
     const n = entries.length;
-    const students = new Set(entries.map(e => e.student_name.trim().toLowerCase())).size;
+    const students = new Set(entries.map(e => e.student_name.trim().toLowerCase()).filter(Boolean)).size;
     slideMs = computeSlideMs(n);
     const onePass = n * slideMs;
+    const bulkCount = entries.filter(e => e.bulk).length;
     lobbyCount.textContent = n
-      ? n + ' photo' + (n === 1 ? '' : 's') + ' from ' + students + ' student' + (students === 1 ? '' : 's')
+      ? n + ' photo' + (n === 1 ? '' : 's')
+        + (students ? ' from ' + students + ' student' + (students === 1 ? '' : 's') : '')
+        + (bulkCount ? ' · ' + bulkCount + ' bulk' : '')
       : 'No showcase photos yet — students submit from the link above.';
     if (n) {
       let note = 'Each slide ~' + Math.round(slideMs / 1000) + 's · one pass ≈ ' + formatMs(onePass);
@@ -176,7 +180,8 @@ function showSlide(i) {
   slideImg.src = e.url;
   slideImg.alt = e.caption;
   slideCaption.textContent = e.caption;
-  slideCredit.textContent = e.student_name;
+  slideCredit.textContent = e.student_name || '';
+  slideCredit.hidden = !e.student_name;
   const capBlock = slideCaption.parentElement;
   capBlock.classList.remove('is-in');
   void capBlock.offsetWidth;

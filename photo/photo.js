@@ -201,19 +201,29 @@ async function listShowcaseMetas() {
 }
 
 /**
- * Resolve the live showcase set: latest version per (student, slot).
- * Tombstones (`deleted: true`) clear a slot. Entries without a slot (first version)
- * get slots 1..3 in created_at order per student.
+ * Resolve the live showcase set.
+ * - Student submissions: latest version per (student, slot 1–3); tombstones clear a slot.
+ * - Bulk uploads (`bulk: true`): latest version per entry_id; not limited to 3.
  */
 function resolveShowcaseEntries(metas) {
+  const live = [];
   const byStudent = new Map();
+  const byBulkId = new Map();
+
   for (const m of metas) {
+    if (m.bulk) {
+      const id = m.entry_id || m._sidecar || m.photo_path;
+      if (!id) continue;
+      const prev = byBulkId.get(id);
+      if (!prev || (m.created_at || '') >= (prev.created_at || '')) byBulkId.set(id, m);
+      continue;
+    }
     const key = (m.student_name || '').trim().toLowerCase();
     if (!key) continue;
     if (!byStudent.has(key)) byStudent.set(key, []);
     byStudent.get(key).push(m);
   }
-  const live = [];
+
   for (const [, list] of byStudent) {
     list.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
     // Backfill slot numbers for older uploads that didn't store one.
@@ -239,21 +249,39 @@ function resolveShowcaseEntries(metas) {
         photo_path: m.photo_path,
         created_at: m.created_at || '',
         slot: s,
+        bulk: false,
         url: publicUrl(m.photo_path),
       });
     }
   }
+
+  for (const m of byBulkId.values()) {
+    if (m.deleted || !m.photo_path || !m.caption) continue;
+    live.push({
+      student_name: m.student_name || '',
+      caption: m.caption,
+      photo_path: m.photo_path,
+      created_at: m.created_at || '',
+      slot: null,
+      bulk: true,
+      entry_id: m.entry_id || '',
+      url: publicUrl(m.photo_path),
+    });
+  }
+
   live.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
   return live;
 }
 
-/** Latest live entry per slot (1..3) for one student name. Missing slots are null. */
+/** Latest live entry per slot (1..3) for one student name. Missing slots are null. Ignores bulk uploads. */
 function slotsForStudent(metas, studentName) {
   const key = studentName.trim().toLowerCase();
-  const mine = metas.filter(m => (m.student_name || '').trim().toLowerCase() === key);
+  const mine = metas.filter(m => !m.bulk && (m.student_name || '').trim().toLowerCase() === key);
   const resolved = resolveShowcaseEntries(mine);
   const out = [null, null, null];
-  for (const e of resolved) out[e.slot - 1] = e;
+  for (const e of resolved) {
+    if (e.slot >= 1 && e.slot <= SHOWCASE_SLOTS) out[e.slot - 1] = e;
+  }
   return out;
 }
 
