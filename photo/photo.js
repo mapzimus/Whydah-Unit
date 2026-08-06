@@ -256,10 +256,10 @@ function resolveShowcaseEntries(metas) {
   }
 
   for (const m of byBulkId.values()) {
-    if (m.deleted || !m.photo_path || !m.caption) continue;
+    if (m.deleted || !m.photo_path) continue;
     live.push({
       student_name: m.student_name || '',
-      caption: m.caption,
+      caption: m.caption || '',
       photo_path: m.photo_path,
       created_at: m.created_at || '',
       slot: null,

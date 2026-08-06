@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bulk Upload — Showcase Slideshow</title>
-<meta name="description" content="Teacher bulk upload: dump a folder of photos into the photography showcase slideshow.">
+<meta name="description" content="Teacher bulk upload: dump a folder of photos into the photography showcase slideshow. No captioning required.">
 <meta name="theme-color" content="#14161a">
 <link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
 <link rel="stylesheet" href="photo.css">
@@ -19,38 +19,27 @@
   </header>
 
   <div class="card">
-    <strong>Dump a whole folder into the slideshow.</strong>
-    <p class="muted" style="margin:0.4em 0 0;">No 3-photo limit. Pick your <code>Desktop\photos\showcase</code> folder (or multi-select files). Captions default to file names — edit them before uploading. Optional credit shows under each caption. When you hit Play on the slideshow, order shuffles.</p>
+    <strong>Add as many photos as you want.</strong>
+    <p class="muted" style="margin:0.4em 0 0;">No 3-photo limit. No captioning. Pick a folder (or multi-select files) and upload — they go straight into the slideshow. Play shuffles the order.</p>
   </div>
 
   <div class="card">
-    <h2>1. Optional credit</h2>
     <div class="row">
-      <input type="text" id="bulk-credit" placeholder="Credit / photographer (optional — applies to all)" maxlength="80" style="flex:1; min-width:220px;">
-    </div>
-
-    <h2 style="margin-top:1.3em;">2. Choose photos</h2>
-    <div class="row">
-      <label class="btn" style="cursor:pointer;">
+      <label class="btn" style="cursor:pointer; font-size:1.05em; padding:0.7em 1.2em;">
         Choose folder
         <input type="file" id="bulk-folder" webkitdirectory multiple style="display:none;">
       </label>
-      <label class="btn secondary" style="cursor:pointer;">
+      <label class="btn secondary" style="cursor:pointer; font-size:1.05em; padding:0.7em 1.2em;">
         Choose photos
         <input type="file" id="bulk-files" multiple accept="image/*" style="display:none;">
       </label>
-    </div>
-    <p class="muted" style="margin:0.6em 0 0;">Tip: <strong>Choose folder</strong> works in Chrome and Edge — pick the whole showcase folder in one click.</p>
-
-    <div id="bulk-list" class="bulk-list" style="margin-top:1em;"></div>
-
-    <h2 style="margin-top:1.3em;">3. Upload</h2>
-    <div class="row">
       <button type="button" id="bulk-upload-btn" disabled>Upload to slideshow</button>
       <a class="btn secondary" href="showcase.html">Open slideshow →</a>
     </div>
-    <div id="bulk-status" class="muted" style="margin-top:0.7em;"></div>
-    <progress id="bulk-progress" max="100" value="0" style="display:none;"></progress>
+    <p class="muted" style="margin:0.7em 0 0;"><strong>Choose folder</strong> works in Chrome / Edge — pick <code>Desktop\photos\showcase</code> in one click.</p>
+    <div id="bulk-status" class="muted" style="margin-top:0.8em;"></div>
+    <progress id="bulk-progress" max="100" value="0" style="display:none; margin-top:0.5em;"></progress>
+    <div id="bulk-list" class="bulk-list" style="margin-top:1em;"></div>
   </div>
 
   <nav class="footer-nav">
@@ -58,7 +47,7 @@
     ·
     <a href="showcase.html">Showcase slideshow</a>
     ·
-    <a href="submit.html">Student / per-name submit</a>
+    <a href="submit.html">Student 3-photo submit</a>
   </nav>
 </div>
 
@@ -67,21 +56,15 @@
 const bulkFiles = document.getElementById('bulk-files');
 const bulkFolder = document.getElementById('bulk-folder');
 const bulkList = document.getElementById('bulk-list');
-const bulkCredit = document.getElementById('bulk-credit');
 const bulkUploadBtn = document.getElementById('bulk-upload-btn');
 const bulkStatus = document.getElementById('bulk-status');
 const bulkProg = document.getElementById('bulk-progress');
-let bulkItems = [];
+let bulkFilesReady = [];
 
 function setBulkStatus(msg, isError) {
   bulkStatus.innerHTML = '';
   if (!msg) return;
   bulkStatus.appendChild(el('div', { class: isError ? 'error' : 'muted', text: msg }));
-}
-
-function captionFromFilename(name) {
-  const base = name.split('/').pop().split('\\').pop();
-  return base.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Untitled';
 }
 
 function newBulkId() {
@@ -90,28 +73,24 @@ function newBulkId() {
 
 function loadBulkFileList(fileList) {
   bulkList.innerHTML = '';
-  bulkItems = [];
-  const files = Array.from(fileList || [])
+  bulkFilesReady = Array.from(fileList || [])
     .filter(f => isImage(f.name) || /^image\//.test(f.type))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-  if (!files.length) {
+
+  if (!bulkFilesReady.length) {
     bulkUploadBtn.disabled = true;
     setBulkStatus('No image files selected.');
     return;
   }
-  setBulkStatus(files.length + ' photo' + (files.length === 1 ? '' : 's') + ' ready — edit captions if you want, then upload.');
-  for (const file of files) {
-    const caption = el('input', {
-      type: 'text',
-      value: captionFromFilename(file.name),
-      maxlength: '140',
-      style: 'flex:1; min-width:180px;',
-    });
-    const row = el('div', { class: 'bulk-row' },
-      el('div', { class: 'bulk-name muted', text: file.name }),
-      caption);
-    bulkList.appendChild(row);
-    bulkItems.push({ file, caption });
+
+  setBulkStatus(bulkFilesReady.length + ' photo' + (bulkFilesReady.length === 1 ? '' : 's') + ' selected — hit Upload to slideshow (no captions needed).');
+  const preview = bulkFilesReady.slice(0, 40);
+  for (const file of preview) {
+    bulkList.appendChild(el('div', { class: 'bulk-row' },
+      el('div', { class: 'bulk-name', text: file.name })));
+  }
+  if (bulkFilesReady.length > preview.length) {
+    bulkList.appendChild(el('div', { class: 'muted', text: '…and ' + (bulkFilesReady.length - preview.length) + ' more' }));
   }
   bulkUploadBtn.disabled = false;
 }
@@ -120,54 +99,47 @@ bulkFiles.onchange = () => loadBulkFileList(bulkFiles.files);
 bulkFolder.onchange = () => loadBulkFileList(bulkFolder.files);
 
 bulkUploadBtn.onclick = async () => {
-  if (!bulkItems.length) { setBulkStatus('Pick some photos first.', true); return; }
-  for (let i = 0; i < bulkItems.length; i++) {
-    if (!bulkItems[i].caption.value.trim()) {
-      setBulkStatus('Photo ' + (i + 1) + ' needs a caption.', true);
-      return;
-    }
-  }
+  if (!bulkFilesReady.length) { setBulkStatus('Pick some photos first.', true); return; }
 
-  const credit = bulkCredit.value.trim();
   bulkUploadBtn.disabled = true;
   bulkProg.style.display = '';
-  bulkProg.max = bulkItems.length;
+  bulkProg.max = bulkFilesReady.length;
   bulkProg.value = 0;
   let ok = 0;
   const failed = [];
 
-  for (let i = 0; i < bulkItems.length; i++) {
-    const item = bulkItems[i];
-    setBulkStatus('Uploading ' + (i + 1) + ' of ' + bulkItems.length + ' — ' + item.file.name);
+  for (let i = 0; i < bulkFilesReady.length; i++) {
+    const file = bulkFilesReady[i];
+    setBulkStatus('Uploading ' + (i + 1) + ' of ' + bulkFilesReady.length + ' — ' + file.name);
     const entryId = newBulkId();
     try {
-      const blob = await shrinkImage(item.file);
-      const photoPath = SHOWCASE_PREFIX + '/' + entryId + '_' + uploadName(item.file, blob);
+      const blob = await shrinkImage(file);
+      const photoPath = SHOWCASE_PREFIX + '/' + entryId + '_' + uploadName(file, blob);
       await storageUpload(photoPath, blob);
       await uploadShowcaseMeta(entryId, {
         bulk: true,
         entry_id: entryId,
-        student_name: credit,
-        caption: item.caption.value.trim(),
+        student_name: '',
+        caption: '',
         photo_path: photoPath,
         created_at: new Date().toISOString(),
       });
       ok++;
     } catch (e) {
-      failed.push(item.file.name + ': ' + e.message);
+      failed.push(file.name + ': ' + e.message);
     }
     bulkProg.value = i + 1;
   }
 
   if (failed.length) {
-    setBulkStatus('Uploaded ' + ok + ' of ' + bulkItems.length + '. Failed: ' + failed.slice(0, 5).join(' · ') + (failed.length > 5 ? '…' : ''), true);
+    setBulkStatus('Uploaded ' + ok + ' of ' + bulkFilesReady.length + '. Failed: ' + failed.slice(0, 5).join(' · ') + (failed.length > 5 ? '…' : ''), true);
     bulkUploadBtn.disabled = false;
   } else {
-    setBulkStatus('Done — ' + ok + ' photo' + (ok === 1 ? '' : 's') + ' in the slideshow. Open the slideshow and hit Play (order shuffles).');
+    setBulkStatus('Done — ' + ok + ' photo' + (ok === 1 ? '' : 's') + ' added. Open the slideshow and hit Play (order shuffles).');
     bulkFiles.value = '';
     bulkFolder.value = '';
     bulkList.innerHTML = '';
-    bulkItems = [];
+    bulkFilesReady = [];
     bulkUploadBtn.disabled = true;
   }
 };
