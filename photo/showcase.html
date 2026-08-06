@@ -32,7 +32,7 @@
         <button id="refresh-btn" class="secondary">↻ Refresh</button>
         <a class="btn secondary" href="submit.html">Students submit here</a>
         <a class="btn secondary" href="submit.html#teacher">Teacher upload</a>
-        <a class="btn secondary" href="submit.html#bulk">Bulk upload</a>
+        <a class="btn" href="bulk.html">📦 Bulk upload</a>
         <button id="play-btn" disabled>▶ Play showcase</button>
       </div>
     </div>
@@ -145,11 +145,18 @@ async function loadEntries() {
       lobbyTiming.textContent = note;
       playBtn.disabled = false;
       for (const e of entries) {
+        const barKids = [];
+        if (e.caption) barKids.push(el('div', { text: e.caption }));
+        if (e.student_name) barKids.push(el('div', { class: 'muted', text: e.student_name }));
+        if (!barKids.length) barKids.push(el('div', { class: 'muted', text: e.bulk ? 'Bulk upload' : 'Photo' }));
         lobbyGrid.appendChild(el('div', { class: 'photo-tile' },
-          el('img', { src: e.url, loading: 'lazy', alt: e.caption, onclick: () => openLightbox(e.url, e.caption + ' — ' + e.student_name) }),
-          el('div', { class: 'tile-bar' },
-            el('div', { text: e.caption }),
-            el('div', { class: 'muted', text: e.student_name }))));
+          el('img', {
+            src: e.url,
+            loading: 'lazy',
+            alt: e.caption || 'Showcase photo',
+            onclick: () => openLightbox(e.url, [e.caption, e.student_name].filter(Boolean).join(' — ')),
+          }),
+          el('div', { class: 'tile-bar' }, ...barKids)));
       }
     }
   } catch (e) {
@@ -178,14 +185,16 @@ function showSlide(i) {
   // Force reflow so the fade restarts even when the src is cached
   void slideImg.offsetWidth;
   slideImg.src = e.url;
-  slideImg.alt = e.caption;
-  slideCaption.textContent = e.caption;
+  slideImg.alt = e.caption || 'Showcase photo';
+  slideCaption.textContent = e.caption || '';
+  slideCaption.hidden = !e.caption;
   slideCredit.textContent = e.student_name || '';
   slideCredit.hidden = !e.student_name;
   const capBlock = slideCaption.parentElement;
+  capBlock.hidden = !e.caption && !e.student_name;
   capBlock.classList.remove('is-in');
   void capBlock.offsetWidth;
-  capBlock.classList.add('is-in');
+  if (!capBlock.hidden) capBlock.classList.add('is-in');
   stageProgress.textContent = (index + 1) + ' / ' + deck.length;
   slideImg.onload = () => slideImg.classList.add('is-in');
   if (slideImg.complete) slideImg.classList.add('is-in');
