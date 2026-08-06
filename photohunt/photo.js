@@ -1,4 +1,4 @@
-/* Shared helpers for the /photo section.
+/* Shared helpers for photo hunt (Supabase upload/download).
  * Backend: Supabase (free tier). Uses plain fetch — no external JS libraries,
  * so nothing here depends on a CDN that school WiFi might block.
  */

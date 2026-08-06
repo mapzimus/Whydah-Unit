@@ -18,7 +18,7 @@
  *       <script src="/games-gate.js" defer></script>
  *     and drive the UI with window.WhydahGate (onChange / setGate / getState).
  *
- * NO external libraries — plain fetch, like /photo/photo.js — so nothing here
+ * NO external libraries — plain fetch, like photohunt/photo.js — so nothing here
  * depends on a CDN the school network might block.
  */
 (function () {

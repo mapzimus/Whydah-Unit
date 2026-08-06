@@ -1,4 +1,4 @@
-/* Photo Hunt 2 (outdoor) shared logic. Loads after ../photo/photo.js (Supabase helpers).
+/* Photo Hunt 2 (outdoor) shared logic. Loads after ../photohunt/photo.js (Supabase helpers).
  *
  * Round 2 is built for a field with no WiFi: a photo is saved on the phone the
  * instant it is picked, counts right away, and uploads itself whenever the

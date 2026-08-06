@@ -1,4 +1,4 @@
-/* Photo Hunt shared logic. Loads after ../photo/photo.js (Supabase helpers). */
+/* Photo Hunt shared logic. Loads after ./photo.js (Supabase helpers). */
 
 const HUNT_ITEMS = [
   { id: 1,  text: 'Find something that looks like a face but is not one.' },

@@ -19,8 +19,8 @@ const ASSETS = [
   './gallery.html',
   './teams.html',
   './hunt.js',
-  '../photo/photo.js',
-  '../photo/photo.css',
+  '../photohunt/photo.js',
+  '../photohunt/photo.css',
   '../pics/favicon-32.png',
 ];
 
