@@ -43,6 +43,24 @@
     <div id="status" class="muted" style="margin-top:0.7em;"></div>
   </div>
 
+  <details class="teacher" id="teacher-panel">
+    <summary>Teacher: upload showcase photos from this computer</summary>
+    <p class="muted" style="margin:0.7em 0 0.9em;">For students who can’t get files onto a Chromebook. Type their name, pick up to three photos from your computer, caption each one, and upload. You can also open their slots below to replace or delete later.</p>
+    <div class="row">
+      <input type="text" id="teacher-student" placeholder="Student first name + last initial" maxlength="60" style="flex:1; min-width:220px;">
+      <button type="button" class="secondary" id="teacher-load-btn">Open their slots</button>
+    </div>
+    <div id="teacher-slots" class="submit-slots" style="margin-top:0.9em;"></div>
+    <div class="row" style="margin-top:0.9em;">
+      <button type="button" id="teacher-upload-btn">Upload for this student</button>
+      <label class="muted" style="display:flex; gap:0.4em; align-items:center; font-size:0.9em;">
+        <input type="checkbox" id="teacher-replace"> Replace slots that are already filled
+      </label>
+    </div>
+    <div id="teacher-status" class="muted" style="margin-top:0.6em;"></div>
+    <progress id="teacher-progress" max="3" value="0" style="display:none;"></progress>
+  </details>
+
   <nav class="footer-nav"><a href="index.html">← Photo home</a></nav>
 </div>
 
@@ -192,6 +210,22 @@ function newId(student, slot) {
   return stamp + '_' + slot + '_' + safe;
 }
 
+/** Upload one photo (+ caption) into a student slot. Always writes a new version. */
+async function uploadIntoSlot(student, slotNum, file, caption) {
+  const id = newId(student, slotNum);
+  const blob = await shrinkImage(file);
+  const photoPath = SHOWCASE_PREFIX + '/' + id + '_' + uploadName(file, blob);
+  await storageUpload(photoPath, blob);
+  await uploadShowcaseMeta(id, {
+    student_name: student,
+    caption,
+    photo_path: photoPath,
+    slot: slotNum,
+    created_at: new Date().toISOString(),
+  });
+  return photoPath;
+}
+
 async function addSlot(slotNum, fileInput, captionInput, btn) {
   const student = await ensureStudent();
   if (!student) return;
@@ -203,17 +237,7 @@ async function addSlot(slotNum, fileInput, captionInput, btn) {
   btn.disabled = true;
   setStatus('Uploading photo ' + slotNum + '…');
   try {
-    const id = newId(student, slotNum);
-    const blob = await shrinkImage(file);
-    const photoPath = SHOWCASE_PREFIX + '/' + id + '_' + uploadName(file, blob);
-    await storageUpload(photoPath, blob);
-    await uploadShowcaseMeta(id, {
-      student_name: student,
-      caption,
-      photo_path: photoPath,
-      slot: slotNum,
-      created_at: new Date().toISOString(),
-    });
+    await uploadIntoSlot(student, slotNum, file, caption);
     await refreshForStudent(student);
     setStatus('Photo ' + slotNum + ' is in the showcase.');
   } catch (e) {
@@ -233,17 +257,7 @@ async function replaceSlot(slotNum, fileInput, captionInput, btn) {
   btn.disabled = true;
   setStatus('Replacing photo ' + slotNum + '…');
   try {
-    const id = newId(student, slotNum);
-    const blob = await shrinkImage(file);
-    const photoPath = SHOWCASE_PREFIX + '/' + id + '_' + uploadName(file, blob);
-    await storageUpload(photoPath, blob);
-    await uploadShowcaseMeta(id, {
-      student_name: student,
-      caption,
-      photo_path: photoPath,
-      slot: slotNum,
-      created_at: new Date().toISOString(),
-    });
+    await uploadIntoSlot(student, slotNum, file, caption);
     await refreshForStudent(student);
     setStatus('Photo ' + slotNum + ' replaced.');
   } catch (e) {
@@ -304,6 +318,142 @@ async function deleteSlot(slotNum, btn) {
   } catch (e) {
     setStatus('Delete failed: ' + e.message, true);
     btn.disabled = false;
+  }
+}
+
+/* ---------- Teacher panel (upload from teacher computer on behalf of a student) ---------- */
+const teacherStudent = document.getElementById('teacher-student');
+const teacherStatus = document.getElementById('teacher-status');
+const teacherProg = document.getElementById('teacher-progress');
+const teacherUploadBtn = document.getElementById('teacher-upload-btn');
+const teacherRows = [];
+
+(function buildTeacherRows() {
+  const box = document.getElementById('teacher-slots');
+  for (let i = 0; i < SHOWCASE_SLOTS; i++) {
+    const file = el('input', { type: 'file', accept: 'image/*' });
+    const caption = el('input', {
+      type: 'text',
+      placeholder: 'Caption for photo ' + (i + 1),
+      maxlength: '140',
+      style: 'flex:1; min-width:200px;',
+    });
+    const preview = el('div', { class: 'submit-preview muted', text: 'No file chosen' });
+    file.onchange = () => {
+      const f = file.files[0];
+      preview.textContent = f ? f.name : 'No file chosen';
+      preview.className = f ? 'submit-preview' : 'submit-preview muted';
+    };
+    const card = el('div', { class: 'submit-slot card' },
+      el('div', { class: 'submit-slot-head' },
+        el('strong', { text: 'Photo ' + (i + 1) }),
+        preview),
+      el('div', { class: 'row', style: 'margin-top:0.5em;' }, file),
+      el('div', { class: 'row', style: 'margin-top:0.5em;' }, caption));
+    box.appendChild(card);
+    teacherRows.push({ file, caption, preview });
+  }
+})();
+
+function setTeacherStatus(msg, isError) {
+  teacherStatus.innerHTML = '';
+  if (!msg) return;
+  teacherStatus.appendChild(el('div', { class: isError ? 'error' : 'muted', text: msg }));
+}
+
+document.getElementById('teacher-load-btn').onclick = async () => {
+  const student = teacherStudent.value.trim();
+  if (!student) { setTeacherStatus('Enter the student’s name first.', true); return; }
+  nameInput.value = student;
+  setTeacherStatus('Loading slots for ' + student + '…');
+  try {
+    await refreshForStudent(student);
+    setTeacherStatus('Opened slots for ' + student + ' above — add, replace, or delete there. Or fill the files below and upload.');
+    document.getElementById('slots-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    setTeacherStatus('Could not load: ' + e.message, true);
+  }
+};
+
+teacherUploadBtn.onclick = async () => {
+  const student = teacherStudent.value.trim();
+  if (!student) { setTeacherStatus('Enter the student’s name first.', true); return; }
+
+  const replaceFilled = document.getElementById('teacher-replace').checked;
+  let existingSlots;
+  try {
+    allMetas = await listShowcaseMetas();
+    existingSlots = slotsForStudent(allMetas, student);
+  } catch (e) {
+    setTeacherStatus('Could not check existing photos: ' + e.message, true);
+    return;
+  }
+
+  const jobs = [];
+  for (let i = 0; i < SHOWCASE_SLOTS; i++) {
+    const file = teacherRows[i].file.files[0];
+    const caption = teacherRows[i].caption.value.trim();
+    if (!file && !caption) continue;
+    if (file && !caption) {
+      setTeacherStatus('Photo ' + (i + 1) + ' needs a caption.', true);
+      return;
+    }
+    if (!file && caption) {
+      setTeacherStatus('Photo ' + (i + 1) + ' has a caption but no file.', true);
+      return;
+    }
+    if (existingSlots[i] && !replaceFilled) {
+      setTeacherStatus('Slot ' + (i + 1) + ' is already filled for ' + student + '. Check “Replace slots that are already filled” or open their slots to edit one-by-one.', true);
+      return;
+    }
+    jobs.push({ slot: i + 1, file, caption });
+  }
+  if (!jobs.length) {
+    setTeacherStatus('Pick at least one photo (with a caption) to upload.', true);
+    return;
+  }
+
+  teacherUploadBtn.disabled = true;
+  teacherProg.style.display = '';
+  teacherProg.max = jobs.length;
+  teacherProg.value = 0;
+  let ok = 0;
+  const failed = [];
+  for (let i = 0; i < jobs.length; i++) {
+    const job = jobs[i];
+    setTeacherStatus('Uploading photo ' + job.slot + ' for ' + student + '…');
+    try {
+      await uploadIntoSlot(student, job.slot, job.file, job.caption);
+      ok++;
+    } catch (e) {
+      failed.push('Photo ' + job.slot + ': ' + e.message);
+    }
+    teacherProg.value = i + 1;
+  }
+
+  nameInput.value = student;
+  try { await refreshForStudent(student); } catch (_) { /* ignore */ }
+
+  if (failed.length) {
+    setTeacherStatus('Uploaded ' + ok + ' of ' + jobs.length + '. Failed: ' + failed.join(' · '), true);
+  } else {
+    setTeacherStatus('Done — ' + ok + ' photo' + (ok === 1 ? '' : 's') + ' in the showcase for ' + student + '.');
+    for (const row of teacherRows) {
+      row.file.value = '';
+      row.caption.value = '';
+      row.preview.textContent = 'No file chosen';
+      row.preview.className = 'submit-preview muted';
+    }
+  }
+  teacherUploadBtn.disabled = false;
+};
+
+// Deep-link: /photo/submit.html#teacher or ?teacher=1 opens the teacher panel.
+if (location.hash === '#teacher' || new URLSearchParams(location.search).get('teacher') === '1') {
+  const panel = document.getElementById('teacher-panel');
+  if (panel) {
+    panel.open = true;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
