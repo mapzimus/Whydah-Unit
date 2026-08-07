@@ -174,6 +174,8 @@ window.WHYDAH_DAYS = [
       span.textContent = remaining === 1
         ? 'The Showcase is TODAY.'
         : remaining + ' class days until the Showcase.';
+    } else {
+      span.textContent = 'Unit complete · Showcase was August 6, 2026.';
     }
   }
 

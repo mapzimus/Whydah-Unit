@@ -1,0 +1,131 @@
+{
+  "archiveVersion": 1,
+  "archivedAt": "2026-08-07",
+  "source": "map-studio-class-list",
+  "id": "mmsga5afxice7bf",
+  "slug": "my-story-map",
+  "name": "My story map",
+  "student": "",
+  "person": "",
+  "title": "",
+  "pinCount": 4,
+  "updated": 1786023484391,
+  "state": {
+    "project": {
+      "student": "",
+      "person": "",
+      "title": ""
+    },
+    "version": 3,
+    "world": {
+      "pins": [
+        {
+          "lat": 50.77,
+          "lng": -3.75,
+          "label": "whydah",
+          "voice": "built as a slave ship",
+          "journal": "whydah was built as a slave ship",
+          "kind": "",
+          "n": 1
+        },
+        {
+          "lat": 8.606945039133041,
+          "lng": 4.218750000000001,
+          "label": "whydah",
+          "voice": "whydah first stop was weast Afica",
+          "journal": "weast Afica was the first stop",
+          "kind": "",
+          "n": 2
+        },
+        {
+          "lat": 17.919405922681882,
+          "lng": -76.640625,
+          "label": "whydah",
+          "voice": "whydah was taken",
+          "journal": "they find whyda",
+          "kind": "",
+          "n": 3
+        },
+        {
+          "lat": 18.170169851812002,
+          "lng": -72.11425781250001,
+          "label": "whydah",
+          "voice": "when they find whydah some people take cuppull things on the ship",
+          "journal": "they take some cuppull thins on the ship",
+          "kind": "",
+          "n": 4
+        }
+      ],
+      "routes": [
+        [
+          [
+            48.99595827316543,
+            -7.207031250000001
+          ],
+          [
+            39.99313712841654,
+            -18.632812500000004
+          ],
+          [
+            29.013967131933672,
+            -23.906250000000004
+          ],
+          [
+            14.703307294265567,
+            -23.5546875
+          ],
+          [
+            -0.15170438303244285,
+            -16.171875000000004
+          ],
+          [
+            -1.5581051254479648,
+            -3.8671875000000004
+          ],
+          [
+            4.765864390192296,
+            2.4609375000000004
+          ],
+          [
+            -2.9635675173621556,
+            3.5156250000000004
+          ],
+          [
+            3.362844638778995,
+            -42.5390625
+          ],
+          [
+            14.120713888860553,
+            -66.79687500000001
+          ],
+          [
+            17.838617506987934,
+            -75.93750000000001
+          ],
+          [
+            18.795496713733648,
+            -72.55371093750001
+          ],
+          [
+            19.667051995279262,
+            -72.15820312500001
+          ],
+          [
+            26.61340207842448,
+            -77.29980468750001
+          ],
+          [
+            30.624994779582405,
+            -79.80468750000001
+          ]
+        ]
+      ],
+      "activeRoute": 0
+    },
+    "chart": {
+      "pins": [],
+      "routes": [],
+      "activeRoute": 0
+    }
+  }
+}

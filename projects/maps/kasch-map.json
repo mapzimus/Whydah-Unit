@@ -1,0 +1,265 @@
+{
+  "archiveVersion": 1,
+  "archivedAt": "2026-08-07",
+  "source": "map-studio-class-list",
+  "id": "mmsg9qmduy3kkll",
+  "slug": "kasch-map",
+  "name": "Kasch Map",
+  "student": "",
+  "person": "",
+  "title": "",
+  "pinCount": 6,
+  "updated": 1786022476637,
+  "state": {
+    "project": {
+      "student": "",
+      "person": "",
+      "title": ""
+    },
+    "version": 3,
+    "world": {
+      "pins": [
+        {
+          "lat": 51.507,
+          "lng": -0.128,
+          "label": "London, 1715",
+          "voice": "This was where the boat was made.",
+          "journal": "Documented in history",
+          "kind": "",
+          "n": 1
+        },
+        {
+          "lat": 6.664607562172573,
+          "lng": 2.2412109375000004,
+          "label": "Ouidah, West Africa",
+          "voice": "This was the first stop of the ship. The Whydah was built as a slave ship.",
+          "journal": "",
+          "kind": "begin",
+          "n": 2
+        },
+        {
+          "lat": 17.769612247142653,
+          "lng": -76.68457031250001,
+          "label": "Kingston / Port Royal, Jamaica",
+          "voice": "Third stop of the Whydah",
+          "journal": "",
+          "kind": "",
+          "n": 3
+        },
+        {
+          "lat": 25.48295117535531,
+          "lng": -64.68750000000001,
+          "label": "Caribbean hunting grounds",
+          "voice": "Sam Bellamy chases the Whydah for 3 days before capturing it",
+          "journal": "",
+          "kind": "",
+          "n": 4
+        },
+        {
+          "lat": 41.83682786072714,
+          "lng": -69.69726562500001,
+          "label": "Wreck · Marconi Beach, Wellfleet",
+          "voice": "this is where the whydah ship crashed by a storm. In april 1717",
+          "journal": "",
+          "kind": "",
+          "n": 5
+        },
+        {
+          "lat": 43.76,
+          "lng": -69.617,
+          "label": "Damariscove Island, Maine",
+          "voice": "This is where they tried to navigate before they crashed.",
+          "journal": "",
+          "kind": "",
+          "n": 6
+        }
+      ],
+      "routes": [
+        [
+          [
+            51.507,
+            -0.128
+          ],
+          [
+            51.5,
+            -0.1
+          ],
+          [
+            50,
+            -8
+          ],
+          [
+            48,
+            -15
+          ],
+          [
+            42,
+            -25
+          ],
+          [
+            35,
+            -30
+          ],
+          [
+            25,
+            -30
+          ],
+          [
+            15,
+            -25
+          ],
+          [
+            8,
+            -15
+          ],
+          [
+            6.4,
+            2
+          ],
+          [
+            6.664607562172573,
+            2.2412109375000004
+          ],
+          [
+            6.4,
+            2
+          ],
+          [
+            8,
+            -20
+          ],
+          [
+            12,
+            -35
+          ],
+          [
+            15,
+            -45
+          ],
+          [
+            17,
+            -55
+          ],
+          [
+            18,
+            -65
+          ],
+          [
+            18,
+            -70
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            16,
+            -74
+          ],
+          [
+            17.769612247142653,
+            -76.68457031250001
+          ],
+          [
+            16,
+            -74
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            18,
+            -70
+          ],
+          [
+            18,
+            -65
+          ],
+          [
+            18,
+            -64.5
+          ],
+          [
+            25.48295117535531,
+            -64.68750000000001
+          ],
+          [
+            18,
+            -64.5
+          ],
+          [
+            18,
+            -65
+          ],
+          [
+            18,
+            -70
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            22.2,
+            -72.8
+          ],
+          [
+            24.5,
+            -74.2
+          ],
+          [
+            25,
+            -74
+          ],
+          [
+            28,
+            -77
+          ],
+          [
+            32,
+            -76
+          ],
+          [
+            36,
+            -74
+          ],
+          [
+            40,
+            -72
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.83682786072714,
+            -69.69726562500001
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            42.34,
+            -70.78
+          ],
+          [
+            43.76,
+            -69.617
+          ]
+        ]
+      ],
+      "activeRoute": 0
+    },
+    "chart": {
+      "pins": [],
+      "routes": [],
+      "activeRoute": 0
+    }
+  }
+}

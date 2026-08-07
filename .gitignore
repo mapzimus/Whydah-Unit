@@ -79,3 +79,12 @@
 # Frozen curriculum archive (added 2026-08-01)
 !curriculum/
 !curriculum/**
+
+# Permanent student project archive (added 2026-08-07, post-Showcase)
+!projects/
+!projects/**
+
+# Post-Showcase site plumbing
+!404.html
+!robots.txt
+!sitemap.xml

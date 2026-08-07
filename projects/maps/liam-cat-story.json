@@ -1,0 +1,611 @@
+{
+  "archiveVersion": 1,
+  "archivedAt": "2026-08-07",
+  "source": "map-studio-class-list",
+  "id": "mmsga0g9yvplmjy",
+  "slug": "liam-cat-story",
+  "name": "Liam cat story",
+  "student": "",
+  "person": "",
+  "title": "",
+  "pinCount": 16,
+  "updated": 1785946244296,
+  "state": {
+    "project": {
+      "student": "",
+      "person": "",
+      "title": ""
+    },
+    "version": 3,
+    "world": {
+      "pins": [
+        {
+          "lat": 52.72448000832171,
+          "lng": -2.9882812500000004,
+          "label": "cat",
+          "voice": "where cat came from",
+          "journal": "",
+          "kind": "begin",
+          "n": 1
+        },
+        {
+          "lat": 50.77,
+          "lng": -3.75,
+          "label": "Hittisleigh Devon",
+          "voice": "Sam Bellamy birth place",
+          "journal": "",
+          "kind": "begin",
+          "n": 2
+        },
+        {
+          "lat": 41.934235301393144,
+          "lng": -69.97956246395337,
+          "label": "capecod",
+          "voice": "Sam Bellamy became part of the navy",
+          "journal": "",
+          "kind": "begin",
+          "n": 3
+        },
+        {
+          "lat": 27.86011657229453,
+          "lng": -80.44991956911308,
+          "label": "Florida",
+          "voice": "Sam Bellamy becomes pirate",
+          "journal": "",
+          "kind": "begin",
+          "n": 4
+        },
+        {
+          "lat": 41.83029829362204,
+          "lng": -69.97340280596777,
+          "label": "The Maria Hallett Of Eastham",
+          "voice": "Mr. new pirate finds true love",
+          "journal": "",
+          "kind": "begin",
+          "n": 5
+        },
+        {
+          "lat": 51.507,
+          "lng": -0.128,
+          "label": "London",
+          "voice": "whydah built as a slave ship",
+          "journal": "1715",
+          "kind": "begin",
+          "n": 6
+        },
+        {
+          "lat": 6.367,
+          "lng": 2.083,
+          "label": "Ouidah, West Africa",
+          "voice": "where they picked up slaves to be sold",
+          "journal": "",
+          "kind": "begin",
+          "n": 7
+        },
+        {
+          "lat": 17.97,
+          "lng": -76.87,
+          "label": "Caribbean",
+          "voice": "where the whydah gets money so Sam Bellamy can steal the treasure later",
+          "journal": "1716 - 1717",
+          "kind": "voyage",
+          "n": 8
+        },
+        {
+          "lat": 19.9,
+          "lng": -73.9,
+          "label": "Windward Passage",
+          "voice": "where Sam Bellamy captured the whydah",
+          "journal": "",
+          "kind": "voyage",
+          "n": 9
+        },
+        {
+          "lat": 33.9,
+          "lng": -76.5,
+          "label": "North for the Carolinas",
+          "voice": "where they started there voyage but where not ready what comes next",
+          "journal": "",
+          "kind": "voyage",
+          "n": 10
+        },
+        {
+          "lat": 41.891,
+          "lng": -69.957,
+          "label": "capecod coast",
+          "voice": "where the ship was wrecked on the coast of capecod after a awful storm",
+          "journal": "",
+          "kind": "storm",
+          "n": 11
+        },
+        {
+          "lat": 41.93,
+          "lng": -69.98,
+          "label": "capecod coast again",
+          "voice": "Southack the famous map maker was sent by the government  to take back the money the pirates stole from them by the time southack made it there the towns folks already took all the treasure all he found was dead pirates he came back empty handed besides a pretty cool map of Massachusetts that is famous",
+          "journal": "May 1717",
+          "kind": "storm",
+          "n": 12
+        },
+        {
+          "lat": 42.35880565809607,
+          "lng": -71.057767868042,
+          "label": "the trail",
+          "voice": "out of rage the government trialed the remaining pirates to death all died To that trial",
+          "journal": "",
+          "kind": "aftermath",
+          "n": 13
+        },
+        {
+          "lat": 41.97758357851384,
+          "lng": -69.96865286533908,
+          "label": "whydah wreck",
+          "voice": "the whydah was descovried and found many pirate stuff inside",
+          "journal": "1984 - 1985",
+          "kind": "evidence",
+          "n": 14
+        },
+        {
+          "lat": 42.522,
+          "lng": -70.895,
+          "label": "Salem",
+          "voice": "the pirate museum opened in mid 1990s and the real pirates opened on April 18th 2022",
+          "journal": "mid 1990s and 4/18/2022",
+          "kind": "modern",
+          "n": 15
+        },
+        {
+          "lat": 48.85459885448174,
+          "lng": 2.347018718719483,
+          "label": "Effiel tower",
+          "voice": "this is if you import the stops in Google Earth all you get is  the effiel tower just think this is funny",
+          "journal": "",
+          "kind": "choice",
+          "n": 16
+        }
+      ],
+      "routes": [
+        [
+          [
+            52.72448000832171,
+            -2.9882812500000004
+          ],
+          [
+            51.5,
+            -5
+          ],
+          [
+            50.77,
+            -3.75
+          ],
+          [
+            51.5,
+            -5
+          ],
+          [
+            48,
+            -15
+          ],
+          [
+            45,
+            -30
+          ],
+          [
+            42,
+            -45
+          ],
+          [
+            40,
+            -60
+          ],
+          [
+            40.4,
+            -73.6
+          ],
+          [
+            40.9,
+            -70.5
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.934235301393144,
+            -69.97956246395337
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            40.9,
+            -70.5
+          ],
+          [
+            40.4,
+            -73.6
+          ],
+          [
+            38,
+            -74.5
+          ],
+          [
+            35.2,
+            -75.4
+          ],
+          [
+            33.5,
+            -77.5
+          ],
+          [
+            31,
+            -79.2
+          ],
+          [
+            28.5,
+            -79.8
+          ],
+          [
+            28.5,
+            -80
+          ],
+          [
+            27.86011657229453,
+            -80.44991956911308
+          ],
+          [
+            28.5,
+            -80
+          ],
+          [
+            28.5,
+            -79.8
+          ],
+          [
+            31,
+            -79.2
+          ],
+          [
+            33.5,
+            -77.5
+          ],
+          [
+            35.2,
+            -75.4
+          ],
+          [
+            38,
+            -74.5
+          ],
+          [
+            40.4,
+            -73.6
+          ],
+          [
+            40.9,
+            -70.5
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.83029829362204,
+            -69.97340280596777
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            40.9,
+            -70.5
+          ],
+          [
+            40.4,
+            -73.6
+          ],
+          [
+            40,
+            -60
+          ],
+          [
+            42,
+            -45
+          ],
+          [
+            45,
+            -30
+          ],
+          [
+            48,
+            -15
+          ],
+          [
+            50,
+            -8
+          ],
+          [
+            51.5,
+            -0.1
+          ],
+          [
+            51.507,
+            -0.128
+          ],
+          [
+            51.5,
+            -0.1
+          ],
+          [
+            50,
+            -8
+          ],
+          [
+            48,
+            -15
+          ],
+          [
+            42,
+            -25
+          ],
+          [
+            35,
+            -30
+          ],
+          [
+            25,
+            -30
+          ],
+          [
+            15,
+            -25
+          ],
+          [
+            -4.216022113990368,
+            -3.6914062500000004
+          ],
+          [
+            6.4,
+            2
+          ],
+          [
+            6.367,
+            2.083
+          ],
+          [
+            6.4,
+            2
+          ],
+          [
+            6.841144766175103,
+            -24.9609375
+          ],
+          [
+            12,
+            -35
+          ],
+          [
+            15,
+            -45
+          ],
+          [
+            17,
+            -55
+          ],
+          [
+            18,
+            -65
+          ],
+          [
+            18,
+            -70
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            16,
+            -74
+          ],
+          [
+            17.97,
+            -76.87
+          ],
+          [
+            16,
+            -74
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            22.2,
+            -72.8
+          ],
+          [
+            24.5,
+            -74.2
+          ],
+          [
+            26.8,
+            -77.5
+          ],
+          [
+            28.5,
+            -79.8
+          ],
+          [
+            31,
+            -79.2
+          ],
+          [
+            33.5,
+            -77.5
+          ],
+          [
+            33.9,
+            -76.5
+          ],
+          [
+            33.5,
+            -77.5
+          ],
+          [
+            35.2,
+            -75.4
+          ],
+          [
+            38,
+            -74.5
+          ],
+          [
+            40.4,
+            -73.6
+          ],
+          [
+            40.9,
+            -70.5
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.891,
+            -69.957
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.93,
+            -69.98
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            42.34,
+            -70.78
+          ],
+          [
+            42.35880565809607,
+            -71.057767868042
+          ],
+          [
+            42.34,
+            -70.78
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.97758357851384,
+            -69.96865286533908
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            42.34,
+            -70.78
+          ],
+          [
+            42.522,
+            -70.895
+          ],
+          [
+            42.34,
+            -70.78
+          ],
+          [
+            42.1,
+            -70.2
+          ],
+          [
+            41.6,
+            -69.3
+          ],
+          [
+            41.1,
+            -68.5
+          ],
+          [
+            42.5,
+            -63
+          ],
+          [
+            44.5,
+            -56
+          ],
+          [
+            47,
+            -45
+          ],
+          [
+            49,
+            -30
+          ],
+          [
+            49.3,
+            -15
+          ],
+          [
+            49.3,
+            -6.5
+          ],
+          [
+            49.8,
+            -3
+          ],
+          [
+            50.2,
+            -0.5
+          ],
+          [
+            51,
+            1.4
+          ],
+          [
+            48.85459885448174,
+            2.347018718719483
+          ]
+        ]
+      ],
+      "activeRoute": 0
+    },
+    "chart": {
+      "pins": [],
+      "routes": [],
+      "activeRoute": 0
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01
 **Author:** Max Howe, with Claude
-**Status:** approved, not yet implemented
+**Status:** in progress — Phase 1a (curriculum archive) done; Phase 3 switchover started 2026-08-07 (root front door, day-page stubs, `/projects/` Map Studio archive); reference-page split and planner finalize still open
 
 ---
 
