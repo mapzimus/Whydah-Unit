@@ -24,6 +24,11 @@
 (function () {
   'use strict';
 
+  /* Showcase was 2026-08-06. After the unit, games stay playable with no
+     teacher unlock. Classroom lock machinery is left in place for the record,
+     but enforcement and the dashboard treat every game as open. */
+  var UNIT_COMPLETE = true;
+
   var SB_URL = 'https://segzgdlqqymqlfuahosd.supabase.co';
   var SB_KEY = 'sb_publishable_fBBZAVo-ljKvaBKNVMukmA_TopYb6D8';
   var HEADERS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
@@ -36,6 +41,15 @@
   var lastOk = false;          // did the most recent read succeed?
   var listeners = [];
 
+  function openAllLocally() {
+    var next = {};
+    for (var i = 0; i < GAMES.length; i++) next[GAMES[i]] = true;
+    state = next;
+    lastOk = true;
+    notify();
+    return state;
+  }
+
   function notify() {
     for (var i = 0; i < listeners.length; i++) {
       try { listeners[i](state, lastOk); } catch (_) {}
@@ -43,26 +57,27 @@
   }
 
   function fetchState() {
+    if (UNIT_COMPLETE) return Promise.resolve(openAllLocally());
     return fetch(SB_URL + '/rest/v1/game_gate?select=slug,unlocked', {
       headers: HEADERS,
       cache: 'no-store',
     })
-      .then(function (r) { if (!r.ok) throw new Error('gate read ' + r.status); return r.json(); })
-      .then(function (rows) {
-        var next = {};
-        rows.forEach(function (row) { next[row.slug] = row.unlocked === true; });
-        state = next;
-        lastOk = true;
-        notify();
-        return state;
-      })
-      .catch(function (err) {
-        // Keep the last known values but mark the read as failed. Enforcement
-        // treats "never succeeded" as locked (fail-closed).
-        lastOk = false;
-        notify();
-        throw err;
-      });
+    .then(function (r) { if (!r.ok) throw new Error('gate read ' + r.status); return r.json(); })
+    .then(function (rows) {
+      var next = {};
+      rows.forEach(function (row) { next[row.slug] = row.unlocked === true; });
+      state = next;
+      lastOk = true;
+      notify();
+      return state;
+    })
+    .catch(function (err) {
+      // Keep the last known values but mark the read as failed. Enforcement
+      // treats "never succeeded" as locked (fail-closed).
+      lastOk = false;
+      notify();
+      throw err;
+    });
   }
 
   // Teacher-only: flip a game via the passcode-checked DB function.
@@ -115,6 +130,10 @@
 
   if (enforceSlug) {
     var root = document.documentElement;
+    if (UNIT_COMPLETE) {
+      openAllLocally();
+      root.classList.add('wg-open');
+    } else {
     root.classList.add('wg-gate', 'wg-checking');   // wg-gate: body hidden until wg-open
 
     var style = document.createElement('style');
@@ -180,6 +199,7 @@
 
     listeners.push(render);
     startPolling(4000);
+    }
   } else if (!script || script.getAttribute('data-mode') !== 'off') {
     // Dashboard / watcher mode: just keep state fresh; the page drives its own UI.
     if (document.readyState === 'loading') {

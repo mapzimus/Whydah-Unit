@@ -1,23 +1,26 @@
-# Navigating Piracy — PBL Unit Dashboard
+# Navigating Piracy — WhydahStory
 
-A planning and teaching dashboard for **Navigating Piracy**, a middle-school Project-Based Learning unit on the **Whydah Gally** — an 18th-century slave ship turned pirate ship that wrecked off Cape Cod in 1717. Students learn the navigation tools and techniques pirates used to cross the ocean, and navigate the real story of who these people were and the choices they made.
+A source-conscious site about the **Whydah Gally** — an 18th-century slave ship turned pirate ship that wrecked off Cape Cod in 1717 — and the completed middle-school unit built around it.
 
-Built for **LEAP4Ed's Summer 2026 middle school program** in Salem, Massachusetts.
+**Unit status:** complete. Ran July 6 – August 6, 2026 at Collins Middle School, Salem, for LEAP4Ed. Public Showcase was August 6.
 
 ## The live site
 
-The class site is live at **[whydahstory.com](https://whydahstory.com)** (hosted on GitHub Pages). During the domain move it is also mirrored at **[maxwellhowegis.com/whydah](https://maxwellhowegis.com/whydah)** so the old link keeps working.
+**[whydahstory.com](https://whydahstory.com)** (GitHub Pages).
 
-- **[index.html](./index.html)** — the evergreen public landing page for the story, curriculum, and games.
-- **[unit/](./unit/)** — the working hub: the story, the people, maps and navigation, the wreck, the final project, and a teacher-only Captain's Cabin (password-gated). `whydah-dashboard.html` remains as a compatibility URL.
-- **Daily student pages** — each class day has its own `dayN.html` missions page, reached from the red TODAY banner on the dashboard. The banner is date-driven (`day-config.js`) and flips itself at midnight Eastern.
-- **Games** — `navigator/` (Whydah’s Voyage — replay the coast) plus Parrot Flip. Student hub at [`games/`](./games/). See [navigator/README.md](./navigator/README.md).
-- **[unit-at-a-glance.html](./unit-at-a-glance.html)** — a one-page, print-ready summary (driving question, five-week arc, standards, and access) suited to handing out at a meeting.
+- **[/](./index.html)** — front door: story, student projects, curriculum archive, games
+- **[/projects/](./projects/)** — permanent Map Studio story maps from the Showcase
+- **[/curriculum/](./curriculum/)** — frozen teaching archive (all 20 days as taught)
+- **[/unit/](./unit/)** — story dashboard (people, timeline, maps, artifacts). `whydah-dashboard.html` remains as a compatibility URL
+- **Games** — `navigator/` (Whydah’s Voyage) plus Parrot Flip at [`games/`](./games/). Stay playable; classroom lock retired
+- **Map Studio** — [`map-studio.html`](./map-studio.html)
+
+Old root `dayN.html` URLs stub into `/curriculum/day-N-…/`.
 
 ## Unit at a glance
 
 - **5 weeks** (July 6 – August 6, 2026), Mon–Thurs
-- **16 instructional sessions** + field trips + project days + a public Showcase
+- **13 instructional sessions** + 3 field trips + Synthesis Studio + 2 build days + public Showcase
 - **Driving question:** *Why would a person choose piracy in 1717, and how would they want you to tell their story?*
 - **Final project:** flexible format (story map, presentation, performance, poster) from a chosen historical perspective
 
