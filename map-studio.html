@@ -425,7 +425,7 @@
 
 <footer class="foot">
   <b>Add</b> stops · <b>💾 Save for class</b> so every Chromebook can open it · <b>📂 Class maps</b> to find yours.
-  <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Crew deck</a>
+  <a href="/projects/">Showcase archive →</a> · <a href="choose-your-project.html">Project menu →</a> · <a href="/">⚓ Home</a>
 </footer>
 
 <script>
@@ -3416,10 +3416,11 @@
   renderPlacesList();
   if (activeLibraryId && !findLibraryMap(activeLibraryId)) setActiveLibraryId(null);
   else updateSaveStatus();
-  var doorParam = null, viewParam = null, playParam = null;
+  var doorParam = null, viewParam = null, playParam = null, archiveParam = null;
   try {
     var qs = new URLSearchParams(window.location.search);
     doorParam = qs.get('door'); viewParam = qs.get('view'); playParam = qs.get('play');
+    archiveParam = qs.get('archive');
   } catch (_) {}
   var jumpDoor = (doorParam && DOORS[doorParam]) ? doorParam : null;
   if (viewParam === 'globe' || playParam === 'pirate' || doorParam !== null) {
@@ -3427,6 +3428,40 @@
   } else {
     enterWorld();
   }
+
+  /* Permanent Showcase archives live under /projects/maps/<slug>.json — no Supabase. */
+  function openArchivedProject(slug) {
+    if (!slug || !/^[a-z0-9-]+$/i.test(slug)) {
+      notice('That archive link looks broken.');
+      return;
+    }
+    notice('Opening archived Showcase map…');
+    fetch('/projects/maps/' + encodeURIComponent(slug) + '.json', { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('Couldn’t find that archived map.');
+        return r.json();
+      })
+      .then(function (rec) {
+        if (!rec || !rec.state) throw new Error('That archive has no story data.');
+        loadStateOntoMap(rec.state);
+        setActiveCloudId(null);
+        setLastCloudName('');
+        setActiveLibraryId(null);
+        if ((!project.student || !project.student.trim()) && rec.name) {
+          project.student = rec.name;
+          syncProjectFields();
+        }
+        notice('Opened archived Showcase map “' + (rec.name || slug) + '”. This copy is permanent on the site.');
+        document.getElementById('hint').textContent =
+          'Archived Showcase map “' + (rec.name || slug) + '”. Edit freely here; the /projects/ copy stays as archived.';
+        openSide('stops');
+        renderStopsList();
+      })
+      .catch(function (err) {
+        notice((err && err.message) || 'Couldn’t open that archived map.');
+      });
+  }
+  if (archiveParam) openArchivedProject(archiveParam);
 })();
 </script>
 

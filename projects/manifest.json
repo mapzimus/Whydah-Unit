@@ -1,0 +1,94 @@
+{
+  "archivedAt": "2026-08-07",
+  "count": 8,
+  "projects": [
+    {
+      "id": "mmsg9dxg52vg7g4",
+      "slug": "emmanuel",
+      "name": "Emmanuel",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 27,
+      "updated": 1785944740757,
+      "file": "maps/emmanuel.json"
+    },
+    {
+      "id": "mmshjv28pva5ctx",
+      "slug": "jailyns-and-angelys-map",
+      "name": "Jailyn's and Angely's map",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 5,
+      "updated": 1786022802457,
+      "file": "maps/jailyns-and-angelys-map.json"
+    },
+    {
+      "id": "mmsg9qmduy3kkll",
+      "slug": "kasch-map",
+      "name": "Kasch Map",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 6,
+      "updated": 1786022476637,
+      "file": "maps/kasch-map.json"
+    },
+    {
+      "id": "mmsga0g9yvplmjy",
+      "slug": "liam-cat-story",
+      "name": "Liam cat story",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 16,
+      "updated": 1785946244296,
+      "file": "maps/liam-cat-story.json"
+    },
+    {
+      "id": "mmshkkybwlt190k",
+      "slug": "mislove-story",
+      "name": "mislove story",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 7,
+      "updated": 1786025436437,
+      "file": "maps/mislove-story.json"
+    },
+    {
+      "id": "mmsga5afxice7bf",
+      "slug": "my-story-map",
+      "name": "My story map",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 4,
+      "updated": 1786023484391,
+      "file": "maps/my-story-map.json"
+    },
+    {
+      "id": "mmsga8jryqvggp2",
+      "slug": "osiris",
+      "name": "Osiris",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 8,
+      "updated": 1786022481758,
+      "file": "maps/osiris.json"
+    },
+    {
+      "id": "mmsg9n7mk9rsjrv",
+      "slug": "william",
+      "name": "William",
+      "student": "",
+      "person": "",
+      "title": "",
+      "pinCount": 5,
+      "updated": 1785945173852,
+      "file": "maps/william.json"
+    }
+  ]
+}

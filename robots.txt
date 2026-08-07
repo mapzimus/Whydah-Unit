@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Design specs and migration tooling — not part of the public reference site
+Disallow: /docs/
+
+Sitemap: https://whydahstory.com/sitemap.xml

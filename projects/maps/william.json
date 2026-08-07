@@ -1,0 +1,176 @@
+{
+  "archiveVersion": 1,
+  "archivedAt": "2026-08-07",
+  "source": "map-studio-class-list",
+  "id": "mmsg9n7mk9rsjrv",
+  "slug": "william",
+  "name": "William",
+  "student": "",
+  "person": "",
+  "title": "",
+  "pinCount": 5,
+  "updated": 1785945173852,
+  "state": {
+    "project": {
+      "student": "",
+      "person": "",
+      "title": ""
+    },
+    "version": 3,
+    "world": {
+      "pins": [
+        {
+          "lat": 17.472993675446073,
+          "lng": -61.88598632812501,
+          "label": "John King story begins",
+          "voice": "On a ship off the coast of Antigua, young John King was on board a ship with his mother when it was taken by Pirates. The pirates looted the ship for 15 days. John thought the pirates were really really cool and wanted to be one, so he told his mom he was joining the crew or else.",
+          "journal": "",
+          "kind": "begin",
+          "n": 1
+        },
+        {
+          "lat": 17.88825319794875,
+          "lng": -76.90429687500001,
+          "label": "Jamaica",
+          "voice": "The first stop after John King joined the crew",
+          "journal": "",
+          "kind": "",
+          "n": 2
+        },
+        {
+          "lat": 20.790461273268726,
+          "lng": -73.14697265625001,
+          "label": "Carrabean hunting grounds",
+          "voice": "For the next few years, John King was a pirate amongst Sam Bellamy's crew just the same as the adults.",
+          "journal": "",
+          "kind": "choice",
+          "n": 3
+        },
+        {
+          "lat": 41.891,
+          "lng": -69.957,
+          "label": "Wreck · Wellfleet",
+          "voice": "John King's life came to an end when the Whydah crashed in April 1717.",
+          "journal": "",
+          "kind": "",
+          "n": 4
+        },
+        {
+          "lat": 42.522,
+          "lng": -70.895,
+          "label": "Salem · found again",
+          "voice": "At the museum in Salem John King's shoe is shown, which proves he was on the ship[. It was found in the wreckage after the ship was discovered in 1985.",
+          "journal": "",
+          "kind": "",
+          "n": 5
+        }
+      ],
+      "routes": [
+        [
+          [
+            17.472993675446073,
+            -61.88598632812501
+          ],
+          [
+            18,
+            -64.5
+          ],
+          [
+            18,
+            -65
+          ],
+          [
+            18,
+            -70
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            16,
+            -74
+          ],
+          [
+            17.88825319794875,
+            -76.90429687500001
+          ],
+          [
+            16,
+            -74
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            20.790461273268726,
+            -73.14697265625001
+          ],
+          [
+            19.9,
+            -73.9
+          ],
+          [
+            22.2,
+            -72.8
+          ],
+          [
+            24.5,
+            -74.2
+          ],
+          [
+            25,
+            -74
+          ],
+          [
+            28,
+            -77
+          ],
+          [
+            32,
+            -76
+          ],
+          [
+            36,
+            -74
+          ],
+          [
+            40,
+            -72
+          ],
+          [
+            41.5,
+            -70
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            41.891,
+            -69.957
+          ],
+          [
+            41.9,
+            -70
+          ],
+          [
+            42.34,
+            -70.78
+          ],
+          [
+            42.522,
+            -70.895
+          ]
+        ]
+      ],
+      "activeRoute": 0
+    },
+    "chart": {
+      "pins": [],
+      "routes": [],
+      "activeRoute": 0
+    }
+  }
+}

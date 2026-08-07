@@ -1,0 +1,168 @@
+{
+  "archiveVersion": 1,
+  "archivedAt": "2026-08-07",
+  "source": "map-studio-class-list",
+  "id": "mmshjv28pva5ctx",
+  "slug": "jailyns-and-angelys-map",
+  "name": "Jailyn's and Angely's map",
+  "student": "",
+  "person": "",
+  "title": "",
+  "pinCount": 5,
+  "updated": 1786022802457,
+  "state": {
+    "project": {
+      "student": "",
+      "person": "",
+      "title": ""
+    },
+    "version": 3,
+    "world": {
+      "pins": [],
+      "routes": [],
+      "activeRoute": 0
+    },
+    "chart": {
+      "pins": [
+        {
+          "lat": 870.6650184553241,
+          "lng": 914,
+          "label": "whydah crash site",
+          "voice": "",
+          "journal": "",
+          "kind": "",
+          "n": 1
+        },
+        {
+          "lat": 700.671875,
+          "lng": 611,
+          "label": "people who benefited from the whydah crash",
+          "voice": "they benefited from the crash by collecting all of the washed up money",
+          "journal": "Date: 1717",
+          "kind": "evidence",
+          "n": 2
+        },
+        {
+          "lat": 1099.671875,
+          "lng": 1048,
+          "label": "Crab Bank",
+          "voice": "This area is where Captain Cyprian Southack found 102 bodies of the people aboard the whydah",
+          "journal": "Date: April 26, 1717",
+          "kind": "",
+          "n": 3
+        },
+        {
+          "lat": 1491.34375,
+          "lng": 560,
+          "label": "Southack took a wrong turn",
+          "voice": "Southack took a wrong turn while trying to find the whydah crash site",
+          "journal": "Date:  April 26, 1717",
+          "kind": "",
+          "n": 4
+        },
+        {
+          "lat": 885.34375,
+          "lng": 1040,
+          "label": "crash site",
+          "voice": "This is the map used to rediscover the whydah in 1985",
+          "journal": "",
+          "kind": "modern",
+          "n": 5
+        }
+      ],
+      "routes": [
+        [
+          [
+            772.296469113448,
+            654
+          ],
+          [
+            757.7873807368201,
+            666.5
+          ],
+          [
+            759.5677533409511,
+            685
+          ],
+          [
+            764.5725449996316,
+            703
+          ],
+          [
+            783.5907533026177,
+            725
+          ],
+          [
+            803.60991993734,
+            741
+          ],
+          [
+            817.6233365816456,
+            761
+          ],
+          [
+            826.6319615672707,
+            769
+          ],
+          [
+            828.6338782307429,
+            774
+          ],
+          [
+            829.634836562479,
+            785
+          ],
+          [
+            818.6242949133818,
+            788
+          ],
+          [
+            812.6185449229652,
+            802
+          ],
+          [
+            804.6108782690762,
+            816
+          ],
+          [
+            810.6166282594929,
+            830
+          ],
+          [
+            825.6310032355345,
+            837
+          ],
+          [
+            832.6377115576873,
+            848
+          ],
+          [
+            841.6463365433124,
+            859
+          ],
+          [
+            848.6530448654652,
+            865
+          ],
+          [
+            854.6587948558819,
+            867
+          ],
+          [
+            865.6693365049791,
+            874
+          ],
+          [
+            868.6722115001875,
+            883
+          ],
+          [
+            876.6798781540764,
+            895
+          ]
+        ]
+      ],
+      "activeRoute": 0
+    }
+  }
+}

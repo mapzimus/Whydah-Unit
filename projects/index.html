@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Story Maps — WhydahStory</title>
+<meta name="description" content="Showcase story maps from Navigating Piracy, summer 2026 at Collins Middle School. Permanent Map Studio archives.">
+<meta name="theme-color" content="#142333">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Student Story Maps — WhydahStory">
+<meta property="og:description" content="Story maps students built in Map Studio for the August 6, 2026 Showcase.">
+<meta property="og:image" content="https://whydahstory.com/pics/black-sam-bellamy-feature.jpg">
+<link rel="canonical" href="https://whydahstory.com/projects/">
+<link rel="icon" type="image/png" sizes="32x32" href="../pics/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<style>
+:root{
+  --ink:#18212a; --paper:#f4efe3; --navy:#142f4b; --rust:#9b4529; --gold:#c59a4a;
+  --line:rgba(20,47,75,.22); --serif:Georgia,'Times New Roman',serif;
+  --sans:'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55}
+a{color:inherit}
+.wrap{width:min(calc(100% - 32px),920px);margin:auto}
+.site-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font:700 19px var(--serif);text-decoration:none;letter-spacing:.02em}
+.nav-links{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
+.nav-links a{text-decoration:none}
+.nav-links a:hover{text-decoration:underline}
+.hero{padding:36px 0 10px}
+.kicker{margin:0 0 10px;color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hero h1{margin:0;font:700 clamp(34px,7vw,54px)/1.02 var(--serif);letter-spacing:-.03em;color:var(--navy)}
+.hero p{max-width:560px;margin:14px 0 0;font-size:clamp(15px,2vw,18px);color:#39434b}
+.note{margin:18px 0 0;padding:12px 14px;border-left:4px solid var(--gold);background:rgba(255,255,255,.45);font-size:14px;color:#4a5258}
+.list{display:grid;gap:12px;padding:28px 0 40px}
+.card{
+  display:grid;grid-template-columns:1fr auto;gap:12px 18px;align-items:center;
+  padding:18px 20px;border:1px solid var(--line);background:rgba(255,255,255,.5);
+  text-decoration:none;transition:background .15s ease, transform .15s ease;
+}
+.card:hover{background:#fff;transform:translateY(-2px)}
+.card h2{margin:0;font:700 22px/1.15 var(--serif);color:var(--navy)}
+.card .meta{margin:6px 0 0;font-size:14px;color:#565c60}
+.card .go{font-weight:750;color:var(--rust);white-space:nowrap}
+.empty,.fail{padding:28px 0 48px;color:#565c60;font-style:italic}
+.footer{padding:26px 0 44px;border-top:1px solid var(--line);font-size:12.5px;color:#565c60}
+.footer a{color:var(--navy)}
+@media(max-width:560px){.card{grid-template-columns:1fr}.card .go{justify-self:start}}
+@media(prefers-reduced-motion:reduce){.card:hover{transform:none}}
+</style>
+</head>
+<body>
+<header class="wrap site-nav">
+  <a class="brand" href="/">WhydahStory</a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="/unit/">Story</a>
+    <a href="/curriculum/">Curriculum</a>
+    <a href="/projects/">Projects</a>
+    <a href="/games/">Games</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="kicker">Showcase 2026 · permanent archive</p>
+    <h1>Student story maps</h1>
+    <p>These Map Studio projects were saved during Navigating Piracy at Collins Middle School. They are committed here so they outlast the classroom cloud list.</p>
+    <p class="note">Names are shown as students titled their maps. Open any map in Map Studio to walk the pins. The live class list may still change; this page will not.</p>
+  </section>
+
+  <section class="list" id="maps" aria-live="polite">
+    <p class="empty">Loading the archive…</p>
+  </section>
+</main>
+
+<footer class="wrap footer">
+  Archived from Map Studio on August 7, 2026, the day after the public Showcase.
+  <div style="margin-top:8px">
+    <a href="/map-studio.html">Map Studio</a> ·
+    <a href="/curriculum/">Curriculum archive</a> ·
+    <a href="/">Home</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.getElementById('maps');
+  function fail(msg) {
+    root.innerHTML = '<p class="fail">' + msg + '</p>';
+  }
+  fetch('manifest.json', { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('Could not load the project list.');
+      return r.json();
+    })
+    .then(function (data) {
+      var projects = (data && data.projects) || [];
+      if (!projects.length) {
+        fail('No archived story maps yet.');
+        return;
+      }
+      root.innerHTML = '';
+      projects.forEach(function (p) {
+        var a = document.createElement('a');
+        a.className = 'card';
+        a.href = '/map-studio.html?archive=' + encodeURIComponent(p.slug);
+        var left = document.createElement('div');
+        var h = document.createElement('h2');
+        h.textContent = p.name;
+        left.appendChild(h);
+        var meta = document.createElement('p');
+        meta.className = 'meta';
+        var bits = [(p.pinCount || 0) + ' stop' + (p.pinCount === 1 ? '' : 's')];
+        if (p.person) bits.push('Told as ' + p.person);
+        else if (p.student) bits.push(p.student);
+        meta.textContent = bits.join(' · ');
+        left.appendChild(meta);
+        a.appendChild(left);
+        var go = document.createElement('span');
+        go.className = 'go';
+        go.textContent = 'Open in Map Studio →';
+        a.appendChild(go);
+        root.appendChild(a);
+      });
+    })
+    .catch(function (err) {
+      fail((err && err.message) || 'Could not load the project list.');
+    });
+})();
+</script>
+</body>
+</html>

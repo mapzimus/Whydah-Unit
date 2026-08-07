@@ -1,0 +1,206 @@
+{
+  "archiveVersion": 1,
+  "archivedAt": "2026-08-07",
+  "source": "map-studio-class-list",
+  "id": "mmshkkybwlt190k",
+  "slug": "mislove-story",
+  "name": "mislove story",
+  "student": "",
+  "person": "",
+  "title": "",
+  "pinCount": 7,
+  "updated": 1786025436437,
+  "state": {
+    "project": {
+      "student": "",
+      "person": "",
+      "title": ""
+    },
+    "version": 3,
+    "world": {
+      "pins": [
+        {
+          "lat": 51.507,
+          "lng": -0.128,
+          "label": "whydah",
+          "voice": "built as a slave ship",
+          "journal": "where the whydah was built as a slave ship",
+          "kind": "",
+          "n": 1
+        },
+        {
+          "lat": 6.367,
+          "lng": 2.083,
+          "label": "whydah, West Africa",
+          "voice": "whydah frist stop in west Afica",
+          "journal": "the frist stop it took was west Afica",
+          "kind": "",
+          "n": 2
+        },
+        {
+          "lat": 19.9,
+          "lng": -73.9,
+          "label": "whydah",
+          "voice": "where the whydah was taken",
+          "journal": "whydah was find",
+          "kind": "",
+          "n": 3
+        },
+        {
+          "lat": 19.907036755646367,
+          "lng": -77.51953125000001,
+          "label": "whydah",
+          "voice": "when they find whydah they steil some cuppull thing on the ship",
+          "journal": "they steil some cuppull thing on the ship",
+          "kind": "",
+          "n": 4
+        },
+        {
+          "lat": 32.13000258657081,
+          "lng": -78.04687500000001,
+          "label": "whydah",
+          "voice": "where whydah ship some people on the ship was there last time",
+          "journal": "where people last time all live",
+          "kind": "",
+          "n": 5
+        },
+        {
+          "lat": 39.26024563717345,
+          "lng": -72.07031250000001,
+          "label": "whydah",
+          "voice": "Dead reckoning coast",
+          "journal": "this was the Dead reckoning coast",
+          "kind": "",
+          "n": 6
+        },
+        {
+          "lat": 42.96766624099211,
+          "lng": -68.55468750000001,
+          "label": "whydah",
+          "voice": "where the whydah was crash",
+          "journal": "3-2 people make it out because of lot of people Dead in the ship",
+          "kind": "",
+          "n": 7
+        }
+      ],
+      "routes": [
+        [
+          [
+            50.73810861862127,
+            -1.0546875000000002
+          ],
+          [
+            37.89813463018776,
+            -12.919921875000002
+          ],
+          [
+            32.927870268796376,
+            -16.347656250000004
+          ],
+          [
+            25.997652350137507,
+            -20.742187500000004
+          ],
+          [
+            15.493518265056291,
+            -23.906250000000004
+          ],
+          [
+            4.428728036698767,
+            -18.984375000000004
+          ],
+          [
+            -0.48991565916499846,
+            -5.273437500000001
+          ],
+          [
+            0.21337306105045814,
+            2.1093750000000004
+          ],
+          [
+            2.6018299370411753,
+            2.1972656250000004
+          ],
+          [
+            4.181422099958759,
+            1.6699218750000002
+          ],
+          [
+            5.057676571864647,
+            2.2851562500000004
+          ],
+          [
+            0.6686476774268787,
+            6.416015625000001
+          ],
+          [
+            -3.4610894741954943,
+            5.273437500000001
+          ],
+          [
+            -4.776333120344466,
+            1.8457031250000002
+          ],
+          [
+            -5.9141989611889905,
+            -4.482421875000001
+          ],
+          [
+            -5.651805746002248,
+            -14.589843750000002
+          ],
+          [
+            -4.425819311720336,
+            -26.19140625
+          ],
+          [
+            -1.1774041257588828,
+            -36.03515625000001
+          ],
+          [
+            9.383122867571853,
+            -51.50390625000001
+          ],
+          [
+            15.22109558913469,
+            -65.91796875000001
+          ],
+          [
+            17.04136835431383,
+            -74.53125000000001
+          ],
+          [
+            18.506345964324773,
+            -75.54199218750001
+          ],
+          [
+            29.16946680876976,
+            -76.28906250000001
+          ],
+          [
+            33.81497132962953,
+            -75.05859375000001
+          ],
+          [
+            38.77172518993357,
+            -70.48828125000001
+          ],
+          [
+            41.591953165781625,
+            -68.90625000000001
+          ],
+          [
+            41.98523839066044,
+            -69.08203125000001
+          ]
+        ]
+      ],
+      "activeRoute": 0
+    },
+    "chart": {
+      "pins": [],
+      "routes": [],
+      "activeRoute": 0
+    }
+  }
+}
