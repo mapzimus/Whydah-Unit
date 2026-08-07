@@ -757,4 +757,4 @@ Additive only — no existing URL changes. Then spot-check three live pages in a
 - **Delete anything.** Old URLs keep working throughout.
 - **Build the reference site.** `/story/`, `/people/`, `/the-wreck/` and the rest are Phase 1b.
 - **Rewrite the planner's links or drop its dates.** Phase 1c, once these URLs are live and verifiable.
-- **Touch `photo/`, `photohunt/`, `photohunt2/`.** Max deletes those at end of week.
+- **Touch `photo/`, `photohunt/`, `photohunt2/`.** Those directories are deleted at end of week.

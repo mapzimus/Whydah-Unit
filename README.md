@@ -26,6 +26,6 @@ Old root `dayN.html` URLs stub into `/curriculum/day-N-…/`.
 
 ## Acknowledgments
 
-Unit facilitated by Max Howe (GIS/cartography). Partnership with Real Pirates Salem Museum. Research draws on Marcus Rediker, Colin Woodard, Kenneth Kinkor's Whydah Sourcebook, the Expedition Whydah archive, and primary sources including the 1717 Boston Vice-Admiralty Court records and Cotton Mather's *Instructions to the Living*.
+Facilitated with GIS/cartography support. Partnership with Real Pirates Salem Museum. Research draws on Marcus Rediker, Colin Woodard, Kenneth Kinkor's Whydah Sourcebook, the Expedition Whydah archive, and primary sources including the 1717 Boston Vice-Admiralty Court records and Cotton Mather's *Instructions to the Living*.
 
 Facts in the dashboard are tiered by confidence (🟢 Solid / 🟡 Contested / 🔴 Mythologized); see the Confidence & Methods section in the dashboard for full methodology and sources.

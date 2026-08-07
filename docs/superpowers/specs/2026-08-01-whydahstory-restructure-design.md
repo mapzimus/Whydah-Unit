@@ -1,7 +1,7 @@
 # whydahstory.com — restructure design
 
 **Date:** 2026-08-01
-**Author:** Max Howe, with Claude
+**Author:** design notes with Claude
 **Status:** in progress — Phase 1a (curriculum archive) done; Phase 3 switchover started 2026-08-07 (root front door, day-page stubs, `/projects/` Map Studio archive); reference-page split and planner finalize still open
 
 ---
@@ -254,7 +254,7 @@ last step before handover. No link reaches LEAP unverified.
 
 ### 7.3 Appendix C becomes a packet manifest
 
-The teacher materials are handed to Rebecca as files, not hosted. Nothing is uploaded
+The teacher materials are handed over as files, not hosted. Nothing is uploaded
 anywhere. Appendix C therefore changes from "filenames pending links" to "contents of the
 handover packet", and the *Materials still to be linked* section is retitled to match.
 
@@ -301,7 +301,7 @@ because phase 1 did the building.
 own verification. The first plan covers phase 1 only, because phase 1 is both the largest
 body of work and the only part that can start before Monday.
 
-**Precondition owned by Max:** `photo/`, `photohunt/` and `photohunt2/` are deleted at the
+**Precondition:** `photo/`, `photohunt/` and `photohunt2/` are deleted at the
 end of the week. They are ungated galleries where students claim uploaded photographs by
 name, which is acceptable for a five-week class on an unadvertised URL and not acceptable
 on a site being optimised for discovery. **This restructure does not touch those three
@@ -334,7 +334,7 @@ directories.** Their `.gitignore` whitelist entries are removed once they are go
 ## 12. Out of scope
 
 - Rewriting curriculum content. The freeze is structural.
-- The photography sections (§9, owned by Max).
+- The photography sections (§9, owned separately).
 - Rewriting Week 5 of the planner as-taught. It is labelled *as planned*, and one site's
   staffing accident would mislead a facilitator with a normal schedule.
 - Re-mapping the unit to a strict 5 × 4 grid. It would contradict the week label printed on
