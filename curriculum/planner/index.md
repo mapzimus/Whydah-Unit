@@ -181,7 +181,7 @@ required for any student-facing page.
 | The Salem connection | https://whydahstory.com/curriculum/as-taught/#salem |
 | Final project | https://whydahstory.com/curriculum/as-taught/#final-project |
 | Glossary (searchable) | https://whydahstory.com/curriculum/as-taught/#glossary |
-| Confidence & methods (🟢/🟡/🔴 source tiers) | https://whydahstory.com/curriculum/as-taught/#confidence |
+| Confidence & methods (🟢/🟡/🔴 source tiers) | https://whydahstory.com/unit/#confidence |
 
 ### Primary sources and external references
 - Southack's 1717 chart of Cape Cod (clean scan) — https://whydahstory.com/pics/southack-1717-chart-clean.jpg

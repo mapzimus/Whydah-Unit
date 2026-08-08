@@ -1216,9 +1216,9 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
     <li class="nav-group">
       <span class="nav-group-label">Games</span>
       <ul>
-        <li class="gate-hidden" data-game-link="navigator"><a href="navigator/" target="_blank" rel="noopener">&#9875; Whydah’s Voyage</a></li>
-        <li class="gate-hidden" data-game-link="parrot-flip"><a href="parrot-flip/" target="_blank" rel="noopener">&#129437; Parrot Flip</a></li>
-        <li data-games-locked-note><span class="games-locked-chip">Games stay open — the unit is over</span></li>
+        <li data-game-link="navigator"><a href="navigator/" target="_blank" rel="noopener">&#9875; Whydah’s Voyage</a></li>
+        <li data-game-link="parrot-flip"><a href="parrot-flip/" target="_blank" rel="noopener">&#129437; Parrot Flip</a></li>
+        <li data-games-locked-note class="gate-hidden"><span class="games-locked-chip">Games stay open — the unit is over</span></li>
       </ul>
     </li>
     <li class="nav-group">
@@ -1233,17 +1233,16 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
         <li><a href="#salem">Salem</a></li>
         <li><a href="#maps-geo">Maps &amp; Flythrough</a></li>
         <li><a href="#projections">Navigation &amp; Projections</a></li>
+        <li><a href="#modern-tools">Live tools &amp; atlases</a></li>
+        <li><a href="#source-links">Sources &amp; Bibliography</a></li>
+        <li><a href="#confidence">Confidence &amp; Methods</a></li>
       </ul>
     </li>
     <li class="nav-group" data-audience="admin">
       <span class="nav-group-label">Captain's Cabin</span>
       <ul>
-        <li data-audience="admin"><a href="#game-gate" data-admin-link="true">Game Gate</a></li>
         <li data-audience="admin"><a href="#unit-plan" data-admin-link="true">Unit Plan</a></li>
         <li data-audience="admin"><a href="#voyage-journal" data-admin-link="true">Voyage Journal</a></li>
-        <li data-audience="admin"><a href="#source-links" data-admin-link="true">Sources &amp; Bibliography</a></li>
-        <li data-audience="admin"><a href="#confidence" data-admin-link="true">Confidence &amp; Methods</a></li>
-        <li data-audience="admin"><a href="#teacher-toolkit" data-admin-link="true">Teacher Toolkit</a></li>
       </ul>
     </li>
   </ul>
@@ -1344,7 +1343,7 @@ body.ribbon-ready #bookmark-ribbon { height: 116px; }
 <div class="games-promo">
 <h3 style="margin-top:0;">Earn the wheel</h3>
 <p><strong>Whydah’s Voyage</strong> is the replayable coast campaign — missions, ports, bosses, the nor’easter. <strong>Parrot Flip</strong> is the crew’s parlor game — flick a pirate macaw and land it on its feet.</p>
-<p class="games-promo-links"><a class="gate-hidden" data-game-link="navigator" href="navigator/" target="_blank" rel="noopener">&#9875; Play Whydah’s Voyage</a> <a class="gate-hidden" data-game-link="parrot-flip" href="parrot-flip/" target="_blank" rel="noopener">&#129437; Play Parrot Flip</a> <a href="games/">Games hub</a> <span data-games-locked-note class="games-locked-chip">Games stay open — the unit is over</span></p>
+<p class="games-promo-links"><a data-game-link="navigator" href="navigator/" target="_blank" rel="noopener">&#9875; Play Whydah’s Voyage</a> <a data-game-link="parrot-flip" href="parrot-flip/" target="_blank" rel="noopener">&#129437; Play Parrot Flip</a> <a href="games/">Games hub</a></p>
 </div>
 </section>
 
@@ -2183,8 +2182,8 @@ Rediker reads pirates as people pushing back against unfair work and a brutal ec
 </div>
 </div>
 <div class="accordion">
-<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-maps-1"><span class="accordion-title">Live cams on Bellamy's coast</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
-<div id="acc-maps-1" class="accordion-body" hidden>
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-maps-1"><span class="accordion-title">Live cams on Bellamy's coast</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-1" class="accordion-body">
 <div class="card">
 <p>The same Massachusetts coast Bellamy died on, watched live in 2026 via <a href="https://masswebcams.com/" target="_blank" rel="noopener">masswebcams.com</a>, a directory of 200+ public webcams across the state. Useful as a "modern bridge" tool: students can compare Southack's 1717 chart to right-now imagery of the same beaches.</p>
 
@@ -2760,20 +2759,6 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 <p>Thursday August 6, 2026 was the public Showcase. Final projects were presented to families, faculty, and visitors. Voyage Journals lay open on tables for everyone to flip through. That was the public reveal of five weeks of work: the moment each chosen voice got heard.</p>
 <p class="meta">Map Studio story maps from the Showcase live permanently at <a href="/projects/">/projects/</a>.</p>
 </div>
-</section>
-
-<section id="game-gate" data-folio="xiii" data-audience="admin">
-<h2>Game Gate</h2>
-<p class="meta"><strong>Unit complete.</strong> Games stay open for visitors; the classroom lock is retired. This panel remains for the record. During the unit it flipped a live switch in the ship's log (Supabase) so every student device unlocked or re-locked within a few seconds.</p>
-<div id="gate-conn" class="gate-status">Checking the ship's log&hellip;</div>
-<div id="gate-grid" class="gate-grid"><!-- rows injected by the gate script --></div>
-<p class="gate-bulk">
-  <button type="button" id="gate-open-all" class="gate-bulk-btn">Open all</button>
-  <button type="button" id="gate-lock-all" class="gate-bulk-btn">Lock all</button>
-</p>
-<p class="meta">Teacher preview (ignores the gate): <a href="navigator/" target="_blank" rel="noopener">Whydah’s Voyage</a> &middot; <a href="parrot-flip/" target="_blank" rel="noopener">Parrot Flip</a> &middot; <a href="games/">Games hub</a></p>
-<p class="meta">The first toggle each session asks for the <strong>gate passcode</strong> (stored only in the database, never on this page). <button type="button" id="gate-forget" class="gate-linklike">Forget the passcode on this device</button></p>
-<p class="meta">Note: this is a classroom-management gate, not hard security &mdash; a student who already knows a game's direct URL and has the passcode could still reach it. It stops casual wandering into the games between activities.</p>
 </section>
 
 <section id="unit-plan" data-folio="xiii" data-audience="admin">
@@ -3465,7 +3450,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 </section>
 
-<section id="source-links" data-folio="xv" data-audience="admin">
+<section id="source-links" data-folio="xv">
 <h2>Sources &amp; Bibliography</h2>
 <h3>Whydah-specific museums and projects</h3>
 <div class="card">
@@ -3613,7 +3598,7 @@ The 1734 published version of his chart (<em>The New England Coasting Pilot</em>
 
 </section>
 
-<section id="confidence" data-folio="xvi" data-audience="admin">
+<section id="confidence" data-folio="xvi">
 <h2>Confidence &amp; methods</h2>
 
 <div class="card">
@@ -3734,36 +3719,18 @@ Full source lists and tier-by-tier findings live alongside this file in <code>re
 
 </section>
 
-<section id="teacher-toolkit" data-folio="xvii" data-audience="admin">
-<h2>Teacher Toolkit</h2>
-<p class="meta">Unit complete. Classroom controls below are retired or historical. GIS links and modern-piracy trackers remain useful as reference.</p>
-
-<div class="card" id="banner-override-panel">
-<h3 style="margin-top:0;">📍 Banner Control</h3>
-<p class="meta"><strong>Retired.</strong> The red TODAY banner and <code>day-config.js</code> ran the live class. The unit ended August 6, 2026; the banner is gone from this dashboard. Day pages live in the frozen <a href="/curriculum/">curriculum archive</a>.</p>
-</div>
-
-<div class="card" id="crew-points-panel">
-<h3 style="margin-top:0;">🏴‍☠️ Crew Points</h3>
-<p class="meta"><strong>Retired with the live class.</strong> During the unit, points lived on the projector device. Cipher wins, board posts, and mission finishes earned points.</p>
-<div data-role="crew-list"></div>
-<div style="display:flex; gap:.5em; margin-top:.7em; flex-wrap:wrap;">
-<input data-role="crew-name" type="text" placeholder="New crew name" style="padding:.35em .5em; flex:1; min-width:10em;">
-<button data-role="add-crew" type="button" style="padding:.35em .9em; cursor:pointer;">Add crew</button>
-<button data-role="project-board" type="button" style="padding:.35em .9em; cursor:pointer; font-weight:700;">Project the board</button>
-</div>
-</div>
-<h3>GIS toolkit - free tools we can pull into class</h3>
-<p class="meta">Beyond MarineTraffic. Each one of these has a teaching use; none of them require a login or a paid account.</p>
+<section id="modern-tools" data-folio="xvii">
+<h2>Live tools &amp; atlases</h2>
+<p class="meta">Free maps and live feeds that sit beside the Whydah story — wind, shipping, period charts, and modern piracy trackers. No login required.</p>
 
 <div class="salem-callout" style="margin-bottom: 1em;">
-<h4>In-build: our own interactive student maps + Google Earth tour</h4>
-<p>Two planning artifacts in <code>resources/</code> that aren't shipped yet but are locked-in directions for the unit:</p>
+<h4>Built for this site</h4>
+<p>Our own tools live elsewhere on the site:</p>
 <ul style="margin: 0.4em 0;">
-<li><strong>Leaflet lesson scaffold</strong> (<code>resources/leaflet-middle-school-gis-whydah-lesson.md</code>) — five-activity arc using Leaflet (~42 KB, MIT) + Leaflet-Geoman: orient the Atlantic, plot the Whydah's route, place the wreck (41.891°N, 69.957°W), simulate Clifford's grid-search excavation, synthesize student evidence as a GeoJSON-output closing activity. Locked technical decision: <em>Leaflet, not MapLibre/Cesium/Felt.</em> Ready to build; suggested order is Activity 3 first as the self-contained template.</li>
-<li><strong>KML walkthrough</strong> (<code>resources/whydah-walkthrough.kml</code>) — Google Earth tour scaffold with confidence-tier styling (green/yellow/red + blue for modern sites + red triangle for the wreck). <em>Currently empty</em> — has the document header and styles but no placemarks yet. Needs populating from the dashboard's spatial waypoints (London, Ouidah, Jamaica, Nassau, Cape Cod wreck site, Boston, Charlestown gallows, Wellfleet, Salem, West Yarmouth Whydah Pirate Museum, Real Pirates Salem 285 Derby St).</li>
+<li><strong><a href="map-studio.html">Map Studio</a></strong> — login-free story maps on a world basemap or Southack’s 1717 chart.</li>
+<li><strong><a href="flythrough.html">3D flythrough</a></strong> — nineteen stops across the Bellamy story.</li>
+<li><strong><a href="/projects/">Showcase story maps</a></strong> — student Map Studio projects from August 6, 2026.</li>
 </ul>
-<p class="meta" style="margin-top: 0.4em;">Both files are referenced here so the working directions don't get lost between sessions. Use <strong>TappyMaps</strong> for US-states-only thematic lessons; use Leaflet for anything that needs continuous-map drawing or world geography. The activity scaffold mirrors the howe2math worksheet pattern: one bank of data + a configurable presentation layer.</p>
 </div>
 
 <div class="card-grid">
@@ -3773,50 +3740,42 @@ Full source lists and tier-by-tier findings live alongside this file in <code>re
 <div class="video-embed-wrap" style="padding-bottom: 70%;">
 <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" title="earth.nullschool.net - live North Atlantic wind" loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
 </div>
-<p class="meta" style="margin-top: 0.6em;">Live wind over the North Atlantic right now, centered on the same water Bellamy sailed. Click "earth" in the bottom-left to switch layer (try <em>Ocean -&gt; Currents</em> to see the Gulf Stream and the North Atlantic Gyre rolling in real time). The single best way to make the trade-wind &amp; gyre lecture (S5) land. <strong>If the embed shows blank above</strong>, nullschool may be blocking the iframe - just click the heading link to open in a new tab.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S5</strong> (the triangle's physics) and <strong>S14</strong> (chokepoint comparison).</p>
+<p class="meta" style="margin-top: 0.6em;">Live wind over the North Atlantic right now, centered on the same water Bellamy sailed. Click "earth" in the bottom-left to switch layer (try <em>Ocean -&gt; Currents</em> to see the Gulf Stream and the North Atlantic Gyre rolling in real time). <strong>If the embed shows blank above</strong>, nullschool may be blocking the iframe — click the heading link to open in a new tab.</p>
 </div>
 
 <div class="card">
 <h4><a href="https://www.shipmap.org/" target="_blank" rel="noopener">Shipmap.org (Kiln, 2012)</a></h4>
 <p>Animated visualization of one full year of global merchant shipping. Watch container ships, dry bulk, tankers, gas, and vehicles move across the Atlantic. The 2012 data is a snapshot but the patterns are durable.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S5</strong> alongside the 1717 triangle map. Same ocean, different decade.</p>
 </div>
 
 <div class="card">
 <h4><a href="https://map.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap</a></h4>
-<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful for showing students how nautical charts encode depth and hazards differently than road maps.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S2-S3</strong> (cartographic conventions) and <strong>S11</strong> (the wreck site, with bathymetry).</p>
+<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful for showing how nautical charts encode depth and hazards differently than road maps.</p>
 </div>
 
 <div class="card">
 <h4><a href="https://www.davidrumsey.com/" target="_blank" rel="noopener">David Rumsey Historical Map Collection</a></h4>
 <p>Stanford's online archive of 100,000+ historical maps - period charts, atlases, globes. The single best free archive of pre-1900 cartography. Includes Moll, Southack-era charts, period Atlantic and Caribbean maps. Built-in Luna Viewer for zoom + compare.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S3</strong> (Moll close-read) and any session where students want to find a period map for their final project.</p>
 </div>
 
 <div class="card">
 <h4><a href="https://collections.leventhalmap.org/" target="_blank" rel="noopener">Leventhal Map &amp; Education Center (BPL)</a></h4>
 <p>Boston Public Library's map collection - especially strong on New England, Cape Cod, and 18th-century coastal charts. Has a Southack Cape Cod chart and a "<em>X Marks the Spot</em>" article tracing the Whydah cartography story directly.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S13</strong> (Southack -&gt; Clifford story).</p>
 </div>
 
 <div class="card">
 <h4><a href="https://historicalcharts.noaa.gov/" target="_blank" rel="noopener">NOAA Historical Map &amp; Chart Collection</a></h4>
 <p>U.S. government archive of 19th-century coastal charts of the U.S. and territories - direct descendants of the Southack tradition. Free, downloadable, mostly NOAA-hosted PDFs. Useful for showing how NOAA still maintains charts of the same waters Southack was mapping in 1717.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S2</strong> and <strong>S11</strong>.</p>
 </div>
 
 <div class="card">
 <h4><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy.com</a></h4>
-<p>Live weather + waves + wind, very visual. Pull up the North Atlantic the morning of S11 and ask "what would today have been like for a 1717 ship?" Run a hypothetical: a 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S11</strong> (the wreck conditions).</p>
+<p>Live weather + waves + wind, very visual. Pull up the North Atlantic and ask what today would have been like for a 1717 ship. A 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
 </div>
 
 <div class="card">
 <h4><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a></h4>
 <p>The International Maritime Bureau's Piracy Reporting Centre maintains a live map of every piracy and armed-robbery-at-sea incident reported worldwide. Updated continuously. Singapore Straits was the world's #1 hotspot in 2025 (80 of 137 IMB incidents), far ahead of the Gulf of Guinea (21); Q1 2026 fell to 16 incidents worldwide, the lowest since 1991. Somali piracy resurged in 2024 under cover of Houthi attacks (MV Ruen retaken March 16, 2024) and surged again from late 2025 into 2026 — naval presence deters but no longer fully contains it. The 1717 chokepoints have moved, not gone away.</p>
-<p class="meta" data-audience="admin">Use in: <strong>S14</strong> (chokepoint comparison + modern piracy parallels). Show students that piracy is a current Coast Guard / Navy concern, not just a costume-and-treasure-chest story.</p>
 </div>
 
 </div>
@@ -4202,10 +4161,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 /* ===== Game Gate wiring =====
-   Reads the live gate (window.WhydahGate from /games-gate.js) and:
-   1. shows/hides the student-facing game links + "opens in class" note, and
-   2. drives the teacher panel in the Captain's Cabin (behind the LEAP4ED wall).
-   Runs on DOMContentLoaded so the deferred gate script has already executed. */
+   Unit complete: games stay open via UNIT_COMPLETE in /games-gate.js.
+   This block only syncs optional [data-game-link] visibility if a future
+   lock is re-enabled. The old Captain's Cabin toggle panel is gone. */
 document.addEventListener('DOMContentLoaded', function () {
   var G = window.WhydahGate;
   if (!G) return;
