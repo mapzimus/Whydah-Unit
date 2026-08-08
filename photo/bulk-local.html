@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Showcase bulk upload (local)</title>
+<style>
+  :root { --bg:#14161a; --card:#1e2128; --text:#e8e6e1; --muted:#9a958c; --accent:#e8b64c; --border:#33383f; --red:#e57373; --green:#7bc47f; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:Segoe UI,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+  .wrap { max-width:720px; margin:0 auto; padding:1.5em 1.2em 3em; }
+  h1 { font-family:Georgia,serif; color:var(--accent); font-size:1.6em; margin:0 0 0.3em; }
+  .muted { color:var(--muted); font-size:0.92em; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.1em 1.2em; margin:1em 0; }
+  .row { display:flex; flex-wrap:wrap; gap:0.6em; align-items:center; }
+  button, .btn {
+    background:var(--accent); color:#1a1408; border:none; border-radius:6px;
+    padding:0.65em 1.1em; font-size:1em; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:disabled { opacity:0.5; cursor:default; }
+  button.secondary, .btn.secondary { background:#262a33; color:var(--text); border:1px solid var(--border); }
+  label.btn { display:inline-block; }
+  progress { width:100%; margin-top:0.6em; }
+  .error { background:#2d1a1a; border:1px solid #6e2f2f; color:var(--red); border-radius:6px; padding:0.7em 1em; margin-top:0.7em; }
+  .ok { color:var(--green); font-weight:600; }
+  #list { margin-top:0.8em; max-height:220px; overflow:auto; font-size:0.85em; color:var(--muted); }
+  code { background:#262a33; padding:0.1em 0.35em; border-radius:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📦 Showcase bulk upload</h1>
+  <p class="muted">Works offline from this file — no site deploy needed. Uploads go straight into the live slideshow storage. No captions. No 3-photo limit.</p>
+
+  <div class="card">
+    <div class="row">
+      <label class="btn">
+        Choose folder
+        <input type="file" id="folder" webkitdirectory multiple hidden>
+      </label>
+      <label class="btn secondary">
+        Choose photos
+        <input type="file" id="files" multiple accept="image/*" hidden>
+      </label>
+      <button id="go" disabled>Upload to slideshow</button>
+    </div>
+    <p class="muted" style="margin:0.7em 0 0;">Chrome / Edge: use <strong>Choose folder</strong> and pick <code>Desktop\photos\showcase</code>.</p>
+    <div id="status" class="muted" style="margin-top:0.8em;"></div>
+    <progress id="prog" max="100" value="0" style="display:none;"></progress>
+    <div id="list"></div>
+  </div>
+
+  <p class="muted">After upload, open <a href="https://whydahstory.com/photo/showcase.html" style="color:#6fb3d2;">the slideshow</a> and hit Play (it shuffles).</p>
+</div>
+
+<script>
+const SB_URL = 'https://segzgdlqqymqlfuahosd.supabase.co';
+const SB_KEY = 'sb_publishable_fBBZAVo-ljKvaBKNVMukmA_TopYb6D8';
+const BUCKET = 'photos';
+const PREFIX = 'showcase';
+const headers = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+const MAX_DIM = 2200, JPEG_Q = 0.87;
+
+const folder = document.getElementById('folder');
+const filesInput = document.getElementById('files');
+const go = document.getElementById('go');
+const statusEl = document.getElementById('status');
+const prog = document.getElementById('prog');
+const list = document.getElementById('list');
+let picked = [];
+
+function setStatus(msg, kind) {
+  statusEl.className = kind === 'error' ? 'error' : kind === 'ok' ? 'ok' : 'muted';
+  statusEl.textContent = msg || '';
+}
+function isImage(name) { return /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(name); }
+function newId() { return 'b' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+function safeUploadName(file, blob) {
+  if (blob === file) return file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+  const base = file.name.replace(/\.[^.]*$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 60) || 'photo';
+  return base + '.jpg';
+}
+
+async function shrinkImage(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIM / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && file.size < 3.5 * 1024 * 1024 && file.type === 'image/jpeg') { bmp.close(); return file; }
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * scale);
+    c.height = Math.round(bmp.height * scale);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close();
+    const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', JPEG_Q));
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+}
+
+async function storageUpload(path, blob) {
+  const r = await fetch(`${SB_URL}/storage/v1/object/${BUCKET}/${path.split('/').map(encodeURIComponent).join('/')}`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': blob.type || 'application/octet-stream' },
+    body: blob,
+  });
+  if (!r.ok) throw new Error(`Upload failed (${r.status}) — ${(await r.text().catch(() => '')).slice(0, 160)}`);
+}
+
+function loadList(fileList) {
+  picked = Array.from(fileList || [])
+    .filter(f => isImage(f.name) || /^image\//.test(f.type))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  list.innerHTML = '';
+  if (!picked.length) {
+    go.disabled = true;
+    setStatus('No image files selected.');
+    return;
+  }
+  setStatus(picked.length + ' photo' + (picked.length === 1 ? '' : 's') + ' ready — hit Upload.');
+  const show = picked.slice(0, 50);
+  list.innerHTML = show.map(f => `<div>${f.name.replace(/</g, '&lt;')}</div>`).join('')
+    + (picked.length > show.length ? `<div>…and ${picked.length - show.length} more</div>` : '');
+  go.disabled = false;
+}
+
+folder.onchange = () => loadList(folder.files);
+filesInput.onchange = () => loadList(filesInput.files);
+
+go.onclick = async () => {
+  if (!picked.length) return;
+  go.disabled = true;
+  prog.style.display = '';
+  prog.max = picked.length;
+  prog.value = 0;
+  let ok = 0;
+  const failed = [];
+
+  for (let i = 0; i < picked.length; i++) {
+    const file = picked[i];
+    setStatus(`Uploading ${i + 1} of ${picked.length} — ${file.name}`);
+    const id = newId();
+    try {
+      const blob = await shrinkImage(file);
+      const photoPath = `${PREFIX}/${id}_${safeUploadName(file, blob)}`;
+      await storageUpload(photoPath, blob);
+      // Compat with the currently-deployed slideshow (no bulk support yet):
+      // unique student_name + non-empty caption so each photo gets its own slide.
+      // Also sets bulk/entry_id for when Pages finally publishes the new code.
+      const meta = {
+        bulk: true,
+        entry_id: id,
+        student_name: 'Photo ' + String(i + 1).padStart(3, '0'),
+        caption: '\u00a0',
+        photo_path: photoPath,
+        slot: 1,
+        created_at: new Date().toISOString(),
+      };
+      await storageUpload(`${PREFIX}/${id}.meta.jpg`, new Blob([JSON.stringify(meta)], { type: 'image/jpeg' }));
+      ok++;
+    } catch (e) {
+      failed.push(file.name + ': ' + e.message);
+    }
+    prog.value = i + 1;
+  }
+
+  if (failed.length) {
+    setStatus(`Uploaded ${ok} of ${picked.length}. Failed: ${failed.slice(0, 4).join(' · ')}${failed.length > 4 ? '…' : ''}`, 'error');
+    go.disabled = false;
+  } else {
+    setStatus(`Done — ${ok} photos are in the slideshow. Open the slideshow and hit Play.`, 'ok');
+    picked = [];
+    list.innerHTML = '';
+    folder.value = '';
+    filesInput.value = '';
+  }
+};
+</script>
+</body>
+</html>
