@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01
 **Author:** design notes with Claude
-**Status:** in progress — Phase 1a (curriculum archive) done; Phase 3 switchover started 2026-08-07 (root front door, day-page stubs, `/projects/` Map Studio archive); reference-page split and planner finalize still open
+**Status:** in progress — Phase 1a done; Phase 3 switchover advanced 2026-08-08 (unit-complete voice, `/projects/`, Sources & Methods un-gated, classroom Game Gate / Banner / Crew Points retired, GIS tools public as `#modern-tools`); reference-page split (`/story/`, `/people/`, …) and planner finalize still open
 
 ---
 
@@ -152,12 +152,12 @@ Its eighteen sections resolve as follows.
 | `maps-geo`, `projections` | public | `/maps/` |
 | `glossary` | public | `/glossary/` |
 | `final-project` | public | **curriculum** — it is the teaching project |
-| `source-links` | **admin-gated** | `/sources/` — un-gated |
-| `confidence` | **admin-gated** | `/methods/` — un-gated |
+| `source-links` | **public** (un-gated 2026-08-08) | `/sources/` when the reference split lands |
+| `confidence` | **public** (un-gated 2026-08-08) | `/methods/` when the reference split lands |
 | `unit-plan` | admin-gated | curriculum |
 | `voyage-journal` | admin-gated | curriculum |
-| `game-gate` | admin-gated | **deleted** |
-| `teacher-toolkit` | admin-gated | **deleted** |
+| `game-gate` | **deleted** (2026-08-08) | — |
+| `teacher-toolkit` | **retired** — GIS / live tools now public as `#modern-tools` | `/maps/` when the reference split lands |
 
 ### 4.2 Positioning
 
