@@ -1,0 +1,5061 @@
+{
+  "runs": 100,
+  "modes": [
+    "easy",
+    "hard",
+    "extreme"
+  ],
+  "timestamp": "2026-08-07T02:16:24.841Z",
+  "note": "Main campaign only (easy/hard/extreme). INSANE excluded.",
+  "structure": {
+    "avgSeqLen": 62.38,
+    "minSeqLen": 57,
+    "maxSeqLen": 68,
+    "weatherFreq": {
+      "clearwater": 25,
+      "busy": 21,
+      "fogbanks": 27,
+      "richholds": 27
+    },
+    "beatKindFreq": {
+      "missionIntro": 1000,
+      "election": 100,
+      "port": 900,
+      "chase": 100,
+      "mini": 305,
+      "sail": 1100,
+      "merchant": 386,
+      "event": 747,
+      "sloopboss": 100,
+      "fork": 100,
+      "mooncusser": 100,
+      "battle": 400,
+      "brigboss": 100,
+      "flagship": 100,
+      "palatine": 100,
+      "hallett": 100,
+      "blockade": 100,
+      "squadron": 100,
+      "storm": 100,
+      "boss": 100,
+      "oldsow": 100
+    },
+    "topEvents": [
+      [
+        "fishcatch",
+        24
+      ],
+      [
+        "blackbeard",
+        21
+      ],
+      [
+        "sail_far",
+        19
+      ],
+      [
+        "signalsmoke",
+        19
+      ],
+      [
+        "fog",
+        18
+      ],
+      [
+        "prizecrew",
+        17
+      ],
+      [
+        "slush",
+        17
+      ],
+      [
+        "bonnyread",
+        17
+      ],
+      [
+        "freeship",
+        15
+      ],
+      [
+        "doldrums",
+        15
+      ],
+      [
+        "leaks",
+        15
+      ],
+      [
+        "waterspout",
+        15
+      ],
+      [
+        "navysail",
+        15
+      ],
+      [
+        "oldsowlore",
+        15
+      ],
+      [
+        "thief",
+        14
+      ],
+      [
+        "julian",
+        14
+      ],
+      [
+        "carpenter",
+        14
+      ],
+      [
+        "rats",
+        14
+      ],
+      [
+        "derelict",
+        14
+      ],
+      [
+        "maryanne",
+        14
+      ],
+      [
+        "nightwatch",
+        13
+      ],
+      [
+        "chart",
+        13
+      ],
+      [
+        "pitch",
+        13
+      ],
+      [
+        "chantey",
+        13
+      ],
+      [
+        "drill",
+        13
+      ],
+      [
+        "scurvy",
+        13
+      ],
+      [
+        "jonah",
+        13
+      ],
+      [
+        "rumtot",
+        13
+      ],
+      [
+        "pressgang",
+        12
+      ],
+      [
+        "whale",
+        12
+      ]
+    ],
+    "rareEvents": [
+      [
+        "treasure",
+        2
+      ],
+      [
+        "warning",
+        3
+      ],
+      [
+        "kraken",
+        3
+      ],
+      [
+        "freeprince",
+        4
+      ],
+      [
+        "boyking",
+        6
+      ],
+      [
+        "quarter",
+        6
+      ],
+      [
+        "careen",
+        6
+      ],
+      [
+        "williams",
+        7
+      ],
+      [
+        "mermaid",
+        7
+      ],
+      [
+        "dutchman",
+        7
+      ],
+      [
+        "barnacle",
+        8
+      ],
+      [
+        "petrel",
+        8
+      ],
+      [
+        "turtle",
+        8
+      ],
+      [
+        "council",
+        8
+      ],
+      [
+        "sailmaker",
+        9
+      ]
+    ],
+    "eventCoverage": 64,
+    "merchantRate": 0.98,
+    "avgMerchants": 3.86,
+    "avgSails": 11,
+    "avgBattles": 4,
+    "avgMinis": 3.05,
+    "avgEvents": 7.47
+  },
+  "completions": {
+    "wins": 100,
+    "losses": 0,
+    "winRate": 1,
+    "stormCleared": 100,
+    "sawStorm": 100,
+    "bossBeaten": 25,
+    "serpentAttempts": 25,
+    "errors": 0,
+    "signatureSeen": {
+      "missionIntro": 1000,
+      "election": 100,
+      "port": 900,
+      "chase": 100,
+      "mini": 307,
+      "event": 746,
+      "sail": 1055,
+      "merchant": 411,
+      "sloopboss": 100,
+      "fork": 100,
+      "mooncusser": 100,
+      "battle": 367,
+      "brigboss": 100,
+      "flagship": 100,
+      "palatine": 100,
+      "hallett": 100,
+      "blockade": 100,
+      "squadron": 100,
+      "storm": 100,
+      "boss": 25,
+      "oldsow": 100
+    },
+    "scoreByMode": {
+      "easy": {
+        "avg": 908.9,
+        "median": 874,
+        "min": 803,
+        "max": 1110,
+        "n": 34
+      },
+      "hard": {
+        "avg": 1154.5,
+        "median": 1110,
+        "min": 1035,
+        "max": 1435,
+        "n": 33
+      },
+      "extreme": {
+        "avg": 1506.3,
+        "median": 1456,
+        "min": 1313,
+        "max": 1827,
+        "n": 33
+      }
+    },
+    "bankByMode": {
+      "easy": {
+        "avg": -531.8,
+        "median": -1192.5
+      },
+      "hard": {
+        "avg": -38.6,
+        "median": -560
+      },
+      "extreme": {
+        "avg": 440.3,
+        "median": -140
+      }
+    },
+    "routeFreq": {
+      "shore": 50,
+      "sea": 50
+    },
+    "deathByMission": {},
+    "avgBeatsPerRun": 61.11,
+    "avgPorts": 9,
+    "goldAtPortAvg": 0,
+    "hullAtPortAvg": 8.31,
+    "ranks": {
+      "Serpent-Slayer": 17,
+      "Master Mariner": 25,
+      "Legend of the Whydah": 33,
+      "Storm-Beater": 25
+    }
+  },
+  "combatBot": {
+    "samples": 200,
+    "avgDamage": 0,
+    "deaths": 0,
+    "byBeat": {
+      "sail": {
+        "n": 110,
+        "avgDmg": 0,
+        "deaths": 0
+      },
+      "sloopboss": {
+        "n": 10,
+        "avgDmg": 0,
+        "deaths": 0
+      },
+      "mooncusser": {
+        "n": 10,
+        "avgDmg": 0,
+        "deaths": 0
+      },
+      "battle": {
+        "n": 40,
+        "avgDmg": 0,
+        "deaths": 0
+      },
+      "brigboss": {
+        "n": 10,
+        "avgDmg": 0,
+        "deaths": 0
+      },
+      "flagship": {
+        "n": 10,
+        "avgDmg": 0,
+        "deaths": 0
+      },
+      "blockade": {
+        "n": 10,
+        "avgDmg": 0,
+        "deaths": 0
+      }
+    }
+  },
+  "stress": [
+    {
+      "mode": "easy",
+      "target": "sloopboss",
+      "hit": "sloopboss",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "sloopboss",
+      "hit": "sloopboss",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "mooncusser",
+      "hit": "mooncusser",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "mooncusser",
+      "hit": "mooncusser",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "brigboss",
+      "hit": "brigboss",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "brigboss",
+      "hit": "brigboss",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "flagship",
+      "hit": "flagship",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "flagship",
+      "hit": "flagship",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "blockade",
+      "hit": "blockade",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "blockade",
+      "hit": "blockade",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "storm",
+      "hit": "storm",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "easy",
+      "target": "storm",
+      "hit": "storm",
+      "ok": true,
+      "hullBefore": 6,
+      "hullAfter": 6,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "sloopboss",
+      "hit": "sloopboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "sloopboss",
+      "hit": "sloopboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "mooncusser",
+      "hit": "mooncusser",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "mooncusser",
+      "hit": "mooncusser",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "brigboss",
+      "hit": "brigboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "brigboss",
+      "hit": "brigboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "flagship",
+      "hit": "flagship",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "flagship",
+      "hit": "flagship",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "blockade",
+      "hit": "blockade",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "blockade",
+      "hit": "blockade",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "storm",
+      "hit": "storm",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "hard",
+      "target": "storm",
+      "hit": "storm",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "sloopboss",
+      "hit": "sloopboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "sloopboss",
+      "hit": "sloopboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "mooncusser",
+      "hit": "mooncusser",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "mooncusser",
+      "hit": "mooncusser",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "brigboss",
+      "hit": "brigboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "brigboss",
+      "hit": "brigboss",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "flagship",
+      "hit": "flagship",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "flagship",
+      "hit": "flagship",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "blockade",
+      "hit": "blockade",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "blockade",
+      "hit": "blockade",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "storm",
+      "hit": "storm",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    },
+    {
+      "mode": "extreme",
+      "target": "storm",
+      "hit": "storm",
+      "ok": true,
+      "hullBefore": 5,
+      "hullAfter": 5,
+      "damage": 0,
+      "died": false,
+      "score": 0
+    }
+  ],
+  "inventory": {
+    "sampleSeq": [
+      "m0:missionIntro",
+      "m0:election",
+      "m0:port",
+      "m1:missionIntro",
+      "m1:chase",
+      "m1:port",
+      "m2:missionIntro",
+      "m2:event:freeship",
+      "m2:event:doldrums",
+      "m2:sail",
+      "m2:mini:backstaff",
+      "m2:sail",
+      "m2:merchant",
+      "m2:sloopboss",
+      "m2:port",
+      "m3:missionIntro",
+      "m3:merchant",
+      "m3:sail",
+      "m3:event:slush",
+      "m3:sail",
+      "m3:fork",
+      "m3:port",
+      "m4:missionIntro",
+      "m4:event:dolphins",
+      "m4:sail",
+      "m4:event:kraken",
+      "m4:sail",
+      "m4:mooncusser",
+      "m4:port",
+      "m5:missionIntro",
+      "m5:battle",
+      "m5:event:council",
+      "m5:sail",
+      "m5:merchant",
+      "m5:brigboss",
+      "m5:port",
+      "m6:missionIntro",
+      "m6:event:sailmaker",
+      "m6:merchant",
+      "m6:battle",
+      "m6:sail",
+      "m6:battle",
+      "m6:mini:leadline",
+      "m6:flagship",
+      "m6:port",
+      "m7:missionIntro",
+      "m7:event:pitch",
+      "m7:sail",
+      "m7:battle",
+      "m7:sail",
+      "m7:merchant",
+      "m7:palatine",
+      "m7:port",
+      "m8:missionIntro",
+      "m8:event:quarter",
+      "m8:sail",
+      "m8:merchant",
+      "m8:hallett",
+      "m8:blockade",
+      "m8:port",
+      "m11:missionIntro",
+      "m11:squadron",
+      "m11:storm",
+      "m11:boss",
+      "m11:oldsow"
+    ],
+    "skins": [
+      {
+        "id": "auto",
+        "name": "The Sultana",
+        "open": true,
+        "insaneOnly": false
+      },
+      {
+        "id": "gilded",
+        "name": "The Gilded Gally",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "ballot",
+        "name": "The Free Vote",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "prize",
+        "name": "The Prize Taker",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "night",
+        "name": "The Night Runner",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "powder",
+        "name": "The Powder Keg",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "crimson",
+        "name": "The Crimson Corsair",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "runner",
+        "name": "The Blockade Runner",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "ghost",
+        "name": "The Palatine",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "serpent",
+        "name": "The Serpent's Wake",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "lamp",
+        "name": "The Lamplighter",
+        "open": false,
+        "insaneOnly": false
+      },
+      {
+        "id": "duck",
+        "name": "The Rubber Ducky",
+        "open": false,
+        "insaneOnly": false
+      }
+    ],
+    "save": {
+      "bank": 0,
+      "best": 0,
+      "wins": 0,
+      "runs": 0,
+      "sndHint": 0,
+      "seen": {},
+      "mode": "hard",
+      "extremeWon": false,
+      "secretUnlock": false,
+      "feats": {},
+      "skin": "auto",
+      "suggestions": [],
+      "furthest": 0,
+      "furthestInsane": 0,
+      "prologueDone": false,
+      "whydahTaken": false,
+      "bellSeen": false,
+      "upg": {
+        "hull": 0,
+        "pumps": 0,
+        "shot": 0,
+        "nest": 0,
+        "helm": 0,
+        "charm": 0,
+        "canvas": 0,
+        "guns": 0
+      }
+    }
+  },
+  "sampleRuns": [
+    {
+      "run": 1,
+      "mode": "easy",
+      "fightSerpent": true,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "mini:logline",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "event:gullthief",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "merchant",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "event:doldrums",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.0664
+        },
+        {
+          "beat": "event:powderwet",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.0664
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 85.0664
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 85.0664
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 85.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 85.0664
+        },
+        {
+          "beat": "event:scurvy",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 85.0664
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "mini:leadline",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "event:drill",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "event:sandbar",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 95.0664
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "merchant",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "event:council",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "event:fishcatch",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 535.0663999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 535.0663999999999
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 535.0663999999999
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 535.0663999999999
+        },
+        {
+          "beat": "boss",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 615.0663999999999
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 200,
+          "hull": 9,
+          "score": 915.0663999999999
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06639999999999997
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.0664
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 85.0664
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 85.0664
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 205.0664
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 355.0664
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 535.0663999999999
+        }
+      ],
+      "events": [
+        "gullthief",
+        "doldrums",
+        "powderwet",
+        "scurvy",
+        "drill",
+        "sandbar",
+        "council",
+        "fishcatch"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": true,
+      "score": 1106,
+      "bank": -2530,
+      "route": "shore",
+      "weather": "busy",
+      "rank": "Serpent-Slayer",
+      "hullEnd": 9,
+      "comboBest": 0,
+      "beatCount": 61,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 1,
+      "sawStorm": true
+    },
+    {
+      "run": 2,
+      "mode": "hard",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "merchant",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "event:treasure",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "event:navysail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 10.066399999999994
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "mini:logline",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "event:king",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "merchant",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "event:chantey",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "mini:logline",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "merchant",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "mini:backstaff",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "event:signalsmoke",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 100.06639999999999
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "event:capestorm",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "event:drill",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "event:pitch",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 540.0663999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 540.0663999999999
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 540.0663999999999
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 540.0663999999999
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 540.0663999999999
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06639999999999419
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 90.06639999999999
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 210.0664
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 360.0664
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 540.0663999999999
+        }
+      ],
+      "events": [
+        "treasure",
+        "navysail",
+        "king",
+        "chantey",
+        "signalsmoke",
+        "capestorm",
+        "drill",
+        "pitch"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 1060,
+      "bank": -2110,
+      "route": "sea",
+      "weather": "fogbanks",
+      "rank": "Master Mariner",
+      "hullEnd": 8,
+      "comboBest": 0,
+      "beatCount": 62,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 2,
+      "sawStorm": true
+    },
+    {
+      "run": 3,
+      "mode": "extreme",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "beat": "merchant",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "beat": "event:sail_far",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 5,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "event:deserter",
+          "m": 2,
+          "gold": 5,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 5,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80
+        },
+        {
+          "beat": "event:jonah",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "mini:logline",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "event:freedman",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "event:dolphins",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "mini:logline",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 325
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 325
+        },
+        {
+          "beat": "event:prizecrew",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 325
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "event:logbook",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 530
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999999564
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 65
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 175
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 325
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 530
+        }
+      ],
+      "events": [
+        "sail_far",
+        "deserter",
+        "jonah",
+        "freedman",
+        "dolphins",
+        "prizecrew",
+        "logbook"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 1365,
+      "bank": -1665,
+      "route": "shore",
+      "weather": "fogbanks",
+      "rank": "Legend of the Whydah",
+      "hullEnd": 8,
+      "comboBest": 0,
+      "beatCount": 57,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 3,
+      "sawStorm": true
+    },
+    {
+      "run": 26,
+      "mode": "hard",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "mini:leadline",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "event:bottle",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "event:petrel",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06679999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06679999999999
+        },
+        {
+          "beat": "event:sail_far",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06679999999999
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 5,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "mini:backstaff",
+          "m": 3,
+          "gold": 5,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 5,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 5,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "merchant",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "event:whale",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "event:dolphins",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "merchant",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "merchant",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "mini:logline",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "mini:backstaff",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "event:pitch",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "event:squall",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 7,
+          "score": 365.0668
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 7,
+          "score": 365.0668
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 7,
+          "score": 365.0668
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 7,
+          "score": 365.0668
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 7,
+          "score": 545.0668000000001
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 7,
+          "score": 545.0668000000001
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 7,
+          "score": 545.0668000000001
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 7,
+          "score": 545.0668000000001
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0668000000001
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06679999999998835
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06679999999999
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 70.06679999999999
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 180.0668
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 330.0668
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 7,
+          "score": 545.0668000000001
+        }
+      ],
+      "events": [
+        "bottle",
+        "petrel",
+        "sail_far",
+        "whale",
+        "dolphins",
+        "pitch",
+        "squall"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 1065,
+      "bank": -2105,
+      "route": "sea",
+      "weather": "richholds",
+      "rank": "Master Mariner",
+      "hullEnd": 8,
+      "comboBest": 0,
+      "beatCount": 63,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 2,
+      "sawStorm": true
+    },
+    {
+      "run": 51,
+      "mode": "extreme",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "beat": "event:golddust",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "event:fog",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "mini:logline",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "merchant",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "event:shares",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "event:derelict",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 45,
+          "hull": 8,
+          "score": 90.06720000000001
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 45,
+          "hull": 8,
+          "score": 90.06720000000001
+        },
+        {
+          "beat": "merchant",
+          "m": 5,
+          "gold": 45,
+          "hull": 8,
+          "score": 90.06720000000001
+        },
+        {
+          "beat": "mini:logline",
+          "m": 5,
+          "gold": 45,
+          "hull": 8,
+          "score": 90.06720000000001
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 45,
+          "hull": 8,
+          "score": 90.06720000000001
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "beat": "mini:leadline",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "event:nightwatch",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 530.0672
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530.0672
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530.0672
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 530.0672
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 610.0672
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06720000000001164
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06720000000001
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 200.0672
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 350.0672
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 530.0672
+        }
+      ],
+      "events": [
+        "golddust",
+        "fog",
+        "shares",
+        "derelict",
+        "nightwatch"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 1469,
+      "bank": -1625,
+      "route": "shore",
+      "weather": "clearwater",
+      "rank": "Legend of the Whydah",
+      "hullEnd": 8,
+      "comboBest": 0,
+      "beatCount": 56,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 3,
+      "sawStorm": true
+    },
+    {
+      "run": 76,
+      "mode": "easy",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "event:boyking",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "merchant",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "mini:leadline",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "event:freeship",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "event:whalepod",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "event:fishcatch",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "merchant",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "event:bottle",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "merchant",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "mini:logline",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "merchant",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "event:rats",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "event:deserter",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 520.0668000000001
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 520.0668000000001
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 520.0668000000001
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 520.0668000000001
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 600.0668000000001
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06680000000004657
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06680000000004
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 190.06680000000006
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 340.06680000000006
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 520.0668000000001
+        }
+      ],
+      "events": [
+        "boyking",
+        "freeship",
+        "whalepod",
+        "fishcatch",
+        "bottle",
+        "rats",
+        "deserter"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 870,
+      "bank": -1250,
+      "route": "sea",
+      "weather": "busy",
+      "rank": "Storm-Beater",
+      "hullEnd": 9,
+      "comboBest": 0,
+      "beatCount": 61,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 4,
+      "sawStorm": true
+    },
+    {
+      "run": 99,
+      "mode": "extreme",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "beat": "event:bilgefire",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "mini:logline",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "event:council",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "merchant",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "event:freeship",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "mini:leadline",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "event:leaks",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "beat": "event:prizecrew",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "mini:backstaff",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 20,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0664
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0664
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0664
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0664
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0664
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 8,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 8,
+          "score": 0.06640000000002329
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 8,
+          "score": 80.06640000000003
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 8,
+          "score": 190.06640000000004
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 8,
+          "score": 340.06640000000004
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 8,
+          "score": 365.06640000000004
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 8,
+          "score": 545.0664
+        }
+      ],
+      "events": [
+        "bilgefire",
+        "council",
+        "freeship",
+        "leaks",
+        "prizecrew"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 1385,
+      "bank": -1665,
+      "route": "shore",
+      "weather": "richholds",
+      "rank": "Legend of the Whydah",
+      "hullEnd": 8,
+      "comboBest": 0,
+      "beatCount": 57,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 3,
+      "sawStorm": true
+    },
+    {
+      "run": 100,
+      "mode": "easy",
+      "fightSerpent": false,
+      "beats": [
+        {
+          "beat": "missionIntro",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "election",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "port",
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "missionIntro",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "beat": "chase",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "port",
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "missionIntro",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "mini:logline",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "event:barnacle",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "event:slush",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "sail",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "merchant",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "sloopboss",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "beat": "port",
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06679999999993
+        },
+        {
+          "beat": "missionIntro",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06679999999993
+        },
+        {
+          "beat": "event:prizecrew",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06679999999993
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 20,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "mini:backstaff",
+          "m": 3,
+          "gold": 20,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "sail",
+          "m": 3,
+          "gold": 20,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "fork",
+          "m": 3,
+          "gold": 20,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "port",
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "missionIntro",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "event:bottle",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "event:sharks",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "sail",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "mini:backstaff",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "mooncusser",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "port",
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "missionIntro",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "merchant",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "battle",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "sail",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "event:shares",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "brigboss",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "beat": "port",
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "beat": "missionIntro",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "beat": "sail",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "beat": "battle",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "beat": "flagship",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "beat": "port",
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "missionIntro",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "merchant",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "mini:logline",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "event:petrel",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "sail",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "battle",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "palatine",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "port",
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "missionIntro",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "merchant",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "sail",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "hallett",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "blockade",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "beat": "port",
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 545.0668
+        },
+        {
+          "beat": "missionIntro",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 545.0668
+        },
+        {
+          "beat": "squadron",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 545.0668
+        },
+        {
+          "beat": "storm",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 545.0668
+        },
+        {
+          "beat": "oldsow",
+          "m": 11,
+          "gold": 0,
+          "hull": 9,
+          "score": 625.0668
+        }
+      ],
+      "ports": [
+        {
+          "m": 0,
+          "gold": 0,
+          "hull": 9,
+          "score": 0
+        },
+        {
+          "m": 1,
+          "gold": 0,
+          "hull": 9,
+          "score": 0.06679999999993015
+        },
+        {
+          "m": 2,
+          "gold": 0,
+          "hull": 9,
+          "score": 80.06679999999993
+        },
+        {
+          "m": 3,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "m": 4,
+          "gold": 0,
+          "hull": 9,
+          "score": 105.06679999999993
+        },
+        {
+          "m": 5,
+          "gold": 0,
+          "hull": 9,
+          "score": 215.06679999999994
+        },
+        {
+          "m": 6,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "m": 7,
+          "gold": 0,
+          "hull": 9,
+          "score": 365.06679999999994
+        },
+        {
+          "m": 8,
+          "gold": 0,
+          "hull": 9,
+          "score": 545.0668
+        }
+      ],
+      "events": [
+        "barnacle",
+        "slush",
+        "prizecrew",
+        "bottle",
+        "sharks",
+        "shares",
+        "petrel"
+      ],
+      "won": true,
+      "stormCleared": true,
+      "bossBeaten": false,
+      "score": 889,
+      "bank": -1225,
+      "route": "sea",
+      "weather": "clearwater",
+      "rank": "Storm-Beater",
+      "hullEnd": 9,
+      "comboBest": 0,
+      "beatCount": 62,
+      "deathAt": null,
+      "err": null,
+      "upg": {
+        "hull": 3,
+        "pumps": 3,
+        "shot": 3,
+        "nest": 3,
+        "helm": 2,
+        "charm": 2,
+        "canvas": 3,
+        "guns": 2
+      },
+      "careerWins": 4,
+      "sawStorm": true
+    }
+  ]
+}
