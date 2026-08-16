@@ -59,7 +59,11 @@ const game = {
     this.practice   = !!opts.practice;
     this.difficulty = opts.difficulty || 'medium';
     this.startingLives = STARTING_LIFE_PRESETS.includes(+opts.startingLives) ? +opts.startingLives : 10;
-    this.maxLives = Math.max(20, this.startingLives);
+    // ON FIRE bonus lives cap: ≤10 starts always top out at 20; above that, 1.5× start
+    // (20→30, 50→75, 100→150).
+    this.maxLives = this.startingLives <= 10
+      ? 20
+      : Math.round(this.startingLives * 1.5);
     this.players = defs.map(d => ({
       name: d.name,
       color: d.color || '#0b86ff',

@@ -444,7 +444,9 @@
           y: b.position.y,
           color: game.currentPlayer()?.color || '#69f0ae',
         });
-        game.resolveFlip(result);
+        game.resolveFlip(result, {
+          perfect: !!(Physics.getLastLandingInfo()?.perfect),
+        });
       }
     }
 
@@ -610,6 +612,10 @@
         streakBannerEl.textContent = '🔥 ON FIRE!';
         streakBannerEl.className   = 'streak-banner on-fire';
         Sound.play('ignite');
+      } else if (game.perfectLanding) {
+        streakBannerEl.textContent = '✦ Perfect landing!';
+        streakBannerEl.className   = 'streak-banner on-fire';
+        Sound.play('make');
       } else if (p.isHeatingUp) {
         streakBannerEl.textContent = '🌡 Heating up!';
         streakBannerEl.className   = 'streak-banner heating-up';
@@ -764,15 +770,20 @@
     if (reduceMotion) return;
     const c = document.getElementById('confetti-canvas');
     if (!c) return;
-    c.width = window.innerWidth;
-    c.height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const lw = window.innerWidth, lh = window.innerHeight;
+    c.width = Math.round(lw * dpr);
+    c.height = Math.round(lh * dpr);
+    c.style.width = lw + 'px';
+    c.style.height = lh + 'px';
     const cx = c.getContext('2d');
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const colors = [color, '#ffcc00', '#ffffff'];
     const parts = [];
     for (let i = 0; i < 130; i++) {
       parts.push({
-        x: c.width / 2 + (Math.random() - 0.5) * 220,
-        y: c.height * 0.35,
+        x: lw / 2 + (Math.random() - 0.5) * 220,
+        y: lh * 0.35,
         vx: (Math.random() - 0.5) * 520,
         vy: -Math.random() * 560 - 120,
         r: 3 + Math.random() * 4,
@@ -786,7 +797,7 @@
     function tick(now) {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now; elapsed += dt;
-      cx.clearRect(0, 0, c.width, c.height);
+      cx.clearRect(0, 0, lw, lh);
       let alive = false;
       for (const p of parts) {
         p.life -= dt;
@@ -805,7 +816,7 @@
       if (alive && elapsed < 4 && !gameOverEl.classList.contains('hidden')) {
         requestAnimationFrame(tick);
       } else {
-        cx.clearRect(0, 0, c.width, c.height);
+        cx.clearRect(0, 0, lw, lh);
       }
     }
     requestAnimationFrame(tick);
