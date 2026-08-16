@@ -209,6 +209,17 @@ const Physics = (() => {
     Body.setPosition(ground,    { x: w / 2,                 y: groundY + 25 });
     Body.setPosition(leftWall,  { x: WALL_INSET - 20,       y: h / 2 });
     Body.setPosition(rightWall, { x: w - WALL_INSET + 20,   y: h / 2 });
+    // If a viewport shrink moved the deck above the bird, snap it back onto the
+    // table. Leaving it under the floor makes the shadow radii go negative and
+    // (worse) leaves the turn stuck with a buried body.
+    if (bottle && bottle.position.y > groundY - 20) {
+      Body.setPosition(bottle, {
+        x: Math.max(WALL_INSET + 40, Math.min(w - WALL_INSET - 40, bottle.position.x)),
+        y: groundY - 76,
+      });
+      Body.setVelocity(bottle, { x: 0, y: 0 });
+      Body.setAngularVelocity(bottle, 0);
+    }
   }
 
   function resetBottle() {

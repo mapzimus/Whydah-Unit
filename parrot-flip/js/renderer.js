@@ -343,6 +343,25 @@ const Renderer = (() => {
 
   const GROUND_SHADOW_REST = 39;   // CG height above deck when standing
 
+  // ctx.ellipse throws IndexSizeError when either radius is negative. A mobile
+  // resize/orientation change can reflow the deck above the bird's CG, making
+  // (groundY - y) deeply negative and spamming the onerror overlay every frame.
+  function fillEllipse(cx, cy, rx, ry) {
+    if (!(rx > 0) || !(ry > 0)) return;
+    ctx.beginPath();
+    if (typeof ctx.ellipse === 'function') {
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    } else {
+      // Older Android System WebViews: scale + unit arc (same fallback spirit as roundRect).
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(rx, ry);
+      ctx.arc(0, 0, 1, 0, Math.PI * 2);
+      ctx.restore();
+    }
+    ctx.fill();
+  }
+
   function drawBottle(bottle, liquid, isOnFire, liquidColor, groundY) {
     const { x, y } = bottle.position;
     const angle  = bottle.angle;
@@ -364,12 +383,12 @@ const Renderer = (() => {
     // Soft contact shadow on the deck — fades out as the bird gains air.
     if (groundY > 0) {
       const d = groundY - y;                      // CG height above deck
-      const a = Math.max(0, 1 - (d - GROUND_SHADOW_REST) / 190);
-      if (a > 0.02) {
+      const a = Math.max(0, Math.min(1, 1 - (d - GROUND_SHADOW_REST) / 190));
+      const rx = 44 + d * 0.08;
+      const ry = 10 + d * 0.015;
+      if (a > 0.02 && rx > 0 && ry > 0) {
         ctx.fillStyle = `rgba(0,0,0,${(0.34 * a).toFixed(3)})`;
-        ctx.beginPath();
-        ctx.ellipse(x, groundY + 5, 44 + d * 0.08, 10 + d * 0.015, 0, 0, Math.PI * 2);
-        ctx.fill();
+        fillEllipse(x, groundY + 5, rx, ry);
       }
     }
 
@@ -389,9 +408,7 @@ const Renderer = (() => {
       // 1–2 frame placeholder while the SVG Image decodes: simple silhouette
       // in the player color so the bird never blinks out entirely.
       ctx.fillStyle = bodyCol;
-      ctx.beginPath();
-      ctx.ellipse(0, -12, 30, 52, 0, 0, Math.PI * 2);
-      ctx.fill();
+      fillEllipse(0, -12, 30, 52);
       ctx.beginPath();
       ctx.arc(14, -72, 22, 0, Math.PI * 2);
       ctx.fill();
@@ -412,9 +429,7 @@ const Renderer = (() => {
     glow.addColorStop(0, 'rgba(90, 255, 110, 0.50)');
     glow.addColorStop(1, 'rgba(90, 255, 110, 0)');
     ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.ellipse(cx, groundY, 55, 16, 0, 0, Math.PI * 2);
-    ctx.fill();
+    fillEllipse(cx, groundY, 55, 16);
   }
 
   // ── Flick indicator ─────────────────────────────────────────────────────────
