@@ -111,6 +111,9 @@ const Renderer = (() => {
     }
   }
 
+  // Throttle ON FIRE sparks — spawning every paint frame floods low-end WebViews.
+  let fireFrame = 0;
+
   function updateParticles(dt) {
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -377,7 +380,7 @@ const Renderer = (() => {
       ctx.beginPath();
       ctx.arc(x, y, 95, 0, Math.PI * 2);
       ctx.fill();
-      spawnFire(x, y - 100);
+      if ((++fireFrame % 3) === 0) spawnFire(x, y - 100);
     }
 
     // Soft contact shadow on the deck — fades out as the bird gains air.

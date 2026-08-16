@@ -38,7 +38,7 @@ const game = {
   lastPenalty: 0,        // lives lost on the last miss (captured before reset)
   onFireGain: 0,         // lives gained on the last ON FIRE bonus make
   justIgnited: false,    // last make just triggered ON FIRE
-  fireEnded: false,      // last miss ended an ON FIRE run (no penalty)
+  fireEnded: false,      // last miss ended an ON FIRE run (penalty only in sudden death)
   fireCapped: false,     // ON FIRE run hit the big-lobby +cap and passed on (no penalty)
   justEliminated: false, // last miss eliminated the current player
 

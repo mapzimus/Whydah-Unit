@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=11">
+  <link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body>
   <a class="back-link" href="/games/">← Whydah Games</a>
@@ -72,6 +72,7 @@
         <span id="turn-banner"></span>
         <span id="top-right">
           <button id="mute-btn" class="hud-btn" title="Mute / unmute">🔊</button>
+          <button id="menu-btn" class="hud-btn" title="Back to setup">☰</button>
           <span id="point-count"></span>
         </span>
       </div>
@@ -115,16 +116,17 @@
       <div id="winner-name"></div>
       <div id="match-summary"></div>
       <button id="play-again-btn">Play Again</button>
+      <button id="setup-again-btn" class="secondary-btn">Back to setup</button>
     </div>
   </div>
 
-  <script src="js/vendor/matter.min.js?v=11"></script>
-  <script src="js/game.js?v=11"></script>
-  <script src="js/physics.js?v=11"></script>
-  <script src="js/input.js?v=11"></script>
-  <script src="js/renderer.js?v=11"></script>
-  <script src="js/audio.js?v=11"></script>
-  <script src="js/main.js?v=11"></script>
+  <script src="js/vendor/matter.min.js?v=12"></script>
+  <script src="js/game.js?v=12"></script>
+  <script src="js/physics.js?v=12"></script>
+  <script src="js/input.js?v=12"></script>
+  <script src="js/renderer.js?v=12"></script>
+  <script src="js/audio.js?v=12"></script>
+  <script src="js/main.js?v=12"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -146,7 +148,7 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=11')
+        navigator.serviceWorker.register('service-worker.js?v=12')
           .then((reg) => console.log('SW registered, scope:', reg.scope))
           .catch((err) => console.error('SW registration failed:', err));
       });

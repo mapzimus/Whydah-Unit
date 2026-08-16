@@ -239,9 +239,36 @@
     } catch (_) {}
     await acquireWakeLock();
   }
+  async function leaveKioskMode() {
+    try { await wakeLock?.release(); } catch (_) {}
+    wakeLock = null;
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch (_) {}
+  }
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && wakeLock === null) acquireWakeLock();
+    // Re-acquire wake lock only while a match is on-screen (not setup / game-over).
+    if (document.visibilityState === 'visible' && wakeLock === null &&
+        setupScreen.classList.contains('hidden') &&
+        gameOverEl.classList.contains('hidden')) {
+      acquireWakeLock();
+    }
   });
+
+  function returnToSetup() {
+    clearTimeout(aiTimer);
+    if (loopId) { cancelAnimationFrame(loopId); loopId = null; }
+    evaluating = false;
+    showGlow = false;
+    Input.disable();
+    Sound.stopSuddenDeath();
+    leaveKioskMode();
+    gameOverEl.classList.add('hidden');
+    gameScreen.classList.add('hidden');
+    tutorialEl.classList.add('hidden');
+    handoffEl.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  }
 
   // ── Start game ─────────────────────────────────────────────────────────────
   startBtn.addEventListener('click', () => {
@@ -282,9 +309,16 @@
       startGame([{ name: game.players[0].name, color: game.players[0].color, isAI: false }], 1, { practice: true, feel: chosenFeel() });
     } else {
       const defs = game.players.map(p => ({ name: p.name, color: p.color, isAI: p.isAI }));
-      startGame(defs, game.direction, { difficulty: game.difficulty, feel: chosenFeel() });
+      startGame(defs, game.direction, {
+        difficulty: game.difficulty,
+        feel: chosenFeel(),
+        startIndex: game.winnerIndex,
+      });
     }
   });
+
+  document.getElementById('setup-again-btn')?.addEventListener('click', returnToSetup);
+  document.getElementById('menu-btn')?.addEventListener('click', returnToSetup);
 
   // initial rows — restore the last saved roster, else defaults
   if (!loadSetup()) {
@@ -370,6 +404,7 @@
     // Bake the SVG parrot sprites for every color in this game up front so
     // the first flick never shows the loading placeholder.
     Renderer.preloadParrots(defs.map((d) => d.color).filter(Boolean));
+    Physics.setFeel(opts.feel || chosenFeel());
     resize();   // sets DPR transform + renderer logical dims (must run after init)
     Physics.init(window.innerWidth, window.innerHeight);  // logical coords
 
@@ -444,6 +479,21 @@
   }
 
   // ── State callbacks ────────────────────────────────────────────────────────
+  function updateSuddenDeathUI() {
+    if (game.practice || !game.inSuddenDeath()) {
+      Sound.stopSuddenDeath();
+      return;
+    }
+    const lvl = game.sdLevel();
+    Sound.setSuddenDeath(true, lvl);
+    // Surface the mode in the stake line so the room knows the rules changed.
+    const stake = game.pointCount > 0 ? game.pointCount + lvl : lvl;
+    const bits = [`💀 Sudden death L${lvl}`];
+    if (stake > 0) bits.push(`miss −${stake}`);
+    if (game.missWouldEliminate()) bits.push('make it or break it');
+    pointCountEl.textContent = bits.join(' · ');
+  }
+
   function onTurnStart() {
     evaluating  = false;
     showGlow    = false;
@@ -460,13 +510,19 @@
     if (game.practice) {
       turnBannerEl.textContent = '🎯 Practice';
       pointCountEl.textContent = '';
+      Sound.stopSuddenDeath();
       Input.enable();
       updateHUD();
       return;
     }
 
     // Spell the stake out for the room — "×4" is expert shorthand
-    pointCountEl.textContent = game.pointCount > 1 ? `⚡ Miss costs ${game.pointCount} lives` : '';
+    if (game.inSuddenDeath()) {
+      updateSuddenDeathUI();
+    } else {
+      Sound.stopSuddenDeath();
+      pointCountEl.textContent = game.pointCount > 1 ? `⚡ Miss costs ${game.pointCount} lives` : '';
+    }
     if (p.isAI) {
       turnBannerEl.textContent = `🤖 ${p.name}`;
       scheduleAi();
@@ -493,7 +549,8 @@
     turnBannerEl.style.color  = '#ff6600';
     streakBannerEl.textContent = `+${game.onFireBonus} lives earned`;
     streakBannerEl.className   = 'streak-banner on-fire';
-    pointCountEl.textContent   = '';
+    if (game.inSuddenDeath()) updateSuddenDeathUI();
+    else pointCountEl.textContent = '';
     if (p.isAI) {
       scheduleAi();
     } else {
@@ -506,7 +563,7 @@
     Input.disable();
     flipHintEl.classList.add('hidden');
     resultTimer = RESULT_MS;
-    buzz(game.lastResult === 'MAKE' ? 30 : [60, 50, 90]);
+    // Haptics come from Sound.play() below — avoid a second vibrate here.
 
     const p = game.currentPlayer();
 
@@ -540,7 +597,11 @@
     }
 
     if (game.lastResult === 'MAKE') {
-      if (game.onFireGain > 0) {
+      if (game.fireCapped) {
+        streakBannerEl.textContent = '🔥 Pass — fire capped';
+        streakBannerEl.className   = 'streak-banner on-fire';
+        Sound.play('make');
+      } else if (game.onFireGain > 0) {
         // ON FIRE bonus make — gained a life
         streakBannerEl.textContent = `🔥 +1 life!  (+${game.onFireBonus} total)`;
         streakBannerEl.className   = 'streak-banner on-fire';
@@ -559,14 +620,20 @@
         Sound.play('make');
       }
     } else if (game.fireEnded) {
-      // ON FIRE ended on a miss — no penalty
-      streakBannerEl.textContent = '🔥 Streak over — no penalty';
-      streakBannerEl.className   = 'streak-banner on-fire';
+      // ON FIRE ended on a miss — free normally; sudden death still takes lives.
+      if (game.lastPenalty > 0) {
+        const n = game.lastPenalty;
+        streakBannerEl.textContent = `🔥 Streak over — −${n} ${n === 1 ? 'life' : 'lives'}`;
+        streakBannerEl.className   = 'streak-banner miss-penalty';
+      } else {
+        streakBannerEl.textContent = '🔥 Streak over — no penalty';
+        streakBannerEl.className   = 'streak-banner on-fire';
+      }
       Sound.play('miss');
     } else {
       const info = Physics.getLastLandingInfo();
-      // tipped but nearly upright after completing a flip
-      const soClose = info && info.reason !== 'no-flip' && info.tilt != null && info.tilt < 0.9;
+      // tipped but nearly upright after completing a flip (not an under-rotated miss)
+      const soClose = info && info.reason !== 'underrotated' && info.tilt != null && info.tilt < 0.9;
       const n = game.lastPenalty;
       const penalty = `−${n} ${n === 1 ? 'life' : 'lives'}`;
       streakBannerEl.textContent = soClose ? `So close! ${penalty}` : penalty;
@@ -574,6 +641,7 @@
       Sound.play('miss');
     }
 
+    updateSuddenDeathUI();
     updateHUD();
   }
 
@@ -582,7 +650,6 @@
     turnBannerEl.textContent = `❌ ${p.name} is out!`;
     turnBannerEl.style.color = '#ff5252';
     Sound.play('eliminated');
-    buzz([80, 60, 80, 60, 160]);
     updateHUD();
     // one-shot flash on the eliminated player's card (cards map 1:1 to players)
     playerListEl.children[game.currentPlayerIndex]?.classList.add('just-out');
@@ -597,7 +664,9 @@
     renderMatchSummary(active[0]);
     runConfetti(active[0] ? active[0].color : '#ffcc00');
     Sound.play('win');
+    Sound.stopSuddenDeath();
     Input.disable();
+    leaveKioskMode();
   }
 
   function renderMatchSummary(winner) {
