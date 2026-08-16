@@ -749,15 +749,9 @@
 
   Input.attach(canvas, onFlick);
 
-  // ── Haptics (phones; skipped under reduced motion) ──────────────────────────
-  function buzz(pattern) {
-    if (reduceMotion) return;
-    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (_) {}
-  }
-
   // ── Practice strength meter ─────────────────────────────────────────────────
   // Maps upSpeed 1000..3200 px/s onto the track; the green band is the make
-  // window (~1800–2400, sweet spot 2100 — see HANDOFF Part 6).
+  // window (~1800–2400, sweet spot 2100).
   function updatePracticeMeter(info) {
     if (!info) return;
     practiceMeterEl.classList.remove('hidden');
