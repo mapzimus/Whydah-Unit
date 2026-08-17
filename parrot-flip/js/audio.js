@@ -62,6 +62,12 @@ const Sound = (() => {
       tone({ freq: 55,  type: 'sine', dur: 0.18, gain: 0.3, delay: 0.0 });
       tone({ freq: 55,  type: 'sine', dur: 0.18, gain: 0.3, delay: 0.45 });
     },
+    // Player knocked out — descending thud + short buzz tone.
+    eliminated: () => {
+      noise(0.14, 0.22, 700);
+      tone({ freq: 220, slideTo: 70, type: 'sawtooth', dur: 0.45, gain: 0.22 });
+      tone({ freq: 110, type: 'sine', dur: 0.35, gain: 0.18, delay: 0.08 });
+    },
   };
 
   // Haptic vibration patterns (ms) per event — no-op on devices without it
@@ -74,6 +80,7 @@ const Sound = (() => {
     ignite:  [60, 40, 60, 40, 110],     // ON FIRE ignite — distinct rumble
     win:     [70, 40, 70, 40, 130],
     tension: [25, 70, 25, 70],          // ominous pulse
+    eliminated: [80, 60, 80, 60, 160],
   };
   function buzz(name) {
     if (muted || !navigator.vibrate) return;

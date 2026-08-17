@@ -31,6 +31,8 @@ const Renderer = (() => {
   // Screen shake (decaying): amp in px, decays to 0 over shakeDecay px/s.
   let shakeAmp = 0, shakeDecay = 0;
   let reduceMotion = false;             // set via setReduceMotion()
+  // Gradients rebuilt on size / fire-mode change only (see ensureBgGradients).
+  let bgCache = { key: '', sky: null, haze: null, wallL: null, wallR: null };
 
   function setReduceMotion(v) { reduceMotion = !!v; }
 
@@ -52,7 +54,10 @@ const Renderer = (() => {
     H = canvas.height;
   }
 
-  function resize(w, h) { W = w; H = h; }
+  function resize(w, h) {
+    W = w; H = h;
+    bgCache.key = '';   // force gradient rebuild at new size
+  }
 
   // ── Color helpers (per-player liquid flavor) ────────────────────────────────
   function hexToRgba(hex, a) {
@@ -111,6 +116,9 @@ const Renderer = (() => {
     }
   }
 
+  // Throttle ON FIRE sparks — spawning every paint frame floods low-end WebViews.
+  let fireFrame = 0;
+
   function updateParticles(dt) {
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -135,7 +143,12 @@ const Renderer = (() => {
   }
 
   // ── Background & scene ─────────────────────────────────────────────────────
-  function drawBackground(groundY, isOnFire) {
+  // Gradients are rebuilt only when size / fire mode changes — creating them
+  // every frame allocates heavily on Android WebViews.
+  function ensureBgGradients(groundY, isOnFire) {
+    const key = `${W}|${H}|${groundY}|${isOnFire ? 1 : 0}`;
+    if (bgCache.key === key && bgCache.sky) return bgCache;
+
     const sky = ctx.createLinearGradient(0, 0, 0, groundY);
     if (isOnFire) {
       sky.addColorStop(0, '#1a0a04');
@@ -146,14 +159,30 @@ const Renderer = (() => {
       sky.addColorStop(0.45, '#0f2438');
       sky.addColorStop(1, '#16324a');
     }
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, W, groundY);
 
-    // Horizon haze / distant sea
     const haze = ctx.createLinearGradient(0, groundY - 90, 0, groundY);
     haze.addColorStop(0, 'rgba(40, 90, 120, 0)');
     haze.addColorStop(1, isOnFire ? 'rgba(120, 50, 20, 0.35)' : 'rgba(50, 110, 140, 0.28)');
-    ctx.fillStyle = haze;
+
+    const WALL = 14;
+    const wallL = ctx.createLinearGradient(0, 0, WALL, 0);
+    wallL.addColorStop(0, 'rgba(42,28,18,0.95)');
+    wallL.addColorStop(1, 'rgba(90,60,36,0.75)');
+    const wallR = ctx.createLinearGradient(W - WALL, 0, W, 0);
+    wallR.addColorStop(0, 'rgba(90,60,36,0.75)');
+    wallR.addColorStop(1, 'rgba(42,28,18,0.95)');
+
+    bgCache = { key, sky, haze, wallL, wallR };
+    return bgCache;
+  }
+
+  function drawBackground(groundY, isOnFire) {
+    const g = ensureBgGradients(groundY, isOnFire);
+    ctx.fillStyle = g.sky;
+    ctx.fillRect(0, 0, W, groundY);
+
+    // Horizon haze / distant sea
+    ctx.fillStyle = g.haze;
     ctx.fillRect(0, groundY - 90, W, 90);
 
     // Sparse stars (skip when on fire)
@@ -377,7 +406,7 @@ const Renderer = (() => {
       ctx.beginPath();
       ctx.arc(x, y, 95, 0, Math.PI * 2);
       ctx.fill();
-      spawnFire(x, y - 100);
+      if ((++fireFrame % 3) === 0) spawnFire(x, y - 100);
     }
 
     // Soft contact shadow on the deck — fades out as the bird gains air.
@@ -470,16 +499,13 @@ const Renderer = (() => {
   }
 
   // ── Side walls ───────────────────────────────────────────────────────────────
-  function drawWalls(groundY) {
+  function drawWalls(groundY, isOnFire) {
     const WALL = 14; // matches physics WALL_INSET
-    for (const x0 of [0, W - WALL]) {
-      const g = ctx.createLinearGradient(x0, 0, x0 + WALL, 0);
-      const flip = x0 === 0;
-      g.addColorStop(0, flip ? 'rgba(42,28,18,0.95)' : 'rgba(90,60,36,0.75)');
-      g.addColorStop(1, flip ? 'rgba(90,60,36,0.75)' : 'rgba(42,28,18,0.95)');
-      ctx.fillStyle = g;
-      ctx.fillRect(x0, 0, WALL, groundY);
-    }
+    const g = ensureBgGradients(groundY, !!isOnFire);
+    ctx.fillStyle = g.wallL;
+    ctx.fillRect(0, 0, WALL, groundY);
+    ctx.fillStyle = g.wallR;
+    ctx.fillRect(W - WALL, 0, WALL, groundY);
     // inner edge highlights
     ctx.fillStyle = 'rgba(197,154,74,0.28)';
     ctx.fillRect(WALL - 2, 0, 2, groundY);
@@ -519,7 +545,7 @@ const Renderer = (() => {
     ctx.translate(sx, sy);
 
     drawBackground(groundY, isOnFire);
-    drawWalls(groundY);
+    drawWalls(groundY, isOnFire);
     drawFlickIndicator(drag, bottle);
     if (showGlow) drawLandingGlow(bottle, groundY);
     drawBottle(bottle, liquid, isOnFire, liquidColor, groundY);

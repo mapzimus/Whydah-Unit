@@ -45,6 +45,11 @@ html, body {
   background:
     radial-gradient(ellipse at 20% 0%, rgba(197,154,74,0.18), transparent 50%),
     linear-gradient(165deg, #0c1824 0%, #142f4b 55%, #1a2430 100%);
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: max(16px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
 }
 
 .setup-card {
@@ -53,10 +58,12 @@ html, body {
   border-radius: 18px;
   padding: 32px 28px;
   width: min(460px, 96vw);
+  margin: auto 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  flex-shrink: 0;
 }
 
 .setup-card h1 {
@@ -639,6 +646,19 @@ html, body {
   transition: opacity 0.2s;
 }
 #play-again-btn:hover { opacity: 0.88; }
+
+.secondary-btn {
+  background: transparent;
+  border: 1px solid rgba(197,154,74,0.45);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.secondary-btn:hover { border-color: var(--gold); color: var(--gold); }
+.secondary-btn:active { transform: scale(0.98); }
 
 /* ── Practice strength meter ─────────────────────────────── */
 #practice-meter {

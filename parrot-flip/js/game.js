@@ -38,7 +38,7 @@ const game = {
   lastPenalty: 0,        // lives lost on the last miss (captured before reset)
   onFireGain: 0,         // lives gained on the last ON FIRE bonus make
   justIgnited: false,    // last make just triggered ON FIRE
-  fireEnded: false,      // last miss ended an ON FIRE run (no penalty)
+  fireEnded: false,      // last miss ended an ON FIRE run (penalty only in sudden death)
   fireCapped: false,     // ON FIRE run hit the big-lobby +cap and passed on (no penalty)
   justEliminated: false, // last miss eliminated the current player
 
@@ -59,7 +59,11 @@ const game = {
     this.practice   = !!opts.practice;
     this.difficulty = opts.difficulty || 'medium';
     this.startingLives = STARTING_LIFE_PRESETS.includes(+opts.startingLives) ? +opts.startingLives : 10;
-    this.maxLives = Math.max(20, this.startingLives);
+    // ON FIRE bonus lives cap: ≤10 starts always top out at 20; above that, 1.5× start
+    // (20→30, 50→75, 100→150).
+    this.maxLives = this.startingLives <= 10
+      ? 20
+      : Math.round(this.startingLives * 1.5);
     this.players = defs.map(d => ({
       name: d.name,
       color: d.color || '#0b86ff',
