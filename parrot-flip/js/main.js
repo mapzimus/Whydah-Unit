@@ -45,37 +45,66 @@
   // Same physics body as the bottle — only the paint job changes.
   const PARROTS = [
     { name: 'Captain Squawk', color: '#d62828', accent: '#2a9d8f', theme: 'Scarlet macaw',
-      vibe: 'Bossy. Claims every make was intentional.' },
+      vibe: 'Bossy. Claims every make was intentional.',
+      make: ['Intentional.', 'As planned.', 'Bow to the captain.'],
+      miss: ['The sea lied.', 'Mutiny later.'] },
     { name: 'Pegleg Polly',   color: '#ff4d8d', accent: '#ffe066', theme: 'Drama macaw',
-      vibe: 'Dramatic. Screams on every miss.' },
+      vibe: 'Dramatic. Screams on every miss.',
+      make: ['Encore!', 'I meant to do that.'],
+      miss: ['DRAMATIC SIGH', 'The tragedy!'] },
     { name: 'Doubloon Dave',  color: '#e9c46a', accent: '#9b4529', theme: 'Gold-feather macaw',
-      vibe: 'Greedy. Only flips for gold.' },
+      vibe: 'Greedy. Only flips for gold.',
+      make: ['Mine.', 'Pay the bird.'],
+      miss: ['Refund!', 'The gold sank.'] },
     { name: 'Stormy Beak',    color: '#457b9d', accent: '#1d3557', theme: 'Blue macaw',
-      vibe: 'Gloomy. Predicted this miss yesterday.' },
+      vibe: 'Gloomy. Predicted this miss yesterday.',
+      make: ['Unexpected.', 'The clouds lied.'],
+      miss: ['Called it.', 'As I predicted.'] },
     { name: 'Barnacle Bill',  color: '#2a9d8f', accent: '#264653', theme: 'Sea-green macaw',
-      vibe: 'Salty. Has notes on your flick form.' },
+      vibe: 'Salty. Has notes on your flick form.',
+      make: ['Better.', 'Form check: pass.'],
+      miss: ['Wrist was late.', 'Notes incoming.'] },
     { name: 'Sir Chirpsalot', color: '#7b2cbf', accent: '#c59a4a', theme: 'Royal macaw',
-      vibe: 'Posh. Tips a tiny hat after makes.' },
+      vibe: 'Posh. Tips a tiny hat after makes.',
+      make: ['Most kind.', '*tips hat*'],
+      miss: ['How gauche.', 'A minor setback.'] },
     { name: 'Cannonball Carl',color: '#f4a261', accent: '#e76f51', theme: 'Sunrise macaw',
-      vibe: 'Explosive. Zero chill, maximum spin.' },
+      vibe: 'Explosive. Zero chill, maximum spin.',
+      make: ['BOOM.', 'More spin!'],
+      miss: ['Too much boom.', 'Reload.'] },
     { name: 'Whisper Wing',   color: '#2ec4b6', accent: '#142f4b', theme: 'Teal macaw',
-      vibe: 'Mysterious. Knows what the bottle knows.' },
+      vibe: 'Mysterious. Knows what the bottle knows.',
+      make: ['The bottle knew.', 'Silence. Then landing.'],
+      miss: ['It told me.', 'The bottle knew.'] },
     { name: 'Hardtack Helen', color: '#bc6c25', accent: '#fefae0', theme: 'Amber macaw',
-      vibe: 'Hungry. Flips better after crackers.' },
+      vibe: 'Hungry. Flips better after crackers.',
+      make: ['Snack later.', 'Fed and flipped.'],
+      miss: ['Need a cracker.', 'Hangry miss.'] },
   ];
+  const SECRET_PARROT = {
+    name: "Pieces o' Eight", color: '#1d1a16', accent: '#ffd54a', theme: 'Obsidian macaw',
+    vibe: 'Hidden crew. Counts coins. Always short one.',
+    make: ['Pieces of eight!', 'Pay the crew.'],
+    miss: ['Short a coin.', 'The chest is empty.'],
+  };
+  const PIECES_KEY = 'parrotflip.pieces';
+  let piecesUnlocked = false;
+  try { piecesUnlocked = localStorage.getItem(PIECES_KEY) === '1'; } catch (_) {}
+  function roster() { return piecesUnlocked ? PARROTS.concat(SECRET_PARROT) : PARROTS; }
   const FLAVORS = PARROTS; // keep old variable name for minimal churn below
 
   // ── Player setup rows (name + parrot picker + Human/CPU) ────────────────────
   let playerCount = 2;
 
   function swatchesHtml(sel) {
-    return PARROTS.map((f, i) =>
+    return roster().map((f, i) =>
       `<button type="button" class="flavor-swatch${i === sel ? ' selected' : ''}" data-idx="${i}" style="background:${f.color}" title="${f.name} — ${f.theme}"></button>`
     ).join('');
   }
 
   function rowHtml(i, def) {
-    const p = PARROTS[def.flavor];
+    const birds = roster();
+    const p = birds[def.flavor] || birds[0];
     return `<div class="player-input-row" data-flavor="${def.flavor}" data-ai="${def.ai ? 1 : 0}">
       <div class="prow-top">
         <span class="player-num" style="color:${p.color}">P${i + 1}</span>
@@ -120,9 +149,11 @@
   function addPlayerInput() {
     if (playerCount >= 8) return;
     const defs = readRows();
-    const idx = defs.length % PARROTS.length;
-    defs.push({ name: PARROTS[idx].name, flavor: idx, ai: false });
+    const birds = roster();
+    const idx = defs.length % birds.length;
+    defs.push({ name: birds[idx].name, flavor: idx, ai: false });
     renderFrom(defs);
+    if (defs.length === 8) showEggToast('Full crew. Eight bells.');
   }
 
   // event delegation: flavor select, AI toggle, remove
@@ -130,8 +161,8 @@
     const sw = e.target.closest('.flavor-swatch');
     if (sw) {
       const row = sw.closest('.player-input-row');
-      const prev = PARROTS[parseInt(row.dataset.flavor) || 0];
-      const next = PARROTS[+sw.dataset.idx];
+      const prev = roster()[parseInt(row.dataset.flavor) || 0];
+      const next = roster()[+sw.dataset.idx];
       const input = row.querySelector('input');
       const cur = (input.value || '').trim();
       // Auto-fill the parrot's default name unless the player typed a custom one
@@ -167,8 +198,8 @@
   addPlayerBtn.addEventListener('click', addPlayerInput);
 
   function rowsToDefs(rows) {
-    return rows.map((r, i) => {
-      const bird = PARROTS[r.flavor] || PARROTS[0];
+    return rows.map((r) => {
+      const bird = roster()[r.flavor] || PARROTS[0];
       return {
         name: (r.name || '').trim() || bird.name,
         color: bird.color,
@@ -182,8 +213,64 @@
   function chosenFeel() {
     return document.querySelector('input[name="feel"]:checked')?.value || 'standard';
   }
+  function chosenLives() {
+    const n = parseInt(document.querySelector('input[name="lives"]:checked')?.value || '10', 10);
+    return STARTING_LIFE_PRESETS.includes(n) ? n : 10;
+  }
   function flickFeedbackOn() {
     return !!document.getElementById('flick-feedback-toggle')?.checked;
+  }
+
+  function pickLine(arr) {
+    if (!arr || !arr.length) return '';
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  function parrotFor(player) {
+    if (!player) return PARROTS[0];
+    return roster().find(b => b.color === player.color) || PARROTS[0];
+  }
+  function nameEggKind(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (/polly|cracker/.test(n)) return 'polly';
+    if (/blackbeard|\bteach\b/.test(n)) return 'blackbeard';
+    if (/kraken/.test(n)) return 'kraken';
+    if (/whydah/.test(n)) return 'whydah';
+    if (/pieces|eight/.test(n)) return 'eight';
+    return '';
+  }
+  function nameEggLine(kind, isMake) {
+    if (kind === 'polly')      return isMake ? 'Polly wants a cracker!' : 'No cracker.';
+    if (kind === 'blackbeard') return isMake ? 'Shiver me timbers!' : "A pirate's life.";
+    if (kind === 'kraken')     return isMake ? 'Release the kraken!' : 'Back to the deep.';
+    if (kind === 'whydah')     return isMake ? 'Whydah gold!' : 'The wreck remembers.';
+    if (kind === 'eight')      return isMake ? 'Pieces of eight!' : 'Short a coin.';
+    return '';
+  }
+  function currentEggs() {
+    const kind = nameEggKind(game.currentPlayer()?.name);
+    return {
+      kraken: kind === 'kraken',
+      moonlit: kind === 'blackbeard' || kind === 'whydah',
+    };
+  }
+
+  let eggToastTimer = null;
+  function showEggToast(msg) {
+    const el = document.getElementById('egg-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    clearTimeout(eggToastTimer);
+    eggToastTimer = setTimeout(() => el.classList.add('hidden'), 2200);
+  }
+  function unlockPieces() {
+    if (piecesUnlocked) return;
+    piecesUnlocked = true;
+    try { localStorage.setItem(PIECES_KEY, '1'); } catch (_) {}
+    Sound.play('coin');
+    showEggToast("Unlocked: Pieces o' Eight");
+    const defs = readRows();
+    renderFrom(defs);
   }
 
   // ── Setup persistence — don't make the class re-type names every day ────────
@@ -201,6 +288,7 @@
         direction:  document.querySelector('input[name="direction"]:checked')?.value ?? '1',
         difficulty: chosenDifficulty(),
         feel:       chosenFeel(),
+        lives:      chosenLives(),
         feedback:   flickFeedbackOn(),
       }));
     } catch (_) {}
@@ -212,12 +300,13 @@
       if (!s || !Array.isArray(s.rows) || s.rows.length < 2) return false;
       renderFrom(s.rows.slice(0, 8).map((r, i) => ({
         name:   String(r.name ?? `Player ${i + 1}`).slice(0, 14),
-        flavor: Math.min(Math.max(parseInt(r.flavor) || 0, 0), FLAVORS.length - 1),
+        flavor: Math.min(Math.max(parseInt(r.flavor) || 0, 0), roster().length - 1),
         ai:     !!r.ai,
       })));
       setRadio('direction',  s.direction);
       setRadio('difficulty', s.difficulty);
       setRadio('feel',       s.feel);
+      setRadio('lives',      String(s.lives ?? 10));
       const fb = document.getElementById('flick-feedback-toggle');
       if (fb) fb.checked = !!s.feedback;
       return true;
@@ -282,14 +371,14 @@
       setupScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
       gameOverEl.classList.add('hidden');
-      startGame(defs, dir, { difficulty: chosenDifficulty(), feel: chosenFeel() });
+      startGame(defs, dir, { difficulty: chosenDifficulty(), feel: chosenFeel(), startingLives: chosenLives() });
     });
   });
 
   // ── Practice (solo, no lives) ───────────────────────────────────────────────
   practiceBtn.addEventListener('click', () => {
     const r0 = readRows()[0] || { name: 'You', flavor: 0 };
-    const bird = PARROTS[r0.flavor] || PARROTS[0];
+    const bird = roster()[r0.flavor] || PARROTS[0];
     const def = { name: (r0.name || '').trim() || bird.name, color: bird.color, isAI: false };
     saveSetup();
     Sound.unlock();
@@ -313,6 +402,7 @@
         difficulty: game.difficulty,
         feel: chosenFeel(),
         startIndex: game.winnerIndex,
+        startingLives: game.startingLives,
       });
     }
   });
@@ -443,6 +533,7 @@
           x: b.position.x,
           y: b.position.y,
           color: game.currentPlayer()?.color || '#69f0ae',
+          coins: result === 'MAKE' && !!(Physics.getLastLandingInfo()?.perfect),
         });
         game.resolveFlip(result, {
           perfect: !!(Physics.getLastLandingInfo()?.perfect),
@@ -477,6 +568,7 @@
       showGlow,
       isOnFire:    !!(game.onFirePlayer),
       liquidColor: game.currentPlayer()?.color,
+      eggs:        currentEggs(),
     });
   }
 
@@ -615,15 +707,17 @@
       } else if (game.perfectLanding) {
         streakBannerEl.textContent = '✦ Perfect landing!';
         streakBannerEl.className   = 'streak-banner on-fire';
-        Sound.play('make');
+        Sound.play('coin');
       } else if (p.isHeatingUp) {
         streakBannerEl.textContent = '🌡 Heating up!';
         streakBannerEl.className   = 'streak-banner heating-up';
         Sound.play('make');
       } else {
-        streakBannerEl.textContent = '';
-        streakBannerEl.className   = 'streak-banner';
+        const egg = nameEggLine(nameEggKind(p.name), true) || pickLine(parrotFor(p).make);
+        streakBannerEl.textContent = egg;
+        streakBannerEl.className   = egg ? 'streak-banner' : 'streak-banner';
         Sound.play('make');
+        if (nameEggKind(p.name) === 'polly') Sound.play('squawk');
       }
     } else if (game.fireEnded) {
       // ON FIRE ended on a miss — free normally; sudden death still takes lives.
@@ -642,9 +736,11 @@
       const soClose = info && info.reason !== 'underrotated' && info.tilt != null && info.tilt < 0.9;
       const n = game.lastPenalty;
       const penalty = `−${n} ${n === 1 ? 'life' : 'lives'}`;
-      streakBannerEl.textContent = soClose ? `So close! ${penalty}` : penalty;
+      const flavor = nameEggLine(nameEggKind(p.name), false) || pickLine(parrotFor(p).miss);
+      streakBannerEl.textContent = soClose ? `So close! ${penalty}` : (flavor ? `${flavor} ${penalty}` : penalty);
       streakBannerEl.className   = 'streak-banner miss-penalty';
       Sound.play('miss');
+      if (nameEggKind(p.name) === 'polly') Sound.play('squawk');
     }
 
     updateSuddenDeathUI();
@@ -846,4 +942,18 @@
   setupScreen.classList.remove('hidden');
   gameScreen.classList.add('hidden');
   gameOverEl.classList.add('hidden');
+
+  // Tap the title macaw eight times — pieces of eight — to unlock the secret bird.
+  const titleParrot = document.getElementById('title-parrot');
+  let parrotTaps = 0, parrotTapAt = 0;
+  titleParrot?.addEventListener('click', (e) => {
+    e.preventDefault();
+    Sound.unlock();
+    Sound.play('squawk');
+    const now = performance.now();
+    if (now - parrotTapAt > 4500) parrotTaps = 0;
+    parrotTapAt = now;
+    parrotTaps++;
+    if (parrotTaps >= 8) unlockPieces();
+  });
 })();

@@ -33,14 +33,16 @@ const Renderer = (() => {
   let reduceMotion = false;             // set via setReduceMotion()
   // Gradients rebuilt on size / fire-mode change only (see ensureBgGradients).
   let bgCache = { key: '', sky: null, haze: null, wallL: null, wallR: null };
+  let shooting = null;   // rare sky streak {x,y,vx,vy,life}
 
   function setReduceMotion(v) { reduceMotion = !!v; }
 
   // Celebration burst (MAKE) / shake (MISS). Called once per result by main.js.
   function kick(type, opts = {}) {
     if (type === 'MAKE') {
-      const { x, y, color } = opts;
+      const { x, y, color, coins } = opts;
       spawnSplash(x, y - 30, reduceMotion ? 8 : 26, color || '#69f0ae');
+      if (coins && !reduceMotion) spawnCoins(x, y - 40, 14);
     } else if (type === 'MISS') {
       if (reduceMotion) return;
       shakeAmp = 12; shakeDecay = 12 / 0.22;   // ~220ms to zero
@@ -116,6 +118,21 @@ const Renderer = (() => {
     }
   }
 
+  function spawnCoins(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 220,
+        vy: -Math.random() * 200 - 40,
+        life: 0.55 + Math.random() * 0.35,
+        maxLife: 0.9,
+        r: 3 + Math.random() * 2,
+        color: Math.random() > 0.4 ? '#ffd54a' : '#c59a4a',
+        coin: true,
+      });
+    }
+  }
+
   // Throttle ON FIRE sparks — spawning every paint frame floods low-end WebViews.
   let fireFrame = 0;
 
@@ -135,9 +152,13 @@ const Renderer = (() => {
       const a = Math.max(0, p.life / p.maxLife);
       ctx.globalAlpha = a * 0.9;
       ctx.fillStyle   = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * (0.4 + 0.6 * a), 0, Math.PI * 2);
-      ctx.fill();
+      if (p.coin) {
+        fillEllipse(p.x, p.y, p.r, p.r * 0.7);
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * (0.4 + 0.6 * a), 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.globalAlpha = 1;
   }
@@ -176,7 +197,7 @@ const Renderer = (() => {
     return bgCache;
   }
 
-  function drawBackground(groundY, isOnFire) {
+  function drawBackground(groundY, isOnFire, eggs) {
     const g = ensureBgGradients(groundY, isOnFire);
     ctx.fillStyle = g.sky;
     ctx.fillRect(0, 0, W, groundY);
@@ -195,6 +216,32 @@ const Renderer = (() => {
         ctx.beginPath();
         ctx.arc(sx, sy, r, 0, Math.PI * 2);
         ctx.fill();
+      }
+      // Moon — bigger after dark, or whenever kraken/moonlit egg is on.
+      const hour = (eggs && eggs.hour != null) ? eggs.hour : new Date().getHours();
+      const moonlit = !!(eggs && eggs.moonlit) || hour < 6 || hour >= 21;
+      const moonR = moonlit ? 22 : 14;
+      const mx = W * 0.82, my = Math.max(36, groundY * 0.18);
+      ctx.fillStyle = moonlit ? 'rgba(244,239,227,0.88)' : 'rgba(244,239,227,0.45)';
+      ctx.beginPath();
+      ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = isOnFire ? 'rgba(90,34,12,0.35)' : 'rgba(7,16,24,0.35)';
+      ctx.beginPath();
+      ctx.arc(mx + moonR * 0.35, my - moonR * 0.1, moonR * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (eggs && eggs.kraken && groundY > 80) {
+      ctx.strokeStyle = 'rgba(30, 80, 70, 0.45)';
+      ctx.lineWidth = 7;
+      ctx.lineCap = 'round';
+      for (let t = 0; t < 3; t++) {
+        const x0 = W * (0.18 + t * 0.28);
+        ctx.beginPath();
+        ctx.moveTo(x0, groundY + 8);
+        ctx.bezierCurveTo(x0 - 30, groundY - 40, x0 + 40, groundY - 90, x0 + (t - 1) * 24, groundY - 130);
+        ctx.stroke();
       }
     }
 
@@ -532,8 +579,28 @@ const Renderer = (() => {
 
   // ── Main frame ─────────────────────────────────────────────────────────────
   function frame(dt, state) {
-    const { bottle, liquid, drag, groundY, result, resultAlpha, showGlow, isOnFire, liquidColor } = state;
+    const { bottle, liquid, drag, groundY, result, resultAlpha, showGlow, isOnFire, liquidColor, eggs } = state;
     updateParticles(dt);
+
+    if (!reduceMotion && !isOnFire) {
+      if (!shooting && Math.random() < dt * 0.07) {
+        shooting = {
+          x: Math.random() * W * 0.6,
+          y: 18 + Math.random() * 70,
+          vx: 220 + Math.random() * 140,
+          vy: 50 + Math.random() * 40,
+          life: 0.55,
+        };
+      }
+      if (shooting) {
+        shooting.x += shooting.vx * dt;
+        shooting.y += shooting.vy * dt;
+        shooting.life -= dt;
+        if (shooting.life <= 0 || shooting.y > groundY - 80) shooting = null;
+      }
+    } else {
+      shooting = null;
+    }
 
     let sx = 0, sy = 0;
     if (shakeAmp > 0.2) {
@@ -544,8 +611,16 @@ const Renderer = (() => {
     ctx.save();
     ctx.translate(sx, sy);
 
-    drawBackground(groundY, isOnFire);
+    drawBackground(groundY, isOnFire, eggs);
     drawWalls(groundY, isOnFire);
+    if (shooting) {
+      ctx.strokeStyle = `rgba(244,239,227,${Math.max(0, shooting.life * 1.4)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(shooting.x, shooting.y);
+      ctx.lineTo(shooting.x - shooting.vx * 0.12, shooting.y - shooting.vy * 0.12);
+      ctx.stroke();
+    }
     drawFlickIndicator(drag, bottle);
     if (showGlow) drawLandingGlow(bottle, groundY);
     drawBottle(bottle, liquid, isOnFire, liquidColor, groundY);
