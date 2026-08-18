@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/style.css?v=15">
 </head>
 <body>
   <a class="back-link" href="../games/">← Whydah Games</a>
@@ -133,13 +133,13 @@
 
   <div id="egg-toast" class="hidden"></div>
 
-  <script src="js/vendor/matter.min.js?v=14"></script>
-  <script src="js/game.js?v=14"></script>
-  <script src="js/physics.js?v=14"></script>
-  <script src="js/input.js?v=14"></script>
-  <script src="js/renderer.js?v=14"></script>
-  <script src="js/audio.js?v=14"></script>
-  <script src="js/main.js?v=14"></script>
+  <script src="js/vendor/matter.min.js?v=15"></script>
+  <script src="js/game.js?v=15"></script>
+  <script src="js/physics.js?v=15"></script>
+  <script src="js/input.js?v=15"></script>
+  <script src="js/renderer.js?v=15"></script>
+  <script src="js/audio.js?v=15"></script>
+  <script src="js/main.js?v=15"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -161,7 +161,7 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=14')
+        navigator.serviceWorker.register('service-worker.js?v=15')
           .then((reg) => console.log('SW registered, scope:', reg.scope))
           .catch((err) => console.error('SW registration failed:', err));
       });

@@ -547,6 +547,7 @@ const Renderer = (() => {
 
   // ── Side walls ───────────────────────────────────────────────────────────────
   function drawWalls(groundY, isOnFire) {
+    if (W && Math.min(W, H) < 600) return; // phones: open arena, no rails
     const WALL = 14; // matches physics WALL_INSET
     const g = ensureBgGradients(groundY, !!isOnFire);
     ctx.fillStyle = g.wallL;

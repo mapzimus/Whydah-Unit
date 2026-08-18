@@ -10,7 +10,9 @@ const Physics = (() => {
   let lastLandingInfo = null;
   let lastFlickInfo = null;
   let canvasW;
+  let canvasH;
   let groundY;
+  let wallsOn = true;   // false on phones — open arena, no side rails
 
   // Spin tuning (rad/step) — see applyFlick. Single sweet spot near 1 turn:
   // soft flick under-rotates (<360, fails), medium ≈ one clean turn (make),
@@ -19,6 +21,23 @@ const Physics = (() => {
   const SPIN_RANGE  = 0.100;  // extra spin at full-strength flick (~1.35 turn)
   const POWER_SPEED = 4000;   // flick speed (px/s) that maps to full power
   const WALL_INSET  = 14;     // px from each screen edge to the wall's inner face (matches renderer)
+
+  function placeWalls(w, h) {
+    if (!leftWall || !rightWall) return;
+    if (wallsOn) {
+      Body.setPosition(leftWall,  { x: WALL_INSET - 20,     y: h / 2 });
+      Body.setPosition(rightWall, { x: w - WALL_INSET + 20, y: h / 2 });
+    } else {
+      // Park off-world so they can't collide (open arena on phones).
+      Body.setPosition(leftWall,  { x: -50000, y: h / 2 });
+      Body.setPosition(rightWall, { x:  50000, y: h / 2 });
+    }
+  }
+
+  function setSideWalls(on) {
+    wallsOn = !!on;
+    if (engine) placeWalls(canvasW, canvasH);
+  }
 
   // ── Landing-detection knobs (the false-miss fix) ───────────────────────────
   // A verdict is read ONLY once the bottle has truly come to rest. A make is
@@ -186,6 +205,7 @@ const Physics = (() => {
   // ── Public API ─────────────────────────────────────────────────────────────
   function init(w, h, bottomInset = 0) {
     canvasW = w;
+    canvasH = h;
     groundY = h - 30 - bottomInset;          // top surface of the table
 
     // Rematch / practice restart: drop the previous engine so Matter bodies
@@ -216,6 +236,7 @@ const Physics = (() => {
     rightWall = Bodies.rectangle(w - WALL_INSET + 20, h / 2, 40, h * 3, wallOpts);
 
     World.add(world, [ground, leftWall, rightWall]);
+    placeWalls(w, h);
 
     resetBottle();
   }
@@ -227,16 +248,17 @@ const Physics = (() => {
   function reflow(w, h, bottomInset = 0) {
     if (!engine) return;
     canvasW = w;
+    canvasH = h;
     groundY = h - 30 - bottomInset;
-    Body.setPosition(ground,    { x: w / 2,                 y: groundY + 25 });
-    Body.setPosition(leftWall,  { x: WALL_INSET - 20,       y: h / 2 });
-    Body.setPosition(rightWall, { x: w - WALL_INSET + 20,   y: h / 2 });
+    Body.setPosition(ground, { x: w / 2, y: groundY + 25 });
+    placeWalls(w, h);
     // If a viewport shrink moved the deck above the bird, snap it back onto the
     // table. Leaving it under the floor makes the shadow radii go negative and
     // (worse) leaves the turn stuck with a buried body.
     if (bottle && bottle.position.y > groundY - 20) {
+      const pad = wallsOn ? WALL_INSET + 40 : 40;
       Body.setPosition(bottle, {
-        x: Math.max(WALL_INSET + 40, Math.min(w - WALL_INSET - 40, bottle.position.x)),
+        x: Math.max(pad, Math.min(w - pad, bottle.position.x)),
         y: groundY - 76,
       });
       Body.setVelocity(bottle, { x: 0, y: 0 });
@@ -322,5 +344,5 @@ const Physics = (() => {
   function getLastLandingInfo() { return lastLandingInfo; }
   function getLastFlickInfo()   { return lastFlickInfo; }
 
-  return { init, reflow, step, resetBottle, applyFlick, checkLanding, setFeel, getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo };
+  return { init, reflow, step, resetBottle, applyFlick, checkLanding, setFeel, setSideWalls, getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo };
 })();
