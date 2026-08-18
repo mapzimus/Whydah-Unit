@@ -37,6 +37,11 @@
 .card .go{margin-top:auto;padding-top:12px;font-weight:750;color:var(--rust)}
 .card.feature{grid-column:1 / -1;border-left:5px solid var(--gold);background:#e8e0cf;min-height:0}
 .card.feature h2{font-size:clamp(26px,4.5vw,38px)}
+.ref-index{padding:24px 0 4px}
+.ref-index .ref-head{margin:0 0 10px;color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.ref-links{display:flex;flex-wrap:wrap;gap:6px 8px;font-size:13px}
+.ref-links a{text-decoration:none;color:var(--navy);padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.45)}
+.ref-links a:hover{background:white}
 .footer{padding:26px 0 44px;margin-top:34px;border-top:1px solid var(--line);font-size:12.5px;color:#565c60}
 .footer .row{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}
 .footer a{color:var(--navy)}
@@ -48,7 +53,7 @@
 <header class="wrap site-nav">
   <a class="brand" href="/">WhydahStory</a>
   <nav class="nav-links" aria-label="Primary">
-    <a href="/unit/">Story</a>
+    <a href="/story/">Story</a>
     <a href="/projects/">Projects</a>
     <a href="/curriculum/">Curriculum</a>
     <a href="/games/">Games</a>
@@ -67,7 +72,7 @@
       <p>Map Studio projects from the August 6, 2026 Showcase, committed permanently so they outlast the classroom cloud list.</p>
       <span class="go">Open the archive →</span>
     </a>
-    <a class="card" href="/unit/">
+    <a class="card" href="/story/">
       <span class="k">Reference</span>
       <h2>The story</h2>
       <p>People, timeline, maps, artifacts — and which claims are documented, contested, or mythologized.</p>
@@ -91,6 +96,22 @@
       <p>Whydah’s Voyage along the coast, plus Parrot Flip for the crew. Still playable. No login.</p>
       <span class="go">To the games →</span>
     </a>
+  </section>
+  <section class="ref-index" aria-label="The Whydah reference">
+    <p class="ref-head">The reference, page by page</p>
+    <div class="ref-links">
+      <a href="/story/">Story &amp; timeline</a>
+      <a href="/people/">People</a>
+      <a href="/pirate-world/">The Pirate World</a>
+      <a href="/the-wreck/">The Wreck &amp; Fleet</a>
+      <a href="/artifacts/">Artifacts</a>
+      <a href="/why-piracy/">Why Piracy</a>
+      <a href="/salem/">Salem</a>
+      <a href="/maps/">Maps &amp; Flythrough</a>
+      <a href="/glossary/">Glossary</a>
+      <a href="/sources/">Sources</a>
+      <a href="/methods/">Methods</a>
+    </div>
   </section>
 </main>
 <footer class="wrap footer">
