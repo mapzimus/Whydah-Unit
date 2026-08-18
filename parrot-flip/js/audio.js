@@ -68,6 +68,16 @@ const Sound = (() => {
       tone({ freq: 220, slideTo: 70, type: 'sawtooth', dur: 0.45, gain: 0.22 });
       tone({ freq: 110, type: 'sine', dur: 0.35, gain: 0.18, delay: 0.08 });
     },
+    // Pirate macaw — short falling squawk.
+    squawk: () => {
+      tone({ freq: 920, slideTo: 340, type: 'sawtooth', dur: 0.22, gain: 0.16 });
+      tone({ freq: 640, slideTo: 220, type: 'triangle', dur: 0.28, gain: 0.12, delay: 0.05 });
+    },
+    // Doubloon clink (perfect landing / secret unlock).
+    coin: () => {
+      tone({ freq: 1240, type: 'sine', dur: 0.12, gain: 0.18 });
+      tone({ freq: 1860, type: 'triangle', dur: 0.16, gain: 0.12, delay: 0.06 });
+    },
   };
 
   // Haptic vibration patterns (ms) per event — no-op on devices without it
@@ -81,6 +91,8 @@ const Sound = (() => {
     win:     [70, 40, 70, 40, 130],
     tension: [25, 70, 25, 70],          // ominous pulse
     eliminated: [80, 60, 80, 60, 160],
+    squawk: 18,
+    coin:   [12, 20, 12],
   };
   function buzz(name) {
     if (muted || !navigator.vibrate) return;

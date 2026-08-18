@@ -97,7 +97,13 @@ html, body {
 }
 .back-link:hover { color: var(--gold); }
 
-.setup-card h1 .emoji { font-size: 1.6rem; -webkit-text-fill-color: initial; }
+.setup-card h1 .emoji {
+  font-size: 1.6rem;
+  -webkit-text-fill-color: initial;
+  cursor: pointer;
+  display: inline-block;
+}
+.setup-card h1 .emoji:active { transform: scale(1.18) rotate(-12deg); }
 
 .section-label {
   font-size: 0.78rem;
@@ -704,6 +710,25 @@ html, body {
   text-transform: uppercase;
   color: var(--muted);
 }
+
+#egg-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: none;
+  background: rgba(20, 47, 75, 0.92);
+  border: 1px solid rgba(197, 154, 74, 0.55);
+  color: #f4efe3;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+#egg-toast.hidden { display: none !important; }
 
 /* ── Reduced motion ──────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
