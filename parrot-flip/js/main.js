@@ -36,6 +36,8 @@
     canvas.style.width  = w + 'px';
     canvas.style.height = h + 'px';
     canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Phones (short side < 600): open arena — no side rails. Smartboards keep walls.
+    Physics.setSideWalls(Math.min(w, h) >= 600);
     Renderer.resize(w, h);
     Physics.reflow(w, h);        // keep ground/walls in sync (no-op before init)
   }
