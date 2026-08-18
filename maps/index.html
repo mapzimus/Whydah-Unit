@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maps of the Whydah — Southack’s 1717 chart, the flythrough, and navigation</title>
+<meta name="description" content="The cartography half of the Whydah story: Southack’s 1717 chart that found the wreck in 1984, a 19-stop 3D flythrough, live wind and shipping maps, latitude and longitude in 1717, and why flat maps lie.">
+<meta name="theme-color" content="#142333">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Maps of the Whydah — Southack’s 1717 chart, the flythrough, and navigation">
+<meta property="og:description" content="The cartography half of the Whydah story: Southack’s 1717 chart that found the wreck in 1984, a 19-stop 3D flythrough, live wind and shipping maps, latitude and longitude in 1717, and why flat maps lie.">
+<meta property="og:image" content="https://whydahstory.com/pics/southack-1717-chart-clean.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://whydahstory.com/maps/">
+<link rel="icon" type="image/png" sizes="32x32" href="/pics/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/reference.css">
+<script src="/reference.js" defer></script>
+</head>
+<body>
+<header class="wrap site-nav">
+  <a class="brand" href="/">WhydahStory</a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="/story/">Story</a>
+    <a href="/projects/">Projects</a>
+    <a href="/curriculum/">Curriculum</a>
+    <a href="/games/">Games</a>
+  </nav>
+</header>
+<nav class="ref-nav wrap" aria-label="The Whydah reference"><a href="/story/">Story</a><a href="/people/">People</a><a href="/pirate-world/">Pirate World</a><a href="/the-wreck/">The Wreck</a><a href="/artifacts/">Artifacts</a><a href="/why-piracy/">Why Piracy</a><a href="/salem/">Salem</a><a href="/maps/" aria-current="page">Maps</a><a href="/glossary/">Glossary</a><a href="/sources/">Sources</a><a href="/methods/">Methods</a></nav>
+<main class="wrap content">
+  <article>
+    <header class="page-head">
+      <p class="kicker">The Reference</p>
+      <h1>Maps & Flythrough</h1>
+    </header>
+<section id="maps-geo">
+<p class="meta">The Whydah's world, on the map: the whole story flown across a 3D globe, live cameras on the wreck coast, the charts that found her, and the winds that shaped the age.</p>
+
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-maps-0"><span class="accordion-title">The Whydah flythrough: interactive 3D tour</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-0" class="accordion-body">
+<div class="card">
+<p>A 19-stop, 3D globe flythrough of the Bellamy story, from his birthplace in Devon to the modern Salem museum. Each stop shows a photo and a "why this matters" caption while the camera does a slow 180-degree pan around the location. Hit play to start, or jump to any stop via the "All stops" button.</p>
+<iframe src="/flythrough.html" style="width:100%; height:650px; border:1px solid #c4b590; border-radius:4px; margin: 0.8em 0; display: block;" loading="lazy" title="Whydah Flythrough - 3D Geographic Tour"></iframe>
+<p class="meta">If the embedded view feels cramped, <a href="/flythrough.html" target="_blank" rel="noopener">open in a new tab</a> for the full-screen experience.</p>
+</div>
+
+<h4>How this was custom-built: a GIS teaching artifact</h4>
+<div class="card">
+<p class="meta">This isn't a Google Earth tour or a museum video. It is a custom 3D web map built from scratch using the same open-source GIS toolkit students would use to make their own. Walking through how it works is itself a Session 14 or 15 lesson on how spatial storytelling gets made.</p>
+
+<p><strong>1. Coordinates from primary sources.</strong> Every one of the 19 stops has a real lat-lon pulled from the research-findings reference. Some are documented to within a few meters (Old State House: 42.359N, 71.058W). Others are <em>approximate</em> by necessity. The Whydah wreck site is given as the publicly cited area off Marconi Beach because the exact coordinates are restricted under Clifford's federal salvage permit.</p>
+
+<p><strong>2. The map engine: MapLibre GL JS.</strong> The 3D globe is rendered with <a href="https://maplibre.org/" target="_blank" rel="noopener">MapLibre GL JS</a>, a free and open-source rebuild of Mapbox GL JS after Mapbox went proprietary in 2020. No API key, no signup, just a 250 KB JavaScript library included in the page.</p>
+
+<p><strong>3. The satellite imagery: Esri World Imagery.</strong> The Earth's surface comes from Esri's <code>World_Imagery</code> tile service, a stitched mosaic of Maxar, USGS, NASA, and aerial sources. Free for educational use, no API key required for raster tiles.</p>
+
+<p><strong>4. The camera animation.</strong> Each transition between stops uses three animated phases: a 2.5-second zoom-out arc to the geographic midpoint between stops (so students see the spatial relationship), a 3.5-second smooth flyTo into the next location with arrival pitch and zoom tuned per spot, then a 15-second slow 180-degree pan around the destination. The pan is driven manually frame-by-frame because MapLibre's built-in flyTo normalizes bearings to take the shortest path: 0 to 359 degrees collapses to -1 unless you drive setBearing yourself.</p>
+
+<p><strong>5. The captions.</strong> Photos and "why this matters" descriptions are HTML and CSS overlays that fade in and out with each stop. Photos reference the <code>pics/</code> folder via relative paths so the same file works locally and on github.io. Each caption has a stop-number label, location name, subtitle, body text, and citation footer.</p>
+
+<p><strong>6. The waypoints data.</strong> All 19 stops are stored as a JavaScript array near the top of <code>flythrough.html</code>. Each entry has lng, lat, zoom, pitch, name, subtitle, description, image, meta. Editable in any text editor. Students can add their own stops as a research extension, reorder them, or rewrite descriptions.</p>
+
+<p class="meta">Total stack: MapLibre GL JS + Esri World Imagery + ~600 lines of vanilla HTML/CSS/JS. No paid services. No build step. One self-contained file. Lives at <code>flythrough.html</code> in the repo.</p>
+</div>
+
+<h4>The 19 stops</h4>
+<div class="card">
+<table style="width:100%; border-collapse: collapse; font-size: 0.9em;">
+<thead><tr style="background: #ede1c5; text-align: left;">
+<th style="padding: 6px 8px; border-bottom: 2px solid #c4b590;">#</th>
+<th style="padding: 6px 8px; border-bottom: 2px solid #c4b590;">Location</th>
+<th style="padding: 6px 8px; border-bottom: 2px solid #c4b590;">Coords</th>
+<th style="padding: 6px 8px; border-bottom: 2px solid #c4b590;">Why this hinges the story</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">1</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Hittisleigh, Devon, UK</strong><br><span class="meta">Bellamy's birthplace, 1689</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">50.745N<br>3.823W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">Devon was 18th-century England's nursery for the Royal Navy. Bellamy's path to sea was set the day he was born here.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">2</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>London</strong><br><span class="meta">Whydah Gally built, 1715</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">51.510N<br>0.099W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">London capital funded the slave-trade economy. The Whydah was destined for triangle-trade work the day she was launched here.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">3</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Ouidah, Benin</strong><br><span class="meta">West African slave port, 1716</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">6.36N<br>2.09E</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">367 enslaved Africans taken aboard. The human source of the wealth Bellamy will later steal.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">4</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Kingston, Jamaica</strong><br><span class="meta">Slave market, late 1716</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">17.94N<br>76.84W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">312 of 367 enslaved people sold here, 55 dead in the Middle Passage. The treasure Bellamy later takes is the proceeds of human sale.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">5</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Sebastian Inlet, Florida</strong><br><span class="meta">1715 Spanish treasure-fleet wrecks</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">27.86N<br>80.45W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The pivot of Bellamy's life. He came as a legal salvager and left as a pirate. Without 1715's hurricane, no Bellamy career.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">6</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Nassau, New Providence</strong><br><span class="meta">Flying Gang base, 1715-1718</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">25.04N<br>77.35W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The political home of pirate democracy. Where ~90 men actually voted Bellamy into command.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">7</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Windward Passage</strong><br><span class="meta">Whydah captured, late Feb 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">~20.0N<br>73.5W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">Career peak. From here Bellamy commands the largest, richest pirate flagship of the entire Golden Age.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">8</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Block Island, RI</strong><br><span class="meta">Williams peels off, mid-April 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">41.18N<br>71.58W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The fleet splits here. Williams' detour to visit family accidentally saves his life.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">9</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Damariscove Island, Maine</strong><br><span class="meta">Destination they never reached</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">43.760N<br>69.617W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The ghost of what Bellamy was trying to do. He died ~150 nautical miles short of this harbor where he meant to careen the ships.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">10</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Off Chatham, Cape Cod</strong><br><span class="meta">Mary Anne wreck, April 26, 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">41.65N<br>69.95W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The first wreck of the night. The Mary Anne survivors gave us the trial depositions. Without them, the Whydah story would be silent.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">11</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Marconi Beach, Wellfleet</strong><br><span class="meta">The Whydah wreck, April 26, 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">41.891N<br>69.957W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The climax. 144 of 146 die in 15 minutes. Bellamy dies. The historical record of all of this begins here.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">12</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Provincetown</strong><br><span class="meta">Southack arrives, May 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">42.05N<br>70.18W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The shift from crime to aftermath. A royal commissioner arrives; the Whydah becomes a salvage opportunity for the Crown.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">13</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Jeremiah's Gutter</strong><br><span class="meta">Southack's whaleboat passage</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">41.79N<br>69.985W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">A 1.5-mile tidal cut Southack used to shortcut the outer Cape. Today the gutter is gone, severed by Route 6's rotary.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">14</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Old State House, Boston</strong><br><span class="meta">Vice-Admiralty Court, Oct 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">42.359N<br>71.058W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">Where the Atlantic legal system reached out. Bellamy died at sea; his crew died here. Same Salem Witch Trials establishment, 25 years on.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">15</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Charlestown gallows site</strong><br><span class="meta">Six executions, Nov 15, 1717</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">42.378N<br>71.063W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The gallows location was chosen at the low-tide mark. Geography tells you who could hang you. Site now buried under harbor fill.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">16</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Wellfleet wreck site, 1984</strong><br><span class="meta">Clifford rediscovers the Whydah</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">41.891N<br>69.957W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The Whydah comes back, 267 years later. Clifford reading a 1717 chart and modeling sand drift IS GIS work.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">17</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Whydah Pirate Museum</strong><br><span class="meta">West Yarmouth, MA</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">41.654N<br>70.224W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">Where 200,000+ artifacts live now. Every coin was held by a pirate. Every bone fragment was a person.</td></tr>
+<tr><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">18</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;"><strong>Real Pirates Salem</strong><br><span class="meta">285 Derby Street, opened 2022</span></td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0; font-variant-numeric: tabular-nums;">42.520N<br>70.882W</td><td style="padding: 6px 8px; border-bottom: 1px solid #d4c5a0;">The Whydah arrives in Salem, the city our students live in. Their connection to the story.</td></tr>
+<tr><td style="padding: 6px 8px;">19</td><td style="padding: 6px 8px;"><strong>Salem Maritime NHS</strong><br><span class="meta">Derby Wharf, Custom House</span></td><td style="padding: 6px 8px; font-variant-numeric: tabular-nums;">42.521N<br>70.886W</td><td style="padding: 6px 8px;">The coda. Same waterfront sent the Grand Turk to Mauritius two generations later. Bellamy to Haraden to Derby is one Atlantic story.</td></tr>
+</tbody>
+</table>
+<p class="meta">Color coding in the flythrough: green = documented site &nbsp;|&nbsp; red = wreck site (approximate, restricted) &nbsp;|&nbsp; orange route line traces the Whydah's known voyage 1715-1717.</p>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-maps-1"><span class="accordion-title">Live cams on Bellamy's coast</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-1" class="accordion-body">
+<div class="card">
+<p>The same Massachusetts coast Bellamy died on, watched live in 2026 via <a href="https://masswebcams.com/" target="_blank" rel="noopener">masswebcams.com</a>, a directory of 200+ public webcams across the state. Useful as a "modern bridge" tool: students can compare Southack's 1717 chart to right-now imagery of the same beaches.</p>
+
+<h4>The wreck site, right now</h4>
+<p>Two USGS Coastal and Marine Geology Program snapshot cameras live at Cape Cod National Seashore station <code>caco-05</code>, the public scientific cameras closest to the Whydah wreck site. Refresh the page for a fresh frame.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0.8em 0;">
+<figure style="margin: 0;">
+<img loading="lazy" decoding="async" src="https://cmgp-coastcam.s3.us-west-2.amazonaws.com/cameras/caco-05/latest/c1.snap.jpg" alt="Live USGS coastal-cam snapshot 1 from Marconi Beach, Wellfleet - the Whydah wreck site" style="width:100%; height:auto; border:1px solid #c4b590; border-radius:3px; display:block;">
+<figcaption class="meta" style="margin-top:0.3em;">USGS CACO-05: Camera 1 (Marconi Beach)</figcaption>
+</figure>
+<figure style="margin: 0;">
+<img loading="lazy" decoding="async" src="https://cmgp-coastcam.s3.us-west-2.amazonaws.com/cameras/caco-05/latest/c2.snap.jpg" alt="Live USGS coastal-cam snapshot 2 from Marconi Beach, Wellfleet - the Whydah wreck site" style="width:100%; height:auto; border:1px solid #c4b590; border-radius:3px; display:block;">
+<figcaption class="meta" style="margin-top:0.3em;">USGS CACO-05: Camera 2 (Marconi Beach)</figcaption>
+</figure>
+</div>
+<p class="meta">Source: <a href="https://masswebcams.com/marconi-beach-webcam/" target="_blank" rel="noopener">masswebcams.com</a> via the <a href="https://www.usgs.gov/centers/whcmsc/science/remote-sensing-coastal-change-using-coastcam" target="_blank" rel="noopener">USGS Coastal Change Hazards Program</a>. Public domain, freely embeddable. The cameras update on a regular schedule but are sometimes offline for maintenance.</p>
+
+<h4>Other wreck-site adjacent cams (link-only)</h4>
+<p class="meta">Most other Massachusetts coast cams are hosted on third-party services that don't allow direct iframe embeds, so they live as click-out links.</p>
+<ul>
+<li><a href="https://masswebcams.com/marconi-beach-webcam/" target="_blank" rel="noopener"><strong>Marconi Beach, Wellfleet</strong></a>. Main page for the cams above.</li>
+<li><a href="https://masswebcams.com/beachcomber-cam-cahoon-hollow-beach/" target="_blank" rel="noopener">Cahoon Hollow Beach (Beachcomber Cam)</a>. Just north of the wreck site, same outer-beach coastline.</li>
+<li><a href="https://masswebcams.com/wellfleet-beach-cam-cape-cod/" target="_blank" rel="noopener">Wellfleet Oyster Cove (inner harbor)</a>. The bay side, where Southack would have hugged the coast in his whaleboat.</li>
+</ul>
+
+<h4>Other Whydah-relevant locations</h4>
+<ul>
+<li><strong>Provincetown</strong> (MacMillan Pier, Harbor Hotel cams), where Southack arrived by sea, May 1717.</li>
+<li><strong>Cape Cod Canal</strong>: modern engineering on the same coast. Compare to Jeremiah's Gutter, the 1717 tidal canal that vanished.</li>
+<li><strong>Boston Harbor</strong>: 25 minutes by water from the Charlestown gallows site.</li>
+</ul>
+
+<p class="meta">This is the actual stretch of shore where the Whydah ran aground, live, right now. The sandbar where 144 men drowned is in this frame, and the shore Southack mapped in 1717 is still right there, just three centuries of erosion later.</p>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-maps-2"><span class="accordion-title">Herman Moll's 1719 world map: the mapmaker who knew pirates</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-2" class="accordion-body" hidden>
+
+<div class="card">
+<p>Moll was the most important London cartographer of the early 1700s. His 1719 world map was made to illustrate Daniel Defoe's <em>Farther Adventures of Robinson Crusoe.</em></p>
+<p><strong>His social circle included actual pirates and privateers:</strong> William Dampier, Woodes Rogers, and William Hacke, who gave him firsthand information on Caribbean routes and Spanish treasure movements.</p>
+<p>Moll's West Indies map has been described as "a guide to English piracy and privateering." His maps showed <strong>trade winds, compass variations, and "Remarkable Tracts"</strong> of voyages, essentially commercial intelligence.</p>
+<p>Ask one question of this map: who made it, and why? The answer: a guy who drank with pirates and sold their route data for profit. Maps are arguments, not neutral records.</p>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-maps-3"><span class="accordion-title">Cyprian Southack's 1717 chart: the map that found the Whydah</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-3" class="accordion-body" hidden>
+<div class="card">
+<figure style="margin: 0;">
+<img loading="lazy" decoding="async" width="2200" height="1600" src="/pics/southack-1717-chart-clean.jpg" alt="Cyprian Southack's chart of Cape Cod from his New England Coasting Pilot (based on his 1717 survey): the outer Cape from Race Point to Barnstable, with the Whydah wreck marked in Southack's own hand near Wellfleet — the label 'The Pirate Ship Whido lost' and his note about burying 102 drowned men. No red X; this is the clean Boston Public Library scan." style="width: 100%; max-width: 860px; display: block; margin: 0 auto; border: 1px solid #c4b590; border-radius: 3px; box-shadow: 2px 3px 8px rgba(42, 29, 15, 0.18);">
+<figcaption class="meta" style="text-align: left; margin-top: 0.8em; padding-left: 1.2em;">
+Southack marked the wreck near Wellfleet with the printed label <em>"Pirate Ship Whido lost"</em> and wrote, in period spelling: <em>"The Place where I came through with a Whale Boat being order'd by ye Govern[men]t to look after ye Pirate Ship Whido Bellame Command[er] cast away ye 26 of April 1717 where I buried One Hundred &amp; Two Men Drowned."</em> (This is the clean <strong>Boston Public Library</strong> scan, Southack's real chart, marked only with that label and note. The famous red <strong>X</strong> you meet on many reproductions is a <strong>later addition</strong>, not his mark; "X marks the spot" comes from <em>Treasure Island</em>, not real pirate maps.)
+<br><br>
+The 1734 published version of his chart (<em>The New England Coasting Pilot</em>) is rich with this kind of voice-of-the-cartographer commentary: depth conventions, harbor warnings, shoal hazards, even a navigable channel named after himself ("North Channel or Southack's Channel"). The map is a hybrid sailing guide, personal log, and self-portrait. Barry Clifford used this chart in 1984 to find the wreck. 267 years between the chart and the dive.
+</figcaption>
+</figure>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-maps-4"><span class="accordion-title">Live world view: global shipping right now</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-4" class="accordion-body" hidden>
+<div class="card">
+<p>The whole Atlantic and beyond, live from <a href="https://www.marinetraffic.com/en/ais/home/centerx:0/centery:25/zoom:2" target="_blank" rel="noopener">MarineTraffic.com</a>. Zoom out to see global shipping density. Zoom into chokepoints (Suez, Malacca, Red Sea, Panama) to watch traffic queue through.</p>
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 1px solid #c4b590; border-radius: 3px; margin-top: 0.5em; background: #e6d9b8;">
+<iframe
+  src="https://www.marinetraffic.com/en/ais/embed/zoom:2/centery:25/centerx:0/maptype:4/shownames:false/mmsi:0/shipid:0/fleet:/fleet_id:/vtypes:/showmenu:false/remember:false"
+  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+  title="MarineTraffic global live ship tracker"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+</div>
+<p class="meta" style="margin-top: 0.8em;"><strong>Quick jumps:</strong> <a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12" target="_blank" rel="noopener">Salem Harbor</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:14" target="_blank" rel="noopener">Wellfleet (wreck site, 41.891N 69.957W)</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6" target="_blank" rel="noopener">Suez</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6" target="_blank" rel="noopener">Malacca</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5" target="_blank" rel="noopener">Red Sea / Bab-el-Mandeb</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8" target="_blank" rel="noopener">Panama</a> · <a href="https://www.marinetraffic.com/en/ais/home/centerx:-12/centery:25/zoom:4" target="_blank" rel="noopener">Bellamy's Atlantic</a></p>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-maps-5"><span class="accordion-title">Atlantic trade winds &amp; gyres: the triangle trade's physics</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-5" class="accordion-body" hidden>
+
+<div class="card">
+<p>The triangle trade's shape wasn't a "choice" by merchants. It was forced by physics.</p>
+<ul>
+<li><strong>North Atlantic Gyre</strong>: giant clockwise ocean current system; the Gulf Stream is its northern limb</li>
+<li><strong>Trade winds</strong> (easterlies, south of ~30°N): carried ships Europe → Africa → Caribbean</li>
+<li><strong>Westerlies</strong> (westerlies, north of ~30°N): carried ships Caribbean → North America → Europe</li>
+</ul>
+<p><strong>The Whydah's final voyage fits this pattern:</strong> after the Caribbean, Bellamy was heading north up the American coast, riding the Gulf Stream toward the westerlies, when the nor'easter caught him off Cape Cod.</p>
+<p>Open the wind map before you look at the trade triangle. "Why is it shaped like a triangle?" has a physical answer (the trade winds and Gulf Stream), not just an economic one.</p>
+</div>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-maps-6"><span class="accordion-title">Go deeper: period maps gallery</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-maps-6" class="accordion-body" hidden>
+<p class="meta">Public-domain originals from Wikimedia Commons and the New York Public Library. The cartographers who made these were the GPS engineers of their era. Their lines are how the Whydah found its way (and didn't).</p>
+
+<div class="card-grid">
+
+<figure class="map-gallery-item">
+<a href="https://upload.wikimedia.org/wikipedia/commons/b/bf/A_new_and_correct_map_of_the_whole_world%2C_shewing_ye_situation_of_its_principal_parts._..._according_to_the_newest_and_most_exact_observations_-_by_Herman_Moll%2C_geographer%2C_1719._NYPL1630430.jpg" target="_blank" rel="noopener">
+<img loading="lazy" decoding="async" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/A_new_and_correct_map_of_the_whole_world%2C_shewing_ye_situation_of_its_principal_parts._..._according_to_the_newest_and_most_exact_observations_-_by_Herman_Moll%2C_geographer%2C_1719._NYPL1630430.jpg/1024px-A_new_and_correct_map_of_the_whole_world%2C_shewing_ye_situation_of_its_principal_parts._..._according_to_the_newest_and_most_exact_observations_-_by_Herman_Moll%2C_geographer%2C_1719._NYPL1630430.jpg" alt="Herman Moll's 1719 New &amp; Correct Map of the Whole World." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Herman Moll, 1719. <em>New &amp; Correct Map of the Whole World</em>.</strong> The map of the era. Mercator projection. Includes "Remarkable Tracts" of explorer voyages, effectively commercial intelligence Moll bought from his pirate &amp; privateer drinking buddies (Dampier, Rogers, Hacke). Click to view full-resolution at NYPL.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<img loading="lazy" decoding="async" width="2200" height="1600" src="/pics/southack-1717-chart-clean.jpg" alt="Cyprian Southack's chart of Cape Cod (New England Coasting Pilot, from his 1717 survey): the Whydah wreck marked near Wellfleet with his own 'Pirate Ship Whido lost' label — the clean Boston Public Library scan, no red X." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Cyprian Southack, New England Coasting Pilot (from his 1717 survey). Cape Cod chart with the Whydah wreck.</strong> Marked near Wellfleet with Southack's own label "Pirate Ship Whido lost" and a period-spelling annotation. No red X (that's a later reproduction add-on). Clean scan: Boston Public Library / Leventhal Map &amp; Education Center, public domain. Barry Clifford used this chart in 1984 to find the wreck.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<a href="https://upload.wikimedia.org/wikipedia/commons/4/45/The_harbour_of_Casco_Bay_and_islands_adjacent.jpg" target="_blank" rel="noopener">
+<img loading="lazy" decoding="async" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/The_harbour_of_Casco_Bay_and_islands_adjacent.jpg/1024px-The_harbour_of_Casco_Bay_and_islands_adjacent.jpg" alt="Cyprian Southack's 1720 chart of Casco Bay, Maine." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Cyprian Southack, 1720. <em>The Harbour of Casco Bay</em>.</strong> A working harbor chart by the same cartographer-salvager who marked the Whydah wreck. Same hand, different coast. Useful to show what Southack's day job looked like.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<img loading="lazy" decoding="async" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Cyprian_Southack_Bay_of_Fundy.png/1024px-Cyprian_Southack_Bay_of_Fundy.png" alt="Cyprian Southack's 1731 Bay of Fundy chart." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Cyprian Southack, 1731. Bay of Fundy.</strong> Hybrid sailing chart and personal log. Note how Southack annotated everything in his own voice: depth conventions, harbor warnings, and a channel he named after himself. Maps as autobiography.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<img loading="lazy" decoding="async" width="900" height="1140" src="/pics/brookes-slave-ship.jpg" alt="The 1788 Brookes slave-ship diagram." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px;">
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Brookes diagram, 1788 (British abolition campaign).</strong> Drawn 70 years after the Whydah era but rooted in the same trade. The visual anchor when KSQ 2 reaches what the Whydah was originally built to do.</figcaption>
+</figure>
+
+</div>
+
+</div>
+</div>
+</section>
+<section id="projections">
+<h2>Navigation &amp; Projections</h2>
+<p class="meta">Where maps and the globe stop agreeing. A map is always a translation, never a copy. This page shows why, and what a 1717 navigator could and couldn't actually know.</p>
+
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="true" aria-controls="acc-nav-0"><span class="accordion-title">Latitude vs longitude: what they are and why one was easy</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-0" class="accordion-body">
+<p>Latitude lines run east-west around the globe. They tell you how far north or south you are from the equator. Longitude lines run north-south. They tell you how far east or west you are from a chosen starting line (the "prime meridian", since 1884 that's a line that runs through Greenwich, England).</p>
+<p><strong>Latitude is the easy one.</strong> Point a sextant or backstaff at the sun at noon (or at the North Star at night). Measure the angle. Look it up on a table. That's your latitude. Sailors had been doing this since the 1400s.</p>
+<p><strong>Longitude is a clock problem.</strong> The Earth spins 360 degrees in 24 hours, so every 15 degrees east or west equals one hour of time difference. To know your longitude, you need two clocks running at once: one for <em>where you are now</em> (easy: read the sun) and one for <em>where you started from</em> (hard: your starting clock has to keep perfect time on a rocking, salty, hot-and-cold ship for months).</p>
+<p>In 1717 nobody had a clock that could pull this off. Sailors could find their latitude, but their longitude was a guess that got worse every day. The clock that finally solved it, John Harrison's H4, didn't prove itself until 1761, 44 years after the Whydah wrecked.</p>
+<p style="margin-top: 0.6em;"><strong>The math angle.</strong> Before chronometers existed, sailors used the <em>lunar distance method</em> to figure out time at sea: measure the angle between the Moon and a chosen star, then run a stack of trigonometric calculations to back out Greenwich time. The Science Museum London has a clear walkthrough (<a href="https://www.sciencemuseum.org.uk/objects-and-stories/where-world-mathematics-navigation" target="_blank" rel="noopener">Where in the World? The Mathematics of Navigation</a>). The almanac tables of predicted celestial positions were computed by hand, often by women and children working from home, who were called <em>computers</em>. The word "computer" originally meant a person who computes.</p>
+
+<div class="card">
+<h4>Watch: The longitude problem and Harrison's clocks</h4>
+<div class="video-embed-wrap">
+<iframe src="https://www.youtube-nocookie.com/embed/zlRxWJ_kGEA" title="The Longitude Problem - Harrison clocks" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<p class="meta">Why this matters: the Whydah grounded at Wellfleet on the night of April 26, 1717, in a nor'easter, in the dark, on a lee shore. They could not verify their east-west position. The ship's pilot was 16-year-old John Julian: "pilot" is documented; that he was navigating with a backstaff that night is period-plausible inference. This video is the fastest way to feel <em>why</em> the wreck was partly a navigation disaster, not bad sailing, but missing tools.</p>
+</div>
+
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-1"><span class="accordion-title">Navigation instruments: what was on the Whydah</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-1" class="accordion-body" hidden>
+
+<div class="tool-card">
+<img loading="lazy" decoding="async" width="404" height="420" src="/pics/compass.png" alt="Mariner's compass with magnetized needle on a pivot." class="tool-img">
+<span class="tool-name">Compass</span> <span class="tool-meta">centuries old by 1717</span>
+<div>Magnetized needle on a pivot. Gave a coarse heading. Standard on all serious sea vessels.</div>
+</div>
+
+<div class="tool-card">
+<img loading="lazy" decoding="async" width="960" height="650" src="/pics/backstaff.svg" alt="Diagram of a Davis quadrant (backstaff) showing the arc, vanes, and shadow path." class="tool-img" style="background:white;">
+<span class="tool-name">Backstaff</span> <span class="tool-meta">invented John Davis, 1594</span>
+<div>The standard latitude tool of the 17th–early 18th century. Measured the sun's altitude from its shadow. User didn't look at the sun directly. <strong>This is what the Whydah's 16-year-old pilot John Julian would have used.</strong></div>
+</div>
+
+<div class="tool-card">
+<img loading="lazy" decoding="async" width="900" height="620" src="/pics/astrolabe.jpg" alt="Mariner's astrolabe - a medieval-origin altitude instrument." class="tool-img" style="background:white;">
+<span class="tool-name">Mariner's astrolabe</span> <span class="tool-meta">old tech, fading out by 1717</span>
+<div>A medieval brass ring for reading the altitude of the sun or Polaris. By 1717 it was mostly <strong>obsolete at sea</strong> (the backstaff had replaced it over the previous decades), though older or poorer ships might still carry one. We include it to show how fast the toolkit was changing.</div>
+</div>
+
+<div class="tool-card">
+<span class="tool-name">Dead reckoning</span> <span class="tool-meta">method, not instrument</span>
+<div>Estimating current position from last known point using heading + speed + elapsed time. Error accumulated over days. For ocean voyages, it was mostly educated guessing.</div>
+</div>
+
+<h4 style="margin-top:1.5em;">What DIDN't exist yet in 1717</h4>
+<div class="tool-grid">
+
+<div class="tool-card not-yet">
+<img loading="lazy" decoding="async" width="760" height="1013" src="/pics/octant.jpg" alt="Hadley's octant, c.1790-1810. Royal Ontario Museum." class="tool-img">
+<span class="tool-name">Octant</span> <span class="tool-meta">1731, fourteen years too late</span>
+<div>Hadley's reflecting octant. A small mirror let you see horizon and sun in the same eyepiece, faster and more accurate than the backstaff.</div>
+</div>
+
+<div class="tool-card not-yet">
+<img loading="lazy" decoding="async" width="758" height="758" src="/pics/sextant.jpg" alt="Modern sextant." class="tool-img">
+<span class="tool-name">Sextant</span> <span class="tool-meta">1757</span>
+<div>Wider arc than the octant (60 degrees vs 45) so it could measure lunar distances, the workaround for finding longitude before chronometers became affordable.</div>
+</div>
+
+<div class="tool-card not-yet">
+<img loading="lazy" decoding="async" width="760" height="505" src="/pics/harrison-chronometer.jpg" alt="Harrison's H5 marine chronometer (the production-ready successor to H4)." class="tool-img">
+<span class="tool-name">Marine chronometer (Harrison's H4)</span> <span class="tool-meta">proved useful 1761, 44 years too late</span>
+<div>The clock that solved longitude. Lost only ~5 seconds over an 81-day voyage. H5 (pictured) is the production-ready version Harrison built after H4 won the Longitude Prize.</div>
+</div>
+
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-2"><span class="accordion-title">Map projections: why no flat map can be right</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-2" class="accordion-body" hidden>
+<p>You cannot flatten a globe onto a flat sheet of paper without stretching, squishing, or tearing <em>something</em>. Mathematicians proved this in the 1800s. Every world map you've ever seen is a trade-off: keep one thing accurate, give up another. The four things mapmakers can try to keep accurate are:</p>
+<ul>
+<li><strong>Shape</strong>: countries look like the right shape, but their size gets distorted. Mercator does this. Good for navigation; bad for comparing how big places really are.</li>
+<li><strong>Size</strong>: countries are the correct size relative to each other, but their shapes get squished. Mollweide, Goode, and Equal Earth do this. Good for showing where people live or where rainforests are; bad if you care what the country actually looks like.</li>
+<li><strong>Distance</strong>: distances along certain lines are accurate. Useful if you want to know "how far is X from my city."</li>
+<li><strong>Compromise</strong>: nothing is exactly right, but nothing is too far off either. Robinson and Winkel Tripel are compromise projections. National Geographic and the American Geographical Society use them for general world maps.</li>
+</ul>
+
+<div class="card">
+<h4>Watch: Why all world maps are wrong (Vox, Johnny Harris)</h4>
+<div class="video-embed-wrap">
+<iframe src="https://www.youtube-nocookie.com/embed/kIID5FDi2JQ" title="Why all world maps are wrong - Vox" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<p class="meta">Six minutes. Why Mercator maps make Africa look smaller than it really is, the 1973 fight over a "fairer" world map, and the trade-offs every projection makes.</p>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-3"><span class="accordion-title">Go deeper: Tissot's indicatrix (the visual proof)</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-3" class="accordion-body" hidden>
+<p>A French mathematician named Nicolas Tissot came up with a clever test in 1859: imagine a bunch of identical circles placed evenly across the globe. Now flatten the globe onto each kind of map and watch what happens to the circles. Where they stay round, the map kept the shape right. Where they balloon up or squish flat, the map is distorting size. You can see the trade-off.</p>
+
+<div class="card-grid">
+
+<figure class="map-gallery-item">
+<a href="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mercator_proj.svg" target="_blank" rel="noopener">
+<img loading="lazy" decoding="async" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mercator_proj.svg?width=800" alt="Tissot indicatrix circles on a Mercator world map. The circles stay circular but balloon enormously near the poles, exposing how much area is exaggerated at high latitudes." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px; background: white;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Mercator projection.</strong> Circles stay round (so country shapes look right) but balloon enormously near the poles. This is why Greenland, Alaska, and Antarctica look gigantic on a Mercator map.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<a href="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mollweide_proj.svg" target="_blank" rel="noopener">
+<img loading="lazy" decoding="async" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Mollweide_proj.svg?width=800" alt="Tissot indicatrix circles on a Mollweide world map. The circles stay the same area but get squashed into ellipses near the edges, showing shape distortion in exchange for true area." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px; background: white;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Mollweide projection.</strong> Circles all stay the same size, so countries are the correct size relative to each other. But they get squashed into ovals toward the edges. Shape is what gets sacrificed. Greenland is finally sized correctly compared to Africa.</figcaption>
+</figure>
+
+<figure class="map-gallery-item">
+<a href="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Robinson_proj.svg" target="_blank" rel="noopener">
+<img loading="lazy" decoding="async" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tissot_indicatrix_world_map_Robinson_proj.svg?width=800" alt="Tissot indicatrix circles on a Robinson world map. Modest distortion of both shape and area in exchange for a visually balanced result." style="width: 100%; height: auto; border: 1px solid #c4b590; border-radius: 3px; background: white;">
+</a>
+<figcaption class="meta" style="font-size: 0.82em; margin-top: 0.4em;"><strong>Robinson projection.</strong> Splits the difference: a little shape distortion AND a little size distortion. Nothing is perfect, but nothing is wildly off. National Geographic used this on world maps from 1988 to 1998.</figcaption>
+</figure>
+
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-4"><span class="accordion-title">Try-it-yourself: drag countries across latitudes</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-4" class="accordion-body" hidden>
+<div class="card">
+<p><a href="https://www.thetruesize.com/" target="_blank" rel="noopener"><strong>thetruesize.com</strong></a>. Drag any country anywhere on a Mercator map and watch it snap to its correct relative size. Drag Greenland down to the equator. Drag the U.S. up over Greenland. The viscerally illustrates the Mercator distortion.</p>
+<p><a href="https://map-projections.net/" target="_blank" rel="noopener"><strong>map-projections.net</strong></a>. Browse 250+ projections side-by-side with their Tissot indicatrices and metric tables.</p>
+<p><a href="https://www.jasondavies.com/maps/transition/" target="_blank" rel="noopener"><strong>Jason Davies&apos; map projection transitions</strong></a>. Smooth animated morphing between projections, by D3 cartographer Jason Davies.</p>
+</div>
+
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-5"><span class="accordion-title">Go deeper: why Mercator survived (and why Google Maps still uses it)</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-5" class="accordion-body" hidden>
+<p>Mercator's 1569 map was a tool for sailors, not a wall map for classrooms. It wasn't widely adopted for marine charts until the early 18th century. By 1717 it was becoming the working standard for ocean navigation. Its key feature: <em>any straight line you draw on it is a course you can actually sail by holding one compass heading the whole way</em>. A 1717 navigator could draw a straight line from Cape Cod to the Azores, read the compass direction off that line, and just hold that heading. Shorter routes exist (called "great circles"), but they require you to keep adjusting your compass heading as you go, hard to do without precise instruments.</p>
+<p>Google Maps uses <strong>Web Mercator</strong> for the same reason a sailor did: zoom in on any neighborhood and a square block still looks like a square. The price is that Greenland looks gigantic when you zoom out. For street-level use, that's a fine trade.</p>
+
+<div class="card" data-audience="admin">
+<h4>How this maps onto the unit</h4>
+<ul>
+<li><strong>S2 (What is a map?)</strong>: introduce projection as a translation choice. Use thetruesize.com hands-on.</li>
+<li><strong>S3 (Reading the 1719 World Map)</strong>: Moll's map is on a Mercator. The "Remarkable Tracts" of voyages he draws are rhumb lines.</li>
+<li><strong>Day 4 (Adopt a Ship) / Map Studio</strong>: classroom maps ran on paper and login-free Map Studio (Web Mercator basemaps). Google My Maps was cut — no student Google logins.</li>
+<li><strong>S14 (Where Ships Squeeze Through)</strong>: chokepoints look the way they do partly because of the projection. Show the same chokepoints on Mollweide for contrast.</li>
+<li><strong>S11 (The Wreck)</strong>: the longitude problem made the wreck partly a navigation disaster.</li>
+</ul>
+</div>
+
+</div>
+</div>
+<p style="margin-top:1.6em;"><strong>Be the navigator. Hands-on.</strong> The activities below turn the ideas above into things you actually <em>do</em>, the way a 1717 pilot, or a modern GIS analyst, would. <a href="/curriculum/handouts.html"><strong>&#128424; Print the worksheets &rarr;</strong></a> (paper quadrant, declination table, dead-reckoning plotting sheet, lat/long grid).</p>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-6"><span class="accordion-title">Try it: find your latitude like a 1717 pilot</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-6" class="accordion-body" hidden>
+<p>Latitude was the <em>findable</em> one. Here's the trick a pilot like 16-year-old John Julian used.</p>
+<p><strong>The North Star shortcut:</strong> the angle from the horizon up to Polaris is (almost exactly) your latitude. Stand in Salem and Polaris sits about <strong>42&deg;</strong> above the horizon, because Salem is at 42&deg;N.</p>
+<p><strong>Make a simple quadrant (10 min):</strong></p>
+<ol>
+<li>Tape a drinking straw along the flat edge of a protractor.</li>
+<li>Tie a string with a small weight through the protractor's center hole.</li>
+<li>Sight a star (or a far rooftop) through the straw; pinch the string where it crosses the scale.</li>
+<li>Read the angle: <strong>90&deg; minus that reading = the object's height above the horizon.</strong></li>
+</ol>
+<p><strong>At night:</strong> aim at Polaris: the height you read &asymp; your latitude. Check it against Google Maps.<br>
+<strong>At noon:</strong> measure the sun's height (<em>never look straight at it. Use a backstaff or read a shadow</em>). Latitude = 90&deg; &minus; sun's height + the sun's declination for that date (your teacher has the table).</p>
+<p class="meta"><strong>Why it matters:</strong> there was <em>no</em> equivalent trick for longitude. That's why the Whydah could find how far <em>north</em> they were but not how far <em>west</em> they'd drifted in the dark, and why she grounded at Wellfleet.</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-7"><span class="accordion-title">Try it. Dead reckoning: plot a course with no GPS</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-7" class="accordion-body" hidden>
+<p><strong>Dead reckoning</strong> = figure out where you are from where you <em>started</em>, plus your <strong>heading</strong>, <strong>speed</strong>, and <strong>time</strong>. (1 <strong>knot</strong> = 1 nautical mile per hour.)</p>
+<p><strong>Worked example:</strong> you leave port steering northeast (045&deg;) at 5 knots. After 6 hours you've sailed 5 &times; 6 = <strong>30 nautical miles</strong> along 045&deg;. Draw that line on the plotting grid. The far end is your best guess at "you are here."</p>
+<p><strong>Do it:</strong> plot Bellamy's Jamaica&rarr;Carolinas run leg by leg. Each leg has a heading, a speed, and a number of hours. Chain them across the grid.</p>
+<p><strong>Now break it:</strong> a current quietly pushes you 10 miles west and you never notice. Re-mark where you <em>think</em> you are vs. where you <em>really</em> are. That gap is <strong>dead-reckoning error</strong>. And it grew every day at sea.</p>
+<p class="meta"><strong>Journal it:</strong> this is the S14 voyage-plan entry. The error you just drew, plus no way to fix longitude, plus a night nor'easter = the wreck.</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-8"><span class="accordion-title">Try it: read &amp; write coordinates</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-8" class="accordion-body" hidden>
+<p>Every place on Earth has an address: <strong>latitude</strong> (how far N/S of the equator) and <strong>longitude</strong> (how far E/W of Greenwich). Order is always <em>lat, then long</em>.</p>
+<p><strong>Warm-up: say these in plain words, then plot them on the blank lat/long grid:</strong></p>
+<ul>
+<li>The wreck site: <strong>41.891&deg;N, 69.957&deg;W</strong> (off Marconi Beach, Wellfleet)</li>
+<li>Boston Court House (the trial): ~42.359&deg;N, 71.058&deg;W</li>
+<li>Your school: right-click it in Google Maps to read the coordinates</li>
+</ul>
+<p><strong>GIS note:</strong> computers store these as numbers, with <strong>N and E positive, S and W negative</strong>. So the wreck is <code>(41.891, -69.957)</code>. That sign flip is how a map app tells west from east.</p>
+<p class="meta"><strong>Why it matters:</strong> every stop on the 3D flythrough is a real coordinate. Turning a place into a pair of numbers is the first move in all of GIS.</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-9"><span class="accordion-title">GIS in action: how a 1717 map found a 1984 wreck (georeferencing)</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-9" class="accordion-body" hidden>
+<p>This is the GIS heart of the whole unit. In 1717 Cyprian Southack marked the wreck on his hand-drawn chart. His own mark was the label <em>"Pirate Ship Whido lost"</em> (the famous red <strong>X</strong> on reproductions was added later). In 1984 Barry Clifford had to answer: <em>where does that mark land in real-world coordinates?</em></p>
+<p><strong>Georeferencing</strong> is the answer. You pick a few features you can recognize on <em>both</em> the old map and a modern one (a point of land, a river mouth, a harbor). Match them up (those are <strong>control points</strong>), and the whole old map stretches into place over the real world. Now the X has a latitude and longitude.</p>
+<p><strong>Do it:</strong> open Southack's 1717 chart (earlier on this page) beside Google Earth. Find <strong>3 shore features</strong> that appear on both. Read the modern coordinates of each, then estimate where Southack's wreck label lands today. You've just georeferenced a 300-year-old map.</p>
+<p><strong>Then the grid:</strong> Clifford searched the seabed in a numbered <strong>grid</strong> of squares. A grid of squares, each holding a value, is exactly how GIS stores a <strong>raster</strong> (like a satellite image). The S13 grid-archaeology activity is you doing the same thing.</p>
+<p class="meta"><strong>Vocab:</strong> georeferencing &middot; control point &middot; raster / grid &middot; layer</p>
+</div>
+</div>
+<div class="accordion">
+<h3 style="margin:0;"><button type="button" class="accordion-header" aria-expanded="false" aria-controls="acc-nav-10"><span class="accordion-title">Try it: great circle vs. rhumb line</span><span class="accordion-chevron" aria-hidden="true"></span></button></h3>
+<div id="acc-nav-10" class="accordion-body" hidden>
+<p>What's the shortest way across an ocean? On a globe it's a <strong>great circle</strong>. But on a flat Mercator map that shortest path looks like a <em>curve</em>, while a dead-straight line on Mercator (a <strong>rhumb line</strong>, one constant compass heading) is actually <em>longer</em>.</p>
+<p><strong>See it:</strong> stretch a string between Boston and London on a globe. It bows up over Greenland. Now draw the straight Boston&ndash;London line on a Mercator world map. Different paths, same two cities. (Or use the <a href="http://www.gcmap.com/" target="_blank" rel="noopener">Great Circle Mapper</a>.)</p>
+<p><strong>The 1717 choice:</strong> Bellamy held <em>rhumb lines</em>: one steady heading he could actually steer. A great circle means constantly re-adjusting your heading, which needs instruments he didn't have. Modern jets and ships fly great circles because GPS makes the adjusting easy.</p>
+<p class="meta"><strong>Why it matters:</strong> the "best" route depends on your tools. Same ocean, different answer in 1717 and today.</p>
+</div>
+</div>
+</section>
+<section id="modern-tools">
+<h2>Live tools &amp; atlases</h2>
+<p class="meta">Free maps and live feeds that sit beside the Whydah story — wind, shipping, period charts, and modern piracy trackers. No login required.</p>
+
+<div class="salem-callout" style="margin-bottom: 1em;">
+<h4>Built for this site</h4>
+<p>Our own tools live elsewhere on the site:</p>
+<ul style="margin: 0.4em 0;">
+<li><strong><a href="/map-studio.html">Map Studio</a></strong> — login-free story maps on a world basemap or Southack’s 1717 chart.</li>
+<li><strong><a href="/flythrough.html">3D flythrough</a></strong> — nineteen stops across the Bellamy story.</li>
+<li><strong><a href="/projects/">Showcase story maps</a></strong> — student Map Studio projects from August 6, 2026.</li>
+</ul>
+</div>
+
+<div class="card-grid">
+
+<div class="card">
+<h4><a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" target="_blank" rel="noopener">earth.nullschool.net - live wind, currents, weather</a></h4>
+<div class="video-embed-wrap" style="padding-bottom: 70%;">
+<iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-56.08,47.18,1225" title="earth.nullschool.net - live North Atlantic wind" loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
+</div>
+<p class="meta" style="margin-top: 0.6em;">Live wind over the North Atlantic right now, centered on the same water Bellamy sailed. Click "earth" in the bottom-left to switch layer (try <em>Ocean -&gt; Currents</em> to see the Gulf Stream and the North Atlantic Gyre rolling in real time). <strong>If the embed shows blank above</strong>, nullschool may be blocking the iframe — click the heading link to open in a new tab.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.shipmap.org/" target="_blank" rel="noopener">Shipmap.org (Kiln, 2012)</a></h4>
+<p>Animated visualization of one full year of global merchant shipping. Watch container ships, dry bulk, tankers, gas, and vehicles move across the Atlantic. The 2012 data is a snapshot but the patterns are durable.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://map.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap</a></h4>
+<p>Free open-source nautical chart - sea marks, harbor info, depth contours, navigational aids. OpenStreetMap's marine layer. Useful for showing how nautical charts encode depth and hazards differently than road maps.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.davidrumsey.com/" target="_blank" rel="noopener">David Rumsey Historical Map Collection</a></h4>
+<p>Stanford's online archive of 100,000+ historical maps - period charts, atlases, globes. The single best free archive of pre-1900 cartography. Includes Moll, Southack-era charts, period Atlantic and Caribbean maps. Built-in Luna Viewer for zoom + compare.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://collections.leventhalmap.org/" target="_blank" rel="noopener">Leventhal Map &amp; Education Center (BPL)</a></h4>
+<p>Boston Public Library's map collection - especially strong on New England, Cape Cod, and 18th-century coastal charts. Has a Southack Cape Cod chart and a "<em>X Marks the Spot</em>" article tracing the Whydah cartography story directly.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://historicalcharts.noaa.gov/" target="_blank" rel="noopener">NOAA Historical Map &amp; Chart Collection</a></h4>
+<p>U.S. government archive of 19th-century coastal charts of the U.S. and territories - direct descendants of the Southack tradition. Free, downloadable, mostly NOAA-hosted PDFs. Useful for showing how NOAA still maintains charts of the same waters Southack was mapping in 1717.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy.com</a></h4>
+<p>Live weather + waves + wind, very visual. Pull up the North Atlantic and ask what today would have been like for a 1717 ship. A 30-knot easterly off Cape Cod is essentially the nor'easter that wrecked the Whydah.</p>
+</div>
+
+<div class="card">
+<h4><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a></h4>
+<p>The International Maritime Bureau's Piracy Reporting Centre maintains a live map of every piracy and armed-robbery-at-sea incident reported worldwide. Updated continuously. Singapore Straits was the world's #1 hotspot in 2025 (80 of 137 IMB incidents), far ahead of the Gulf of Guinea (21); Q1 2026 fell to 16 incidents worldwide, the lowest since 1991. Somali piracy resurged in 2024 under cover of Houthi attacks (MV Ruen retaken March 16, 2024) and surged again from late 2025 into 2026 — naval presence deters but no longer fully contains it. The 1717 chokepoints have moved, not gone away.</p>
+</div>
+
+</div>
+
+<h3>Modern tools (2026)</h3>
+<div class="card">
+<h4><a href="https://www.marinetraffic.com/">MarineTraffic.com</a> — live ship tracking</h4>
+<p>Our main modern-bridge tool. Free tier shows current positions of commercial ships at sea.</p>
+<ul>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-12.0/centery:25.0/zoom:4">Bellamy's world — central Atlantic</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.88/centery:42.52/zoom:12">Salem Harbor</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:14">Wellfleet wreck site (41.891N, 69.957W)</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:32/centery:30/zoom:6">Suez</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:42/centery:14/zoom:5">Red Sea / Bab-el-Mandeb</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-80/centery:9/zoom:8">Panama Canal</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:103/centery:3/zoom:6">Strait of Malacca</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-69.957/centery:41.891/zoom:11">Cape Cod / wreck site (zoomed out)</a></li>
+<li><a href="https://www.marinetraffic.com/en/ais/home/centerx:-70.9/centery:42.5/zoom:12">Salem Harbor</a></li>
+</ul>
+</div>
+
+<h3>Modern piracy - news, trackers, and organizations</h3>
+<div class="card">
+<p class="meta">Current sources for the modern bridge in S14. Vetted, ad-light, public-interest. Most are also linked from <a href="http://www.cindyvallar.com/modernresources.html" target="_blank" rel="noopener">Cindy Vallar's running modern-piracy resources page</a>, which is updated through 2026.</p>
+<ul>
+<li><a href="https://icc-ccs.org/map/" target="_blank" rel="noopener">IMB Live Piracy Map</a> - International Maritime Bureau Piracy Reporting Centre. Live, continuously updated.</li>
+<li><a href="https://www.recaap.org/" target="_blank" rel="noopener">ReCAAP ISC</a> - Asia regional piracy reporting (Singapore Straits is the 2025 hotspot).</li>
+<li><a href="https://eunavfor.eu/" target="_blank" rel="noopener">EUNAVFOR Operation Atalanta</a> - EU naval force off Somalia.</li>
+<li><a href="https://www.shipping.nato.int/" target="_blank" rel="noopener">NATO Shipping Centre</a> - merchant shipping coordination + piracy stats.</li>
+<li><a href="https://www.imo.org/" target="_blank" rel="noopener">IMO (International Maritime Organization)</a> - UN maritime regulatory body.</li>
+<li><a href="https://gcaptain.com/category/piracy/" target="_blank" rel="noopener">gCaptain - piracy section</a> - the best ongoing news source.</li>
+<li><a href="https://news.usni.org/" target="_blank" rel="noopener">USNI News</a> - US Naval Institute, strong coverage of military responses.</li>
+<li><a href="https://cimsec.org/" target="_blank" rel="noopener">Center for International Maritime Security (CIMSEC)</a> - analysis and policy.</li>
+</ul>
+<h4>Recent incidents in modern piracy</h4>
+<ul>
+<li><strong>2024 Ruen rescue (Arabian Sea)</strong> - Indian Navy commandos retook the bulk carrier <em>Ruen</em> from Somali pirates in an airborne raid (March 16, 2024). Concrete modern parallel to Bellamy-era boarding tactics, with helicopters instead of cutlasses.</li>
+<li><strong>2024–2026 Somali piracy resurgence</strong> - Houthi attacks on Red Sea shipping created cover for a Somali piracy resurgence after years of decline; it surged again from late 2025 into 2026 (Hellas Aphrodite hijacked Nov 2025; multiple simultaneous incidents tracked by EUNAVFOR in spring 2026).</li>
+<li><strong>2025 Singapore Straits #1 hotspot</strong> - the world's busiest chokepoint became the busiest piracy zone, surpassing the Gulf of Guinea and Somalia.</li>
+<li><strong>2026 Q1 decline</strong> - early 2026 numbers show a sharp drop from 2025 peaks (16 incidents worldwide, lowest since 1991). The pattern is cyclical, not a story of progress.</li>
+</ul>
+</div>
+</section>
+  </article>
+  <nav class="next-deck" aria-label="Keep exploring">
+    <p class="next-head">Keep exploring</p>
+    <a class="next-card" href="/map-studio.html">
+      <span class="next-label">Map Studio</span>
+      <span class="next-blurb">Drop voice pins on a world map or Southack’s chart.</span>
+      <span class="next-go">Continue &rarr;</span>
+    </a>
+    <a class="next-card" href="/the-wreck/">
+      <span class="next-label">The Wreck & Fleet</span>
+      <span class="next-blurb">The night the chart records.</span>
+      <span class="next-go">Continue &rarr;</span>
+    </a>
+    <a class="next-card" href="/glossary/">
+      <span class="next-label">Glossary</span>
+      <span class="next-blurb">Chart, projection, dead reckoning — the terms defined.</span>
+      <span class="next-go">Continue &rarr;</span>
+    </a>
+  </nav>
+</main>
+<footer class="wrap footer">
+  <span>Part of the WhydahStory reference on the Whydah Gally &mdash; a slave ship turned pirate ship, wrecked off Cape Cod in 1717. Claims are tiered <a href="/methods/">🟢 Solid / 🟡 Contested / 🔴 Mythologized</a>.</span>
+  <div class="row">
+    <a href="/">Home</a> ·
+    <a href="/sources/">Sources</a> ·
+    <a href="/methods/">Methods</a> ·
+    <a href="/curriculum/">Curriculum archive</a>
+  </div>
+</footer>
+</body>
+</html>

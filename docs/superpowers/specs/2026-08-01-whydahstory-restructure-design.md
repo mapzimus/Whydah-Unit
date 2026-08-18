@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01
 **Author:** design notes with Claude
-**Status:** in progress — Phase 1a done; Phase 3 switchover advanced 2026-08-08 (unit-complete voice, `/projects/`, Sources & Methods un-gated, classroom Game Gate / Banner / Crew Points retired, GIS tools public as `#modern-tools`); reference-page split (`/story/`, `/people/`, …) and planner finalize still open
+**Status:** complete — Phase 1a done; Phase 3 switchover advanced 2026-08-08 (unit-complete voice, `/projects/`, Sources & Methods un-gated, classroom Game Gate / Banner / Crew Points retired, GIS tools public as `#modern-tools`); planner finalized; reference-page split landed 2026-08-18 (`/story/` `/people/` `/pirate-world/` `/the-wreck/` `/artifacts/` `/why-piracy/` `/salem/` `/maps/` `/glossary/` `/sources/` `/methods/` via `docs/tools/build-reference.mjs`), `/unit/` and `whydah-dashboard.html` retired into anchor-mapping redirect stubs, `day-config.js` and the photo-hunt galleries (§9 precondition) deleted. Remaining: phase 6 reference build-out, which is open-ended by design
 
 ---
 

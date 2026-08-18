@@ -5,7 +5,6 @@
 !index.html
 !whydah-dashboard.html
 !day*.html
-!day-config.js
 !CNAME
 !handouts.html
 !flythrough.html
@@ -32,16 +31,6 @@
 !navigator/
 !navigator/**
 
-# Photography unit (whole folder is public)
-!photo/
-!photo/**
-
-# Rain-day photo scavenger hunt (added 2026-07-29)
-!photohunt/
-!photohunt/**
-!photohunt2/
-!photohunt2/**
-
 # Classroom games hub + Parrot Flip
 !games/
 !games/**
@@ -51,9 +40,35 @@
 # Shared teacher-controlled game lock (loaded by the games + dashboard)
 !games-gate.js
 
-# Stable route for the live unit dashboard
+# Old dashboard route — now a redirect stub into the reference pages
 !unit/
 !unit/**
+
+# The Whydah reference (dashboard split, 2026-08-18)
+!reference.css
+!reference.js
+!story/
+!story/**
+!people/
+!people/**
+!pirate-world/
+!pirate-world/**
+!the-wreck/
+!the-wreck/**
+!artifacts/
+!artifacts/**
+!why-piracy/
+!why-piracy/**
+!salem/
+!salem/**
+!maps/
+!maps/**
+!glossary/
+!glossary/**
+!sources/
+!sources/**
+!methods/
+!methods/**
 
 # Final-two-weeks student pages (added 2026-07-26)
 !choose-your-project.html
