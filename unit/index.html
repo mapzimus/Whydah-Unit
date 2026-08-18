@@ -2,25 +2,45 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Navigating Piracy — The Story</title>
-<meta name="description" content="The Whydah story dashboard from Navigating Piracy: people, timeline, maps, artifacts, and a completed Summer 2026 unit in Salem.">
-<link rel="canonical" href="https://whydahstory.com/unit/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The story — moved</title>
+<script>
+/* The one-page dashboard became focused reference pages (2026-08-18).
+   Map the old tab anchors onto their new homes. */
+(function () {
+  var MAP = {
+    'overview': '/story/',
+    'timeline': '/story/#timeline',
+    'people': '/people/',
+    'pirate-world': '/pirate-world/',
+    'wreck-fleet': '/the-wreck/',
+    'artifacts': '/artifacts/',
+    'why-piracy': '/why-piracy/',
+    'salem': '/salem/',
+    'maps-geo': '/maps/',
+    'projections': '/maps/#projections',
+    'modern-tools': '/maps/#modern-tools',
+    'glossary': '/glossary/',
+    'source-links': '/sources/',
+    'confidence': '/methods/',
+    'final-project': '/curriculum/choose-your-project.html',
+    'unit-plan': '/curriculum/as-taught/#unit-plan',
+    'voyage-journal': '/curriculum/as-taught/#voyage-journal'
+  };
+  var id = (location.hash || '').slice(1);
+  location.replace(MAP[id] || '/story/');
+})();
+</script>
+<meta http-equiv="refresh" content="0;url=/story/">
+<link rel="canonical" href="https://whydahstory.com/story/">
+<style>
+body{font-family:Georgia,serif;background:#f4efe3;color:#18212a;padding:2.5em 1.2em;line-height:1.5}
+a{color:#9b4529;font-weight:700}
+</style>
 </head>
 <body>
-<p id="loading">Loading the story…</p>
-<script>
-fetch('../whydah-dashboard.html')
-  .then(function(response){ if(!response.ok) throw new Error('Dashboard unavailable'); return response.text(); })
-  .then(function(html){
-    html = html
-      .replace('<head>', '<head><base href="/">')
-      .replaceAll("window.location.hash = '#overview';", "history.replaceState(null, '', '/unit/#overview');")
-      .replace("window.location.hash = '#' + id;", "history.replaceState(null, '', '/unit/#' + id); window.dispatchEvent(new HashChangeEvent('hashchange'));")
-      .replace("history.replaceState(null, '', '#' + id);", "history.replaceState(null, '', '/unit/#' + id);");
-    document.open(); document.write(html); document.close();
-  })
-  .catch(function(){ document.getElementById('loading').innerHTML = 'The dashboard could not load. <a href="../whydah-dashboard.html">Open the compatibility page</a>.'; });
-</script>
+<p><strong>The story dashboard</strong> is now a set of reference pages.</p>
+<p><a href="/story/">Continue to the story →</a></p>
+<p>Or jump straight to <a href="/people/">People</a>, <a href="/the-wreck/">The Wreck &amp; Fleet</a>, <a href="/artifacts/">Artifacts</a>, <a href="/why-piracy/">Why Piracy</a>, <a href="/salem/">Salem</a>, <a href="/maps/">Maps</a>, <a href="/glossary/">Glossary</a>, <a href="/sources/">Sources</a>, or <a href="/methods/">Methods</a>. The classroom snapshot is preserved at <a href="/curriculum/as-taught/">/curriculum/as-taught/</a>.</p>
 </body>
 </html>
