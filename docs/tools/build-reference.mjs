@@ -34,7 +34,7 @@ const PAGES = [
   {
     dir: 'story',
     sections: ['overview', 'timeline'],
-    kicker: 'The Reference',
+    kicker: 'The voyage',
     h1: 'The story',
     title: 'The Whydah — the story and timeline',
     description:
@@ -49,7 +49,7 @@ const PAGES = [
   {
     dir: 'people',
     sections: ['people'],
-    kicker: 'The Reference',
+    kicker: 'The crew',
     h1: 'People',
     title: 'People of the Whydah — crew, captives, investigators',
     description:
@@ -64,7 +64,7 @@ const PAGES = [
   {
     dir: 'pirate-world',
     sections: ['pirate-world'],
-    kicker: 'The Reference',
+    kicker: 'The Atlantic',
     h1: 'The Pirate World',
     title: 'The Pirate World — the Atlantic network around the Whydah',
     description:
@@ -79,7 +79,7 @@ const PAGES = [
   {
     dir: 'the-wreck',
     sections: ['wreck-fleet'],
-    kicker: 'The Reference',
+    kicker: 'The site',
     h1: 'The Wreck & Fleet',
     title: 'The Wreck & Fleet — four ships in the nor’easter of April 26, 1717',
     description:
@@ -94,7 +94,7 @@ const PAGES = [
   {
     dir: 'artifacts',
     sections: ['artifacts'],
-    kicker: 'The Reference',
+    kicker: 'The evidence',
     h1: 'Artifacts',
     title: 'Artifacts of the Whydah — recovered objects and what they teach',
     description:
@@ -109,7 +109,7 @@ const PAGES = [
   {
     dir: 'why-piracy',
     sections: ['why-piracy'],
-    kicker: 'The Reference',
+    kicker: 'The question',
     h1: 'Why piracy',
     title: 'Why piracy? Push and pull factors in 1717',
     description:
@@ -124,7 +124,7 @@ const PAGES = [
   {
     dir: 'salem',
     sections: ['salem'],
-    kicker: 'The Reference',
+    kicker: 'The shore',
     h1: 'Salem connection',
     title: 'The Salem connection — trade, witch-trial figures, and the Whydah',
     description:
@@ -139,7 +139,7 @@ const PAGES = [
   {
     dir: 'maps',
     sections: ['maps-geo', 'projections', 'modern-tools'],
-    kicker: 'The Reference',
+    kicker: 'Cartography',
     h1: 'Maps & Flythrough',
     title: 'Maps of the Whydah — Southack’s 1717 chart, the flythrough, and navigation',
     description:
@@ -154,7 +154,7 @@ const PAGES = [
   {
     dir: 'glossary',
     sections: ['glossary'],
-    kicker: 'The Reference',
+    kicker: 'Language',
     h1: 'Glossary',
     title: 'Glossary — the Whydah reference, term by term',
     description:
@@ -347,7 +347,7 @@ function refNav(currentDir) {
     const current = href === `/${currentDir}/` ? ' aria-current="page"' : '';
     return `<a href="${href}"${current}>${label}</a>`;
   }).join('');
-  return `<nav class="ref-nav wrap" aria-label="The Whydah reference">${items}</nav>`;
+  return `<nav class="ref-nav wrap" aria-label="Chapters">${items}</nav>`;
 }
 
 function nextBlock(next) {
@@ -376,7 +376,7 @@ ${CANONICAL_HOST_SCRIPT}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(page.title)}</title>
 <meta name="description" content="${esc(page.description)}">
-<meta name="theme-color" content="#142333">
+<meta name="theme-color" content="#0d1822">
 <meta property="og:type" content="article">
 <meta property="og:title" content="${esc(page.title)}">
 <meta property="og:description" content="${esc(page.description)}">
@@ -389,14 +389,18 @@ ${CANONICAL_HOST_SCRIPT}
 <script src="/reference.js" defer></script>
 </head>
 <body>
-<header class="wrap site-nav">
-  <a class="brand" href="/">WhydahStory</a>
-  <nav class="nav-links" aria-label="Primary">
-    <a href="/story/">Story</a>
-    <a href="/projects/">Projects</a>
-    <a href="/curriculum/">Curriculum</a>
-    <a href="/games/">Games</a>
-  </nav>
+<header class="site-bar">
+  <div class="wrap site-nav">
+    <a class="brand" href="/">The Whydah <span class="brand-sub">Gally</span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="nav-links" aria-label="Primary">
+      <a href="/story/"${page.dir === 'story' ? ' aria-current="page"' : ''}>Story</a>
+      <a href="/maps/"${page.dir === 'maps' ? ' aria-current="page"' : ''}>Maps</a>
+      <a href="/the-wreck/"${page.dir === 'the-wreck' ? ' aria-current="page"' : ''}>Wreck</a>
+      <a href="/people/"${page.dir === 'people' ? ' aria-current="page"' : ''}>People</a>
+      <a href="/gis/">New map</a>
+    </nav>
+  </div>
 </header>
 ${refNav(page.dir)}
 <main class="wrap content">
@@ -409,13 +413,17 @@ ${sectionHtml}
   </article>
 ${nextBlock(page.next)}
 </main>
-<footer class="wrap footer">
-  <span>Part of the WhydahStory reference on the Whydah Gally &mdash; a slave ship turned pirate ship, wrecked off Cape Cod in 1717. Claims are tiered <a href="/methods/">🟢 Solid / 🟡 Contested / 🔴 Mythologized</a>.</span>
-  <div class="row">
-    <a href="/">Home</a> ·
-    <a href="/sources/">Sources</a> ·
-    <a href="/methods/">Methods</a> ·
-    <a href="/curriculum/">Curriculum archive</a>
+<footer class="site-foot">
+  <div class="wrap footer">
+    <span>The <em>Whydah Gally</em> — a slave ship turned pirate ship, wrecked off Cape Cod in 1717. Claims are tiered <a href="/methods/">Solid / Contested / Mythologized</a>.</span>
+    <div class="row">
+      <a href="/">Home</a> ·
+      <a href="/maps/">Maps</a> ·
+      <a href="/gis/">New map</a> ·
+      <a href="/sources/">Sources</a> ·
+      <a href="/projects/">Student maps</a> ·
+      <a href="/curriculum/">Teaching record</a>
+    </div>
   </div>
 </footer>
 </body>

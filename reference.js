@@ -2,6 +2,16 @@
    Three small features carried over from the dashboard; everything else
    (tabs, admin gate, game gate) was classroom machinery and is retired. */
 document.addEventListener('DOMContentLoaded', function () {
+  var toggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('primary-nav');
+  if (toggle && nav) {
+    toggle.addEventListener('click', function () {
+      var open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      nav.classList.toggle('is-open', !open);
+    });
+  }
+
   // Accordions (delegated — covers any .accordion-header on the page)
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.accordion-header');

@@ -6,11 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breaking News: John King — newspaper front page, Showcase 2026</title>
 <meta name="description" content="A student newspaper front page reporting John King's death in the Whydah wreck: hand-drawn BREAKING NEWS headline, a pasted print of Gregory Manchess's painting of the boy pirate, and the cause of death in a boxed bulletin. Transcribed from the original.">
-<meta name="theme-color" content="#142333">
+<meta name="theme-color" content="#0d1822">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Breaking News: John King — newspaper front page, Showcase 2026">
 <meta property="og:description" content="A student newspaper front page reporting the boy pirate's death in the Whydah wreck off Cape Cod.">
 <link rel="canonical" href="https://whydahstory.com/projects/john-king-newspaper/">
+<link rel="stylesheet" href="/reference.css">
+<script src="/reference.js" defer></script>
 <link rel="icon" type="image/png" sizes="32x32" href="/pics/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <style>
@@ -45,14 +47,18 @@ h1{margin:0;font:700 clamp(30px,6vw,46px)/1.06 var(--serif);letter-spacing:-.02e
 </style>
 </head>
 <body>
-<header class="wrap site-nav">
-  <a class="brand" href="/">WhydahStory</a>
-  <nav class="nav-links" aria-label="Primary">
-    <a href="/story/">Story</a>
-    <a href="/projects/">Projects</a>
-    <a href="/curriculum/">Curriculum</a>
-    <a href="/games/">Games</a>
-  </nav>
+<header class="site-bar">
+  <div class="wrap site-nav">
+    <a class="brand" href="/">The Whydah <span class="brand-sub">Gally</span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="nav-links" aria-label="Primary">
+      <a href="/story/">Story</a>
+      <a href="/maps/">Maps</a>
+      <a href="/the-wreck/">Wreck</a>
+      <a href="/people/">People</a>
+      <a href="/gis/">New map</a>
+    </nav>
+  </div>
 </header>
 <main class="wrap">
   <section class="hero">
@@ -89,12 +95,17 @@ h1{margin:0;font:700 clamp(30px,6vw,46px)/1.06 var(--serif);letter-spacing:-.02e
     <strong>The bulletin is accurate reporting.</strong> King died when the Whydah Gally sank in a violent storm off Cape Cod on April 26, 1717, and the 8-to-11 age range is the real scientific estimate from his remains — an 11-inch fibula identified in 2006, still in its shoe and silk stocking. Full story on his card at <a href="/people/#john-king">People</a> and the storm at <a href="/the-wreck/">The Wreck</a>. It joins Erick's <a href="/projects/john-king/">writing piece</a> and <a href="/projects/john-king-poster/">poster</a>, Kelly and Jasmely's <a href="/projects/john-king-fact-sheet/">fact sheet</a>, and a second front page, <a href="/projects/john-king-breaking-news/">the Savage report</a>, on the class's John King shelf — the same Manchess painting also appears mounted on Erick's writing piece.
   </aside>
 </main>
-<footer class="wrap footer">
-  Presented at the Navigating Piracy Showcase, August 6, 2026, at Collins Middle School, Salem.
-  <div style="margin-top:8px">
-    <a href="/projects/">All student projects</a> ·
-    <a href="/people/">People</a> ·
-    <a href="/">Home</a>
+<footer class="site-foot">
+  <div class="wrap footer">
+    <span>The <em>Whydah Gally</em> — a slave ship turned pirate ship, wrecked off Cape Cod in 1717. Claims are tiered <a href="/methods/">Solid / Contested / Mythologized</a>.</span>
+    <div class="row">
+      <a href="/">Home</a> ·
+      <a href="/maps/">Maps</a> ·
+      <a href="/gis/">New map</a> ·
+      <a href="/sources/">Sources</a> ·
+      <a href="/projects/">Student maps</a> ·
+      <a href="/curriculum/">Teaching record</a>
+    </div>
   </div>
 </footer>
 </body>

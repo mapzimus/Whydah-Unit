@@ -1,20 +1,19 @@
-/* WhydahStory reference pages — shared stylesheet.
-   Light "paper" theme matching the front door (index.html), with content
-   styles carried over from the dashboard's original light theme so the
-   extracted markup (.card, .tier, .timeline, .person-card, …) renders as
-   designed. Generated pages: /story/ /people/ /pirate-world/ /the-wreck/
-   /artifacts/ /why-piracy/ /salem/ /maps/ /glossary/ /sources/ /methods/. */
+/* WhydahStory — shared stylesheet.
+   Dark chrome over warm chart-paper pages. Content blocks (.card, .tier,
+   .timeline, .person-card, …) keep the dashboard's original light theme. */
 
 :root {
-  --ink: #18212a;
-  --paper: #f4efe3;
-  --navy: #142f4b;
-  --rust: #9b4529;
-  --gold: #c59a4a;
-  --line: rgba(20, 47, 75, 0.22);
+  --void: #081018;
+  --deep: #0d1822;
+  --ink: #1b1610;
+  --paper: #efe6d0;
+  --navy: #163044;
+  --rust: #b85a32;
+  --gold: #d4a853;
+  --line: rgba(22, 48, 68, 0.18);
   --serif: Georgia, 'Times New Roman', serif;
   --sans: 'Segoe UI', system-ui, sans-serif;
-  /* content palette (from the dashboard light theme) */
+  --foam: #f3ead6;
   --card-bg: #fffdf6;
   --text: #222;
   --muted: #5a5247;
@@ -38,23 +37,47 @@ body {
   line-height: 1.6;
 }
 a { color: var(--rust); }
-a:hover { color: #6e2f1b; }
+a:hover { color: #8a3d1f; }
 .wrap { width: min(calc(100% - 32px), 980px); margin: auto; }
 
-/* ---------- site chrome (matches index.html) ---------- */
+/* ---------- site chrome ---------- */
+.site-bar {
+  background: var(--deep);
+  color: var(--foam);
+  border-bottom: 1px solid rgba(212, 168, 83, 0.22);
+}
 .site-nav {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 18px 0; border-bottom: 1px solid var(--line);
+  padding: 16px 0;
   font-family: var(--sans);
 }
-.brand { font: 700 19px var(--serif); text-decoration: none; letter-spacing: 0.02em; color: var(--ink); }
-.nav-links { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; }
-.nav-links a { text-decoration: none; color: var(--ink); }
-.nav-links a:hover { text-decoration: underline; }
+.brand {
+  display: flex; align-items: baseline; gap: 8px;
+  font: 700 18px var(--serif); text-decoration: none;
+  letter-spacing: 0.04em; color: var(--foam);
+}
+.brand-sub {
+  font: 700 10px var(--sans); letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--gold); opacity: 0.9;
+}
+.nav-toggle {
+  display: none; background: transparent; color: var(--foam);
+  border: 1px solid rgba(243, 234, 214, 0.28);
+  padding: 6px 10px; font: 700 11px var(--sans);
+  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+}
+.nav-links { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; }
+.nav-links a { text-decoration: none; color: rgba(243, 234, 214, 0.82); }
+.nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--gold); }
+.site-bar .site-nav { border-bottom: 0; padding: 16px 0; }
+.site-bar .brand { color: var(--foam); }
+.site-bar .nav-links a { color: rgba(243, 234, 214, 0.82); }
+.site-bar .nav-links a:hover,
+.site-bar .nav-links a[aria-current="page"] { color: var(--gold); }
 
 .ref-nav {
   display: flex; flex-wrap: wrap; gap: 4px 6px;
-  padding: 10px 0 0;
+  padding: 14px 0 0;
   font-family: var(--sans); font-size: 12.5px;
 }
 .ref-nav a {
@@ -65,9 +88,31 @@ a:hover { color: #6e2f1b; }
 .ref-nav a:hover { background: white; }
 .ref-nav a[aria-current="page"] { background: var(--navy); border-color: var(--navy); color: #f4efe3; }
 
-.footer { padding: 26px 0 44px; margin-top: 34px; border-top: 1px solid var(--line); font-size: 12.5px; color: #565c60; font-family: var(--sans); }
-.footer .row { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; }
-.footer a { color: var(--navy); }
+.site-foot {
+  margin-top: 48px;
+  background: var(--deep);
+  color: rgba(243, 234, 214, 0.72);
+}
+.footer {
+  padding: 28px 0 44px;
+  font-size: 12.5px;
+  font-family: var(--sans);
+  color: rgba(243, 234, 214, 0.72);
+}
+.footer .row { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; }
+.footer a { color: var(--gold); }
+.site-foot .footer { color: rgba(243, 234, 214, 0.72); border-top: 0; }
+.site-foot .footer a { color: var(--gold); }
+
+@media (max-width: 720px) {
+  .nav-toggle { display: inline-block; }
+  .nav-links {
+    display: none; width: 100%; flex-direction: column; gap: 10px;
+    padding: 4px 0 12px;
+  }
+  .nav-links.is-open { display: flex; }
+  .site-nav { flex-wrap: wrap; }
+}
 
 /* ---------- page head ---------- */
 .content { padding: 10px 0 0; }
@@ -232,7 +277,7 @@ tr:last-child td { border-bottom: none; }
   table th, table td { font-size: 0.85em; padding: 0.4em 0.5em; }
 }
 @media print {
-  .site-nav, .ref-nav, .next-deck, .footer { display: none; }
+  .site-bar, .site-nav, .ref-nav, .next-deck, .site-foot, .footer { display: none; }
   body { background: white; }
   .card, .person-card, table { box-shadow: none; break-inside: avoid; }
   .accordion-body[hidden] { display: block !important; }

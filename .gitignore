@@ -70,6 +70,10 @@
 !methods/
 !methods/**
 
+# Spatial telling (coming soon)
+!gis/
+!gis/**
+
 # Final-two-weeks student pages (added 2026-07-26)
 !choose-your-project.html
 !map-studio.html

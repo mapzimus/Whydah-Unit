@@ -1,11 +1,11 @@
 {
-  "name": "Navigating Piracy",
+  "name": "The Whydah Gally",
   "short_name": "Whydah",
   "icons": [
     { "src": "pics/favicon-192.png", "type": "image/png", "sizes": "192x192" },
     { "src": "pics/favicon-512.png", "type": "image/png", "sizes": "512x512" }
   ],
-  "theme_color": "#2c1810",
-  "background_color": "#262626",
+  "theme_color": "#0d1822",
+  "background_color": "#0d1822",
   "display": "standalone"
 }
