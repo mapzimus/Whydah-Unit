@@ -4,123 +4,402 @@
 <script>/* canonical-host redirect */(function(){var h=location.hostname;if(/\.github\.io$/i.test(h)||/(^|\.)maxwellhowegis\.com$/i.test(h)){location.replace("https://whydahstory.com"+location.pathname.replace(/^\/(Whydah-Unit|whydah)(?=\/|$)/i,"")+location.search+location.hash);}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WhydahStory — The Whydah, maps, and how we know</title>
-<meta name="description" content="A source-conscious site about the Whydah Gally, Atlantic navigation, and a summer 2026 middle-school unit in Salem. Story, student projects, curriculum archive, and games.">
-<meta name="theme-color" content="#142333">
+<title>The Whydah Gally — wrecked off Cape Cod, 1717</title>
+<meta name="description" content="The Whydah Gally: a slave ship captured by Sam Bellamy, wrecked off Wellfleet in a midnight nor’easter, and found again with a 1717 chart. The story, the maps, the people.">
+<meta name="theme-color" content="#0d1822">
 <meta property="og:type" content="website">
-<meta property="og:title" content="WhydahStory — The Whydah, maps, and how we know">
-<meta property="og:description" content="The Whydah Gally, Atlantic navigation, student story maps from the 2026 Showcase, and a frozen teaching archive.">
-<meta property="og:image" content="https://whydahstory.com/pics/black-sam-bellamy-feature.jpg">
+<meta property="og:title" content="The Whydah Gally — wrecked off Cape Cod, 1717">
+<meta property="og:description" content="A London slaver. A pirate flagship. Fifteen minutes on a lee shore. The chart that found her 267 years later.">
+<meta property="og:image" content="https://whydahstory.com/pics/southack-1717-chart-clean.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://whydahstory.com/">
 <link rel="icon" type="image/png" sizes="32x32" href="pics/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="stylesheet" href="/reference.css">
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
+<script src="/reference.js" defer></script>
+<script src="/vendor/maplibre/maplibre-gl.js" defer></script>
 <style>
-:root{--ink:#18212a;--paper:#f4efe3;--navy:#142f4b;--rust:#9b4529;--gold:#c59a4a;--line:rgba(20,47,75,.22);--serif:Georgia,'Times New Roman',serif;--sans:'Segoe UI',system-ui,sans-serif}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55}a{color:inherit}
-.wrap{width:min(calc(100% - 32px),980px);margin:auto}
-.site-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
-.brand{font:700 19px var(--serif);text-decoration:none;letter-spacing:.02em}
-.nav-links{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
-.nav-links a{text-decoration:none}
-.nav-links a:hover{text-decoration:underline}
-.hero{padding:42px 0 8px;text-align:center}
-.hero .kicker{margin:0 0 12px;color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-.hero h1{margin:0;font:700 clamp(40px,8vw,68px)/1 var(--serif);letter-spacing:-.03em;color:var(--navy)}
-.hero p{max-width:580px;margin:16px auto 0;font-size:clamp(15px,2vw,18px);color:#39434b}
-.deck{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:34px 0 10px}
-.card{display:flex;flex-direction:column;gap:8px;padding:22px;border:1px solid var(--line);background:rgba(255,255,255,.5);text-decoration:none;transition:transform .15s ease,background .15s ease;min-height:150px}
-.card:hover{transform:translateY(-3px);background:white}
-.card .k{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--rust);text-transform:uppercase}
-.card h2{margin:0;color:var(--navy);font:700 clamp(22px,3.4vw,30px)/1.05 var(--serif)}
-.card p{margin:0;font-size:14.5px;color:#4a5258}
-.card .go{margin-top:auto;padding-top:12px;font-weight:750;color:var(--rust)}
-.card.feature{grid-column:1 / -1;border-left:5px solid var(--gold);background:#e8e0cf;min-height:0}
-.card.feature h2{font-size:clamp(26px,4.5vw,38px)}
-.ref-index{padding:24px 0 4px}
-.ref-index .ref-head{margin:0 0 10px;color:var(--rust);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-.ref-links{display:flex;flex-wrap:wrap;gap:6px 8px;font-size:13px}
-.ref-links a{text-decoration:none;color:var(--navy);padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.45)}
-.ref-links a:hover{background:white}
-.footer{padding:26px 0 44px;margin-top:34px;border-top:1px solid var(--line);font-size:12.5px;color:#565c60}
-.footer .row{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}
-.footer a{color:var(--navy)}
-@media(max-width:640px){.deck{grid-template-columns:1fr}.card{min-height:0}}
-@media(prefers-reduced-motion:reduce){.card:hover{transform:none}}
+body.home { background: var(--void); color: var(--foam); }
+.home a { color: inherit; }
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(8,16,24,0.15) 0%, rgba(8,16,24,0.55) 48%, rgba(8,16,24,0.94) 100%),
+    #0b1520 url("/pics/southack-1717-chart-clean.jpg") center / cover;
+}
+#hero-map {
+  position: absolute; inset: 0;
+  z-index: 0;
+}
+#hero-map .maplibregl-ctrl-attrib { font-size: 10px; opacity: 0.55; }
+.hero-veil {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 30% 40%, transparent 0%, rgba(8,16,24,0.25) 50%, rgba(8,16,24,0.72) 100%),
+    linear-gradient(180deg, rgba(8,16,24,0.2) 0%, rgba(8,16,24,0.15) 40%, rgba(8,16,24,0.92) 100%);
+}
+.hero-copy {
+  position: relative; z-index: 2;
+  width: min(calc(100% - 32px), 980px);
+  margin: 0 auto;
+  padding: 0 0 56px;
+}
+.hero .coords {
+  margin: 0 0 14px;
+  font: 700 11px var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.hero h1 {
+  margin: 0;
+  font: 700 clamp(48px, 11vw, 96px)/0.92 var(--serif);
+  letter-spacing: -0.035em;
+  color: #f7f0de;
+}
+.hero .lede {
+  max-width: 34em;
+  margin: 18px 0 0;
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.45;
+  color: rgba(243, 234, 214, 0.86);
+}
+.hero-actions {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 26px;
+}
+.btn {
+  display: inline-block;
+  padding: 11px 16px;
+  border: 1px solid rgba(212, 168, 83, 0.55);
+  background: var(--gold);
+  color: #14110b;
+  font: 750 13px var(--sans);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--foam);
+  border-color: rgba(243, 234, 214, 0.28);
+}
+.btn:hover { filter: brightness(1.06); }
+.scroll-cue {
+  position: relative; z-index: 2;
+  width: min(calc(100% - 32px), 980px);
+  margin: 0 auto;
+  padding: 0 0 22px;
+  font: 700 11px var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(243, 234, 214, 0.45);
+}
+
+.section { padding: 72px 0 8px; }
+.section h2 {
+  margin: 0 0 10px;
+  font: 700 clamp(28px, 5vw, 42px)/1.05 var(--serif);
+  letter-spacing: -0.02em;
+  color: #f3ead6;
+  border: 0;
+}
+.section .intro {
+  max-width: 40em;
+  margin: 0 0 28px;
+  color: rgba(243, 234, 214, 0.78);
+  font-size: 17px;
+}
+.k {
+  margin: 0 0 12px;
+  color: var(--gold);
+  font: 800 11px var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.beats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+.beat {
+  padding: 22px 20px 24px;
+  border: 1px solid rgba(212, 168, 83, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+}
+.beat .n { color: var(--gold); font: 700 12px var(--sans); letter-spacing: 0.14em; }
+.beat h3 { margin: 10px 0 8px; font: 700 22px/1.15 var(--serif); color: #f3ead6; }
+.beat p { margin: 0; font-family: var(--sans); font-size: 14.5px; color: rgba(243, 234, 214, 0.7); line-height: 1.5; }
+
+.chapters { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.chapter {
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 148px;
+  padding: 22px;
+  border: 1px solid rgba(212, 168, 83, 0.16);
+  background: rgba(13, 24, 34, 0.4);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.chapter:hover { border-color: rgba(212, 168, 83, 0.5); background: rgba(255,255,255,0.04); transform: translateY(-2px); }
+.chapter h3 { margin: 0; font: 700 24px/1.1 var(--serif); color: #f3ead6; }
+.chapter p { margin: 0; font-family: var(--sans); font-size: 14.5px; color: rgba(243, 234, 214, 0.68); }
+.chapter .go { margin-top: auto; padding-top: 12px; color: var(--gold); font: 750 13px var(--sans); }
+.chapter.wide { grid-column: 1 / -1; min-height: 0; }
+
+.soon {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 28px;
+  align-items: end;
+  padding: 28px;
+  border: 1px solid rgba(212, 168, 83, 0.28);
+  background:
+    linear-gradient(120deg, rgba(13,24,34,0.2), rgba(13,24,34,0.55)),
+    url("/pics/Whydah-map.jpg") center / cover;
+}
+.soon h2 { color: #f7f0de; }
+.soon .intro { margin-bottom: 0; }
+.soon .stamp {
+  justify-self: end;
+  padding: 10px 14px;
+  border: 1px dashed var(--gold);
+  color: var(--gold);
+  font: 800 12px var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(8,16,24,0.55);
+}
+
+.quiet { padding-bottom: 72px; }
+.quiet-links { display: flex; flex-wrap: wrap; gap: 10px 18px; font-family: var(--sans); font-size: 14px; }
+.quiet-links a { color: rgba(243, 234, 214, 0.72); text-decoration: none; border-bottom: 1px solid rgba(212, 168, 83, 0.35); }
+.quiet-links a:hover { color: var(--gold); }
+
+.home .site-foot { margin-top: 0; }
+
+@media (max-width: 760px) {
+  .beats, .chapters, .soon { grid-template-columns: 1fr; }
+  .soon .stamp { justify-self: start; }
+  .chapter { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter:hover { transform: none; }
+}
 </style>
 </head>
-<body>
-<header class="wrap site-nav">
-  <a class="brand" href="/">WhydahStory</a>
-  <nav class="nav-links" aria-label="Primary">
-    <a href="/story/">Story</a>
-    <a href="/projects/">Projects</a>
-    <a href="/curriculum/">Curriculum</a>
-    <a href="/games/">Games</a>
-  </nav>
-</header>
-<main class="wrap">
-  <section class="hero">
-    <p class="kicker">WhydahStory</p>
-    <h1>The Whydah, and how we know.</h1>
-    <p>A source-conscious site about the slave ship turned pirate ship that wrecked off Cape Cod in 1717 — plus the student story maps and teaching archive from a summer unit in Salem.</p>
-  </section>
-  <section class="deck">
-    <a class="card feature" href="/projects/">
-      <span class="k">From the Showcase</span>
-      <h2>Student projects</h2>
-      <p>Story maps from Map Studio, plus posters and writing pieces transcribed from the originals — the August 6, 2026 Showcase, committed permanently.</p>
-      <span class="go">Open the archive →</span>
-    </a>
-    <a class="card" href="/story/">
-      <span class="k">Reference</span>
-      <h2>The story</h2>
-      <p>People, timeline, maps, artifacts — and which claims are documented, contested, or mythologized.</p>
-      <span class="go">Explore the story →</span>
-    </a>
-    <a class="card" href="/curriculum/">
-      <span class="k">Teaching record</span>
-      <h2>Curriculum archive</h2>
-      <p>All twenty days as taught at Collins Middle School, July 6 – August 6, 2026. Frozen. Not maintained.</p>
-      <span class="go">Enter the archive →</span>
-    </a>
-    <a class="card" href="/map-studio.html">
-      <span class="k">Tool</span>
-      <h2>Map Studio</h2>
-      <p>Drop voice pins on a world map or Southack’s 1717 chart. Open any archived Showcase map from here.</p>
-      <span class="go">Open the studio →</span>
-    </a>
-    <a class="card" href="/games/">
-      <span class="k">Play</span>
-      <h2>Games</h2>
-      <p>Whydah’s Voyage along the coast, plus Parrot Flip for the crew. Still playable. No login.</p>
-      <span class="go">To the games →</span>
-    </a>
-  </section>
-  <section class="ref-index" aria-label="The Whydah reference">
-    <p class="ref-head">The reference, page by page</p>
-    <div class="ref-links">
-      <a href="/story/">Story &amp; timeline</a>
+<body class="home">
+<header class="site-bar">
+  <div class="wrap site-nav">
+    <a class="brand" href="/">The Whydah <span class="brand-sub">Gally</span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="nav-links" aria-label="Primary">
+      <a href="/story/" aria-current="false">Story</a>
+      <a href="/maps/">Maps</a>
+      <a href="/the-wreck/">Wreck</a>
       <a href="/people/">People</a>
-      <a href="/pirate-world/">The Pirate World</a>
-      <a href="/the-wreck/">The Wreck &amp; Fleet</a>
-      <a href="/artifacts/">Artifacts</a>
-      <a href="/why-piracy/">Why Piracy</a>
+      <a href="/gis/">New map</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" aria-label="The wreck site">
+  <div id="hero-map" role="img" aria-label="Atlantic map of the Whydah’s voyage, from London to the wreck off Wellfleet"></div>
+  <div class="hero-veil" aria-hidden="true"></div>
+  <div class="hero-copy">
+    <p class="coords">41.891°N · 69.957°W · Wellfleet, Cape Cod</p>
+    <h1>The Whydah Gally</h1>
+    <p class="lede">Built in London to carry enslaved people. Taken by Sam Bellamy off the Bahamas. Lost in fifteen minutes on a lee shore — and found again with a chart drawn the month she sank.</p>
+    <div class="hero-actions">
+      <a class="btn" href="/story/">Read the story</a>
+      <a class="btn ghost" href="/maps/">See it on a map</a>
+    </div>
+  </div>
+  <p class="scroll-cue">The voyage, the wreck, the chart</p>
+</section>
+
+<main>
+  <section class="wrap section">
+    <p class="k">1715 – 1717 – 1984</p>
+    <h2>One ship, three lives.</h2>
+    <p class="intro">Before she was a pirate legend she was a slaver, named for the West African port of Ouidah. The gold in her hold was the proceeds of that voyage. The chart that found her was a salvage map. None of that is a footnote.</p>
+    <div class="beats">
+      <article class="beat">
+        <span class="n">01 · Slaver</span>
+        <h3>London to Ouidah to Jamaica</h3>
+        <p>Sir Humphrey Morice, MP and London’s foremost slave merchant, commissioned her. 367 people were loaded in West Africa. 312 were sold in Kingston. Fifty-five died on the crossing.</p>
+      </article>
+      <article class="beat">
+        <span class="n">02 · Flagship</span>
+        <h3>Bellamy takes her in three days</h3>
+        <p>Late February 1717, in the Windward Passage. A 300-mile chase. Captain Prince surrendered; Bellamy let him sail away. For ten weeks she was the richest pirate ship of the Golden Age.</p>
+      </article>
+      <article class="beat">
+        <span class="n">03 · Wreck</span>
+        <h3>A nor’easter off Wellfleet</h3>
+        <p>April 26, 1717. 144 of 146 drowned. Cyprian Southack marked the spot that May. Barry Clifford read the same chart in 1984. The wreck is still under that beach.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <p class="k">Explore</p>
+    <h2>How we tell it.</h2>
+    <p class="intro">People, evidence, and the maps that hold the story together. Every claim on these pages is marked Solid, Contested, or Mythologized.</p>
+    <div class="chapters">
+      <a class="chapter" href="/story/">
+        <h3>The voyage</h3>
+        <p>The full arc — from a Devon village to a Boston gallows — and a timeline you can trust in pieces.</p>
+        <span class="go">Open the story →</span>
+      </a>
+      <a class="chapter" href="/the-wreck/">
+        <h3>The wreck &amp; fleet</h3>
+        <p>Four ships in one storm. Two survived. Geography and luck decided who lived.</p>
+        <span class="go">The night she broke →</span>
+      </a>
+      <a class="chapter" href="/maps/">
+        <h3>Maps &amp; flythrough</h3>
+        <p>Southack’s 1717 chart, a 19-stop globe tour, and why a flat map cannot tell this honestly.</p>
+        <span class="go">Across the Atlantic →</span>
+      </a>
+      <a class="chapter" href="/people/">
+        <h3>People</h3>
+        <p>Bellamy, the boy John King, the pilot John Julian, the six who hanged, the two who didn’t.</p>
+        <span class="go">Meet the crew →</span>
+      </a>
+      <a class="chapter" href="/artifacts/">
+        <h3>Artifacts</h3>
+        <p>The bell, the coins, a child’s shoe — more than 200,000 objects from under the sand.</p>
+        <span class="go">What came up →</span>
+      </a>
+      <a class="chapter" href="/why-piracy/">
+        <h3>Why piracy</h3>
+        <p>Push and pull in 1717: unpaid wages and a vote. The hard parts held at the same time.</p>
+        <span class="go">The question →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="wrap section" id="new-map">
+    <a class="soon" href="/gis/">
+      <div>
+        <p class="k">A new map</p>
+        <h2>The voyage, drawn again.</h2>
+        <p class="intro">A spatial telling of the Whydah is coming — the triangle, the chase, the lee shore, the chart that found her. Until then the flythrough and the maps already here will take you over the same water.</p>
+      </div>
+      <span class="stamp">Coming soon</span>
+    </a>
+  </section>
+
+  <section class="wrap section quiet">
+    <p class="k">Also here</p>
+    <h2>The rest of the ship.</h2>
+    <p class="intro">Student story maps from a Salem classroom, the unit as it was taught, and two games that still run in the browser.</p>
+    <div class="quiet-links">
+      <a href="/pirate-world/">The Atlantic world</a>
       <a href="/salem/">Salem</a>
-      <a href="/maps/">Maps &amp; Flythrough</a>
       <a href="/glossary/">Glossary</a>
       <a href="/sources/">Sources</a>
-      <a href="/methods/">Methods</a>
+      <a href="/methods/">How we know</a>
+      <a href="/map-studio.html">Map Studio</a>
+      <a href="/projects/">Student maps</a>
+      <a href="/curriculum/">Teaching record</a>
+      <a href="/games/">Games</a>
     </div>
   </section>
 </main>
-<footer class="wrap footer">
-  <span>Built around the Whydah Gally and a Summer 2026 middle-school program in Salem, Massachusetts. Before pirates captured it, the Whydah was built for the transatlantic slave trade — that history is part of the story, not a footnote.</span>
-  <div class="row">
-    <a href="/curriculum/crew-deck.html">Old crew deck</a> ·
-    <a href="/curriculum-guide.html">Curriculum guide</a> ·
-    <a href="/flythrough.html">3D flythrough</a>
+
+<footer class="site-foot">
+  <div class="wrap footer">
+    <span>The <em>Whydah Gally</em> — a slave ship turned pirate ship, wrecked off Cape Cod in 1717. Claims are tiered <a href="/methods/">Solid / Contested / Mythologized</a>.</span>
+    <div class="row">
+      <a href="/story/">Story</a> ·
+      <a href="/maps/">Maps</a> ·
+      <a href="/gis/">New map</a> ·
+      <a href="/sources/">Sources</a> ·
+      <a href="/projects/">Student maps</a> ·
+      <a href="/curriculum/">Teaching record</a>
+    </div>
   </div>
 </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.maplibregl) return;
+  var el = document.getElementById('hero-map');
+  if (!el) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var wreck = [-69.957, 41.891];
+  var route = [
+    [-0.099, 51.510],
+    [2.09, 6.36],
+    [-76.84, 17.94],
+    [-73.5, 20.0],
+    [-71.58, 41.18],
+    wreck
+  ];
+  var map;
+  try {
+    map = new maplibregl.Map({
+      container: el,
+      style: 'https://tiles.openfreemap.org/styles/dark',
+      center: [-42, 26],
+      zoom: 2.15,
+      pitch: 0,
+      bearing: -12,
+      attributionControl: true,
+      interactive: false,
+      fadeDuration: 0
+    });
+  } catch (err) {
+    return;
+  }
+  map.on('error', function () { /* chart image remains underneath */ });
+  map.on('load', function () {
+    map.addSource('voyage', {
+      type: 'geojson',
+      data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route } }
+    });
+    map.addLayer({
+      id: 'voyage-glow',
+      type: 'line',
+      source: 'voyage',
+      paint: { 'line-color': '#d4a853', 'line-width': 6, 'line-opacity': 0.22 }
+    });
+    map.addLayer({
+      id: 'voyage-line',
+      type: 'line',
+      source: 'voyage',
+      paint: { 'line-color': '#e6c57a', 'line-width': 1.6, 'line-opacity': 0.9 }
+    });
+    map.addSource('wreck', {
+      type: 'geojson',
+      data: { type: 'Feature', geometry: { type: 'Point', coordinates: wreck } }
+    });
+    map.addLayer({
+      id: 'wreck-halo',
+      type: 'circle',
+      source: 'wreck',
+      paint: { 'circle-radius': 14, 'circle-color': '#c45c32', 'circle-opacity': 0.22 }
+    });
+    map.addLayer({
+      id: 'wreck-pt',
+      type: 'circle',
+      source: 'wreck',
+      paint: {
+        'circle-radius': 5,
+        'circle-color': '#f3ead6',
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#c45c32'
+      }
+    });
+    if (!reduce) {
+      map.easeTo({ center: [-55, 28], zoom: 2.35, bearing: -8, duration: 8000 });
+    }
+  });
+});
+</script>
 </body>
 </html>
