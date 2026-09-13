@@ -422,14 +422,15 @@
   let matchStats  = null;   // per-player display-only tallies (index-aligned, null in practice)
   const RESULT_MS = 1500;
 
-  // CPU takes its turn: aim near the sweet-spot flick, with a fixed classroom miss rate.
+  // CPU takes its turn: aim near the sweet-spot flick, with a classroom miss rate.
+  // A little sloppier than the old medium (sigma 400 / lean 420) so kids can beat it.
   function aiFlick() {
     if (game.state !== GAME_STATES.TURN_START && game.state !== GAME_STATES.ON_FIRE) return;
-    const sigma = 400;
+    const sigma = 540;
     const u1 = Math.random() || 1e-6, u2 = Math.random();
     const gauss = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
     const up = Math.max(500, 2100 + gauss * sigma);   // sweet spot ~2100 px/s
-    const vx = (Math.random() - 0.5) * 420;           // slight lean
+    const vx = (Math.random() - 0.5) * 520;           // lean — wider = more tips
     onFlick(vx, -up);
   }
 
