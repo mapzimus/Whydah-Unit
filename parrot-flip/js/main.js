@@ -15,9 +15,6 @@
   const flipHintEl   = document.getElementById('flip-hint');
   const startBtn     = document.getElementById('start-btn');
   const practiceBtn  = document.getElementById('practice-btn');
-  const plinkoLabBtn = document.getElementById('plinko-lab-btn');
-  const plinkoLabPanel = document.getElementById('plinko-lab-panel');
-  const plinkoLabStats = document.getElementById('plinko-lab-stats');
   const addPlayerBtn = document.getElementById('add-player-btn');
   const playerInputs = document.getElementById('player-inputs');
   const handoffEl    = document.getElementById('handoff-overlay');
@@ -347,7 +344,6 @@
     if (loopId) { cancelAnimationFrame(loopId); loopId = null; }
     evaluating = false;
     showGlow = false;
-    stopPlinkoLab();
     Input.disable();
     Sound.stopSuddenDeath();
     leaveKioskMode();
@@ -425,136 +421,6 @@
   let aiTimer     = null;
   let matchStats  = null;   // per-player display-only tallies (index-aligned, null in practice)
   const RESULT_MS = 1500;
-
-  // ── Plinko Lab: auto-drop tester (title ⚓ ×5, setup button, or ?plinko=auto)
-  let plinkoLab = false;
-  let plinkoLabDrop = 0;
-  let plinkoLabPaused = false;
-  let plinkoLabRandom = false;
-  let plinkoLabHits = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  let plinkoLabSlot = 4;
-
-  function plinkoQuery() {
-    return String(new URLSearchParams(location.search).get('plinko') || '').toLowerCase();
-  }
-  function stopPlinkoLab() {
-    plinkoLab = false;
-    plinkoLabPaused = false;
-    plinkoLabPanel?.classList.add('hidden');
-  }
-  function resetLabRoster() {
-    game.plinkoWin = false;
-    game.justEliminated = false;
-    game.lastPenalty = 0;
-    game.onFirePlayer = null;
-    game.onFireBonus = 0;
-    game.pointCount = 0;
-    game.turnCounter = 0;
-    game.sdJustStarted = false;
-    game.fireHeld = false;
-    const lives = game.startingLives || 10;
-    for (const p of game.players) {
-      p.lives = lives;
-      p.eliminated = false;
-      p.streak = 0;
-      p.isOnFire = false;
-      p.isHeatingUp = false;
-    }
-    if (game.players.length) {
-      game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
-    }
-  }
-  function labBucket(i) {
-    return PLINKO_BUCKETS[Math.max(0, Math.min(8, i | 0))];
-  }
-  function updateLabPanel() {
-    if (!plinkoLab || !plinkoLabStats) return;
-    const now = labBucket(plinkoLabSlot);
-    const rows = PLINKO_BUCKETS.map((b, i) => {
-      const mark = i === plinkoLabSlot ? ' ◂' : '';
-      const cls = i === plinkoLabSlot ? 'lab-hit is-next' : 'lab-hit';
-      return `<div class="${cls}"><span>${i + 1}. ${b.title}</span><span>${plinkoLabHits[i]}${mark}</span></div>`;
-    }).join('');
-    const mode = plinkoLabPaused ? 'PAUSED' : (plinkoLabRandom ? 'Random' : `Cycle · ${now.short}`);
-    plinkoLabStats.innerHTML = `<div class="lab-hit"><span>Drops</span><span>${plinkoLabDrop} · ${mode}</span></div>${rows}`;
-  }
-  function startLabDrop() {
-    if (!plinkoLab) return;
-    Input.disable();
-    flipHintEl.classList.add('hidden');
-    handoffEl.classList.add('hidden');
-    evaluating = false;
-    showGlow = false;
-    resultAlpha = 0;
-    game.lastResult = null;
-    game.lastPlinko = null;
-    game.plinkoWin = false;
-    game.state = GAME_STATES.EVALUATING;
-    const target = plinkoLabRandom ? Math.floor(Math.random() * 9) : (plinkoLabDrop % 9);
-    plinkoLabSlot = target;
-    plinkoLabDrop++;
-    Physics.startPlinko(target);
-    const bkt = labBucket(target);
-    const p = game.currentPlayer();
-    turnBannerEl.textContent = `⚓ ${p ? p.name : 'Lab'} · drop ${plinkoLabDrop}`;
-    if (p) turnBannerEl.style.color = p.color;
-    pointCountEl.textContent = plinkoLabRandom ? 'Random' : `${bkt.title} · ${bkt.short}`;
-    streakBannerEl.textContent = 'Auto-test — tap to skip this bounce';
-    streakBannerEl.className = 'streak-banner on-fire';
-    Sound.play('plinko');
-    updateLabPanel();
-    updateHUD();
-  }
-  function finishLabDrop() {
-    resetLabRoster();
-    updateHUD();
-    if (plinkoLabPaused) {
-      turnBannerEl.textContent = `⚓ Lab paused · next drop ${plinkoLabDrop + 1}`;
-      pointCountEl.textContent = 'Tap or P';
-      streakBannerEl.textContent = 'Paused — roster reset, ready to drop';
-      streakBannerEl.className = 'streak-banner';
-      updateLabPanel();
-      return;
-    }
-    startLabDrop();
-  }
-  function skipLabStep() {
-    if (!plinkoLab) return;
-    if (Physics.getPlinkoState() && game.state !== GAME_STATES.RESULT &&
-        game.state !== GAME_STATES.GAME_OVER) {
-      Physics.skipPlinko();
-      return;
-    }
-    if (game.state === GAME_STATES.RESULT) {
-      resultTimer = 0;
-      return;
-    }
-    if (plinkoLabPaused) startLabDrop();
-  }
-  function beginPlinkoLab() {
-    plinkoLab = true;
-    plinkoLabDrop = 0;
-    plinkoLabPaused = false;
-    plinkoLabRandom = false;
-    plinkoLabHits = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    plinkoLabSlot = 0;
-    Sound.unlock();
-    setupScreen.classList.add('hidden');
-    gameOverEl.classList.add('hidden');
-    tutorialEl.classList.add('hidden');
-    handoffEl.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    plinkoLabPanel?.classList.remove('hidden');
-    try { document.activeElement.blur(); } catch (_) {}
-    const defs = [
-      { name: PARROTS[0].name, color: PARROTS[0].color, isAI: false },
-      { name: PARROTS[1].name, color: PARROTS[1].color, isAI: false },
-      { name: PARROTS[2].name, color: PARROTS[2].color, isAI: false },
-      { name: PARROTS[3].name, color: PARROTS[3].color, isAI: false },
-    ];
-    startGame(defs, 1, { startingLives: 10 });
-  }
-  window.__plinkoLab = beginPlinkoLab;
 
   // CPU takes its turn: aim near the sweet-spot flick, with a classroom miss rate.
   // A little sloppier than the old medium (sigma 400 / lean 420) so kids can beat it.
@@ -653,9 +519,8 @@
     // half the wall-clock time — same arc, just quicker with a full lobby.
     const plinkoOn = !!Physics.getPlinkoState();
     const aiShot = currentIsAI() && (evaluating || plinkoOn);
-    const labShot = plinkoLab && plinkoOn;
     Physics.step(dt);
-    if (aiShot || labShot) Physics.step(dt);
+    if (aiShot) Physics.step(dt);
 
     // Physics-based landing check
     if (evaluating) {
@@ -703,11 +568,7 @@
       if (resultTimer <= 0) {
         showGlow    = false;
         resultAlpha = 0;
-        if (plinkoLab) {
-          finishLabDrop();
-        } else {
-          game.advanceTurn();
-        }
+        game.advanceTurn();
       }
     }
 
@@ -751,12 +612,6 @@
     showGlow    = false;
     resultAlpha = 0;
     clearTimeout(aiTimer);
-    if (plinkoLab) {
-      Input.disable();
-      flipHintEl.classList.add('hidden');
-      startLabDrop();
-      return;
-    }
     Physics.resetBottle();
     flipHintEl.classList.remove('hidden');
 
@@ -853,10 +708,6 @@
 
     if (game.lastResult === 'PLINKO' && game.lastPlinko) {
       const bkt = game.lastPlinko;
-      if (plinkoLab && Number.isInteger(plinkoLabSlot)) {
-        plinkoLabHits[plinkoLabSlot] = (plinkoLabHits[plinkoLabSlot] || 0) + 1;
-        updateLabPanel();
-      }
       streakBannerEl.textContent = bkt.win ? 'Lucky Bird — automatic win!'
         : bkt.lose ? 'Walked the plank!'
         : bkt.x2 && bkt.halve ? '×2 lives · crew halved'
@@ -959,12 +810,6 @@
   }
 
   function onGameOver() {
-    if (plinkoLab) {
-      gameScreen.classList.remove('hidden');
-      gameOverEl.classList.add('hidden');
-      finishLabDrop();
-      return;
-    }
     gameScreen.classList.add('hidden');
     gameOverEl.classList.remove('hidden');
     const active = game.activePlayers();
@@ -997,11 +842,10 @@
     if (game.state !== GAME_STATES.TURN_START &&
         game.state !== GAME_STATES.ON_FIRE) return;
 
-    if (plinkoLab) return;
     Sound.unlock();
     Sound.play('flick');
     Physics.applyFlick(vx, vy);
-    const forceHold = plinkoQuery() === '1';
+    const forceHold = /(?:\?|&)plinko=1(?:&|$)/.test(location.search);
     Physics.armPlinko(forceHold);
 
     // Practice trainer: show where this flick landed on the strength meter
@@ -1154,74 +998,4 @@
     parrotTaps++;
     if (parrotTaps >= 8) unlockPieces();
   });
-
-  // Gold Plinko Lab chip under the title — tap five times. Drawn as SVG so
-  // phones that hide ⚓ inside the gradient heading still see a real anchor.
-  const setupAnchor = document.getElementById('setup-anchor');
-  const setupAnchorLabel = document.getElementById('setup-anchor-label');
-  let anchorTaps = 0, anchorTapAt = 0;
-  function setAnchorLabel(text) {
-    if (setupAnchorLabel) setupAnchorLabel.textContent = text;
-  }
-  setupAnchor?.addEventListener('click', (e) => {
-    e.preventDefault();
-    Sound.unlock();
-    Sound.play('coin');
-    const now = performance.now();
-    if (now - anchorTapAt > 4500) anchorTaps = 0;
-    anchorTapAt = now;
-    anchorTaps++;
-    if (anchorTaps >= 5) {
-      anchorTaps = 0;
-      setAnchorLabel('Plinko Lab · tap 5×');
-      showEggToast('Plinko Lab');
-      beginPlinkoLab();
-      return;
-    }
-    setAnchorLabel(`Plinko Lab · ${anchorTaps} / 5`);
-    showEggToast(`${anchorTaps} / 5`);
-  });
-  plinkoLabBtn?.addEventListener('click', () => {
-    Sound.unlock();
-    beginPlinkoLab();
-  });
-
-  let labTapDown = false;
-  canvas.addEventListener('pointerdown', () => {
-    labTapDown = !!plinkoLab;
-  });
-  canvas.addEventListener('pointerup', () => {
-    if (plinkoLab && labTapDown) skipLabStep();
-    labTapDown = false;
-  });
-  document.addEventListener('keydown', (e) => {
-    if (!plinkoLab) return;
-    if (e.key === 'p' || e.key === 'P') {
-      e.preventDefault();
-      plinkoLabPaused = !plinkoLabPaused;
-      if (!plinkoLabPaused && game.state !== GAME_STATES.RESULT && !Physics.getPlinkoState()) {
-        startLabDrop();
-      } else {
-        updateLabPanel();
-        if (plinkoLabPaused) pointCountEl.textContent = 'PAUSED';
-      }
-    } else if (e.key === 'r' || e.key === 'R') {
-      e.preventDefault();
-      plinkoLabRandom = !plinkoLabRandom;
-      updateLabPanel();
-      pointCountEl.textContent = plinkoLabRandom ? 'Random' : 'Cycle';
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      returnToSetup();
-    } else if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      skipLabStep();
-    }
-  }, true);
-
-  // ?plinko=auto|test|lab starts the looping tester. ?plinko=1 still forces
-  // a hold after a real flick.
-  if (['auto', 'test', 'lab'].includes(plinkoQuery())) {
-    beginPlinkoLab();
-  }
 })();
