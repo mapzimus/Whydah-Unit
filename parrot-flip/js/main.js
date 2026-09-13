@@ -563,6 +563,7 @@
     handoffEl.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     plinkoLabPanel?.classList.remove('hidden');
+    try { document.activeElement.blur(); } catch (_) {}
     const defs = [
       { name: PARROTS[0].name, color: PARROTS[0].color, isAI: false },
       { name: PARROTS[1].name, color: PARROTS[1].color, isAI: false },
@@ -1200,6 +1201,7 @@
   document.addEventListener('keydown', (e) => {
     if (!plinkoLab) return;
     if (e.key === 'p' || e.key === 'P') {
+      e.preventDefault();
       plinkoLabPaused = !plinkoLabPaused;
       if (!plinkoLabPaused && game.state !== GAME_STATES.RESULT && !Physics.getPlinkoState()) {
         startLabDrop();
@@ -1208,16 +1210,18 @@
         if (plinkoLabPaused) pointCountEl.textContent = 'PAUSED';
       }
     } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
       plinkoLabRandom = !plinkoLabRandom;
       updateLabPanel();
       pointCountEl.textContent = plinkoLabRandom ? 'Random' : 'Cycle';
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       returnToSetup();
     } else if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
       skipLabStep();
     }
-  });
+  }, true);
 
   // ?plinko=auto|test|lab starts the looping tester. ?plinko=1 still forces
   // a hold after a real flick.
