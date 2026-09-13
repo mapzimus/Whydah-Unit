@@ -719,7 +719,7 @@
         Sound.play('make');
       } else if (game.sdJustStarted) {
         streakBannerEl.textContent = '💀 Sudden death!';
-        streakBannerEl.className   = 'streak-banner miss-penalty';
+        streakBannerEl.className   = 'streak-banner';
         Sound.play('make');
       } else if (game.perfectLanding) {
         streakBannerEl.textContent = '✦ Perfect landing!';
