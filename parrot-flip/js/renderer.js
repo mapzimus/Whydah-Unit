@@ -458,6 +458,19 @@ const Renderer = (() => {
     ctx.fillStyle = '#3a2418';
     ctx.fillRect(0, layout.floor, W, H - layout.floor);
 
+    ctx.save();
+    ctx.fillStyle = 'rgba(197,154,74,0.42)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = '700 11px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('BEWARE THE HOLD', W / 2, 10);
+    ctx.restore();
+
+    const hazards = plinko.hazards || [];
+    for (const h of hazards) {
+      if (h.kind === 'wind') drawHoldWind(h);
+    }
+
     for (let i = 0; i < 9; i++) {
       const x = layout.inset + layout.slotW * i;
       const b = buckets[i] || { color: '#c59a4a', short: '', title: '' };
@@ -497,6 +510,165 @@ const Renderer = (() => {
       ctx.fill();
     }
 
+    for (const h of hazards) {
+      if (h.kind === 'wind') continue;
+      drawHoldMover(h);
+    }
+  }
+
+  function drawHoldWind(h) {
+    const pulse = Math.max(0.15, Math.min(1, h.pulse == null ? 0.6 : h.pulse));
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(h.x, h.y, h.w, h.h);
+    ctx.clip();
+    if (h.style === 'cannon') {
+      const g = ctx.createLinearGradient(h.x, h.y, h.x + h.w, h.y);
+      g.addColorStop(0, `rgba(255,140,40,${0.04 + 0.16 * pulse})`);
+      g.addColorStop(0.5, `rgba(255,210,90,${0.10 + 0.22 * pulse})`);
+      g.addColorStop(1, `rgba(255,140,40,${0.04 + 0.16 * pulse})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(h.x, h.y, h.w, h.h);
+    } else {
+      ctx.fillStyle = `rgba(90,170,190,${0.05 + 0.14 * pulse})`;
+      ctx.fillRect(h.x, h.y, h.w, h.h);
+    }
+    const rows = 5;
+    for (let i = 0; i < rows; i++) {
+      const yy = h.y + (i + 0.55) * h.h / rows;
+      const drift = (pulse * 18 + i * 7) % 22;
+      ctx.strokeStyle = h.style === 'cannon'
+        ? `rgba(255,220,140,${0.25 + 0.55 * pulse})`
+        : `rgba(220,240,245,${0.22 + 0.5 * pulse})`;
+      ctx.lineWidth = 1.2 + pulse * 1.1;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      if (h.dir >= 0) {
+        ctx.moveTo(h.x + drift, yy);
+        ctx.bezierCurveTo(h.x + h.w * 0.35, yy - 4, h.x + h.w * 0.6, yy + 4, h.x + h.w * (0.55 + 0.35 * pulse), yy);
+      } else {
+        ctx.moveTo(h.x + h.w - drift, yy);
+        ctx.bezierCurveTo(h.x + h.w * 0.65, yy - 4, h.x + h.w * 0.4, yy + 4, h.x + h.w * (0.45 - 0.35 * pulse), yy);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = h.style === 'cannon'
+      ? `rgba(255,210,120,${0.45 + 0.4 * pulse})`
+      : `rgba(200,230,235,${0.4 + 0.4 * pulse})`;
+    ctx.font = `700 ${Math.max(8, Math.min(11, h.w * 0.08))}px "Segoe UI", system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(h.label || 'WIND', h.x + h.w / 2, h.y + h.h / 2);
+    ctx.restore();
+  }
+
+  function drawHoldMover(h) {
+    if (h.kind === 'lantern') {
+      ctx.save();
+      ctx.strokeStyle = '#c59a4a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(h.pivotX, h.pivotY);
+      ctx.lineTo(h.x, h.y);
+      ctx.stroke();
+      ctx.fillStyle = '#5a3a24';
+      ctx.fillRect(h.pivotX - 4, h.pivotY - 3, 8, 5);
+      const glow = h.glow == null ? 0.8 : h.glow;
+      const halo = ctx.createRadialGradient(h.x, h.y, 1, h.x, h.y, h.r * 3.2);
+      halo.addColorStop(0, `rgba(255,190,60,${0.45 * glow})`);
+      halo.addColorStop(1, 'rgba(255,140,20,0)');
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, h.r * 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      const glass = ctx.createRadialGradient(h.x - h.r * 0.3, h.y - h.r * 0.3, 1, h.x, h.y, h.r);
+      glass.addColorStop(0, '#ffe9a0');
+      glass.addColorStop(0.55, '#ffb020');
+      glass.addColorStop(1, '#8a4a10');
+      ctx.fillStyle = glass;
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#3a2410';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(90,50,16,0.7)';
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y - h.r);
+      ctx.lineTo(h.x, h.y + h.r);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
+    if (h.kind === 'barrel') {
+      ctx.save();
+      ctx.translate(h.x, h.y);
+      ctx.rotate(h.angle || 0);
+      const wood = ctx.createRadialGradient(-h.r * 0.25, -h.r * 0.25, 2, 0, 0, h.r);
+      wood.addColorStop(0, '#c48a44');
+      wood.addColorStop(0.7, '#7a4a20');
+      wood.addColorStop(1, '#3a2210');
+      ctx.fillStyle = wood;
+      ctx.beginPath();
+      ctx.arc(0, 0, h.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#2a1608';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(30,18,8,0.7)';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, h.r * 0.62, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, h.r * 0.28, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#2a1608';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(1.6, h.r * 0.12), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    ctx.rotate(h.angle || 0);
+    const hw = h.w / 2, hh = h.h / 2;
+    ctx.fillStyle = h.kind === 'boom' ? '#4a2c16' : '#6b4424';
+    ctx.fillRect(-hw, -hh, h.w, h.h);
+    ctx.strokeStyle = 'rgba(20,10,4,0.55)';
+    ctx.lineWidth = 1.4;
+    ctx.strokeRect(-hw, -hh, h.w, h.h);
+    ctx.strokeStyle = 'rgba(197,154,74,0.35)';
+    ctx.lineWidth = 1;
+    if (h.kind === 'crate') {
+      ctx.beginPath();
+      ctx.moveTo(-hw + 3, -hh + 3);
+      ctx.lineTo(hw - 3, hh - 3);
+      ctx.moveTo(hw - 3, -hh + 3);
+      ctx.lineTo(-hw + 3, hh - 3);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(197,154,74,0.45)';
+      ctx.fillRect(-3, -3, 6, 6);
+    } else {
+      for (let i = 1; i < 4; i++) {
+        const x = -hw + (h.w * i) / 4;
+        ctx.beginPath();
+        ctx.moveTo(x, -hh + 1);
+        ctx.lineTo(x, hh - 1);
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(197,154,74,0.5)';
+      ctx.fillRect(-hw + 4, -1.5, 3, 3);
+      ctx.fillRect(hw - 7, -1.5, 3, 3);
+    }
+    if (h.kind === 'boom') {
+      ctx.fillStyle = '#2a1a10';
+      ctx.fillRect(-4, -hh - 2, 8, h.h + 4);
+    }
+    ctx.restore();
   }
 
   function drawPlinkoBall(bottle, color) {
