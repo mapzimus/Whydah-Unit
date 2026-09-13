@@ -460,21 +460,25 @@ const Renderer = (() => {
 
     for (let i = 0; i < 9; i++) {
       const x = layout.inset + layout.slotW * i;
-      const b = buckets[i] || { color: '#c59a4a', short: '' };
+      const b = buckets[i] || { color: '#c59a4a', short: '', title: '' };
       ctx.fillStyle = b.color;
-      ctx.globalAlpha = i === 4 ? 0.92 : 0.78;
+      ctx.globalAlpha = i === 4 ? 0.95 : 0.82;
       ctx.fillRect(x + 1, layout.bucketTop, layout.slotW - 2, layout.bucketH);
       ctx.globalAlpha = 1;
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
       ctx.strokeRect(x + 1, layout.bucketTop, layout.slotW - 2, layout.bucketH);
       ctx.save();
       ctx.fillStyle = i === 4 ? '#1a100c' : '#f4efe3';
       ctx.textAlign = 'center';
+      const cx = x + layout.slotW / 2;
+      const big = Math.max(11, Math.min(16, layout.slotW * 0.38));
+      const small = Math.max(7, Math.min(9, layout.slotW * 0.22));
+      ctx.font = `bold ${big}px Georgia, "Times New Roman", serif`;
       ctx.textBaseline = 'middle';
-      const label = b.short || '';
-      const fontPx = Math.max(10, Math.min(14, layout.slotW * 0.36));
-      ctx.font = `bold ${fontPx}px Georgia, "Times New Roman", serif`;
-      ctx.fillText(label, x + layout.slotW / 2, layout.bucketTop + layout.bucketH / 2);
+      ctx.fillText(b.short || '', cx, layout.bucketTop + layout.bucketH * 0.38);
+      ctx.font = `700 ${small}px "Segoe UI", system-ui, sans-serif`;
+      const word = (b.title || '').split(' ')[0] || '';
+      ctx.fillText(word, cx, layout.bucketTop + layout.bucketH * 0.72);
       ctx.restore();
     }
 
@@ -493,6 +497,32 @@ const Renderer = (() => {
       ctx.fill();
     }
 
+  }
+
+  function drawPlinkoBall(bottle, color) {
+    if (!bottle) return;
+    const { x, y } = bottle.position;
+    const r = bottle.circleRadius || 10;
+    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, 1, x, y, r);
+    g.addColorStop(0, '#ffe9a8');
+    g.addColorStop(0.45, color || '#c59a4a');
+    g.addColorStop(1, '#7a4e16');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(80,40,8,0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(bottle.angle || 0);
+    ctx.fillStyle = '#3a2410';
+    ctx.font = `bold ${Math.max(9, r * 1.1)}px Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('8', 0, 1);
+    ctx.restore();
   }
 
   function drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, paintScale) {
@@ -690,7 +720,8 @@ const Renderer = (() => {
       drawFlickIndicator(drag, bottle);
       if (showGlow) drawLandingGlow(bottle, groundY);
     }
-    drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, plinko ? 0.3 : 1);
+    if (plinko) drawPlinkoBall(bottle, liquidColor);
+    else drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
     drawParticles();
 
     if (result) {

@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=25">
+  <link rel="stylesheet" href="css/style.css?v=26">
 </head>
 <body>
   <a class="back-link" href="../games/">← Whydah Games</a>
@@ -25,12 +25,6 @@
     <div class="setup-card">
       <h1><span class="emoji" id="title-parrot" title="🦜">🦜</span> Parrot Flip</h1>
       <p class="tagline">Caribbean pirate parrots (macaws included). Same flip physics.</p>
-      <button type="button" id="setup-anchor" class="setup-anchor-btn">
-        <svg class="anchor-icon" viewBox="0 0 32 32" aria-hidden="true">
-          <path fill="currentColor" d="M16 2.2a3 3 0 0 1 1.5 5.6v2h3.2V12H17.5v4.8c3.6.5 6.4 2.4 8 4.8l-2.2 1.4c-1.2-1.8-3.5-3.2-5.8-3.6V29h-3V19.4c-2.3.4-4.6 1.8-5.8 3.6L6.5 21.6c1.6-2.4 4.4-4.3 8-4.8V12H9.3V9.8h3.2v-2A3 3 0 0 1 16 2.2zm0 2.1a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8z"/>
-        </svg>
-        <span id="setup-anchor-label">Plinko Lab · tap 5×</span>
-      </button>
 
       <div>
         <div class="section-label">Players — pick a parrot (🧑 tap for CPU)</div>
@@ -59,7 +53,6 @@
 
       <button id="start-btn">Start Game</button>
       <button id="practice-btn">🎯 Practice (solo)</button>
-      <button type="button" id="plinko-lab-btn">Start Plinko Lab</button>
     </div>
   </div>
 
@@ -78,11 +71,6 @@
       <div id="streak-banner"></div>
     </div>
     <div id="flip-hint">Flick UP — harder = more spin. Land the parrot upright!</div>
-    <div id="plinko-lab-panel" class="hidden">
-      <div class="lab-kicker">⚓ Plinko Lab</div>
-      <div id="plinko-lab-stats"></div>
-      <div class="lab-help">Tap to skip · P pause · R random / cycle</div>
-    </div>
     <div id="practice-meter" class="hidden">
       <div class="pm-track"><div class="pm-band"></div><div class="pm-marker"></div></div>
       <div class="pm-label">flick strength — green zone ≈ one clean flip</div>
@@ -126,13 +114,13 @@
 
   <div id="egg-toast" class="hidden"></div>
 
-  <script src="js/vendor/matter.min.js?v=25"></script>
-  <script src="js/game.js?v=25"></script>
-  <script src="js/physics.js?v=25"></script>
-  <script src="js/input.js?v=25"></script>
-  <script src="js/renderer.js?v=25"></script>
-  <script src="js/audio.js?v=25"></script>
-  <script src="js/main.js?v=25"></script>
+  <script src="js/vendor/matter.min.js?v=26"></script>
+  <script src="js/game.js?v=26"></script>
+  <script src="js/physics.js?v=26"></script>
+  <script src="js/input.js?v=26"></script>
+  <script src="js/renderer.js?v=26"></script>
+  <script src="js/audio.js?v=26"></script>
+  <script src="js/main.js?v=26"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -154,7 +142,7 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=25')
+        navigator.serviceWorker.register('service-worker.js?v=26')
           .then((reg) => console.log('SW registered, scope:', reg.scope))
           .catch((err) => console.error('SW registration failed:', err));
       });
