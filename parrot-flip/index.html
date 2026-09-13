@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=15">
+  <link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
   <a class="back-link" href="../games/">← Whydah Games</a>
@@ -38,25 +38,6 @@
           <label><input type="radio" name="direction" value="1" checked> ➡ Left → Right</label>
           <label><input type="radio" name="direction" value="-1"> ⬅ Right → Left</label>
         </div>
-      </div>
-
-      <div>
-        <div class="section-label">CPU difficulty</div>
-        <div class="direction-options">
-          <label><input type="radio" name="difficulty" value="easy"> 🟢 Easy</label>
-          <label><input type="radio" name="difficulty" value="medium" checked> 🟡 Medium</label>
-          <label><input type="radio" name="difficulty" value="hard"> 🔴 Hard</label>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-label">Feel</div>
-        <div class="direction-options">
-          <label><input type="radio" name="feel" value="forgiving"> 🟢 Forgiving</label>
-          <label><input type="radio" name="feel" value="standard" checked> 🟡 Standard</label>
-          <label><input type="radio" name="feel" value="pro"> 🔴 Pro</label>
-        </div>
-        <label class="checkbox-row"><input type="checkbox" id="flick-feedback-toggle"> Show flick feedback</label>
       </div>
 
       <div>
@@ -133,13 +114,13 @@
 
   <div id="egg-toast" class="hidden"></div>
 
-  <script src="js/vendor/matter.min.js?v=15"></script>
-  <script src="js/game.js?v=15"></script>
-  <script src="js/physics.js?v=15"></script>
-  <script src="js/input.js?v=15"></script>
-  <script src="js/renderer.js?v=15"></script>
-  <script src="js/audio.js?v=15"></script>
-  <script src="js/main.js?v=15"></script>
+  <script src="js/vendor/matter.min.js?v=16"></script>
+  <script src="js/game.js?v=16"></script>
+  <script src="js/physics.js?v=16"></script>
+  <script src="js/input.js?v=16"></script>
+  <script src="js/renderer.js?v=16"></script>
+  <script src="js/audio.js?v=16"></script>
+  <script src="js/main.js?v=16"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -161,7 +142,7 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=15')
+        navigator.serviceWorker.register('service-worker.js?v=16')
           .then((reg) => console.log('SW registered, scope:', reg.scope))
           .catch((err) => console.error('SW registration failed:', err));
       });

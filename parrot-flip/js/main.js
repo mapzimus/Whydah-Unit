@@ -28,6 +28,16 @@
   // Scale the backing store by devicePixelRatio so everything is crisp on a
   // hi-DPI smartboard. We draw in LOGICAL (CSS) pixels — the transform maps
   // them to physical pixels — so physics/renderer keep using logical coords.
+
+  // Player cards sit over the bottom of the canvas. Raise the deck so the
+  // bird stands on the visible table, not inside the HUD strip.
+  function tableInset() {
+    const h = window.innerHeight;
+    const short = Math.min(window.innerWidth, h);
+    const frac = short < 600 ? 0.20 : 0.14;
+    return Math.round(Math.min(180, Math.max(110, h * frac)));
+  }
+
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2 (fill-rate)
     const w = window.innerWidth, h = window.innerHeight;
@@ -39,7 +49,7 @@
     // Phones (short side < 600): open arena — no side rails. Smartboards keep walls.
     Physics.setSideWalls(Math.min(w, h) >= 600);
     Renderer.resize(w, h);
-    Physics.reflow(w, h);        // keep ground/walls in sync (no-op before init)
+    Physics.reflow(w, h, tableInset());        // keep ground/walls in sync (no-op before init)
   }
   window.addEventListener('resize', resize);
 
@@ -209,20 +219,10 @@
       };
     });
   }
-  function chosenDifficulty() {
-    return document.querySelector('input[name="difficulty"]:checked')?.value || 'medium';
-  }
-  function chosenFeel() {
-    return document.querySelector('input[name="feel"]:checked')?.value || 'standard';
-  }
   function chosenLives() {
     const n = parseInt(document.querySelector('input[name="lives"]:checked')?.value || '10', 10);
     return STARTING_LIFE_PRESETS.includes(n) ? n : 10;
   }
-  function flickFeedbackOn() {
-    return !!document.getElementById('flick-feedback-toggle')?.checked;
-  }
-
   function pickLine(arr) {
     if (!arr || !arr.length) return '';
     return arr[Math.floor(Math.random() * arr.length)];
@@ -288,10 +288,7 @@
       localStorage.setItem(SETUP_KEY, JSON.stringify({
         rows:       readRows(),
         direction:  document.querySelector('input[name="direction"]:checked')?.value ?? '1',
-        difficulty: chosenDifficulty(),
-        feel:       chosenFeel(),
         lives:      chosenLives(),
-        feedback:   flickFeedbackOn(),
       }));
     } catch (_) {}
   }
@@ -306,11 +303,7 @@
         ai:     !!r.ai,
       })));
       setRadio('direction',  s.direction);
-      setRadio('difficulty', s.difficulty);
-      setRadio('feel',       s.feel);
       setRadio('lives',      String(s.lives ?? 10));
-      const fb = document.getElementById('flick-feedback-toggle');
-      if (fb) fb.checked = !!s.feedback;
       return true;
     } catch (_) { return false; }
   }
@@ -373,7 +366,7 @@
       setupScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
       gameOverEl.classList.add('hidden');
-      startGame(defs, dir, { difficulty: chosenDifficulty(), feel: chosenFeel(), startingLives: chosenLives() });
+      startGame(defs, dir, { startingLives: chosenLives() });
     });
   });
 
@@ -389,7 +382,7 @@
       setupScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
       gameOverEl.classList.add('hidden');
-      startGame([def], 1, { practice: true, feel: chosenFeel() });
+      startGame([def], 1, { practice: true });
     });
   });
 
@@ -397,12 +390,10 @@
     gameOverEl.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     if (game.practice) {
-      startGame([{ name: game.players[0].name, color: game.players[0].color, isAI: false }], 1, { practice: true, feel: chosenFeel() });
+      startGame([{ name: game.players[0].name, color: game.players[0].color, isAI: false }], 1, { practice: true });
     } else {
       const defs = game.players.map(p => ({ name: p.name, color: p.color, isAI: p.isAI }));
       startGame(defs, game.direction, {
-        difficulty: game.difficulty,
-        feel: chosenFeel(),
         startIndex: game.winnerIndex,
         startingLives: game.startingLives,
       });
@@ -431,10 +422,10 @@
   let matchStats  = null;   // per-player display-only tallies (index-aligned, null in practice)
   const RESULT_MS = 1500;
 
-  // CPU takes its turn: aim near the sweet-spot flick, with error set by difficulty.
+  // CPU takes its turn: aim near the sweet-spot flick, with a fixed classroom miss rate.
   function aiFlick() {
     if (game.state !== GAME_STATES.TURN_START && game.state !== GAME_STATES.ON_FIRE) return;
-    const sigma = { easy: 650, medium: 400, hard: 220 }[game.difficulty] || 400;
+    const sigma = 400;
     const u1 = Math.random() || 1e-6, u2 = Math.random();
     const gauss = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
     const up = Math.max(500, 2100 + gauss * sigma);   // sweet spot ~2100 px/s
@@ -442,11 +433,9 @@
     onFlick(vx, -up);
   }
 
-  // CPU pacing: harder CPUs commit a touch faster/steadier; add jitter + a brief
-  // wind-up so turns don't read as instant/robotic.
+  // Brief wind-up so CPU turns don't read as instant/robotic.
   function aiThinkDelay() {
-    const base = { easy: 1300, medium: 1050, hard: 850 }[game.difficulty] || 1050;
-    return base + Math.random() * 500;
+    return 1050 + Math.random() * 500;
   }
   function scheduleAi() {
     Input.disable();
@@ -496,9 +485,8 @@
     // Bake the SVG parrot sprites for every color in this game up front so
     // the first flick never shows the loading placeholder.
     Renderer.preloadParrots(defs.map((d) => d.color).filter(Boolean));
-    Physics.setFeel(opts.feel || chosenFeel());
     resize();   // sets DPR transform + renderer logical dims (must run after init)
-    Physics.init(window.innerWidth, window.innerHeight);  // logical coords
+    Physics.init(window.innerWidth, window.innerHeight, tableInset());  // logical coords
 
     game.on(GAME_STATES.TURN_START, onTurnStart);
     game.on(GAME_STATES.RESULT,     onResult);
@@ -799,17 +787,6 @@
 
     // Practice trainer: show where this flick landed on the strength meter
     if (game.practice) updatePracticeMeter(Physics.getLastFlickInfo());
-
-    // Optional learning aid: flash how this flick's strength compares to the
-    // ~2100 px/s sweet spot. Shown during airtime; onResult overwrites it.
-    if (flickFeedbackOn()) {
-      const info = Physics.getLastFlickInfo();
-      if (info) {
-        const d = info.upSpeed - 2100;
-        streakBannerEl.textContent = Math.abs(d) < 250 ? '✦ Perfect snap' : (d < 0 ? 'Too soft' : 'Too hard');
-        streakBannerEl.className = 'streak-banner';
-      }
-    }
 
     Input.disable();
     flipHintEl.classList.add('hidden');

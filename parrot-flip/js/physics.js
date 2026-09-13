@@ -53,22 +53,11 @@ const Physics = (() => {
   const PERFECT_ANGLE   = 0.16;  // ≤~9° upright = perfect landing flair
   const MISS_CAP_FRAMES = 300;   // ~5s grounded with no verdict → forced MISS (fallback)
 
-  // Feel presets (setup menu). Wider make window + less chaos = forgiving;
-  // tighter upright + more kick/jitter = pro.
-  const FEEL = {
-    forgiving: { makeAngle: 0.78, fallenAngle: 1.05, spinJitter: 0.14, launchJitter: 0.08, kickScale: 0.65 },
-    standard:  { makeAngle: 0.61, fallenAngle: 1.20, spinJitter: 0.24, launchJitter: 0.12, kickScale: 1.00 },
-    pro:       { makeAngle: 0.48, fallenAngle: 1.32, spinJitter: 0.34, launchJitter: 0.18, kickScale: 1.30 },
-  };
-  let feel = { ...FEEL.standard };
-  let MAKE_ANGLE   = feel.makeAngle;
-  let FALLEN_ANGLE = feel.fallenAngle;
-
-  function setFeel(name) {
-    feel = { ...(FEEL[name] || FEEL.standard) };
-    MAKE_ANGLE   = feel.makeAngle;
-    FALLEN_ANGLE = feel.fallenAngle;
-  }
+  // One classroom feel — a hair more forgiving than the old "standard" preset
+  // so a decent flick usually sticks, without deleting the miss chance.
+  const FEEL = { makeAngle: 0.70, fallenAngle: 1.12, spinJitter: 0.16, launchJitter: 0.09, kickScale: 0.75 };
+  const MAKE_ANGLE   = FEEL.makeAngle;
+  const FALLEN_ANGLE = FEEL.fallenAngle;
 
 
   // ── Liquid oscillator ──────────────────────────────────────────────────────
@@ -296,9 +285,8 @@ const Physics = (() => {
 
     // Small randomness so the same flick isn't a guaranteed make — a centered
     // flick still usually lands, but a marginal one becomes a coin flip.
-    // Amplitude comes from Feel (forgiving / standard / pro).
-    const jSpin   = 1 + (Math.random() - 0.5) * feel.spinJitter;
-    const jLaunch = 1 + (Math.random() - 0.5) * feel.launchJitter;
+    const jSpin   = 1 + (Math.random() - 0.5) * FEEL.spinJitter;
+    const jLaunch = 1 + (Math.random() - 0.5) * FEEL.launchJitter;
     const jDrift  = (Math.random() - 0.5) * 2.4;       // ±1.2 px/frame stray drift
 
     // Fairly steady launch height so airtime is consistent — the player is
@@ -331,7 +319,7 @@ const Physics = (() => {
     // falls" moment. Keeps a good flick from being a guaranteed make.
     if (hasFlipped && !hasLanded && bottle.velocity.y > 0 && bottle.position.y >= groundY - 55) {
       hasLanded = true;
-      const kick = (liquid.vel * 0.06 + (Math.random() - 0.5) * 0.16) * feel.kickScale;
+      const kick = (liquid.vel * 0.06 + (Math.random() - 0.5) * 0.16) * FEEL.kickScale;
       Body.setAngularVelocity(bottle, bottle.angularVelocity + kick);
     }
 
@@ -344,5 +332,5 @@ const Physics = (() => {
   function getLastLandingInfo() { return lastLandingInfo; }
   function getLastFlickInfo()   { return lastFlickInfo; }
 
-  return { init, reflow, step, resetBottle, applyFlick, checkLanding, setFeel, setSideWalls, getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo };
+  return { init, reflow, step, resetBottle, applyFlick, checkLanding, setSideWalls, getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo };
 })();

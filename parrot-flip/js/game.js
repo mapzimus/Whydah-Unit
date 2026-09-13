@@ -44,7 +44,6 @@ const game = {
 
   // Modes
   practice: false,       // solo free-flip practice (no lives/turns)
-  difficulty: 'medium',  // AI skill: 'easy' | 'medium' | 'hard'
   practiceMakes: 0,
   practiceAttempts: 0,
   practiceStreak: 0,
@@ -57,7 +56,6 @@ const game = {
   // defs: [{ name, color, isAI }]
   init(defs, direction, opts = {}) {
     this.practice   = !!opts.practice;
-    this.difficulty = opts.difficulty || 'medium';
     this.startingLives = STARTING_LIFE_PRESETS.includes(+opts.startingLives) ? +opts.startingLives : 10;
     // ON FIRE bonus lives cap: ≤10 starts always top out at 20; above that, 1.5× start
     // (20→30, 50→75, 100→150).
