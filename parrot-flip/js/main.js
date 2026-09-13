@@ -586,6 +586,7 @@
       isOnFire:    !!(game.onFirePlayer),
       liquidColor: game.currentPlayer()?.color,
       eggs:        currentEggs(),
+      deckHole:    Physics.getDeckHole(),
       plinko:      pk,
       plinkoTitle: pkBucket && (pkBucket.win ? 'LUCKY BIRD!' : pkBucket.title),
       plinkoColor: pkBucket && pkBucket.color,
