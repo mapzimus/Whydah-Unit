@@ -238,6 +238,7 @@
     if (/kraken/.test(n)) return 'kraken';
     if (/whydah/.test(n)) return 'whydah';
     if (/pieces|eight/.test(n)) return 'eight';
+    if (/\b(mr\.?|mister)\s*howe\b/.test(n) || n === 'howe') return 'howe';
     return '';
   }
   function nameEggLine(kind, isMake) {
@@ -847,7 +848,8 @@
     Sound.play('flick');
     Physics.applyFlick(vx, vy);
     const forceHold = /(?:\?|&)plinko=1(?:&|$)/.test(location.search);
-    Physics.armPlinko(forceHold);
+    const howeHold = nameEggKind(game.currentPlayer()?.name) === 'howe';
+    Physics.armPlinko(forceHold, howeHold ? 0.2 : undefined);
 
     // Practice trainer: show where this flick landed on the strength meter
     if (game.practice) updatePracticeMeter(Physics.getLastFlickInfo());

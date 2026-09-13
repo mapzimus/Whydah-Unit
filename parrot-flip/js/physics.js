@@ -430,8 +430,10 @@ const Physics = (() => {
     return { w, h, inset, innerW, slotW, pegR, ballR, top, bucketTop, bucketH, floor };
   }
 
-  function armPlinko(force) {
-    plinkoArmed = !!force || Math.random() < (typeof PLINKO_CHANCE === 'number' ? PLINKO_CHANCE : 0.01);
+  function armPlinko(force, chance) {
+    const p = (typeof chance === 'number') ? chance
+      : (typeof PLINKO_CHANCE === 'number' ? PLINKO_CHANCE : 0.01);
+    plinkoArmed = !!force || Math.random() < p;
     if (plinkoArmed) plinkoTarget = Math.floor(Math.random() * 9);
     return plinkoArmed;
   }
