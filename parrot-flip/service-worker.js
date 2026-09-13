@@ -1,6 +1,6 @@
 // service-worker.js — offline support for Parrot Flip.
 // Network-first for HTML/JS/CSS so fixes aren't stuck behind a stale cache.
-const CACHE_NAME = 'whydah-parrot-flip-v26';
+const CACHE_NAME = 'whydah-parrot-flip-v27';
 
 const PRECACHE_URLS = [
   './',
@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
   // HTML/JS/CSS: network first, fall back to cache (prevents sticky bugs)
   if (isAppShell(url)) {
     event.respondWith(
-      fetch(event.request).then((response) => {
+      fetch(event.request, { cache: 'reload' }).then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
