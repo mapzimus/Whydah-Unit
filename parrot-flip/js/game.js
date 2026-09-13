@@ -24,6 +24,7 @@ const ONFIRE_CAP_LIVES = 5;
 const STARTING_LIFE_PRESETS = [3, 5, 10, 20, 100];
 
 // 1/100 shots fall through the deck into a 9-bucket pirate hold.
+// Testers: tap the setup tagline 5×, or open ?plinko=auto for the looping lab.
 // Layout is symmetric around Lucky Bird so the room can read it at a glance.
 const PLINKO_CHANCE = 0.01;
 const PLINKO_BUCKETS = [
