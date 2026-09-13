@@ -15,7 +15,31 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=26">
+  <link rel="stylesheet" href="css/style.css?v=27">
+  <script>
+    // Drop leftover lab-era caches so a home-screen icon does not keep v25.
+    (function () {
+      var BUILD = '27';
+      try {
+        if (!window.caches) return;
+        caches.keys().then(function (keys) {
+          var stale = keys.filter(function (k) {
+            return /^whydah-parrot-flip-v/.test(k) && k !== 'whydah-parrot-flip-v' + BUILD;
+          });
+          if (!stale.length) return;
+          if (sessionStorage.getItem('pf.flushed') === BUILD) return;
+          sessionStorage.setItem('pf.flushed', BUILD);
+          return Promise.all(stale.map(function (k) { return caches.delete(k); }))
+            .then(function () {
+              if (!navigator.serviceWorker) return;
+              return navigator.serviceWorker.getRegistrations()
+                .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); });
+            })
+            .then(function () { location.reload(); });
+        });
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <a class="back-link" href="../games/">← Whydah Games</a>
@@ -114,13 +138,13 @@
 
   <div id="egg-toast" class="hidden"></div>
 
-  <script src="js/vendor/matter.min.js?v=26"></script>
-  <script src="js/game.js?v=26"></script>
-  <script src="js/physics.js?v=26"></script>
-  <script src="js/input.js?v=26"></script>
-  <script src="js/renderer.js?v=26"></script>
-  <script src="js/audio.js?v=26"></script>
-  <script src="js/main.js?v=26"></script>
+  <script src="js/vendor/matter.min.js?v=27"></script>
+  <script src="js/game.js?v=27"></script>
+  <script src="js/physics.js?v=27"></script>
+  <script src="js/input.js?v=27"></script>
+  <script src="js/renderer.js?v=27"></script>
+  <script src="js/audio.js?v=27"></script>
+  <script src="js/main.js?v=27"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -142,8 +166,8 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=26')
-          .then((reg) => console.log('SW registered, scope:', reg.scope))
+        navigator.serviceWorker.register('service-worker.js?v=27', { updateViaCache: 'none' })
+          .then((reg) => { try { reg.update(); } catch (e) {} })
           .catch((err) => console.error('SW registration failed:', err));
       });
     }
