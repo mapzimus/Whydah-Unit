@@ -2,16 +2,20 @@
 
 const Input = (() => {
   const MIN_DRAG = 22;   // px — small dead zone so a quick flick registers
+  // Touch samples jump; a "soft" finger flick still reports 5–10k px/s peaks.
+  // Scale those down so a gentle toss stays in the make window (~2k px/s).
+  const TOUCH_VEL_SCALE = 0.40;
 
   let canvas, onFlick;
   let dragging = false;
-  let startX = 0, startY = 0;
+  let startX = 0, startY = 0, startT = 0;
   let curX = 0, curY = 0;
   let lastX = 0, lastY = 0, lastT = 0;
   let peakSpeed = 0, peakVx = 0, peakVy = 0;  // fastest instant of the gesture
   let rect = null;                             // canvas rect, captured at gesture start
   let enabled = false;
   let activePointerId = null;                  // the one pointer that owns the in-flight flick
+  let pointerType = 'mouse';
 
   function attach(cvs, flickCallback) {
     canvas  = cvs;
@@ -33,6 +37,7 @@ const Input = (() => {
     if (dragging) return;
     e.preventDefault();
     activePointerId = e.pointerId;
+    pointerType = e.pointerType || 'mouse';
     try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     dragging = true;
     // Capture the canvas rect ONCE at gesture start. Recomputing it per move
@@ -41,7 +46,7 @@ const Input = (() => {
     rect = canvas.getBoundingClientRect();
     startX = curX = lastX = e.clientX - rect.left;
     startY = curY = lastY = e.clientY - rect.top;
-    lastT = performance.now();
+    startT = lastT = performance.now();
     peakSpeed = peakVx = peakVy = 0;
   }
 
@@ -74,6 +79,16 @@ const Input = (() => {
     // we somehow captured almost no motion (e.g. one big jump then release).
     let vx = peakVx, vy = peakVy;
     if (peakSpeed < 80) { vx = dx * 10; vy = dy * 10; }
+
+    // Touch/pen: one noisy sample can look like a max-power snap. Blend the
+    // peak with the gesture-average, then scale so a soft flick stays soft.
+    if (pointerType === 'touch' || pointerType === 'pen') {
+      const dur = Math.max((performance.now() - startT) / 1000, 0.06);
+      vx = 0.55 * vx + 0.45 * (dx / dur);
+      vy = 0.55 * vy + 0.45 * (dy / dur);
+      vx *= TOUCH_VEL_SCALE;
+      vy *= TOUCH_VEL_SCALE;
+    }
 
     onFlick(vx, vy);
   }

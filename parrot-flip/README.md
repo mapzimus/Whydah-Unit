@@ -8,7 +8,7 @@ with bottle-flip physics. Eye patches on every bird.
 Pick a colored bird (Captain Squawk, Pegleg Polly, Doubloon Dave, …). Same
 Matter.js flick physics as Flip Game — rendered as a standing pirate parrot.
 
-Menu: Easy / Medium / Hard CPU, Forgiving / Standard / Pro feel, flick feedback.
+One feel, one CPU skill — pick parrots and flip.
 
 No build step — open `index.html` or serve the folder.
 

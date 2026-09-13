@@ -280,16 +280,16 @@ const Renderer = (() => {
   // the bird still "flaps" in flight).
   //
   // Alignment with physics: the compound bottle body's center of mass is the
-  // sprite origin. Upright at rest, the ground-contact plane is local y≈+39
+  // sprite origin. Upright at rest, the physics contact plane is local y≈+39
   // (base bottom is 73px below the spawn anchor, the CG 34px below it). The
-  // SVG is authored in a 300×420 viewBox with the foot soles at svg y=376;
-  // SPR maps that line to local +39 and scales the bird into the same visual
-  // envelope as the original bottle (head top ≈ -119).
+  // SVG is authored in a 300×420 viewBox with the foot soles at svg y=376.
+  // GROUND_LOCAL is a few px shallower than the contact plane so the feet
+  // rest on the deck rail instead of sinking through the planks.
   const SPR = (() => {
     const VIEW_W = 300, VIEW_H = 420;
     const GROUND_SVG = 376;              // foot-sole line in svg coords
-    const GROUND_LOCAL = 39;             // physics contact plane, local coords
-    const SCALE = 0.62;                  // svg px → local px (bird size; feet stay anchored to GROUND_LOCAL)
+    const GROUND_LOCAL = 32;             // sit on the rail, not in the deck
+    const SCALE = 0.93;                  // 1.5× the old 0.62 envelope; feet stay on GROUND_LOCAL
     const destW = VIEW_W * SCALE, destH = VIEW_H * SCALE;
     const destX = -destW / 2;
     const destY = GROUND_LOCAL - GROUND_SVG * SCALE;
