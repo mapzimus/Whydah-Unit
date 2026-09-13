@@ -1195,8 +1195,13 @@
     showPlinkoLabButton();
   }
 
+  let labTapDown = false;
+  canvas.addEventListener('pointerdown', () => {
+    labTapDown = !!plinkoLab;
+  });
   canvas.addEventListener('pointerup', () => {
-    if (plinkoLab) skipLabStep();
+    if (plinkoLab && labTapDown) skipLabStep();
+    labTapDown = false;
   });
   document.addEventListener('keydown', (e) => {
     if (!plinkoLab) return;
