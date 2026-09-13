@@ -472,17 +472,9 @@ const Renderer = (() => {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const label = b.short || '';
-      const fontPx = Math.max(9, Math.min(13, layout.slotW * 0.28));
+      const fontPx = Math.max(10, Math.min(14, layout.slotW * 0.36));
       ctx.font = `bold ${fontPx}px Georgia, "Times New Roman", serif`;
-      const cx = x + layout.slotW / 2;
-      const cy = layout.bucketTop + layout.bucketH / 2;
-      if (layout.slotW < 52 && label.length > 3) {
-        ctx.translate(cx, cy);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText(label, 0, 0);
-      } else {
-        ctx.fillText(label, cx, cy);
-      }
+      ctx.fillText(label, x + layout.slotW / 2, layout.bucketTop + layout.bucketH / 2);
       ctx.restore();
     }
 
@@ -501,10 +493,6 @@ const Renderer = (() => {
       ctx.fill();
     }
 
-    ctx.fillStyle = 'rgba(244,239,227,0.55)';
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 13px Georgia, "Times New Roman", serif';
-    ctx.fillText('The deck gave way — Lucky Bird pays the middle', W / 2, 28);
   }
 
   function drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, paintScale) {
@@ -702,7 +690,7 @@ const Renderer = (() => {
       drawFlickIndicator(drag, bottle);
       if (showGlow) drawLandingGlow(bottle, groundY);
     }
-    drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, plinko ? 0.4 : 1);
+    drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, plinko ? 0.3 : 1);
     drawParticles();
 
     if (result) {

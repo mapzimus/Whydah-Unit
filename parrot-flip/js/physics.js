@@ -6,7 +6,7 @@ const Physics = (() => {
   let engine, world, bottle, ground, leftWall, rightWall;
   let groundedFrames = 0;
   let angleWin = [];   // sliding window of recent angles (settle detection)
-  let totalRotation = 0, hasFlipped = false, launchAngle = 0, hasLanded = false;
+  let totalRotation = 0, hasFlipped = false, launchAngle = 0, hasLanded = false, wasAirborne = false;
   let lastLandingInfo = null;
   let lastFlickInfo = null;
   let canvasW;
@@ -130,7 +130,8 @@ const Physics = (() => {
     const linSpeed = Math.hypot(bottle.velocity.x, bottle.velocity.y);
     const grounded = bottle.position.y >= groundY - 80;
 
-    if (grounded && plinkoArmed) {
+    if (!grounded) wasAirborne = true;
+    if (grounded && plinkoArmed && wasAirborne) {
       plinkoArmed = false;
       return 'PLINKO';
     }
@@ -295,6 +296,7 @@ const Physics = (() => {
     hasFlipped     = false;
     launchAngle    = 0;
     hasLanded      = false;
+    wasAirborne    = false;
     lastLandingInfo = null;
     lastFlickInfo    = null;
     liquid.reset();
