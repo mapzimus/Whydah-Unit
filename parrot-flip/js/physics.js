@@ -511,7 +511,7 @@ const Physics = (() => {
       dir: 1,
       period: 2.35,
       phase: 0,
-      strength: 0.052,
+      strength: 0.038,
       label: 'TRADE WIND',
       style: 'gust',
       pulse: 0.6,
@@ -525,7 +525,7 @@ const Physics = (() => {
       dir: -1,
       period: 2.05,
       phase: 1.35,
-      strength: 0.048,
+      strength: 0.036,
       label: 'GUST',
       style: 'gust',
       pulse: 0.6,
@@ -539,7 +539,7 @@ const Physics = (() => {
       dir: 1,
       period: 3.15,
       phase: 0.5,
-      strength: 0.040,
+      strength: 0.030,
       label: 'CANNON BLAST',
       style: 'cannon',
       pulse: 0.4,
@@ -646,9 +646,14 @@ const Physics = (() => {
         if (!bottle || bottle.position.y > steerLine) continue;
         const bx = bottle.position.x, by = bottle.position.y;
         if (bx >= h.x && bx <= h.x + h.w && by >= h.y && by <= h.y + h.h) {
+          let force = h.dir * h.strength * pulse;
+          const leftGap = bx - layout.inset;
+          const rightGap = layout.w - layout.inset - bx;
+          if (force < 0 && leftGap < 40) force *= Math.max(0, leftGap / 40);
+          if (force > 0 && rightGap < 40) force *= Math.max(0, rightGap / 40);
           Body.applyForce(bottle, bottle.position, {
-            x: h.dir * h.strength * pulse * bottle.mass,
-            y: -0.004 * pulse * bottle.mass,
+            x: force * bottle.mass,
+            y: -0.0012 * pulse * bottle.mass,
           });
         }
         continue;
