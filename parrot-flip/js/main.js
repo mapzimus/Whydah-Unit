@@ -238,6 +238,8 @@
     if (/kraken/.test(n)) return 'kraken';
     if (/whydah/.test(n)) return 'whydah';
     if (/pieces|eight/.test(n)) return 'eight';
+    // Mr. Howe / Mr Howe / Mister Howe / Howe — classroom egg, not a flavor line.
+    if (/\bhowe\b/.test(n.replace(/[.]/g, ' '))) return 'howe';
     return '';
   }
   function nameEggLine(kind, isMake) {
@@ -504,6 +506,9 @@
     matchStats = opts.practice ? null
       : game.players.map(() => ({ attempts: 0, makes: 0, cur: 0, bestStreak: 0, bestFire: 0, worstLoss: 0 }));
     practiceMeterEl.classList.add('hidden');   // revealed by the first practice flick
+    if (defs.some((d) => nameEggKind(d.name) === 'howe')) {
+      showEggToast('Mr. Howe — the hold is hungry (~1 in 5 tosses)');
+    }
 
     if (loopId) cancelAnimationFrame(loopId);
     lastTime = performance.now();
@@ -847,7 +852,8 @@
     Sound.play('flick');
     Physics.applyFlick(vx, vy);
     const forceHold = /(?:\?|&)plinko=1(?:&|$)/.test(location.search);
-    Physics.armPlinko(forceHold);
+    const howeHold = nameEggKind(game.currentPlayer()?.name) === 'howe';
+    Physics.armPlinko(forceHold, howeHold ? 0.2 : undefined);
 
     // Practice trainer: show where this flick landed on the strength meter
     if (game.practice) updatePracticeMeter(Physics.getLastFlickInfo());

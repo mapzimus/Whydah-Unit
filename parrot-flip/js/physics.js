@@ -135,10 +135,12 @@ const Physics = (() => {
     const restY    = groundY - 76;
     const grounded = bottle.position.y >= restY - 12;
 
-    // Standing CG sits near restY. The old "airborne = 4px up" check treated a
-    // perched bird as already flying, so armed holds never fired (or fired
-    // while still sitting). Require a real toss, then a downward return.
-    if (restY - bottle.position.y > 70) flickLeftTable = true;
+    // Perched CG is ~40px above the rail (measured), not restY (the spawn
+    // anchor). Measure the toss from that pose so a normal flick that clearly
+    // leaves the table can open the hatch — the old restY-70 check needed a
+    // ~107px hop and quietly ignored most classroom tosses.
+    const standY = groundY - 40;
+    if (standY - bottle.position.y > 64) flickLeftTable = true;
 
     // Open the hatch before the feet hit the rail so the bird doesn't bounce
     // off a still-solid deck and then teleport into the hold.
@@ -430,8 +432,10 @@ const Physics = (() => {
     return { w, h, inset, innerW, slotW, pegR, ballR, top, bucketTop, bucketH, floor };
   }
 
-  function armPlinko(force) {
-    plinkoArmed = !!force || Math.random() < (typeof PLINKO_CHANCE === 'number' ? PLINKO_CHANCE : 0.01);
+  function armPlinko(force, chance) {
+    const p = (typeof chance === 'number') ? chance
+      : (typeof PLINKO_CHANCE === 'number' ? PLINKO_CHANCE : 0.01);
+    plinkoArmed = !!force || Math.random() < p;
     if (plinkoArmed) plinkoTarget = Math.floor(Math.random() * 9);
     return plinkoArmed;
   }
