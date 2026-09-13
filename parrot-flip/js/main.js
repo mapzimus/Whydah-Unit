@@ -1155,9 +1155,14 @@
     if (parrotTaps >= 8) unlockPieces();
   });
 
-  // Title ⚓ — tap five times to start the lab (counts up so you know it registered).
+  // Gold Plinko Lab chip under the title — tap five times. Drawn as SVG so
+  // phones that hide ⚓ inside the gradient heading still see a real anchor.
   const setupAnchor = document.getElementById('setup-anchor');
+  const setupAnchorLabel = document.getElementById('setup-anchor-label');
   let anchorTaps = 0, anchorTapAt = 0;
+  function setAnchorLabel(text) {
+    if (setupAnchorLabel) setupAnchorLabel.textContent = text;
+  }
   setupAnchor?.addEventListener('click', (e) => {
     e.preventDefault();
     Sound.unlock();
@@ -1168,11 +1173,13 @@
     anchorTaps++;
     if (anchorTaps >= 5) {
       anchorTaps = 0;
+      setAnchorLabel('Plinko Lab · tap 5×');
       showEggToast('Plinko Lab');
       beginPlinkoLab();
       return;
     }
-    showEggToast(`⚓ ${anchorTaps} / 5`);
+    setAnchorLabel(`Plinko Lab · ${anchorTaps} / 5`);
+    showEggToast(`${anchorTaps} / 5`);
   });
   plinkoLabBtn?.addEventListener('click', () => {
     Sound.unlock();
