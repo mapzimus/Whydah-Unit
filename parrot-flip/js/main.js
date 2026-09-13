@@ -517,14 +517,22 @@
 
     // Human shots play at 1×. CPU shots step twice so the toss is over in
     // half the wall-clock time — same arc, just quicker with a full lobby.
-    const aiShot = currentIsAI() && evaluating;
+    const plinkoOn = !!Physics.getPlinkoState();
+    const aiShot = currentIsAI() && (evaluating || plinkoOn);
     Physics.step(dt);
     if (aiShot) Physics.step(dt);
 
     // Physics-based landing check
     if (evaluating) {
       const result = Physics.checkLanding();
-      if (result) {
+      if (result === 'PLINKO') {
+        evaluating = false;
+        Physics.startPlinko();
+        turnBannerEl.textContent = 'The deck gave way!';
+        streakBannerEl.textContent = 'Hold plinko — 9 buckets, Lucky Bird in the middle';
+        streakBannerEl.className = 'streak-banner on-fire';
+        Sound.play('plinko');
+      } else if (result) {
         evaluating = false;
         showGlow   = result === 'MAKE';
         const b = Physics.getBottle();
@@ -538,6 +546,13 @@
           perfect: !!(Physics.getLastLandingInfo()?.perfect),
         });
       }
+    }
+
+    if (Physics.getPlinkoState() &&
+        game.state !== GAME_STATES.RESULT &&
+        game.state !== GAME_STATES.GAME_OVER) {
+      const slot = Physics.checkPlinko();
+      if (slot != null) game.resolvePlinko(slot);
     }
 
     // Result countdown + fade
@@ -557,6 +572,8 @@
       }
     }
 
+    const pk = Physics.getPlinkoState();
+    const pkBucket = game.lastResult === 'PLINKO' ? game.lastPlinko : null;
     Renderer.frame(dt, {
       bottle:      Physics.getBottle(),
       liquid:      Physics.getLiquid(),
@@ -568,6 +585,9 @@
       isOnFire:    !!(game.onFirePlayer),
       liquidColor: game.currentPlayer()?.color,
       eggs:        currentEggs(),
+      plinko:      pk,
+      plinkoTitle: pkBucket && (pkBucket.win ? 'LUCKY BIRD!' : pkBucket.title),
+      plinkoColor: pkBucket && pkBucket.color,
     });
   }
 
@@ -665,7 +685,8 @@
   function onResult() {
     Input.disable();
     flipHintEl.classList.add('hidden');
-    resultTimer = RESULT_MS;
+    resultTimer = (game.lastResult === 'PLINKO' && game.lastPlinko && (game.lastPlinko.win || game.lastPlinko.lose))
+      ? 2200 : RESULT_MS;
     // Haptics come from Sound.play() below — avoid a second vibrate here.
 
     const p = game.currentPlayer();
@@ -674,15 +695,28 @@
     if (matchStats) {
       const s = matchStats[game.currentPlayerIndex];
       s.attempts++;
-      if (game.lastResult === 'MAKE') {
+      if (game.lastResult === 'MAKE' || (game.lastResult === 'PLINKO' && game.lastPlinko && game.lastPlinko.win)) {
         s.makes++;
         s.cur++;
         s.bestStreak = Math.max(s.bestStreak, s.cur);
         s.bestFire   = Math.max(s.bestFire, game.onFireBonus);
-      } else {
+      } else if (game.lastResult === 'MISS' || (game.lastResult === 'PLINKO' && game.lastPlinko && game.lastPlinko.lose)) {
         s.cur = 0;
         s.worstLoss = Math.max(s.worstLoss, game.lastPenalty);
       }
+    }
+
+    if (game.lastResult === 'PLINKO' && game.lastPlinko) {
+      const bkt = game.lastPlinko;
+      streakBannerEl.textContent = bkt.win ? 'Lucky Bird — automatic win!'
+        : bkt.lose ? 'Walked the plank!'
+        : bkt.x2 && bkt.halve ? '×2 lives · crew halved'
+        : bkt.x2 ? 'Lives doubled!'
+        : 'The crew is halved!';
+      streakBannerEl.className = bkt.lose ? 'streak-banner miss-penalty' : 'streak-banner on-fire';
+      Sound.play(bkt.win ? 'win' : bkt.lose ? 'eliminated' : bkt.x2 ? 'coin' : 'miss');
+      updateHUD();
+      return;
     }
 
     if (game.practice) {
@@ -811,6 +845,8 @@
     Sound.unlock();
     Sound.play('flick');
     Physics.applyFlick(vx, vy);
+    const forceHold = /(?:\?|&)plinko=1(?:&|$)/.test(location.search);
+    Physics.armPlinko(forceHold);
 
     // Practice trainer: show where this flick landed on the strength meter
     if (game.practice) updatePracticeMeter(Physics.getLastFlickInfo());
