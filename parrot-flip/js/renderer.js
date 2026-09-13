@@ -197,7 +197,7 @@ const Renderer = (() => {
     return bgCache;
   }
 
-  function drawBackground(groundY, isOnFire, eggs) {
+  function drawBackground(groundY, isOnFire, eggs, hole) {
     const g = ensureBgGradients(groundY, isOnFire);
     ctx.fillStyle = g.sky;
     ctx.fillRect(0, 0, W, groundY);
@@ -245,7 +245,10 @@ const Renderer = (() => {
       }
     }
 
-    // Ship deck planks
+    drawDeck(groundY, hole || null);
+  }
+
+  function drawDeck(groundY, hole) {
     ctx.fillStyle = '#3a2418';
     ctx.fillRect(0, groundY, W, H - groundY);
 
@@ -257,7 +260,6 @@ const Renderer = (() => {
       ctx.lineTo(W, y);
       ctx.stroke();
     }
-    // Nail dots / plank seams
     ctx.fillStyle = 'rgba(197,154,74,0.18)';
     for (let x = 24; x < W; x += 64) {
       for (let y = groundY + 10; y < H; y += 22) {
@@ -265,11 +267,33 @@ const Renderer = (() => {
       }
     }
 
-    // Deck edge rail
     ctx.fillStyle = '#5a3a24';
     ctx.fillRect(0, groundY - 4, W, 5);
     ctx.fillStyle = 'rgba(197,154,74,0.35)';
     ctx.fillRect(0, groundY - 4, W, 1);
+
+    if (!hole) return;
+    const hx = hole.x;
+    const rx = hole.r;
+    const ry = hole.r * 0.38;
+    ctx.fillStyle = '#070402';
+    fillEllipse(hx, groundY + 6, rx, ry);
+    ctx.strokeStyle = 'rgba(197,154,74,0.7)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (typeof ctx.ellipse === 'function') {
+      ctx.ellipse(hx, groundY + 6, rx, ry, 0, 0, Math.PI * 2);
+    } else {
+      ctx.arc(hx, groundY + 6, rx, 0, Math.PI * 2);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (typeof ctx.ellipse === 'function') {
+      ctx.ellipse(hx, groundY + 6, rx * 0.72, ry * 0.55, 0, 0, Math.PI * 2);
+    }
+    ctx.stroke();
   }
 
   // ── Parrot sprite (authored SVG macaw) ─────────────────────────────────────
@@ -876,10 +900,11 @@ const Renderer = (() => {
     ctx.translate(sx, sy);
 
     const plinko = state.plinko;
+    const deckHole = state.deckHole;
     if (plinko) {
       drawPlinkoBoard(plinko);
     } else {
-      drawBackground(groundY, isOnFire, eggs);
+      drawBackground(groundY, isOnFire, eggs, deckHole);
       drawWalls(groundY, isOnFire);
       if (shooting) {
         ctx.strokeStyle = `rgba(244,239,227,${Math.max(0, shooting.life * 1.4)})`;
@@ -892,8 +917,23 @@ const Renderer = (() => {
       drawFlickIndicator(drag, bottle);
       if (showGlow) drawLandingGlow(bottle, groundY);
     }
-    if (plinko) drawPlinkoBall(bottle, liquidColor);
-    else drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
+    if (plinko) {
+      drawPlinkoBall(bottle, liquidColor);
+    } else if (deckHole && bottle) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, W, groundY);
+      if (typeof ctx.ellipse === 'function') {
+        ctx.ellipse(deckHole.x, groundY + 6, deckHole.r, deckHole.r * 0.38, 0, 0, Math.PI * 2);
+      } else {
+        ctx.arc(deckHole.x, groundY + 6, deckHole.r, 0, Math.PI * 2);
+      }
+      ctx.clip();
+      drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
+      ctx.restore();
+    } else {
+      drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
+    }
     drawParticles();
 
     if (result) {

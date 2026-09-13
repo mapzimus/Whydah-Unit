@@ -28,6 +28,7 @@ const Physics = (() => {
   let plinkoFrames = 0;
   let plinkoDone = null;
   let flickLeftTable = false; // rose well above the standing pose this flick
+  let deckOpen = false;       // hatch is open — bird is falling through the table
 
   // Spin tuning (rad/step) — see applyFlick. Single sweet spot near 1 turn:
   // soft flick under-rotates (<360, fails), medium ≈ one clean turn (make),
@@ -138,11 +139,17 @@ const Physics = (() => {
     // perched bird as already flying, so armed holds never fired (or fired
     // while still sitting). Require a real toss, then a downward return.
     if (restY - bottle.position.y > 70) flickLeftTable = true;
-    if (plinkoArmed && flickLeftTable && bottle.velocity.y > 0.2 &&
-        bottle.position.y >= restY - 10) {
+
+    // Open the hatch before the feet hit the rail so the bird doesn't bounce
+    // off a still-solid deck and then teleport into the hold.
+    if (plinkoArmed && flickLeftTable && bottle.velocity.y > 0.15) {
+      if (bottle.bounds.max.y >= groundY - 110) openDeck();
+    }
+    if (deckOpen && bottle.position.y > groundY + 28) {
       plinkoArmed = false;
       return 'PLINKO';
     }
+    if (deckOpen) return null;
 
     if (!grounded) {
       groundedFrames = 0;
@@ -264,12 +271,13 @@ const Physics = (() => {
     }
     groundY = h - 30 - bottomInset;
     if (!ground) return;
-    Body.setPosition(ground, { x: w / 2, y: groundY + 25 });
+    if (!deckOpen) Body.setPosition(ground, { x: w / 2, y: groundY + 25 });
     placeWalls(w, h);
     // If a viewport shrink moved the deck above the bird, snap it back onto the
     // table. Leaving it under the floor makes the shadow radii go negative and
-    // (worse) leaves the turn stuck with a buried body.
-    if (bottle && bottle.position.y > groundY - 20) {
+    // (worse) leaves the turn stuck with a buried body. Skip while the hatch is
+    // open — that's the bird falling through on purpose.
+    if (!deckOpen && bottle && bottle.position.y > groundY - 20) {
       const pad = wallsOn ? WALL_INSET + 40 : 40;
       Body.setPosition(bottle, {
         x: Math.max(pad, Math.min(w - pad, bottle.position.x)),
@@ -281,7 +289,7 @@ const Physics = (() => {
   }
 
   function resetBottle() {
-    if (plinkoMode) {
+    if (plinkoMode || deckOpen) {
       init(canvasW, canvasH, lastInset);
       return;
     }
@@ -289,6 +297,7 @@ const Physics = (() => {
     groundedFrames = 0;
     plinkoArmed = false;
     flickLeftTable = false;
+    deckOpen = false;
     angleWin       = [];
     totalRotation  = 0;
     hasFlipped     = false;
@@ -359,7 +368,7 @@ const Physics = (() => {
     // the table, the still-sloshing liquid gives it a shove. Sometimes it
     // sticks, sometimes that extra push tips it over — the "almost stuck then
     // falls" moment. Keeps a good flick from being a guaranteed make.
-    if (hasFlipped && !hasLanded && bottle.velocity.y > 0 && bottle.position.y >= groundY - 55) {
+    if (!deckOpen && hasFlipped && !hasLanded && bottle.velocity.y > 0 && bottle.position.y >= groundY - 55) {
       hasLanded = true;
       const kick = (liquid.vel * 0.06 + (Math.random() - 0.5) * 0.16) * FEEL.kickScale;
       Body.setAngularVelocity(bottle, bottle.angularVelocity + kick);
@@ -392,6 +401,15 @@ const Physics = (() => {
     plinkoFrames = 0;
     plinkoDone = null;
     flickLeftTable = false;
+    deckOpen = false;
+  }
+
+  function openDeck() {
+    if (deckOpen || !ground) return;
+    deckOpen = true;
+    ground.collisionFilter.mask = 0;
+    ground.collisionFilter.category = 0;
+    Body.setPosition(ground, { x: -50000, y: ground.position.y });
   }
 
   function slotCenter(i, layout) {
@@ -432,6 +450,12 @@ const Physics = (() => {
     plinkoArmed = false;
     flickLeftTable = false;
 
+    const inheritX = bottle ? bottle.position.x : w / 2;
+    const inheritVx = bottle ? bottle.velocity.x : (Math.random() - 0.5) * 2.2;
+    const inheritVy = bottle ? bottle.velocity.y : 1.6;
+    const inheritSpin = bottle ? bottle.angularVelocity : 0;
+    deckOpen = false;
+
     // New engine — World.clear on the live table world left a frozen hold.
     rebuildEngine(1.15);
 
@@ -471,7 +495,10 @@ const Physics = (() => {
       }));
     }
 
-    const startX = w / 2 + (Math.random() - 0.5) * layout.slotW * 1.6;
+    const startX = Math.max(
+      layout.inset + layout.ballR + 8,
+      Math.min(w - layout.inset - layout.ballR - 8, inheritX)
+    );
     bottle = Bodies.circle(startX, layout.top + 6, layout.ballR, {
       restitution: 0.32,
       friction: 0.06,
@@ -479,8 +506,11 @@ const Physics = (() => {
       density: 0.006,
       label: 'plinko-ball',
     });
-    Body.setVelocity(bottle, { x: (Math.random() - 0.5) * 2.2, y: 1.6 });
-    Body.setAngularVelocity(bottle, (Math.random() - 0.5) * 0.12);
+    Body.setVelocity(bottle, {
+      x: Math.max(-5, Math.min(5, inheritVx * 0.5)),
+      y: Math.max(2.4, Math.min(6.5, inheritVy * 0.42)),
+    });
+    Body.setAngularVelocity(bottle, Math.max(-0.22, Math.min(0.22, inheritSpin * 0.35)));
 
     World.add(world, [leftWall, rightWall, floor, bottle].concat(pegs, dividers, hazardBodies));
     return plinkoTarget;
@@ -766,6 +796,11 @@ const Physics = (() => {
     };
   }
 
+  function getDeckHole() {
+    if (!deckOpen || plinkoMode || !bottle) return null;
+    return { x: bottle.position.x, r: 58 };
+  }
+
   function getBottle()  { return bottle; }
   function getLiquid()  { return liquid; }
   function getGroundY() { return groundY; }
@@ -774,7 +809,7 @@ const Physics = (() => {
 
   return {
     init, reflow, step, resetBottle, applyFlick, checkLanding, setSideWalls,
-    armPlinko, startPlinko, checkPlinko, getPlinkoState,
+    armPlinko, startPlinko, checkPlinko, getPlinkoState, getDeckHole,
     getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo,
   };
 })();
