@@ -426,33 +426,16 @@
   let matchStats  = null;   // per-player display-only tallies (index-aligned, null in practice)
   const RESULT_MS = 1500;
 
-  // ── Plinko Lab: auto-drop tester (secret on setup + ?plinko=auto) ──────────
-  const PLINKO_LAB_KEY = 'parrotflip.plinkoLab';
+  // ── Plinko Lab: auto-drop tester (title ⚓ ×5, setup button, or ?plinko=auto)
   let plinkoLab = false;
   let plinkoLabDrop = 0;
   let plinkoLabPaused = false;
   let plinkoLabRandom = false;
   let plinkoLabHits = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   let plinkoLabSlot = 4;
-  let plinkoLabUnlocked = false;
-  try { plinkoLabUnlocked = localStorage.getItem(PLINKO_LAB_KEY) === '1'; } catch (_) {}
 
   function plinkoQuery() {
     return String(new URLSearchParams(location.search).get('plinko') || '').toLowerCase();
-  }
-  function showPlinkoLabButton() {
-    if (plinkoLabBtn) plinkoLabBtn.classList.remove('hidden');
-  }
-  function unlockPlinkoLab(toast) {
-    if (!plinkoLabUnlocked) {
-      plinkoLabUnlocked = true;
-      try { localStorage.setItem(PLINKO_LAB_KEY, '1'); } catch (_) {}
-      if (toast) {
-        Sound.play('coin');
-        showEggToast('Unlocked: Auto-test Plinko');
-      }
-    }
-    showPlinkoLabButton();
   }
   function stopPlinkoLab() {
     plinkoLab = false;
@@ -549,7 +532,6 @@
     if (plinkoLabPaused) startLabDrop();
   }
   function beginPlinkoLab() {
-    unlockPlinkoLab(false);
     plinkoLab = true;
     plinkoLabDrop = 0;
     plinkoLabPaused = false;
@@ -1173,27 +1155,29 @@
     if (parrotTaps >= 8) unlockPieces();
   });
 
-  // Tagline five times unlocks the auto-test (same idea as the macaw egg).
-  const setupTagline = document.getElementById('setup-tagline');
-  let tagTaps = 0, tagTapAt = 0;
-  setupTagline?.addEventListener('click', () => {
+  // Title ⚓ — tap five times to start the lab (counts up so you know it registered).
+  const setupAnchor = document.getElementById('setup-anchor');
+  let anchorTaps = 0, anchorTapAt = 0;
+  setupAnchor?.addEventListener('click', (e) => {
+    e.preventDefault();
     Sound.unlock();
+    Sound.play('coin');
     const now = performance.now();
-    if (now - tagTapAt > 4500) tagTaps = 0;
-    tagTapAt = now;
-    tagTaps++;
-    if (tagTaps >= 5) {
-      tagTaps = 0;
-      unlockPlinkoLab(true);
+    if (now - anchorTapAt > 4500) anchorTaps = 0;
+    anchorTapAt = now;
+    anchorTaps++;
+    if (anchorTaps >= 5) {
+      anchorTaps = 0;
+      showEggToast('Plinko Lab');
+      beginPlinkoLab();
+      return;
     }
+    showEggToast(`⚓ ${anchorTaps} / 5`);
   });
   plinkoLabBtn?.addEventListener('click', () => {
     Sound.unlock();
     beginPlinkoLab();
   });
-  if (plinkoLabUnlocked || ['auto', 'test', 'lab'].includes(plinkoQuery())) {
-    showPlinkoLabButton();
-  }
 
   let labTapDown = false;
   canvas.addEventListener('pointerdown', () => {

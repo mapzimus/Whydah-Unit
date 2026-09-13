@@ -300,9 +300,8 @@ html, body {
 }
 #plinko-lab-btn:hover  { background: rgba(197, 154, 74, 0.22); }
 #plinko-lab-btn:active { transform: scale(0.98); }
-#plinko-lab-btn.hidden { display: none !important; }
 
-#setup-tagline { cursor: pointer; user-select: none; }
+#setup-anchor { user-select: none; }
 
 #plinko-lab-panel {
   position: absolute;
