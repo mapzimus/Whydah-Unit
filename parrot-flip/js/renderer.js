@@ -438,9 +438,80 @@ const Renderer = (() => {
     ctx.fill();
   }
 
-  function drawBottle(bottle, liquid, isOnFire, liquidColor, groundY) {
+  function drawPlinkoBoard(plinko) {
+    const { layout, pegs } = plinko;
+    const buckets = (typeof PLINKO_BUCKETS !== 'undefined') ? PLINKO_BUCKETS : [];
+    ctx.fillStyle = '#140c08';
+    ctx.fillRect(0, 0, W, H);
+    const hold = ctx.createLinearGradient(0, 0, 0, layout.floor);
+    hold.addColorStop(0, '#2a1810');
+    hold.addColorStop(0.45, '#1a100c');
+    hold.addColorStop(1, '#0e0907');
+    ctx.fillStyle = hold;
+    ctx.fillRect(0, 0, W, layout.floor);
+
+    ctx.fillStyle = 'rgba(197,154,74,0.08)';
+    for (let x = 18; x < W; x += 46) {
+      ctx.fillRect(x, 0, 3, layout.floor);
+    }
+
+    ctx.fillStyle = '#3a2418';
+    ctx.fillRect(0, layout.floor, W, H - layout.floor);
+
+    for (let i = 0; i < 9; i++) {
+      const x = layout.inset + layout.slotW * i;
+      const b = buckets[i] || { color: '#c59a4a', short: '' };
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = i === 4 ? 0.92 : 0.78;
+      ctx.fillRect(x + 1, layout.bucketTop, layout.slotW - 2, layout.bucketH);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.strokeRect(x + 1, layout.bucketTop, layout.slotW - 2, layout.bucketH);
+      ctx.save();
+      ctx.fillStyle = i === 4 ? '#1a100c' : '#f4efe3';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = b.short || '';
+      const fontPx = Math.max(9, Math.min(13, layout.slotW * 0.28));
+      ctx.font = `bold ${fontPx}px Georgia, "Times New Roman", serif`;
+      const cx = x + layout.slotW / 2;
+      const cy = layout.bucketTop + layout.bucketH / 2;
+      if (layout.slotW < 52 && label.length > 3) {
+        ctx.translate(cx, cy);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(label, 0, 0);
+      } else {
+        ctx.fillText(label, cx, cy);
+      }
+      ctx.restore();
+    }
+
+    for (const peg of pegs) {
+      const g = ctx.createRadialGradient(peg.x - peg.r * 0.3, peg.y - peg.r * 0.3, 1, peg.x, peg.y, peg.r);
+      g.addColorStop(0, '#ffe28a');
+      g.addColorStop(0.55, '#c59a4a');
+      g.addColorStop(1, '#7a5a24');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath();
+      ctx.arc(peg.x - peg.r * 0.3, peg.y - peg.r * 0.3, peg.r * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = 'rgba(244,239,227,0.55)';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 13px Georgia, "Times New Roman", serif';
+    ctx.fillText('The deck gave way — Lucky Bird pays the middle', W / 2, 28);
+  }
+
+  function drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, paintScale) {
+    if (!bottle) return;
     const { x, y } = bottle.position;
     const angle  = bottle.angle;
+    const birdScale = paintScale || 1;
     const bodyCol = liquidColor || '#d62828';
     const flap = Math.max(-0.45, Math.min(0.45, (liquid.slosh || 0) * 0.55));
     const spr = getParrotSprite(bodyCol);
@@ -457,7 +528,7 @@ const Renderer = (() => {
     }
 
     // Soft contact shadow on the deck — fades out as the bird gains air.
-    if (groundY > 0) {
+    if (groundY > 0 && birdScale === 1) {
       const d = groundY - y;                      // CG height above deck
       const a = Math.max(0, Math.min(1, 1 - (d - GROUND_SHADOW_REST) / 190));
       const rx = 44 + d * 0.08;
@@ -471,6 +542,7 @@ const Renderer = (() => {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
+    if (birdScale !== 1) ctx.scale(birdScale, birdScale);
 
     if (spr.ready) {
       ctx.drawImage(spr.body, SPR.destX, SPR.destY, SPR.destW, SPR.destH);
@@ -573,7 +645,8 @@ const Renderer = (() => {
     ctx.shadowBlur    = 36;
     ctx.translate(W / 2, H / 2 - 60);
     ctx.scale(pop, pop);
-    ctx.font          = 'bold 76px Georgia, "Times New Roman", serif';
+    const size = String(text).length > 10 ? 48 : 76;
+    ctx.font          = `bold ${size}px Georgia, "Times New Roman", serif`;
     ctx.fillText(text, 0, 0);
     ctx.restore();
   }
@@ -612,24 +685,33 @@ const Renderer = (() => {
     ctx.save();
     ctx.translate(sx, sy);
 
-    drawBackground(groundY, isOnFire, eggs);
-    drawWalls(groundY, isOnFire);
-    if (shooting) {
-      ctx.strokeStyle = `rgba(244,239,227,${Math.max(0, shooting.life * 1.4)})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(shooting.x, shooting.y);
-      ctx.lineTo(shooting.x - shooting.vx * 0.12, shooting.y - shooting.vy * 0.12);
-      ctx.stroke();
+    const plinko = state.plinko;
+    if (plinko) {
+      drawPlinkoBoard(plinko);
+    } else {
+      drawBackground(groundY, isOnFire, eggs);
+      drawWalls(groundY, isOnFire);
+      if (shooting) {
+        ctx.strokeStyle = `rgba(244,239,227,${Math.max(0, shooting.life * 1.4)})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(shooting.x, shooting.y);
+        ctx.lineTo(shooting.x - shooting.vx * 0.12, shooting.y - shooting.vy * 0.12);
+        ctx.stroke();
+      }
+      drawFlickIndicator(drag, bottle);
+      if (showGlow) drawLandingGlow(bottle, groundY);
     }
-    drawFlickIndicator(drag, bottle);
-    if (showGlow) drawLandingGlow(bottle, groundY);
-    drawBottle(bottle, liquid, isOnFire, liquidColor, groundY);
+    drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, plinko ? 0.4 : 1);
     drawParticles();
 
     if (result) {
-      const color = result === 'MAKE' ? '#7dcea0' : '#c23b22';
-      drawResult(result === 'MAKE' ? 'MAKE!' : 'MISS', color, resultAlpha);
+      if (result === 'PLINKO' && state.plinkoTitle) {
+        drawResult(state.plinkoTitle, state.plinkoColor || '#ffd54a', resultAlpha);
+      } else {
+        const color = result === 'MAKE' ? '#7dcea0' : '#c23b22';
+        drawResult(result === 'MAKE' ? 'MAKE!' : 'MISS', color, resultAlpha);
+      }
     }
     ctx.restore();
   }

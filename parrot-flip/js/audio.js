@@ -78,6 +78,12 @@ const Sound = (() => {
       tone({ freq: 1240, type: 'sine', dur: 0.12, gain: 0.18 });
       tone({ freq: 1860, type: 'triangle', dur: 0.16, gain: 0.12, delay: 0.06 });
     },
+    // Deck collapse into the hold — falling rattle.
+    plinko: () => {
+      noise(0.22, 0.2, 700);
+      tone({ freq: 240, slideTo: 70, type: 'triangle', dur: 0.55, gain: 0.2 });
+      tone({ freq: 180, slideTo: 90, type: 'sawtooth', dur: 0.35, gain: 0.1, delay: 0.12 });
+    },
   };
 
   // Haptic vibration patterns (ms) per event — no-op on devices without it
@@ -93,6 +99,7 @@ const Sound = (() => {
     eliminated: [80, 60, 80, 60, 160],
     squawk: 18,
     coin:   [12, 20, 12],
+    plinko: [30, 40, 30, 40, 80],
   };
   function buzz(name) {
     if (muted || !navigator.vibrate) return;

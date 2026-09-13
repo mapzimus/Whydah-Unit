@@ -23,13 +23,30 @@ const ONFIRE_CAP_PLAYERS = 4;
 const ONFIRE_CAP_LIVES = 5;
 const STARTING_LIFE_PRESETS = [3, 5, 10, 20, 100];
 
+// 1/100 shots fall through the deck into a 9-bucket pirate hold.
+// Layout is symmetric around Lucky Bird so the room can read it at a glance.
+const PLINKO_CHANCE = 0.01;
+const PLINKO_BUCKETS = [
+  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2 & ½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
+  { key: 'halve',     title: 'CURSE THE CREW', short: '½ CREW', color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
+  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',     color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
+  { key: 'plank',     title: 'THE PLANK',      short: 'OUT',    color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
+  { key: 'lucky',     title: 'LUCKY BIRD',     short: 'WIN',    color: '#ffd54a', win: true,  lose: false, x2: false, halve: false },
+  { key: 'plank',     title: 'THE PLANK',      short: 'OUT',    color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
+  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',     color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
+  { key: 'halve',     title: 'CURSE THE CREW', short: '½ CREW', color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
+  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2 & ½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
+];
+
 const game = {
   state: GAME_STATES.SETUP,
   players: [],
   currentPlayerIndex: 0,
   direction: 1,          // 1 = forward through array, -1 = backward
   pointCount: 0,         // lives at risk on a miss; 0 = no stake built yet (free miss)
-  lastResult: null,      // 'MAKE' | 'MISS'
+  lastResult: null,      // 'MAKE' | 'MISS' | 'PLINKO'
+  lastPlinko: null,      // bucket the bird settled in, when lastResult is PLINKO
+  plinkoWin: false,      // Lucky Bird — this player just won the match
   onFirePlayer: null,
   onFireBonus: 0,
   winnerIndex: 0,        // index of last game's winner (for "winner starts next")
@@ -76,6 +93,8 @@ const game = {
     this.currentPlayerIndex = 0;
     this.pointCount = 0;
     this.lastResult = null;
+    this.lastPlinko = null;
+    this.plinkoWin = false;
     this.onFirePlayer = null;
     this.onFireBonus = 0;
     this.practiceMakes = this.practiceAttempts = this.practiceStreak = this.practiceBest = 0;
@@ -243,10 +262,80 @@ const game = {
     this.setState(GAME_STATES.RESULT);
   },
 
+  // Rare hold-plinko: not a MAKE/MISS. Stake is preserved. Fire keeps going
+  // unless this bucket walks the player (or Lucky Bird ends the match).
+  resolvePlinko(index) {
+    const bucket = PLINKO_BUCKETS[Math.max(0, Math.min(PLINKO_BUCKETS.length - 1, index | 0))];
+    this.turnCounter++;
+    this.lastResult = 'PLINKO';
+    this.lastPlinko = bucket;
+    this.plinkoWin = false;
+    this.lastPenalty = 0;
+    this.onFireGain = 0;
+    this.justIgnited = false;
+    this.fireEnded = false;
+    this.fireCapped = false;
+    this.fireHeld = false;
+    this.sdJustStarted = !this.practice && this.turnCounter === SD_THRESHOLD + 1;
+    this.justEliminated = false;
+    this.perfectLanding = false;
+
+    if (this.practice) {
+      this.practiceAttempts++;
+      if (bucket.win || bucket.x2) {
+        this.practiceMakes++;
+        this.practiceStreak++;
+        this.practiceBest = Math.max(this.practiceBest, this.practiceStreak);
+      } else if (bucket.lose) {
+        this.practiceStreak = 0;
+      }
+      this.setState(GAME_STATES.RESULT);
+      return;
+    }
+
+    const player = this.currentPlayer();
+    if (bucket.x2) player.lives = Math.min(999, player.lives * 2);
+    if (bucket.halve) {
+      for (const p of this.players) {
+        if (p !== player && !p.eliminated) p.lives = Math.max(1, Math.floor(p.lives / 2));
+      }
+    }
+    if (bucket.win) {
+      for (const p of this.players) {
+        if (p !== player) {
+          p.eliminated = true;
+          p.lives = 0;
+          p.isOnFire = false;
+        }
+      }
+      this.onFirePlayer = null;
+      this.plinkoWin = true;
+      this.winnerIndex = this.currentPlayerIndex;
+    }
+    if (bucket.lose) {
+      player.lives = 0;
+      player.eliminated = true;
+      player.isOnFire = false;
+      player.isHeatingUp = false;
+      player.streak = 0;
+      if (this.onFirePlayer === player) this.onFirePlayer = null;
+      this.onFireBonus = 0;
+      this.justEliminated = true;
+    }
+
+    this.setState(GAME_STATES.RESULT);
+  },
+
   // Called after result display to advance turn
   advanceTurn() {
     // Practice: never ends — just keep flipping
     if (this.practice) { this.setState(GAME_STATES.TURN_START); return; }
+
+    if (this.plinkoWin) {
+      this.winnerIndex = this.currentPlayerIndex;
+      this.setState(GAME_STATES.GAME_OVER);
+      return;
+    }
 
     // Win check first
     const active = this.activePlayers();
