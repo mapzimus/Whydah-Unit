@@ -621,11 +621,19 @@
       scheduleAi();
     } else {
       turnBannerEl.textContent = `${p.name}'s turn`;
-      flipHintEl.classList.add('hidden');           // hidden until they tap in
-      showHandoff(p, () => {
+      // Skip the pass-to gate when only one human is still in — 7 CPUs
+      // shouldn't make the last kid tap through a handoff every turn.
+      const humansLeft = game.activePlayers().filter(pl => !pl.isAI).length;
+      if (humansLeft > 1) {
+        flipHintEl.classList.add('hidden');
+        showHandoff(p, () => {
+          flipHintEl.classList.remove('hidden');
+          Input.enable();
+        });
+      } else {
         flipHintEl.classList.remove('hidden');
         Input.enable();
-      });
+      }
     }
     updateHUD();
   }
@@ -640,7 +648,9 @@
     const p = game.currentPlayer();
     turnBannerEl.textContent  = `🔥 ${p.name} IS ON FIRE!`;
     turnBannerEl.style.color  = '#ff6600';
-    streakBannerEl.textContent = `+${game.onFireBonus} lives earned`;
+    streakBannerEl.textContent = game.inSuddenDeath()
+      ? '🔥 On fire holds'
+      : `+${game.onFireBonus} lives earned`;
     streakBannerEl.className   = 'streak-banner on-fire';
     if (game.inSuddenDeath()) updateSuddenDeathUI();
     else pointCountEl.textContent = '';
@@ -703,6 +713,14 @@
         streakBannerEl.textContent = '🔥 ON FIRE!';
         streakBannerEl.className   = 'streak-banner on-fire';
         Sound.play('ignite');
+      } else if (game.fireHeld) {
+        streakBannerEl.textContent = '🔥 On fire holds';
+        streakBannerEl.className   = 'streak-banner on-fire';
+        Sound.play('make');
+      } else if (game.sdJustStarted) {
+        streakBannerEl.textContent = '💀 Sudden death!';
+        streakBannerEl.className   = 'streak-banner miss-penalty';
+        Sound.play('make');
       } else if (game.perfectLanding) {
         streakBannerEl.textContent = '✦ Perfect landing!';
         streakBannerEl.className   = 'streak-banner on-fire';
@@ -754,7 +772,7 @@
     updateHUD();
     // one-shot flash on the eliminated player's card (cards map 1:1 to players)
     playerListEl.children[game.currentPlayerIndex]?.classList.add('just-out');
-    setTimeout(() => game.advanceTurn(), 1800);
+    setTimeout(() => game.advanceTurn(), 1200);
   }
 
   function onGameOver() {
