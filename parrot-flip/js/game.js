@@ -11,8 +11,9 @@ const GAME_STATES = {
   GAME_OVER: 'GAME_OVER',
 };
 
-// Sudden death: after this many flips, ON FIRE stops minting free lives and every
-// miss costs an escalating extra penalty — guarantees even high-skill games end.
+// Sudden death: after this many flips, every miss costs an escalating extra
+// penalty so long games still end. ON FIRE keeps the extra-flip run (it holds);
+// it just stops minting free lives — the deflation valve.
 const SD_THRESHOLD = 70;
 const SD_STEP = 20;   // flips per escalation level (+1 extra life lost each level)
 
@@ -22,13 +23,31 @@ const ONFIRE_CAP_PLAYERS = 4;
 const ONFIRE_CAP_LIVES = 5;
 const STARTING_LIFE_PRESETS = [3, 5, 10, 20, 100];
 
+// 1/100 shots fall through the deck into a 9-bucket pirate hold.
+// Testers: tap the setup tagline 5×, or open ?plinko=auto for the looping lab.
+// Layout is symmetric around Lucky Bird so the room can read it at a glance.
+const PLINKO_CHANCE = 0.01;
+const PLINKO_BUCKETS = [
+  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
+  { key: 'halve',     title: 'CURSE THE CREW', short: '½',   color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
+  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',  color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
+  { key: 'plank',     title: 'THE PLANK',      short: 'OUT', color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
+  { key: 'lucky',     title: 'LUCKY BIRD',     short: 'WIN', color: '#ffd54a', win: true,  lose: false, x2: false, halve: false },
+  { key: 'plank',     title: 'THE PLANK',      short: 'OUT', color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
+  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',  color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
+  { key: 'halve',     title: 'CURSE THE CREW', short: '½',   color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
+  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
+];
+
 const game = {
   state: GAME_STATES.SETUP,
   players: [],
   currentPlayerIndex: 0,
   direction: 1,          // 1 = forward through array, -1 = backward
   pointCount: 0,         // lives at risk on a miss; 0 = no stake built yet (free miss)
-  lastResult: null,      // 'MAKE' | 'MISS'
+  lastResult: null,      // 'MAKE' | 'MISS' | 'PLINKO'
+  lastPlinko: null,      // bucket the bird settled in, when lastResult is PLINKO
+  plinkoWin: false,      // Lucky Bird — this player just won the match
   onFirePlayer: null,
   onFireBonus: 0,
   winnerIndex: 0,        // index of last game's winner (for "winner starts next")
@@ -40,6 +59,8 @@ const game = {
   justIgnited: false,    // last make just triggered ON FIRE
   fireEnded: false,      // last miss ended an ON FIRE run (penalty only in sudden death)
   fireCapped: false,     // ON FIRE run hit the big-lobby +cap and passed on (no penalty)
+  fireHeld: false,       // ON FIRE make in sudden death — run continues, no extra life
+  sdJustStarted: false,  // this flip crossed the sudden-death threshold
   justEliminated: false, // last miss eliminated the current player
 
   // Modes
@@ -50,18 +71,15 @@ const game = {
   practiceBest: 0,
   turnCounter: 0,        // flips this game (drives sudden death)
   startingLives: 10,
-  maxLives: 20,
+  maxLives: 15,
   perfectLanding: false,
 
   // defs: [{ name, color, isAI }]
   init(defs, direction, opts = {}) {
     this.practice   = !!opts.practice;
     this.startingLives = STARTING_LIFE_PRESETS.includes(+opts.startingLives) ? +opts.startingLives : 10;
-    // ON FIRE bonus lives cap: ≤10 starts always top out at 20; above that, 1.5× start
-    // (20→30, 50→75, 100→150).
-    this.maxLives = this.startingLives <= 10
-      ? 20
-      : Math.round(this.startingLives * 1.5);
+    // ON FIRE can bank lives up to 1.5× the start, rounded up (3→5, 5→8, 10→15, 20→30, 100→150).
+    this.maxLives = Math.ceil(this.startingLives * 1.5);
     this.players = defs.map(d => ({
       name: d.name,
       color: d.color || '#0b86ff',
@@ -76,11 +94,15 @@ const game = {
     this.currentPlayerIndex = 0;
     this.pointCount = 0;
     this.lastResult = null;
+    this.lastPlinko = null;
+    this.plinkoWin = false;
     this.onFirePlayer = null;
     this.onFireBonus = 0;
     this.practiceMakes = this.practiceAttempts = this.practiceStreak = this.practiceBest = 0;
     this.turnCounter = 0;
     this.perfectLanding = false;
+    this.fireHeld = false;
+    this.sdJustStarted = false;
 
     // Winner-starts-next: caller passes the winner's INDEX (not name, which is
     // ambiguous when two players share a name). Ignored in practice.
@@ -137,6 +159,8 @@ const game = {
     this.justIgnited    = false;
     this.fireEnded      = false;
     this.fireCapped     = false;
+    this.fireHeld       = false;
+    this.sdJustStarted  = !this.practice && this.turnCounter === SD_THRESHOLD + 1;
     this.justEliminated = false;
     this.perfectLanding = result === 'MAKE' && !!meta.perfect;
 
@@ -159,8 +183,9 @@ const game = {
     // ── ON FIRE bonus flips: each make = +1 life; a miss just ends the run ──
     if (wasOnFire) {
       if (result === 'MAKE') {
-        // +1 life per flip while ON FIRE — bounded by the match life cap. In SUDDEN
-        // DEATH, ON FIRE stops minting free lives (the deflation valve).
+        // +1 life per flip while ON FIRE — bounded by the match life cap. In
+        // sudden death the run HOLDS (same player keeps flipping) but new lives
+        // stop so a hot streak can't stall the table forever.
         if (!sd) {
           const before = player.lives;
           player.lives    = Math.min(player.lives + 1, this.maxLives);
@@ -168,22 +193,22 @@ const game = {
           if (this.onFireGain > 0) this.onFireBonus++;
         } else {
           this.onFireGain = 0;
+          this.fireHeld   = true;
         }
-        // Big lobbies (>4 players): cap the ON FIRE run at +5 lives (or once it
-        // can't gain) and pass on — so 5-7 others aren't kept waiting through a
-        // long run. Graceful end: keep the gains, NO penalty, NOT a miss.
-        // End the ON FIRE run gracefully (keep gains, NO penalty, NOT a miss) when
-        // the player hits the match life cap — no point flipping for nothing — or when
-        // a big lobby (>4) has handed out its +5 / can no longer gain.
+        // End the run gracefully (keep gains, NO penalty, NOT a miss) only when
+        // another flip can't help: at the match life cap, or a big lobby has
+        // already handed out its +5. Do NOT treat "no life this flip" as a cap —
+        // that used to kill ON FIRE the instant sudden death started.
         if (player.lives >= this.maxLives ||
             (this.players.length > ONFIRE_CAP_PLAYERS &&
-             (this.onFireBonus >= ONFIRE_CAP_LIVES || this.onFireGain === 0))) {
+             this.onFireBonus >= ONFIRE_CAP_LIVES)) {
           player.isOnFire    = false;
           player.isHeatingUp = false;
           player.streak      = 0;
           this.onFirePlayer  = null;
           this.onFireBonus   = 0;
           this.fireCapped    = true;
+          this.fireHeld      = false;
         }
       } else {
         // Miss ends ON FIRE — normally NO life loss (the reward); in sudden death
@@ -238,10 +263,80 @@ const game = {
     this.setState(GAME_STATES.RESULT);
   },
 
+  // Rare hold-plinko: not a MAKE/MISS. Stake is preserved. Fire keeps going
+  // unless this bucket walks the player (or Lucky Bird ends the match).
+  resolvePlinko(index) {
+    const bucket = PLINKO_BUCKETS[Math.max(0, Math.min(PLINKO_BUCKETS.length - 1, index | 0))];
+    this.turnCounter++;
+    this.lastResult = 'PLINKO';
+    this.lastPlinko = bucket;
+    this.plinkoWin = false;
+    this.lastPenalty = 0;
+    this.onFireGain = 0;
+    this.justIgnited = false;
+    this.fireEnded = false;
+    this.fireCapped = false;
+    this.fireHeld = false;
+    this.sdJustStarted = !this.practice && this.turnCounter === SD_THRESHOLD + 1;
+    this.justEliminated = false;
+    this.perfectLanding = false;
+
+    if (this.practice) {
+      this.practiceAttempts++;
+      if (bucket.win || bucket.x2) {
+        this.practiceMakes++;
+        this.practiceStreak++;
+        this.practiceBest = Math.max(this.practiceBest, this.practiceStreak);
+      } else if (bucket.lose) {
+        this.practiceStreak = 0;
+      }
+      this.setState(GAME_STATES.RESULT);
+      return;
+    }
+
+    const player = this.currentPlayer();
+    if (bucket.x2) player.lives = Math.min(999, player.lives * 2);
+    if (bucket.halve) {
+      for (const p of this.players) {
+        if (p !== player && !p.eliminated) p.lives = Math.max(1, Math.floor(p.lives / 2));
+      }
+    }
+    if (bucket.win) {
+      for (const p of this.players) {
+        if (p !== player) {
+          p.eliminated = true;
+          p.lives = 0;
+          p.isOnFire = false;
+        }
+      }
+      this.onFirePlayer = null;
+      this.plinkoWin = true;
+      this.winnerIndex = this.currentPlayerIndex;
+    }
+    if (bucket.lose) {
+      player.lives = 0;
+      player.eliminated = true;
+      player.isOnFire = false;
+      player.isHeatingUp = false;
+      player.streak = 0;
+      if (this.onFirePlayer === player) this.onFirePlayer = null;
+      this.onFireBonus = 0;
+      this.justEliminated = true;
+    }
+
+    this.setState(GAME_STATES.RESULT);
+  },
+
   // Called after result display to advance turn
   advanceTurn() {
     // Practice: never ends — just keep flipping
     if (this.practice) { this.setState(GAME_STATES.TURN_START); return; }
+
+    if (this.plinkoWin) {
+      this.winnerIndex = this.currentPlayerIndex;
+      this.setState(GAME_STATES.GAME_OVER);
+      return;
+    }
 
     // Win check first
     const active = this.activePlayers();

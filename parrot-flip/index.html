@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=16">
+  <link rel="stylesheet" href="css/style.css?v=23">
 </head>
 <body>
   <a class="back-link" href="../games/">← Whydah Games</a>
@@ -24,7 +24,7 @@
   <div id="setup-screen" class="screen hidden">
     <div class="setup-card">
       <h1><span class="emoji" id="title-parrot" title="🦜">🦜</span> Parrot Flip</h1>
-      <p class="tagline">Caribbean pirate parrots (macaws included). Same flip physics.</p>
+      <p class="tagline" id="setup-tagline">Caribbean pirate parrots (macaws included). Same flip physics.</p>
 
       <div>
         <div class="section-label">Players — pick a parrot (🧑 tap for CPU)</div>
@@ -53,6 +53,7 @@
 
       <button id="start-btn">Start Game</button>
       <button id="practice-btn">🎯 Practice (solo)</button>
+      <button id="plinko-lab-btn" class="hidden">⚓ Auto-test Plinko</button>
     </div>
   </div>
 
@@ -71,6 +72,11 @@
       <div id="streak-banner"></div>
     </div>
     <div id="flip-hint">Flick UP — harder = more spin. Land the parrot upright!</div>
+    <div id="plinko-lab-panel" class="hidden">
+      <div class="lab-kicker">⚓ Plinko Lab</div>
+      <div id="plinko-lab-stats"></div>
+      <div class="lab-help">Tap to skip · P pause · R random / cycle</div>
+    </div>
     <div id="practice-meter" class="hidden">
       <div class="pm-track"><div class="pm-band"></div><div class="pm-marker"></div></div>
       <div class="pm-label">flick strength — green zone ≈ one clean flip</div>
@@ -114,13 +120,13 @@
 
   <div id="egg-toast" class="hidden"></div>
 
-  <script src="js/vendor/matter.min.js?v=16"></script>
-  <script src="js/game.js?v=16"></script>
-  <script src="js/physics.js?v=16"></script>
-  <script src="js/input.js?v=16"></script>
-  <script src="js/renderer.js?v=16"></script>
-  <script src="js/audio.js?v=16"></script>
-  <script src="js/main.js?v=16"></script>
+  <script src="js/vendor/matter.min.js?v=23"></script>
+  <script src="js/game.js?v=23"></script>
+  <script src="js/physics.js?v=23"></script>
+  <script src="js/input.js?v=23"></script>
+  <script src="js/renderer.js?v=23"></script>
+  <script src="js/audio.js?v=23"></script>
+  <script src="js/main.js?v=23"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -142,7 +148,7 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=16')
+        navigator.serviceWorker.register('service-worker.js?v=23')
           .then((reg) => console.log('SW registered, scope:', reg.scope))
           .catch((err) => console.error('SW registration failed:', err));
       });

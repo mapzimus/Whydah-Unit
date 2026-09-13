@@ -15,6 +15,9 @@
   const flipHintEl   = document.getElementById('flip-hint');
   const startBtn     = document.getElementById('start-btn');
   const practiceBtn  = document.getElementById('practice-btn');
+  const plinkoLabBtn = document.getElementById('plinko-lab-btn');
+  const plinkoLabPanel = document.getElementById('plinko-lab-panel');
+  const plinkoLabStats = document.getElementById('plinko-lab-stats');
   const addPlayerBtn = document.getElementById('add-player-btn');
   const playerInputs = document.getElementById('player-inputs');
   const handoffEl    = document.getElementById('handoff-overlay');
@@ -344,6 +347,7 @@
     if (loopId) { cancelAnimationFrame(loopId); loopId = null; }
     evaluating = false;
     showGlow = false;
+    stopPlinkoLab();
     Input.disable();
     Sound.stopSuddenDeath();
     leaveKioskMode();
@@ -422,20 +426,173 @@
   let matchStats  = null;   // per-player display-only tallies (index-aligned, null in practice)
   const RESULT_MS = 1500;
 
-  // CPU takes its turn: aim near the sweet-spot flick, with a fixed classroom miss rate.
+  // ── Plinko Lab: auto-drop tester (secret on setup + ?plinko=auto) ──────────
+  const PLINKO_LAB_KEY = 'parrotflip.plinkoLab';
+  let plinkoLab = false;
+  let plinkoLabDrop = 0;
+  let plinkoLabPaused = false;
+  let plinkoLabRandom = false;
+  let plinkoLabHits = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  let plinkoLabSlot = 4;
+  let plinkoLabUnlocked = false;
+  try { plinkoLabUnlocked = localStorage.getItem(PLINKO_LAB_KEY) === '1'; } catch (_) {}
+
+  function plinkoQuery() {
+    return String(new URLSearchParams(location.search).get('plinko') || '').toLowerCase();
+  }
+  function showPlinkoLabButton() {
+    if (plinkoLabBtn) plinkoLabBtn.classList.remove('hidden');
+  }
+  function unlockPlinkoLab(toast) {
+    if (!plinkoLabUnlocked) {
+      plinkoLabUnlocked = true;
+      try { localStorage.setItem(PLINKO_LAB_KEY, '1'); } catch (_) {}
+      if (toast) {
+        Sound.play('coin');
+        showEggToast('Unlocked: Auto-test Plinko');
+      }
+    }
+    showPlinkoLabButton();
+  }
+  function stopPlinkoLab() {
+    plinkoLab = false;
+    plinkoLabPaused = false;
+    plinkoLabPanel?.classList.add('hidden');
+  }
+  function resetLabRoster() {
+    game.plinkoWin = false;
+    game.justEliminated = false;
+    game.lastPenalty = 0;
+    game.onFirePlayer = null;
+    game.onFireBonus = 0;
+    game.pointCount = 0;
+    game.turnCounter = 0;
+    game.sdJustStarted = false;
+    game.fireHeld = false;
+    const lives = game.startingLives || 10;
+    for (const p of game.players) {
+      p.lives = lives;
+      p.eliminated = false;
+      p.streak = 0;
+      p.isOnFire = false;
+      p.isHeatingUp = false;
+    }
+    if (game.players.length) {
+      game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
+    }
+  }
+  function labBucket(i) {
+    return PLINKO_BUCKETS[Math.max(0, Math.min(8, i | 0))];
+  }
+  function updateLabPanel() {
+    if (!plinkoLab || !plinkoLabStats) return;
+    const now = labBucket(plinkoLabSlot);
+    const rows = PLINKO_BUCKETS.map((b, i) => {
+      const mark = i === plinkoLabSlot ? ' ◂' : '';
+      const cls = i === plinkoLabSlot ? 'lab-hit is-next' : 'lab-hit';
+      return `<div class="${cls}"><span>${i + 1}. ${b.title}</span><span>${plinkoLabHits[i]}${mark}</span></div>`;
+    }).join('');
+    const mode = plinkoLabPaused ? 'PAUSED' : (plinkoLabRandom ? 'Random' : `Cycle · ${now.short}`);
+    plinkoLabStats.innerHTML = `<div class="lab-hit"><span>Drops</span><span>${plinkoLabDrop} · ${mode}</span></div>${rows}`;
+  }
+  function startLabDrop() {
+    if (!plinkoLab) return;
+    Input.disable();
+    flipHintEl.classList.add('hidden');
+    handoffEl.classList.add('hidden');
+    evaluating = false;
+    showGlow = false;
+    resultAlpha = 0;
+    game.lastResult = null;
+    game.lastPlinko = null;
+    game.plinkoWin = false;
+    game.state = GAME_STATES.EVALUATING;
+    const target = plinkoLabRandom ? Math.floor(Math.random() * 9) : (plinkoLabDrop % 9);
+    plinkoLabSlot = target;
+    plinkoLabDrop++;
+    Physics.startPlinko(target);
+    const bkt = labBucket(target);
+    const p = game.currentPlayer();
+    turnBannerEl.textContent = `⚓ ${p ? p.name : 'Lab'} · drop ${plinkoLabDrop}`;
+    if (p) turnBannerEl.style.color = p.color;
+    pointCountEl.textContent = plinkoLabRandom ? 'Random' : `${bkt.title} · ${bkt.short}`;
+    streakBannerEl.textContent = 'Auto-test — tap to skip this bounce';
+    streakBannerEl.className = 'streak-banner on-fire';
+    Sound.play('plinko');
+    updateLabPanel();
+    updateHUD();
+  }
+  function finishLabDrop() {
+    resetLabRoster();
+    updateHUD();
+    if (plinkoLabPaused) {
+      turnBannerEl.textContent = `⚓ Lab paused · next drop ${plinkoLabDrop + 1}`;
+      pointCountEl.textContent = 'Tap or P';
+      streakBannerEl.textContent = 'Paused — roster reset, ready to drop';
+      streakBannerEl.className = 'streak-banner';
+      updateLabPanel();
+      return;
+    }
+    startLabDrop();
+  }
+  function skipLabStep() {
+    if (!plinkoLab) return;
+    if (Physics.getPlinkoState() && game.state !== GAME_STATES.RESULT &&
+        game.state !== GAME_STATES.GAME_OVER) {
+      Physics.skipPlinko();
+      return;
+    }
+    if (game.state === GAME_STATES.RESULT) {
+      resultTimer = 0;
+      return;
+    }
+    if (plinkoLabPaused) startLabDrop();
+  }
+  function beginPlinkoLab() {
+    unlockPlinkoLab(false);
+    plinkoLab = true;
+    plinkoLabDrop = 0;
+    plinkoLabPaused = false;
+    plinkoLabRandom = false;
+    plinkoLabHits = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    plinkoLabSlot = 0;
+    Sound.unlock();
+    setupScreen.classList.add('hidden');
+    gameOverEl.classList.add('hidden');
+    tutorialEl.classList.add('hidden');
+    handoffEl.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+    plinkoLabPanel?.classList.remove('hidden');
+    try { document.activeElement.blur(); } catch (_) {}
+    const defs = [
+      { name: PARROTS[0].name, color: PARROTS[0].color, isAI: false },
+      { name: PARROTS[1].name, color: PARROTS[1].color, isAI: false },
+      { name: PARROTS[2].name, color: PARROTS[2].color, isAI: false },
+      { name: PARROTS[3].name, color: PARROTS[3].color, isAI: false },
+    ];
+    startGame(defs, 1, { startingLives: 10 });
+  }
+  window.__plinkoLab = beginPlinkoLab;
+
+  // CPU takes its turn: aim near the sweet-spot flick, with a classroom miss rate.
+  // A little sloppier than the old medium (sigma 400 / lean 420) so kids can beat it.
   function aiFlick() {
     if (game.state !== GAME_STATES.TURN_START && game.state !== GAME_STATES.ON_FIRE) return;
-    const sigma = 400;
+    const sigma = 540;
     const u1 = Math.random() || 1e-6, u2 = Math.random();
     const gauss = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
     const up = Math.max(500, 2100 + gauss * sigma);   // sweet spot ~2100 px/s
-    const vx = (Math.random() - 0.5) * 420;           // slight lean
+    const vx = (Math.random() - 0.5) * 520;           // lean — wider = more tips
     onFlick(vx, -up);
   }
 
-  // Brief wind-up so CPU turns don't read as instant/robotic.
+  function currentIsAI() {
+    return !!(game.currentPlayer() && game.currentPlayer().isAI);
+  }
+
+  // Half the old 1.05–1.55s wind-up — 8 CPUs would otherwise stall the table.
   function aiThinkDelay() {
-    return 1050 + Math.random() * 500;
+    return 525 + Math.random() * 250;
   }
   function scheduleAi() {
     Input.disable();
@@ -510,12 +667,25 @@
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     lastTime = now;
 
-    Physics.step(dt); // always step — bottle settles on table during TURN_START too
+    // Human shots play at 1×. CPU shots step twice so the toss is over in
+    // half the wall-clock time — same arc, just quicker with a full lobby.
+    const plinkoOn = !!Physics.getPlinkoState();
+    const aiShot = currentIsAI() && (evaluating || plinkoOn);
+    const labShot = plinkoLab && plinkoOn;
+    Physics.step(dt);
+    if (aiShot || labShot) Physics.step(dt);
 
     // Physics-based landing check
     if (evaluating) {
       const result = Physics.checkLanding();
-      if (result) {
+      if (result === 'PLINKO') {
+        evaluating = false;
+        Physics.startPlinko();
+        turnBannerEl.textContent = 'The deck gave way!';
+        streakBannerEl.textContent = 'Hold plinko — 9 buckets, Lucky Bird in the middle';
+        streakBannerEl.className = 'streak-banner on-fire';
+        Sound.play('plinko');
+      } else if (result) {
         evaluating = false;
         showGlow   = result === 'MAKE';
         const b = Physics.getBottle();
@@ -531,9 +701,16 @@
       }
     }
 
+    if (Physics.getPlinkoState() &&
+        game.state !== GAME_STATES.RESULT &&
+        game.state !== GAME_STATES.GAME_OVER) {
+      const slot = Physics.checkPlinko();
+      if (slot != null) game.resolvePlinko(slot);
+    }
+
     // Result countdown + fade
     if (game.state === GAME_STATES.RESULT) {
-      resultTimer -= dt * 1000;
+      resultTimer -= dt * 1000 * (currentIsAI() ? 2 : 1);
       if (resultTimer > RESULT_MS - 350) {
         resultAlpha = (RESULT_MS - resultTimer) / 350;
       } else if (resultTimer < 400) {
@@ -544,10 +721,16 @@
       if (resultTimer <= 0) {
         showGlow    = false;
         resultAlpha = 0;
-        game.advanceTurn();
+        if (plinkoLab) {
+          finishLabDrop();
+        } else {
+          game.advanceTurn();
+        }
       }
     }
 
+    const pk = Physics.getPlinkoState();
+    const pkBucket = game.lastResult === 'PLINKO' ? game.lastPlinko : null;
     Renderer.frame(dt, {
       bottle:      Physics.getBottle(),
       liquid:      Physics.getLiquid(),
@@ -559,6 +742,9 @@
       isOnFire:    !!(game.onFirePlayer),
       liquidColor: game.currentPlayer()?.color,
       eggs:        currentEggs(),
+      plinko:      pk,
+      plinkoTitle: pkBucket && (pkBucket.win ? 'LUCKY BIRD!' : pkBucket.title),
+      plinkoColor: pkBucket && pkBucket.color,
     });
   }
 
@@ -583,6 +769,12 @@
     showGlow    = false;
     resultAlpha = 0;
     clearTimeout(aiTimer);
+    if (plinkoLab) {
+      Input.disable();
+      flipHintEl.classList.add('hidden');
+      startLabDrop();
+      return;
+    }
     Physics.resetBottle();
     flipHintEl.classList.remove('hidden');
 
@@ -612,11 +804,19 @@
       scheduleAi();
     } else {
       turnBannerEl.textContent = `${p.name}'s turn`;
-      flipHintEl.classList.add('hidden');           // hidden until they tap in
-      showHandoff(p, () => {
+      // Skip the pass-to gate when only one human is still in — 7 CPUs
+      // shouldn't make the last kid tap through a handoff every turn.
+      const humansLeft = game.activePlayers().filter(pl => !pl.isAI).length;
+      if (humansLeft > 1) {
+        flipHintEl.classList.add('hidden');
+        showHandoff(p, () => {
+          flipHintEl.classList.remove('hidden');
+          Input.enable();
+        });
+      } else {
         flipHintEl.classList.remove('hidden');
         Input.enable();
-      });
+      }
     }
     updateHUD();
   }
@@ -631,7 +831,9 @@
     const p = game.currentPlayer();
     turnBannerEl.textContent  = `🔥 ${p.name} IS ON FIRE!`;
     turnBannerEl.style.color  = '#ff6600';
-    streakBannerEl.textContent = `+${game.onFireBonus} lives earned`;
+    streakBannerEl.textContent = game.inSuddenDeath()
+      ? '🔥 On fire holds'
+      : `+${game.onFireBonus} lives earned`;
     streakBannerEl.className   = 'streak-banner on-fire';
     if (game.inSuddenDeath()) updateSuddenDeathUI();
     else pointCountEl.textContent = '';
@@ -646,7 +848,8 @@
   function onResult() {
     Input.disable();
     flipHintEl.classList.add('hidden');
-    resultTimer = RESULT_MS;
+    resultTimer = (game.lastResult === 'PLINKO' && game.lastPlinko && (game.lastPlinko.win || game.lastPlinko.lose))
+      ? 2200 : RESULT_MS;
     // Haptics come from Sound.play() below — avoid a second vibrate here.
 
     const p = game.currentPlayer();
@@ -655,15 +858,32 @@
     if (matchStats) {
       const s = matchStats[game.currentPlayerIndex];
       s.attempts++;
-      if (game.lastResult === 'MAKE') {
+      if (game.lastResult === 'MAKE' || (game.lastResult === 'PLINKO' && game.lastPlinko && game.lastPlinko.win)) {
         s.makes++;
         s.cur++;
         s.bestStreak = Math.max(s.bestStreak, s.cur);
         s.bestFire   = Math.max(s.bestFire, game.onFireBonus);
-      } else {
+      } else if (game.lastResult === 'MISS' || (game.lastResult === 'PLINKO' && game.lastPlinko && game.lastPlinko.lose)) {
         s.cur = 0;
         s.worstLoss = Math.max(s.worstLoss, game.lastPenalty);
       }
+    }
+
+    if (game.lastResult === 'PLINKO' && game.lastPlinko) {
+      const bkt = game.lastPlinko;
+      if (plinkoLab && Number.isInteger(plinkoLabSlot)) {
+        plinkoLabHits[plinkoLabSlot] = (plinkoLabHits[plinkoLabSlot] || 0) + 1;
+        updateLabPanel();
+      }
+      streakBannerEl.textContent = bkt.win ? 'Lucky Bird — automatic win!'
+        : bkt.lose ? 'Walked the plank!'
+        : bkt.x2 && bkt.halve ? '×2 lives · crew halved'
+        : bkt.x2 ? 'Lives doubled!'
+        : 'The crew is halved!';
+      streakBannerEl.className = bkt.lose ? 'streak-banner miss-penalty' : 'streak-banner on-fire';
+      Sound.play(bkt.win ? 'win' : bkt.lose ? 'eliminated' : bkt.x2 ? 'coin' : 'miss');
+      updateHUD();
+      return;
     }
 
     if (game.practice) {
@@ -694,6 +914,14 @@
         streakBannerEl.textContent = '🔥 ON FIRE!';
         streakBannerEl.className   = 'streak-banner on-fire';
         Sound.play('ignite');
+      } else if (game.fireHeld) {
+        streakBannerEl.textContent = '🔥 On fire holds';
+        streakBannerEl.className   = 'streak-banner on-fire';
+        Sound.play('make');
+      } else if (game.sdJustStarted) {
+        streakBannerEl.textContent = '💀 Sudden death!';
+        streakBannerEl.className   = 'streak-banner';
+        Sound.play('make');
       } else if (game.perfectLanding) {
         streakBannerEl.textContent = '✦ Perfect landing!';
         streakBannerEl.className   = 'streak-banner on-fire';
@@ -745,10 +973,16 @@
     updateHUD();
     // one-shot flash on the eliminated player's card (cards map 1:1 to players)
     playerListEl.children[game.currentPlayerIndex]?.classList.add('just-out');
-    setTimeout(() => game.advanceTurn(), 1800);
+    setTimeout(() => game.advanceTurn(), 1200);
   }
 
   function onGameOver() {
+    if (plinkoLab) {
+      gameScreen.classList.remove('hidden');
+      gameOverEl.classList.add('hidden');
+      finishLabDrop();
+      return;
+    }
     gameScreen.classList.add('hidden');
     gameOverEl.classList.remove('hidden');
     const active = game.activePlayers();
@@ -781,9 +1015,12 @@
     if (game.state !== GAME_STATES.TURN_START &&
         game.state !== GAME_STATES.ON_FIRE) return;
 
+    if (plinkoLab) return;
     Sound.unlock();
     Sound.play('flick');
     Physics.applyFlick(vx, vy);
+    const forceHold = plinkoQuery() === '1';
+    Physics.armPlinko(forceHold);
 
     // Practice trainer: show where this flick landed on the strength meter
     if (game.practice) updatePracticeMeter(Physics.getLastFlickInfo());
@@ -935,4 +1172,65 @@
     parrotTaps++;
     if (parrotTaps >= 8) unlockPieces();
   });
+
+  // Tagline five times unlocks the auto-test (same idea as the macaw egg).
+  const setupTagline = document.getElementById('setup-tagline');
+  let tagTaps = 0, tagTapAt = 0;
+  setupTagline?.addEventListener('click', () => {
+    Sound.unlock();
+    const now = performance.now();
+    if (now - tagTapAt > 4500) tagTaps = 0;
+    tagTapAt = now;
+    tagTaps++;
+    if (tagTaps >= 5) {
+      tagTaps = 0;
+      unlockPlinkoLab(true);
+    }
+  });
+  plinkoLabBtn?.addEventListener('click', () => {
+    Sound.unlock();
+    beginPlinkoLab();
+  });
+  if (plinkoLabUnlocked || ['auto', 'test', 'lab'].includes(plinkoQuery())) {
+    showPlinkoLabButton();
+  }
+
+  let labTapDown = false;
+  canvas.addEventListener('pointerdown', () => {
+    labTapDown = !!plinkoLab;
+  });
+  canvas.addEventListener('pointerup', () => {
+    if (plinkoLab && labTapDown) skipLabStep();
+    labTapDown = false;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!plinkoLab) return;
+    if (e.key === 'p' || e.key === 'P') {
+      e.preventDefault();
+      plinkoLabPaused = !plinkoLabPaused;
+      if (!plinkoLabPaused && game.state !== GAME_STATES.RESULT && !Physics.getPlinkoState()) {
+        startLabDrop();
+      } else {
+        updateLabPanel();
+        if (plinkoLabPaused) pointCountEl.textContent = 'PAUSED';
+      }
+    } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      plinkoLabRandom = !plinkoLabRandom;
+      updateLabPanel();
+      pointCountEl.textContent = plinkoLabRandom ? 'Random' : 'Cycle';
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      returnToSetup();
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      skipLabStep();
+    }
+  }, true);
+
+  // ?plinko=auto|test|lab starts the looping tester. ?plinko=1 still forces
+  // a hold after a real flick.
+  if (['auto', 'test', 'lab'].includes(plinkoQuery())) {
+    beginPlinkoLab();
+  }
 })();

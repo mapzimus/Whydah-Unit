@@ -6,13 +6,25 @@ const Physics = (() => {
   let engine, world, bottle, ground, leftWall, rightWall;
   let groundedFrames = 0;
   let angleWin = [];   // sliding window of recent angles (settle detection)
-  let totalRotation = 0, hasFlipped = false, launchAngle = 0, hasLanded = false;
+  let totalRotation = 0, hasFlipped = false, launchAngle = 0, hasLanded = false, wasAirborne = false;
   let lastLandingInfo = null;
   let lastFlickInfo = null;
   let canvasW;
   let canvasH;
+  let lastInset = 0;
   let groundY;
   let wallsOn = true;   // false on phones — open arena, no side rails
+
+  // Rare 1/100 hold-plinko. Target slot is rolled up front so each of the 9
+  // buckets stays equally likely; physics + a late nudge sell the bounce.
+  let plinkoArmed = false;
+  let plinkoMode = false;
+  let plinkoTarget = 4;
+  let plinkoLayout = null;
+  let plinkoPegs = [];
+  let plinkoSettle = 0;
+  let plinkoFrames = 0;
+  let plinkoDone = null;
 
   // Spin tuning (rad/step) — see applyFlick. Single sweet spot near 1 turn:
   // soft flick under-rotates (<360, fails), medium ≈ one clean turn (make),
@@ -112,11 +124,17 @@ const Physics = (() => {
   }
 
   function checkLanding() {
-    if (!bottle) return null;
+    if (!bottle || plinkoMode) return null;
 
     const angVel   = Math.abs(bottle.angularVelocity);
     const linSpeed = Math.hypot(bottle.velocity.x, bottle.velocity.y);
     const grounded = bottle.position.y >= groundY - 80;
+
+    if (!grounded) wasAirborne = true;
+    if (grounded && plinkoArmed && wasAirborne) {
+      plinkoArmed = false;
+      return 'PLINKO';
+    }
 
     if (!grounded) {
       groundedFrames = 0;
@@ -195,7 +213,9 @@ const Physics = (() => {
   function init(w, h, bottomInset = 0) {
     canvasW = w;
     canvasH = h;
+    lastInset = bottomInset;
     groundY = h - 30 - bottomInset;          // top surface of the table
+    clearPlinkoFlags();
 
     // Rematch / practice restart: drop the previous engine so Matter bodies
     // don't accumulate across a long classroom day.
@@ -206,6 +226,8 @@ const Physics = (() => {
 
     engine = Engine.create({ gravity: { y: 1.5, scale: 0.001 } });
     world  = engine.world;
+    engine.gravity.y = 1.5;
+    engine.gravity.scale = 0.001;
 
     ground = Bodies.rectangle(w / 2, groundY + 25, w * 6, 50, {
       isStatic: true,
@@ -238,7 +260,13 @@ const Physics = (() => {
     if (!engine) return;
     canvasW = w;
     canvasH = h;
+    lastInset = bottomInset;
+    if (plinkoMode) {
+      startPlinko(plinkoTarget);
+      return;
+    }
     groundY = h - 30 - bottomInset;
+    if (!ground) return;
     Body.setPosition(ground, { x: w / 2, y: groundY + 25 });
     placeWalls(w, h);
     // If a viewport shrink moved the deck above the bird, snap it back onto the
@@ -256,13 +284,19 @@ const Physics = (() => {
   }
 
   function resetBottle() {
+    if (plinkoMode) {
+      init(canvasW, canvasH, lastInset);
+      return;
+    }
     if (bottle) World.remove(world, bottle);
     groundedFrames = 0;
+    plinkoArmed = false;
     angleWin       = [];
     totalRotation  = 0;
     hasFlipped     = false;
     launchAngle    = 0;
     hasLanded      = false;
+    wasAirborne    = false;
     lastLandingInfo = null;
     lastFlickInfo    = null;
     liquid.reset();
@@ -305,7 +339,13 @@ const Physics = (() => {
   }
 
   function step(dt) {
+    if (plinkoMode && bottle && plinkoLayout) steerPlinko();
     Engine.update(engine, dt * 1000);
+    if (plinkoMode) {
+      plinkoFrames++;
+      liquid.update(bottle ? bottle.angularVelocity : 0, dt);
+      return;
+    }
     // Require a full 360° flip: track angle traveled since launch.
     // Matter's body.angle accumulates (doesn't wrap) so this is exact.
     if (!hasFlipped) {
@@ -326,11 +366,177 @@ const Physics = (() => {
     liquid.update(bottle.angularVelocity, dt);
   }
 
+  function clearPlinkoFlags() {
+    plinkoMode = false;
+    plinkoArmed = false;
+    plinkoLayout = null;
+    plinkoPegs = [];
+    plinkoSettle = 0;
+    plinkoFrames = 0;
+    plinkoDone = null;
+  }
+
+  function slotCenter(i, layout) {
+    return layout.inset + layout.slotW * (i + 0.5);
+  }
+
+  function buildPlinkoLayout(w, h) {
+    const inset = 6;
+    const innerW = w - inset * 2;
+    const slotW = innerW / 9;
+    const hud = Math.round(Math.min(168, Math.max(96, h * 0.14)));
+    const floor = h - hud;
+    const bucketH = Math.max(48, Math.min(72, h * 0.085));
+    const bucketTop = floor - bucketH;
+    const top = 58;
+    const pegR = Math.max(5, Math.min(8, slotW * 0.16));
+    const ballR = Math.max(7, Math.min(13, slotW * 0.28));
+    return { w, h, inset, innerW, slotW, pegR, ballR, top, bucketTop, bucketH, floor };
+  }
+
+  function armPlinko(force) {
+    plinkoArmed = !!force || Math.random() < (typeof PLINKO_CHANCE === 'number' ? PLINKO_CHANCE : 0.01);
+    if (plinkoArmed) plinkoTarget = Math.floor(Math.random() * 9);
+    return plinkoArmed;
+  }
+
+  function startPlinko(forcedTarget) {
+    if (!engine) return plinkoTarget;
+    if (Number.isInteger(forcedTarget) && forcedTarget >= 0 && forcedTarget <= 8) {
+      plinkoTarget = forcedTarget;
+    }
+    const w = canvasW, h = canvasH;
+    const layout = buildPlinkoLayout(w, h);
+    plinkoLayout = layout;
+    plinkoMode = true;
+    plinkoSettle = 0;
+    plinkoFrames = 0;
+    plinkoDone = null;
+    plinkoArmed = false;
+
+    try { World.clear(world, false); } catch (_) {}
+    bottle = ground = leftWall = rightWall = null;
+    plinkoPegs = [];
+
+    engine.gravity.y = 1.85;
+    engine.gravity.scale = 0.001;
+
+    const wallOpts = { isStatic: true, label: 'wall', friction: 0.04, restitution: 0.45 };
+    leftWall  = Bodies.rectangle(layout.inset - 16, h / 2, 32, h * 3, wallOpts);
+    rightWall = Bodies.rectangle(w - layout.inset + 16, h / 2, 32, h * 3, wallOpts);
+    const floor = Bodies.rectangle(w / 2, layout.floor + 18, w * 2, 36, {
+      isStatic: true, label: 'plinko-floor', friction: 0.9, restitution: 0.05,
+    });
+
+    const pegs = [];
+    const rows = 6;
+    const pegTop = layout.top + 28;
+    const pegBot = layout.bucketTop - 28;
+    for (let row = 0; row < rows; row++) {
+      const y = pegTop + (pegBot - pegTop) * (row / (rows - 1));
+      const cols = row % 2 === 0 ? 8 : 9;
+      const span = layout.innerW - layout.slotW * 0.55;
+      for (let c = 0; c < cols; c++) {
+        const x = layout.inset + layout.slotW * 0.275 + (cols === 1 ? span / 2 : span * (c / (cols - 1)));
+        const peg = Bodies.circle(x, y, layout.pegR, {
+          isStatic: true, restitution: 0.72, friction: 0.02, label: 'peg',
+        });
+        pegs.push(peg);
+      }
+    }
+    plinkoPegs = pegs;
+
+    const dividers = [];
+    for (let i = 0; i <= 9; i++) {
+      const x = layout.inset + layout.slotW * i;
+      dividers.push(Bodies.rectangle(x, layout.bucketTop + layout.bucketH / 2, 5, layout.bucketH + 8, {
+        isStatic: true, label: 'divider', friction: 0.4, restitution: 0.15,
+      }));
+    }
+
+    const startX = slotCenter(plinkoTarget, layout) * 0.22 + (w / 2) * 0.78 + (Math.random() - 0.5) * layout.slotW * 0.8;
+    bottle = Bodies.circle(startX, layout.top, layout.ballR, {
+      restitution: 0.58,
+      friction: 0.04,
+      frictionAir: 0.01,
+      density: 0.004,
+      label: 'bottle',
+    });
+    Body.setVelocity(bottle, { x: (Math.random() - 0.5) * 3.2, y: 1.2 });
+    Body.setAngularVelocity(bottle, (Math.random() - 0.5) * 0.18);
+
+    World.add(world, [leftWall, rightWall, floor, bottle].concat(pegs, dividers));
+    return plinkoTarget;
+  }
+
+  function steerPlinko() {
+    const layout = plinkoLayout;
+    const tx = slotCenter(plinkoTarget, layout);
+    const dx = tx - bottle.position.x;
+    const t = Math.max(0, Math.min(1, (bottle.position.y - layout.top) / (layout.bucketTop - layout.top)));
+    const k = 0.00012 + t * t * 0.0016;
+    Body.applyForce(bottle, bottle.position, { x: dx * k * bottle.mass, y: 0 });
+    if (bottle.position.y > layout.bucketTop - 24) {
+      Body.setVelocity(bottle, {
+        x: bottle.velocity.x * 0.55 + dx * 0.12,
+        y: Math.max(bottle.velocity.y, 0.4),
+      });
+    }
+    // Guarantee the rolled slot if the bounce runs long — equal chance first.
+    if (plinkoFrames > 280) {
+      Body.setPosition(bottle, { x: tx, y: layout.bucketTop + layout.bucketH * 0.45 });
+      Body.setVelocity(bottle, { x: 0, y: 0 });
+      Body.setAngularVelocity(bottle, 0);
+    }
+  }
+
+  function checkPlinko() {
+    if (!plinkoMode || !bottle || !plinkoLayout || plinkoDone != null) return plinkoDone;
+    const layout = plinkoLayout;
+    const inBucket = bottle.position.y >= layout.bucketTop - 6;
+    const slow = Math.hypot(bottle.velocity.x, bottle.velocity.y) < 2.4
+      && Math.abs(bottle.angularVelocity) < 0.12;
+    if (inBucket && slow) plinkoSettle++;
+    else plinkoSettle = 0;
+    if (plinkoSettle >= 18 || plinkoFrames > 320) {
+      plinkoDone = plinkoTarget;
+      return plinkoDone;
+    }
+    return null;
+  }
+
+  // Snap into the rolled bucket so testers can skip a long bounce.
+  function skipPlinko() {
+    if (!plinkoMode || !bottle || !plinkoLayout) return plinkoDone;
+    const layout = plinkoLayout;
+    const tx = slotCenter(plinkoTarget, layout);
+    Body.setPosition(bottle, { x: tx, y: layout.bucketTop + layout.bucketH * 0.45 });
+    Body.setVelocity(bottle, { x: 0, y: 0 });
+    Body.setAngularVelocity(bottle, 0);
+    plinkoSettle = 18;
+    plinkoFrames = 321;
+    plinkoDone = plinkoTarget;
+    return plinkoDone;
+  }
+
+  function getPlinkoState() {
+    if (!plinkoMode || !plinkoLayout) return null;
+    return {
+      layout: plinkoLayout,
+      target: plinkoTarget,
+      pegs: plinkoPegs.map((p) => ({ x: p.position.x, y: p.position.y, r: p.circleRadius || plinkoLayout.pegR })),
+    };
+  }
+
   function getBottle()  { return bottle; }
   function getLiquid()  { return liquid; }
   function getGroundY() { return groundY; }
   function getLastLandingInfo() { return lastLandingInfo; }
   function getLastFlickInfo()   { return lastFlickInfo; }
 
-  return { init, reflow, step, resetBottle, applyFlick, checkLanding, setSideWalls, getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo };
+  return {
+    init, reflow, step, resetBottle, applyFlick, checkLanding, setSideWalls,
+    armPlinko, startPlinko, checkPlinko, skipPlinko, getPlinkoState,
+    getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo,
+  };
 })();
