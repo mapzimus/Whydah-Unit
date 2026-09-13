@@ -287,6 +287,60 @@ html, body {
 #practice-btn:hover  { background: rgba(255,255,255,0.12); }
 #practice-btn:active { transform: scale(0.98); }
 
+#plinko-lab-btn {
+  background: rgba(197, 154, 74, 0.12);
+  border: 1px solid rgba(197, 154, 74, 0.45);
+  color: var(--gold);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+#plinko-lab-btn:hover  { background: rgba(197, 154, 74, 0.22); }
+#plinko-lab-btn:active { transform: scale(0.98); }
+#plinko-lab-btn.hidden { display: none !important; }
+
+#setup-tagline { cursor: pointer; user-select: none; }
+
+#plinko-lab-panel {
+  position: absolute;
+  top: 64px;
+  left: 12px;
+  z-index: 8;
+  pointer-events: none;
+  max-width: min(280px, 46vw);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(14, 28, 48, 0.82);
+  border: 1px solid rgba(197, 154, 74, 0.4);
+  color: #f4efe3;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+#plinko-lab-panel.hidden { display: none !important; }
+.lab-kicker {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+#plinko-lab-stats { font-variant-numeric: tabular-nums; }
+.lab-hit {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lab-hit.is-next { color: #ffd54a; font-weight: 700; }
+.lab-help {
+  margin-top: 8px;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
 /* Practice stats panel (replaces player cards in solo practice) */
 .practice-stats {
   flex: 1;

@@ -505,6 +505,20 @@ const Physics = (() => {
     return null;
   }
 
+  // Snap into the rolled bucket so testers can skip a long bounce.
+  function skipPlinko() {
+    if (!plinkoMode || !bottle || !plinkoLayout) return plinkoDone;
+    const layout = plinkoLayout;
+    const tx = slotCenter(plinkoTarget, layout);
+    Body.setPosition(bottle, { x: tx, y: layout.bucketTop + layout.bucketH * 0.45 });
+    Body.setVelocity(bottle, { x: 0, y: 0 });
+    Body.setAngularVelocity(bottle, 0);
+    plinkoSettle = 18;
+    plinkoFrames = 321;
+    plinkoDone = plinkoTarget;
+    return plinkoDone;
+  }
+
   function getPlinkoState() {
     if (!plinkoMode || !plinkoLayout) return null;
     return {
@@ -522,7 +536,7 @@ const Physics = (() => {
 
   return {
     init, reflow, step, resetBottle, applyFlick, checkLanding, setSideWalls,
-    armPlinko, startPlinko, checkPlinko, getPlinkoState,
+    armPlinko, startPlinko, checkPlinko, skipPlinko, getPlinkoState,
     getBottle, getLiquid, getGroundY, getLastLandingInfo, getLastFlickInfo,
   };
 })();
