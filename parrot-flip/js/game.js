@@ -11,8 +11,9 @@ const GAME_STATES = {
   GAME_OVER: 'GAME_OVER',
 };
 
-// Sudden death: after this many flips, ON FIRE stops minting free lives and every
-// miss costs an escalating extra penalty — guarantees even high-skill games end.
+// Sudden death: after this many flips, every miss costs an escalating extra
+// penalty so long games still end. ON FIRE keeps the extra-flip run (it holds);
+// it just stops minting free lives — the deflation valve.
 const SD_THRESHOLD = 70;
 const SD_STEP = 20;   // flips per escalation level (+1 extra life lost each level)
 
@@ -40,6 +41,8 @@ const game = {
   justIgnited: false,    // last make just triggered ON FIRE
   fireEnded: false,      // last miss ended an ON FIRE run (penalty only in sudden death)
   fireCapped: false,     // ON FIRE run hit the big-lobby +cap and passed on (no penalty)
+  fireHeld: false,       // ON FIRE make in sudden death — run continues, no extra life
+  sdJustStarted: false,  // this flip crossed the sudden-death threshold
   justEliminated: false, // last miss eliminated the current player
 
   // Modes
@@ -81,6 +84,8 @@ const game = {
     this.practiceMakes = this.practiceAttempts = this.practiceStreak = this.practiceBest = 0;
     this.turnCounter = 0;
     this.perfectLanding = false;
+    this.fireHeld = false;
+    this.sdJustStarted = false;
 
     // Winner-starts-next: caller passes the winner's INDEX (not name, which is
     // ambiguous when two players share a name). Ignored in practice.
@@ -137,6 +142,8 @@ const game = {
     this.justIgnited    = false;
     this.fireEnded      = false;
     this.fireCapped     = false;
+    this.fireHeld       = false;
+    this.sdJustStarted  = !this.practice && this.turnCounter === SD_THRESHOLD + 1;
     this.justEliminated = false;
     this.perfectLanding = result === 'MAKE' && !!meta.perfect;
 
@@ -159,8 +166,9 @@ const game = {
     // ── ON FIRE bonus flips: each make = +1 life; a miss just ends the run ──
     if (wasOnFire) {
       if (result === 'MAKE') {
-        // +1 life per flip while ON FIRE — bounded by the match life cap. In SUDDEN
-        // DEATH, ON FIRE stops minting free lives (the deflation valve).
+        // +1 life per flip while ON FIRE — bounded by the match life cap. In
+        // sudden death the run HOLDS (same player keeps flipping) but new lives
+        // stop so a hot streak can't stall the table forever.
         if (!sd) {
           const before = player.lives;
           player.lives    = Math.min(player.lives + 1, this.maxLives);
@@ -168,22 +176,22 @@ const game = {
           if (this.onFireGain > 0) this.onFireBonus++;
         } else {
           this.onFireGain = 0;
+          this.fireHeld   = true;
         }
-        // Big lobbies (>4 players): cap the ON FIRE run at +5 lives (or once it
-        // can't gain) and pass on — so 5-7 others aren't kept waiting through a
-        // long run. Graceful end: keep the gains, NO penalty, NOT a miss.
-        // End the ON FIRE run gracefully (keep gains, NO penalty, NOT a miss) when
-        // the player hits the match life cap — no point flipping for nothing — or when
-        // a big lobby (>4) has handed out its +5 / can no longer gain.
+        // End the run gracefully (keep gains, NO penalty, NOT a miss) only when
+        // another flip can't help: at the match life cap, or a big lobby has
+        // already handed out its +5. Do NOT treat "no life this flip" as a cap —
+        // that used to kill ON FIRE the instant sudden death started.
         if (player.lives >= this.maxLives ||
             (this.players.length > ONFIRE_CAP_PLAYERS &&
-             (this.onFireBonus >= ONFIRE_CAP_LIVES || this.onFireGain === 0))) {
+             this.onFireBonus >= ONFIRE_CAP_LIVES)) {
           player.isOnFire    = false;
           player.isHeatingUp = false;
           player.streak      = 0;
           this.onFirePlayer  = null;
           this.onFireBonus   = 0;
           this.fireCapped    = true;
+          this.fireHeld      = false;
         }
       } else {
         // Miss ends ON FIRE — normally NO life loss (the reward); in sudden death
