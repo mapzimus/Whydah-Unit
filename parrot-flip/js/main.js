@@ -434,9 +434,13 @@
     onFlick(vx, -up);
   }
 
-  // Brief wind-up so CPU turns don't read as instant/robotic.
+  function currentIsAI() {
+    return !!(game.currentPlayer() && game.currentPlayer().isAI);
+  }
+
+  // Half the old 1.05–1.55s wind-up — 8 CPUs would otherwise stall the table.
   function aiThinkDelay() {
-    return 1050 + Math.random() * 500;
+    return 525 + Math.random() * 250;
   }
   function scheduleAi() {
     Input.disable();
@@ -511,7 +515,11 @@
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     lastTime = now;
 
-    Physics.step(dt); // always step — bottle settles on table during TURN_START too
+    // Human shots play at 1×. CPU shots step twice so the toss is over in
+    // half the wall-clock time — same arc, just quicker with a full lobby.
+    const aiShot = currentIsAI() && evaluating;
+    Physics.step(dt);
+    if (aiShot) Physics.step(dt);
 
     // Physics-based landing check
     if (evaluating) {
@@ -534,7 +542,7 @@
 
     // Result countdown + fade
     if (game.state === GAME_STATES.RESULT) {
-      resultTimer -= dt * 1000;
+      resultTimer -= dt * 1000 * (currentIsAI() ? 2 : 1);
       if (resultTimer > RESULT_MS - 350) {
         resultAlpha = (RESULT_MS - resultTimer) / 350;
       } else if (resultTimer < 400) {
