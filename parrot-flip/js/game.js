@@ -27,15 +27,15 @@ const STARTING_LIFE_PRESETS = [3, 5, 10, 20, 100];
 // Layout is symmetric around Lucky Bird so the room can read it at a glance.
 const PLINKO_CHANCE = 0.01;
 const PLINKO_BUCKETS = [
-  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2 & ½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
-  { key: 'halve',     title: 'CURSE THE CREW', short: '½ CREW', color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
-  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',     color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
-  { key: 'plank',     title: 'THE PLANK',      short: 'OUT',    color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
-  { key: 'lucky',     title: 'LUCKY BIRD',     short: 'WIN',    color: '#ffd54a', win: true,  lose: false, x2: false, halve: false },
-  { key: 'plank',     title: 'THE PLANK',      short: 'OUT',    color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
-  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',     color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
-  { key: 'halve',     title: 'CURSE THE CREW', short: '½ CREW', color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
-  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2 & ½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
+  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
+  { key: 'halve',     title: 'CURSE THE CREW', short: '½',   color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
+  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',  color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
+  { key: 'plank',     title: 'THE PLANK',      short: 'OUT', color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
+  { key: 'lucky',     title: 'LUCKY BIRD',     short: 'WIN', color: '#ffd54a', win: true,  lose: false, x2: false, halve: false },
+  { key: 'plank',     title: 'THE PLANK',      short: 'OUT', color: '#9b4529', win: false, lose: true,  x2: false, halve: false },
+  { key: 'x2',        title: 'DOUBLE LOOT',    short: '×2',  color: '#2a9d8f', win: false, lose: false, x2: true,  halve: false },
+  { key: 'halve',     title: 'CURSE THE CREW', short: '½',   color: '#7b2cbf', win: false, lose: false, x2: false, halve: true  },
+  { key: 'lootcurse', title: 'LOOT & CURSE', short: '×2½', color: '#c59a4a', win: false, lose: false, x2: true,  halve: true  },
 ];
 
 const game = {
