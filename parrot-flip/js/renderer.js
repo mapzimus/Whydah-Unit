@@ -197,7 +197,7 @@ const Renderer = (() => {
     return bgCache;
   }
 
-  function drawBackground(groundY, isOnFire, eggs, hole) {
+  function drawBackground(groundY, isOnFire, eggs) {
     const g = ensureBgGradients(groundY, isOnFire);
     ctx.fillStyle = g.sky;
     ctx.fillRect(0, 0, W, groundY);
@@ -245,10 +245,7 @@ const Renderer = (() => {
       }
     }
 
-    drawDeck(groundY, hole || null);
-  }
-
-  function drawDeck(groundY, hole) {
+    // Ship deck planks
     ctx.fillStyle = '#3a2418';
     ctx.fillRect(0, groundY, W, H - groundY);
 
@@ -271,29 +268,6 @@ const Renderer = (() => {
     ctx.fillRect(0, groundY - 4, W, 5);
     ctx.fillStyle = 'rgba(197,154,74,0.35)';
     ctx.fillRect(0, groundY - 4, W, 1);
-
-    if (!hole) return;
-    const hx = hole.x;
-    const rx = hole.r;
-    const ry = hole.r * 0.38;
-    ctx.fillStyle = '#070402';
-    fillEllipse(hx, groundY + 6, rx, ry);
-    ctx.strokeStyle = 'rgba(197,154,74,0.7)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    if (typeof ctx.ellipse === 'function') {
-      ctx.ellipse(hx, groundY + 6, rx, ry, 0, 0, Math.PI * 2);
-    } else {
-      ctx.arc(hx, groundY + 6, rx, 0, Math.PI * 2);
-    }
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    if (typeof ctx.ellipse === 'function') {
-      ctx.ellipse(hx, groundY + 6, rx * 0.72, ry * 0.55, 0, 0, Math.PI * 2);
-    }
-    ctx.stroke();
   }
 
   // ── Parrot sprite (authored SVG macaw) ─────────────────────────────────────
@@ -460,265 +434,6 @@ const Renderer = (() => {
       ctx.restore();
     }
     ctx.fill();
-  }
-
-  function drawPlinkoBoard(plinko) {
-    const { layout, pegs } = plinko;
-    const buckets = (typeof PLINKO_BUCKETS !== 'undefined') ? PLINKO_BUCKETS : [];
-    ctx.fillStyle = '#140c08';
-    ctx.fillRect(0, 0, W, H);
-    const hold = ctx.createLinearGradient(0, 0, 0, layout.floor);
-    hold.addColorStop(0, '#2a1810');
-    hold.addColorStop(0.45, '#1a100c');
-    hold.addColorStop(1, '#0e0907');
-    ctx.fillStyle = hold;
-    ctx.fillRect(0, 0, W, layout.floor);
-
-    ctx.fillStyle = 'rgba(197,154,74,0.08)';
-    for (let x = 18; x < W; x += 46) {
-      ctx.fillRect(x, 0, 3, layout.floor);
-    }
-
-    ctx.fillStyle = '#3a2418';
-    ctx.fillRect(0, layout.floor, W, H - layout.floor);
-
-    ctx.save();
-    ctx.fillStyle = 'rgba(197,154,74,0.42)';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.font = '700 11px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('BEWARE THE HOLD', W / 2, 10);
-    ctx.restore();
-
-    const hazards = plinko.hazards || [];
-    for (const h of hazards) {
-      if (h.kind === 'wind') drawHoldWind(h);
-    }
-
-    for (let i = 0; i < 9; i++) {
-      const x = layout.inset + layout.slotW * i;
-      const b = buckets[i] || { color: '#c59a4a', short: '', title: '' };
-      ctx.fillStyle = b.color;
-      ctx.globalAlpha = i === 4 ? 0.95 : 0.82;
-      ctx.fillRect(x + 1, layout.bucketTop, layout.slotW - 2, layout.bucketH);
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.strokeRect(x + 1, layout.bucketTop, layout.slotW - 2, layout.bucketH);
-      ctx.save();
-      ctx.fillStyle = i === 4 ? '#1a100c' : '#f4efe3';
-      ctx.textAlign = 'center';
-      const cx = x + layout.slotW / 2;
-      const big = Math.max(11, Math.min(16, layout.slotW * 0.38));
-      const small = Math.max(7, Math.min(9, layout.slotW * 0.22));
-      ctx.font = `bold ${big}px Georgia, "Times New Roman", serif`;
-      ctx.textBaseline = 'middle';
-      ctx.fillText(b.short || '', cx, layout.bucketTop + layout.bucketH * 0.38);
-      ctx.font = `700 ${small}px "Segoe UI", system-ui, sans-serif`;
-      const word = (b.title || '').split(' ')[0] || '';
-      ctx.fillText(word, cx, layout.bucketTop + layout.bucketH * 0.72);
-      ctx.restore();
-    }
-
-    for (const peg of pegs) {
-      const g = ctx.createRadialGradient(peg.x - peg.r * 0.3, peg.y - peg.r * 0.3, 1, peg.x, peg.y, peg.r);
-      g.addColorStop(0, '#ffe28a');
-      g.addColorStop(0.55, '#c59a4a');
-      g.addColorStop(1, '#7a5a24');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.beginPath();
-      ctx.arc(peg.x - peg.r * 0.3, peg.y - peg.r * 0.3, peg.r * 0.28, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    for (const h of hazards) {
-      if (h.kind === 'wind') continue;
-      drawHoldMover(h);
-    }
-  }
-
-  function drawHoldWind(h) {
-    const pulse = Math.max(0.15, Math.min(1, h.pulse == null ? 0.6 : h.pulse));
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(h.x, h.y, h.w, h.h);
-    ctx.clip();
-    if (h.style === 'cannon') {
-      const g = ctx.createLinearGradient(h.x, h.y, h.x + h.w, h.y);
-      g.addColorStop(0, `rgba(255,140,40,${0.04 + 0.16 * pulse})`);
-      g.addColorStop(0.5, `rgba(255,210,90,${0.10 + 0.22 * pulse})`);
-      g.addColorStop(1, `rgba(255,140,40,${0.04 + 0.16 * pulse})`);
-      ctx.fillStyle = g;
-      ctx.fillRect(h.x, h.y, h.w, h.h);
-    } else {
-      ctx.fillStyle = `rgba(90,170,190,${0.05 + 0.14 * pulse})`;
-      ctx.fillRect(h.x, h.y, h.w, h.h);
-    }
-    const rows = 5;
-    for (let i = 0; i < rows; i++) {
-      const yy = h.y + (i + 0.55) * h.h / rows;
-      const drift = (pulse * 18 + i * 7) % 22;
-      ctx.strokeStyle = h.style === 'cannon'
-        ? `rgba(255,220,140,${0.25 + 0.55 * pulse})`
-        : `rgba(220,240,245,${0.22 + 0.5 * pulse})`;
-      ctx.lineWidth = 1.2 + pulse * 1.1;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      if (h.dir >= 0) {
-        ctx.moveTo(h.x + drift, yy);
-        ctx.bezierCurveTo(h.x + h.w * 0.35, yy - 4, h.x + h.w * 0.6, yy + 4, h.x + h.w * (0.55 + 0.35 * pulse), yy);
-      } else {
-        ctx.moveTo(h.x + h.w - drift, yy);
-        ctx.bezierCurveTo(h.x + h.w * 0.65, yy - 4, h.x + h.w * 0.4, yy + 4, h.x + h.w * (0.45 - 0.35 * pulse), yy);
-      }
-      ctx.stroke();
-    }
-    ctx.fillStyle = h.style === 'cannon'
-      ? `rgba(255,210,120,${0.45 + 0.4 * pulse})`
-      : `rgba(200,230,235,${0.4 + 0.4 * pulse})`;
-    ctx.font = `700 ${Math.max(8, Math.min(11, h.w * 0.08))}px "Segoe UI", system-ui, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(h.label || 'WIND', h.x + h.w / 2, h.y + h.h / 2);
-    ctx.restore();
-  }
-
-  function drawHoldMover(h) {
-    if (h.kind === 'lantern') {
-      ctx.save();
-      ctx.strokeStyle = '#c59a4a';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(h.pivotX, h.pivotY);
-      ctx.lineTo(h.x, h.y);
-      ctx.stroke();
-      ctx.fillStyle = '#5a3a24';
-      ctx.fillRect(h.pivotX - 4, h.pivotY - 3, 8, 5);
-      const glow = h.glow == null ? 0.8 : h.glow;
-      const halo = ctx.createRadialGradient(h.x, h.y, 1, h.x, h.y, h.r * 3.2);
-      halo.addColorStop(0, `rgba(255,190,60,${0.45 * glow})`);
-      halo.addColorStop(1, 'rgba(255,140,20,0)');
-      ctx.fillStyle = halo;
-      ctx.beginPath();
-      ctx.arc(h.x, h.y, h.r * 3.2, 0, Math.PI * 2);
-      ctx.fill();
-      const glass = ctx.createRadialGradient(h.x - h.r * 0.3, h.y - h.r * 0.3, 1, h.x, h.y, h.r);
-      glass.addColorStop(0, '#ffe9a0');
-      glass.addColorStop(0.55, '#ffb020');
-      glass.addColorStop(1, '#8a4a10');
-      ctx.fillStyle = glass;
-      ctx.beginPath();
-      ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#3a2410';
-      ctx.lineWidth = 1.6;
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(90,50,16,0.7)';
-      ctx.beginPath();
-      ctx.moveTo(h.x, h.y - h.r);
-      ctx.lineTo(h.x, h.y + h.r);
-      ctx.stroke();
-      ctx.restore();
-      return;
-    }
-
-    if (h.kind === 'barrel') {
-      ctx.save();
-      ctx.translate(h.x, h.y);
-      ctx.rotate(h.angle || 0);
-      const wood = ctx.createRadialGradient(-h.r * 0.25, -h.r * 0.25, 2, 0, 0, h.r);
-      wood.addColorStop(0, '#c48a44');
-      wood.addColorStop(0.7, '#7a4a20');
-      wood.addColorStop(1, '#3a2210');
-      ctx.fillStyle = wood;
-      ctx.beginPath();
-      ctx.arc(0, 0, h.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#2a1608';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(30,18,8,0.7)';
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.arc(0, 0, h.r * 0.62, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(0, 0, h.r * 0.28, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = '#2a1608';
-      ctx.beginPath();
-      ctx.arc(0, 0, Math.max(1.6, h.r * 0.12), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-      return;
-    }
-
-    ctx.save();
-    ctx.translate(h.x, h.y);
-    ctx.rotate(h.angle || 0);
-    const hw = h.w / 2, hh = h.h / 2;
-    ctx.fillStyle = h.kind === 'boom' ? '#4a2c16' : '#6b4424';
-    ctx.fillRect(-hw, -hh, h.w, h.h);
-    ctx.strokeStyle = 'rgba(20,10,4,0.55)';
-    ctx.lineWidth = 1.4;
-    ctx.strokeRect(-hw, -hh, h.w, h.h);
-    ctx.strokeStyle = 'rgba(197,154,74,0.35)';
-    ctx.lineWidth = 1;
-    if (h.kind === 'crate') {
-      ctx.beginPath();
-      ctx.moveTo(-hw + 3, -hh + 3);
-      ctx.lineTo(hw - 3, hh - 3);
-      ctx.moveTo(hw - 3, -hh + 3);
-      ctx.lineTo(-hw + 3, hh - 3);
-      ctx.stroke();
-      ctx.fillStyle = 'rgba(197,154,74,0.45)';
-      ctx.fillRect(-3, -3, 6, 6);
-    } else {
-      for (let i = 1; i < 4; i++) {
-        const x = -hw + (h.w * i) / 4;
-        ctx.beginPath();
-        ctx.moveTo(x, -hh + 1);
-        ctx.lineTo(x, hh - 1);
-        ctx.stroke();
-      }
-      ctx.fillStyle = 'rgba(197,154,74,0.5)';
-      ctx.fillRect(-hw + 4, -1.5, 3, 3);
-      ctx.fillRect(hw - 7, -1.5, 3, 3);
-    }
-    if (h.kind === 'boom') {
-      ctx.fillStyle = '#2a1a10';
-      ctx.fillRect(-4, -hh - 2, 8, h.h + 4);
-    }
-    ctx.restore();
-  }
-
-  function drawPlinkoBall(bottle, color) {
-    if (!bottle) return;
-    const { x, y } = bottle.position;
-    const r = bottle.circleRadius || 10;
-    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, 1, x, y, r);
-    g.addColorStop(0, '#ffe9a8');
-    g.addColorStop(0.45, color || '#c59a4a');
-    g.addColorStop(1, '#7a4e16');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(80,40,8,0.45)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(bottle.angle || 0);
-    ctx.fillStyle = '#3a2410';
-    ctx.font = `bold ${Math.max(9, r * 1.1)}px Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('8', 0, 1);
-    ctx.restore();
   }
 
   function drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, paintScale) {
@@ -899,50 +614,24 @@ const Renderer = (() => {
     ctx.save();
     ctx.translate(sx, sy);
 
-    const plinko = state.plinko;
-    const deckHole = state.deckHole;
-    if (plinko) {
-      drawPlinkoBoard(plinko);
-    } else {
-      drawBackground(groundY, isOnFire, eggs, deckHole);
-      drawWalls(groundY, isOnFire);
-      if (shooting) {
-        ctx.strokeStyle = `rgba(244,239,227,${Math.max(0, shooting.life * 1.4)})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(shooting.x, shooting.y);
-        ctx.lineTo(shooting.x - shooting.vx * 0.12, shooting.y - shooting.vy * 0.12);
-        ctx.stroke();
-      }
-      drawFlickIndicator(drag, bottle);
-      if (showGlow) drawLandingGlow(bottle, groundY);
-    }
-    if (plinko) {
-      drawPlinkoBall(bottle, liquidColor);
-    } else if (deckHole && bottle) {
-      ctx.save();
+    drawBackground(groundY, isOnFire, eggs);
+    drawWalls(groundY, isOnFire);
+    if (shooting) {
+      ctx.strokeStyle = `rgba(244,239,227,${Math.max(0, shooting.life * 1.4)})`;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.rect(0, 0, W, groundY);
-      if (typeof ctx.ellipse === 'function') {
-        ctx.ellipse(deckHole.x, groundY + 6, deckHole.r, deckHole.r * 0.38, 0, 0, Math.PI * 2);
-      } else {
-        ctx.arc(deckHole.x, groundY + 6, deckHole.r, 0, Math.PI * 2);
-      }
-      ctx.clip();
-      drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
-      ctx.restore();
-    } else {
-      drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
+      ctx.moveTo(shooting.x, shooting.y);
+      ctx.lineTo(shooting.x - shooting.vx * 0.12, shooting.y - shooting.vy * 0.12);
+      ctx.stroke();
     }
+    drawFlickIndicator(drag, bottle);
+    if (showGlow) drawLandingGlow(bottle, groundY);
+    drawBottle(bottle, liquid, isOnFire, liquidColor, groundY, 1);
     drawParticles();
 
     if (result) {
-      if (result === 'PLINKO' && state.plinkoTitle) {
-        drawResult(state.plinkoTitle, state.plinkoColor || '#ffd54a', resultAlpha);
-      } else {
-        const color = result === 'MAKE' ? '#7dcea0' : '#c23b22';
-        drawResult(result === 'MAKE' ? 'MAKE!' : 'MISS', color, resultAlpha);
-      }
+      const color = result === 'MAKE' ? '#7dcea0' : '#c23b22';
+      drawResult(result === 'MAKE' ? 'MAKE!' : 'MISS', color, resultAlpha);
     }
     ctx.restore();
   }
