@@ -15,11 +15,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Parrot Flip">
 
-  <link rel="stylesheet" href="css/style.css?v=32">
+  <link rel="stylesheet" href="css/style.css?v=33">
   <script>
     // Drop leftover lab-era caches so a home-screen icon does not keep v25.
     (function () {
-      var BUILD = '32';
+      var BUILD = '33';
       try {
         if (!window.caches) return;
         caches.keys().then(function (keys) {
@@ -138,14 +138,14 @@
 
   <div id="egg-toast" class="hidden"></div>
 
-  <script src="js/vendor/matter.min.js?v=32"></script>
-  <script src="js/game.js?v=32"></script>
-  <script src="js/physics.js?v=32"></script>
-  <script src="js/flick.js?v=32"></script>
-  <script src="js/input.js?v=32"></script>
-  <script src="js/renderer.js?v=32"></script>
-  <script src="js/audio.js?v=32"></script>
-  <script src="js/main.js?v=32"></script>
+  <script src="js/vendor/matter.min.js?v=33"></script>
+  <script src="js/game.js?v=33"></script>
+  <script src="js/physics.js?v=33"></script>
+  <script src="js/flick.js?v=33"></script>
+  <script src="js/input.js?v=33"></script>
+  <script src="js/renderer.js?v=33"></script>
+  <script src="js/audio.js?v=33"></script>
+  <script src="js/main.js?v=33"></script>
   <script>
     window.onerror = (msg, src, line) => {
       const el = document.getElementById('err-overlay') || (() => {
@@ -167,7 +167,7 @@
       // already deletes caches that don't match CACHE_NAME; plain
       // registration is all that's needed here.
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js?v=32', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('service-worker.js?v=33', { updateViaCache: 'none' })
           .then((reg) => { try { reg.update(); } catch (e) {} })
           .catch((err) => console.error('SW registration failed:', err));
       });
