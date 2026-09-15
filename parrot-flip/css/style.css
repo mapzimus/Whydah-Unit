@@ -321,6 +321,7 @@ html, body {
   display: block;
   pointer-events: all;
   cursor: crosshair;
+  touch-action: none;   /* iOS: don't steal an upward flick as a page scroll */
 }
 
 /* HUD */

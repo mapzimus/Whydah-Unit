@@ -1,17 +1,13 @@
 // input.js — pointer flick detection (mouse + touch unified)
 
 const Input = (() => {
-  const MIN_DRAG = 22;   // px — small dead zone so a quick flick registers
-  // Touch samples jump; a "soft" finger flick still reports 5–10k px/s peaks.
-  // Scale those down so a gentle toss stays in the make window (~2k px/s).
-  const TOUCH_VEL_SCALE = 0.40;
-
   let canvas, onFlick;
   let dragging = false;
   let startX = 0, startY = 0, startT = 0;
   let curX = 0, curY = 0;
   let lastX = 0, lastY = 0, lastT = 0;
   let peakSpeed = 0, peakVx = 0, peakVy = 0;  // fastest instant of the gesture
+  let samples = [];                            // {t,x,y} for snap-window velocity
   let rect = null;                             // canvas rect, captured at gesture start
   let enabled = false;
   let activePointerId = null;                  // the one pointer that owns the in-flight flick
@@ -48,6 +44,7 @@ const Input = (() => {
     startY = curY = lastY = e.clientY - rect.top;
     startT = lastT = performance.now();
     peakSpeed = peakVx = peakVy = 0;
+    samples = [{ t: startT, x: startX, y: startY }];
   }
 
   function onMove(e) {
@@ -64,42 +61,39 @@ const Input = (() => {
     // before release (which would otherwise read as zero velocity).
     if (spd > peakSpeed) { peakSpeed = spd; peakVx = ivx; peakVy = ivy; }
     lastX = curX; lastY = curY; lastT = now;
+    samples.push({ t: now, x: curX, y: curY });
+  }
+
+  function gestureArgs() {
+    return {
+      samples, pointerType, peakVx, peakVy, peakSpeed,
+      startX, startY, curX, curY,
+    };
+  }
+
+  function fireIfFlick() {
+    const v = Flick.velocityFromGesture(gestureArgs());
+    if (!v) return;
+    onFlick(v.vx, v.vy);
   }
 
   function onUp(e) {
     if (!dragging || !enabled || e.pointerId !== activePointerId) return;
     dragging = false;
     activePointerId = null;
-
-    const dx = curX - startX, dy = curY - startY;
-    const dist = Math.hypot(dx, dy);
-    if (dist < MIN_DRAG) return;
-
-    // Use the gesture's peak velocity. Fall back to a distance estimate if
-    // we somehow captured almost no motion (e.g. one big jump then release).
-    let vx = peakVx, vy = peakVy;
-    if (peakSpeed < 80) { vx = dx * 10; vy = dy * 10; }
-
-    // Touch/pen: one noisy sample can look like a max-power snap. Blend the
-    // peak with the gesture-average, then scale so a soft flick stays soft.
-    if (pointerType === 'touch' || pointerType === 'pen') {
-      const dur = Math.max((performance.now() - startT) / 1000, 0.06);
-      vx = 0.55 * vx + 0.45 * (dx / dur);
-      vy = 0.55 * vy + 0.45 * (dy / dur);
-      vx *= TOUCH_VEL_SCALE;
-      vy *= TOUCH_VEL_SCALE;
-    }
-
-    onFlick(vx, vy);
+    fireIfFlick();
   }
 
-  // A pointercancel (palm rejection, OS gesture interrupt, lost capture) must
-  // ABORT the gesture WITHOUT firing a flick. The old code routed cancel to
-  // onUp, so an interrupted drag could launch a phantom flick.
+  // iOS often fires pointercancel instead of pointerup on a fast upward
+  // flick (it thinks the page is scrolling). If the gesture was a real
+  // snap, commit it. Tiny wiggles still abort — those were the phantom
+  // launches the old cancel→up path created.
   function onCancel(e) {
     if (e.pointerId !== activePointerId) return;
+    const commit = dragging && enabled && Flick.shouldCommitCancel(gestureArgs());
     dragging = false;
     activePointerId = null;
+    if (commit) fireIfFlick();
   }
 
   // Returns drag vector for drawing the preview arrow
