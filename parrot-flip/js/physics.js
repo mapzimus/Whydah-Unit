@@ -54,9 +54,9 @@ const Physics = (() => {
   const PERFECT_ANGLE   = 0.16;  // ≤~9° upright = perfect landing flair
   const MISS_CAP_FRAMES = 300;   // ~5s grounded with no verdict → forced MISS (fallback)
 
-  // One classroom feel — a hair more forgiving than the old "standard" preset
-  // so a decent flick usually sticks, without deleting the miss chance.
-  const FEEL = { makeAngle: 0.70, fallenAngle: 1.12, spinJitter: 0.16, launchJitter: 0.09, kickScale: 0.75 };
+  // Classroom feel with real miss chance: a centered flick often sticks,
+  // but spin/kick/drift jitter is wide enough that the same toss can tip.
+  const FEEL = { makeAngle: 0.62, fallenAngle: 1.16, spinJitter: 0.28, launchJitter: 0.14, kickScale: 1.15 };
   const MAKE_ANGLE   = FEEL.makeAngle;
   const FALLEN_ANGLE = FEEL.fallenAngle;
 
@@ -285,11 +285,11 @@ const Physics = (() => {
     const power   = Math.min(upSpeed / POWER_SPEED, 1.0); // 0..1 flick strength
     lastFlickInfo = { upSpeed, power, vx, vy };
 
-    // Small randomness so the same flick isn't a guaranteed make — a centered
-    // flick still usually lands, but a marginal one becomes a coin flip.
+    // Small randomness so the same flick isn't a guaranteed make — spin,
+    // height, drift, and the landing kick all have room to spoil a good toss.
     const jSpin   = 1 + (Math.random() - 0.5) * FEEL.spinJitter;
     const jLaunch = 1 + (Math.random() - 0.5) * FEEL.launchJitter;
-    const jDrift  = (Math.random() - 0.5) * 2.4;       // ±1.2 px/frame stray drift
+    const jDrift  = (Math.random() - 0.5) * 3.8;       // ±1.9 px/frame stray drift
 
     // Toss into the upper sky, scaled to the room above the bird so a
     // classroom phone still stays on screen. Extra airtime lets a decent
