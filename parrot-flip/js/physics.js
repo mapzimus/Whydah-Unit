@@ -268,13 +268,18 @@ const Physics = (() => {
     World.add(world, bottle);
   }
 
+  function launchImpulse(power) {
+    const startY = bottle ? bottle.position.y : 400;
+    const sky = Math.max(180, startY - 56);           // leave a bit of headroom
+    const peak = sky * (0.62 + power * 0.18);         // 62%..80% of the sky
+    return -(8.8 + 0.043 * peak);
+  }
+
   // Convert a flick gesture (px/s) into a launch — models a wrist snap.
   //   • A quick UPWARD flick tosses the bottle up AND spins it forward.
   //   • Flick STRENGTH (upward speed) drives the spin — harder snap = more
   //     rotation. This is the skill: snap hard enough for one clean 360°.
   //   • Sideways lean only nudges drift + which way it tumbles.
-  // Launch height stays in a tight band so airtime is steady and the player
-  // is really tuning the *spin* (rotation count) with their flick strength.
   function applyFlick(vx, vy) {
     const upSpeed = Math.max(0, -vy);                  // upward flick speed (px/s)
     const power   = Math.min(upSpeed / POWER_SPEED, 1.0); // 0..1 flick strength
@@ -286,9 +291,11 @@ const Physics = (() => {
     const jLaunch = 1 + (Math.random() - 0.5) * FEEL.launchJitter;
     const jDrift  = (Math.random() - 0.5) * 2.4;       // ±1.2 px/frame stray drift
 
-    // Fairly steady launch height so airtime is consistent — the player is
-    // really tuning the *spin* (rotation count) with their flick strength.
-    const launchY = -(16 + power * 5) * jLaunch;       // -16 (soft) .. -21 (hard)
+    // Toss into the upper sky, scaled to the room above the bird so a
+    // classroom phone still stays on screen. Extra airtime lets a decent
+    // flick finish one turn; spin still does the skill (soft < 360, hard
+    // overshoots). Empirically peak ≈ ( |ly| - 8.8 ) / 0.043 px.
+    const launchY = launchImpulse(power) * jLaunch;
     const launchX = Math.max(-6, Math.min(6, vx / 280)) + jDrift; // sideways drift
 
     // Wrist-snap spin scales with flick strength. Forward by default;
