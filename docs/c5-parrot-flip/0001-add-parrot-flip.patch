@@ -1,0 +1,1886 @@
+From ebf8d980d658eda5fd5b2ac32d4c66d457366429 Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Wed, 16 Sep 2026 21:35:44 +0000
+Subject: [PATCH 1/2] Add Parrot Flip as a party minigame.
+
+Port the Whydah-Unit macaw flick (Matter.js physics, snap-window
+touch feel, and SVG pirate parrots) into the C5 hub. Each seat gets
+four tosses; most upright landings wins.
+---
+ README.md                                     |   1 +
+ package-lock.json                             |  17 +
+ package.json                                  |   4 +
+ src/minigames/imported/README.md              |   4 +
+ .../imported/parrot-flip/flick.test.ts        |  98 +++
+ src/minigames/imported/parrot-flip/flick.ts   |  62 ++
+ .../imported/parrot-flip/parrot-flip.ts       | 212 +++++++
+ .../imported/parrot-flip/physics.test.ts      |  77 +++
+ src/minigames/imported/parrot-flip/physics.ts | 314 ++++++++++
+ src/minigames/imported/parrot-flip/pointer.ts | 167 +++++
+ .../imported/parrot-flip/renderer.ts          | 581 ++++++++++++++++++
+ .../imported/parrot-flip/rules.test.ts        |  61 ++
+ src/minigames/imported/parrot-flip/rules.ts   |  56 ++
+ src/minigames/index.test.ts                   |   2 +
+ src/minigames/index.ts                        |   3 +-
+ src/styles.css                                |   1 +
+ 16 files changed, 1659 insertions(+), 1 deletion(-)
+ create mode 100644 src/minigames/imported/parrot-flip/flick.test.ts
+ create mode 100644 src/minigames/imported/parrot-flip/flick.ts
+ create mode 100644 src/minigames/imported/parrot-flip/parrot-flip.ts
+ create mode 100644 src/minigames/imported/parrot-flip/physics.test.ts
+ create mode 100644 src/minigames/imported/parrot-flip/physics.ts
+ create mode 100644 src/minigames/imported/parrot-flip/pointer.ts
+ create mode 100644 src/minigames/imported/parrot-flip/renderer.ts
+ create mode 100644 src/minigames/imported/parrot-flip/rules.test.ts
+ create mode 100644 src/minigames/imported/parrot-flip/rules.ts
+
+diff --git a/README.md b/README.md
+index f3375b7..6641372 100644
+--- a/README.md
++++ b/README.md
+@@ -27,6 +27,7 @@ Default table is two players (you + a bot). Add seats, rename, or flip Human/Bot
+ | Game | How it plays |
+ | --- | --- |
+ | **Pairs** | Cards start face down. Each round picks 18 random club crests from a World XI pool. Flip two to match. A match stays and you go again. |
++| **Parrot Flip** | Take turns flicking a pirate macaw. Land it standing. Four tosses each — most makes wins. Port of [parrot-flip](https://github.com/mapzimus/Whydah-Unit/tree/main/parrot-flip) from Whydah-Unit. |
+ 
+ ## Add another game
+ 
+diff --git a/package-lock.json b/package-lock.json
+index 52699db..6c6db74 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -7,7 +7,11 @@
+     "": {
+       "name": "c5",
+       "version": "0.1.0",
++      "dependencies": {
++        "matter-js": "^0.19.0"
++      },
+       "devDependencies": {
++        "@types/matter-js": "^0.20.2",
+         "typescript": "^7.0.2",
+         "vite": "^8.3.0",
+         "vitest": "^5.0.0"
+@@ -341,6 +345,13 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/@types/matter-js": {
++      "version": "0.20.2",
++      "resolved": "https://registry.npmjs.org/@types/matter-js/-/matter-js-0.20.2.tgz",
++      "integrity": "sha512-3PPKy3QxvZ89h9+wdBV2488I1JLVs7DEpIkPvgO8JC1mUdiVSO37ZIvVctOTD7hIq8OAL2gJ3ugGSuUip6DhCw==",
++      "dev": true,
++      "license": "MIT"
++    },
+     "node_modules/@typescript/typescript-aix-ppc64": {
+       "version": "7.0.2",
+       "resolved": "https://registry.npmjs.org/@typescript/typescript-aix-ppc64/-/typescript-aix-ppc64-7.0.2.tgz",
+@@ -1080,6 +1091,12 @@
+         "@jridgewell/sourcemap-codec": "^1.6.0"
+       }
+     },
++    "node_modules/matter-js": {
++      "version": "0.19.0",
++      "resolved": "https://registry.npmjs.org/matter-js/-/matter-js-0.19.0.tgz",
++      "integrity": "sha512-v2huwvQGOHTGOkMqtHd2hercCG3f6QAObTisPPHg8TZqq2lz7eIY/5i/5YUV8Ibf3mEioFEmwibcPUF2/fnKKQ==",
++      "license": "MIT"
++    },
+     "node_modules/nanoid": {
+       "version": "3.3.19",
+       "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.19.tgz",
+diff --git a/package.json b/package.json
+index bedb2e6..7344cbc 100644
+--- a/package.json
++++ b/package.json
+@@ -17,8 +17,12 @@
+     "node": ">=20"
+   },
+   "devDependencies": {
++    "@types/matter-js": "^0.20.2",
+     "typescript": "^7.0.2",
+     "vite": "^8.3.0",
+     "vitest": "^5.0.0"
++  },
++  "dependencies": {
++    "matter-js": "^0.19.0"
+   }
+ }
+diff --git a/src/minigames/imported/README.md b/src/minigames/imported/README.md
+index 5d4a863..28b466d 100644
+--- a/src/minigames/imported/README.md
++++ b/src/minigames/imported/README.md
+@@ -3,3 +3,7 @@
+ Drop ports and borrowed prototypes here.
+ 
+ Wrap whatever you bring in as a `MinigameDefinition` (see `../template.ts`), then add that export to `allMinigames` in `../index.ts`. The hub only shows registered games.
++
++## Parrot Flip
++
++Port of [Whydah-Unit parrot-flip](https://github.com/mapzimus/Whydah-Unit/tree/main/parrot-flip): same Matter.js flick physics and macaw art, scored as a four-toss party minigame.
+diff --git a/src/minigames/imported/parrot-flip/flick.test.ts b/src/minigames/imported/parrot-flip/flick.test.ts
+new file mode 100644
+index 0000000..60ea6c4
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/flick.test.ts
+@@ -0,0 +1,98 @@
++import { describe, expect, it } from "vitest";
++import { shouldCommitCancel, velocityFromGesture, type FlickGesture } from "./flick";
++
++function pathUp({ px, ms, holdMs = 0, steps = 6 }: { px: number; ms: number; holdMs?: number; steps?: number }) {
++  const samples = [];
++  const y0 = 520;
++  if (holdMs) samples.push({ t: 0, x: 200, y: y0 });
++  const t0 = holdMs;
++  for (let i = 0; i <= steps; i += 1) {
++    const t = t0 + (ms * i) / steps;
++    const y = y0 - (px * i) / steps;
++    samples.push({ t, x: 200, y });
++  }
++  const last = samples[samples.length - 1]!;
++  return {
++    samples,
++    startX: 200,
++    startY: y0,
++    curX: last.x,
++    curY: last.y,
++  };
++}
++
++function upSpeed(opts: { px: number; ms: number; holdMs?: number; pointerType?: string; peakVy?: number }): number {
++  const g = pathUp(opts);
++  const v = velocityFromGesture({
++    ...g,
++    pointerType: opts.pointerType ?? "touch",
++    peakVx: 0,
++    peakVy: opts.peakVy ?? -9000,
++    peakSpeed: Math.abs(opts.peakVy ?? 9000),
++  });
++  return v ? -v.vy : 0;
++}
++
++describe("flick velocity", () => {
++  it("puts a typical 140px / 90ms finger toss in the make window", () => {
++    const typical = upSpeed({ px: 140, ms: 90, peakVy: -9000 });
++    expect(typical).toBeGreaterThanOrEqual(1800);
++    expect(typical).toBeLessThanOrEqual(2500);
++  });
++
++  it("does not treat a noisy 12k peak as max-power", () => {
++    expect(upSpeed({ px: 140, ms: 90, peakVy: -12000 })).toBeLessThan(3200);
++  });
++
++  it("does not dilute a press-and-hold then snap", () => {
++    const hesitate = upSpeed({ px: 140, ms: 90, holdMs: 320, peakVy: -6000 });
++    expect(hesitate).toBeGreaterThanOrEqual(1800);
++    expect(hesitate).toBeLessThanOrEqual(2500);
++  });
++
++  it("keeps a tiny toss below the make window", () => {
++    expect(upSpeed({ px: 50, ms: 140, peakVy: -2000 })).toBeLessThan(1600);
++  });
++
++  it("uses peak velocity for mouse", () => {
++    const mouse = velocityFromGesture({
++      ...pathUp({ px: 220, ms: 110 }),
++      pointerType: "mouse",
++      peakVx: 40,
++      peakVy: -2100,
++      peakSpeed: 2100,
++    });
++    expect(mouse).not.toBeNull();
++    expect(Math.abs(-mouse!.vy - 2100)).toBeLessThan(1);
++  });
++
++  it("commits a real snap on pointercancel", () => {
++    const gesture: FlickGesture = {
++      ...pathUp({ px: 140, ms: 90 }),
++      pointerType: "touch",
++      peakVx: 0,
++      peakVy: -5000,
++      peakSpeed: 5000,
++    };
++    expect(shouldCommitCancel(gesture)).toBe(true);
++  });
++
++  it("ignores a tiny wiggle on cancel", () => {
++    expect(
++      shouldCommitCancel({
++        samples: [
++          { t: 0, x: 10, y: 10 },
++          { t: 20, x: 12, y: 11 },
++        ],
++        pointerType: "touch",
++        startX: 10,
++        startY: 10,
++        curX: 12,
++        curY: 11,
++        peakVx: 100,
++        peakVy: -80,
++        peakSpeed: 120,
++      }),
++    ).toBe(false);
++  });
++});
+diff --git a/src/minigames/imported/parrot-flip/flick.ts b/src/minigames/imported/parrot-flip/flick.ts
+new file mode 100644
+index 0000000..5a9a3d4
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/flick.ts
+@@ -0,0 +1,62 @@
++/** Gesture → launch velocity. Port of Whydah-Unit parrot-flip/js/flick.js. */
++
++export const MIN_DRAG = 22;
++export const SNAP_MS = 90;
++export const TOUCH_GAIN = 1.25;
++export const CANCEL_MIN_UP = 400;
++
++export interface FlickSample {
++  t: number;
++  x: number;
++  y: number;
++}
++
++export interface FlickGesture {
++  samples: FlickSample[];
++  pointerType: string;
++  peakVx: number;
++  peakVy: number;
++  peakSpeed: number;
++  startX: number;
++  startY: number;
++  curX: number;
++  curY: number;
++}
++
++export function snapVelocity(samples: FlickSample[]): { vx: number; vy: number } {
++  if (samples.length < 2) return { vx: 0, vy: 0 };
++  const b = samples[samples.length - 1]!;
++  const t0 = b.t - SNAP_MS;
++  let a = samples[0]!;
++  for (const sample of samples) {
++    if (sample.t <= t0) a = sample;
++  }
++  const dt = Math.max((b.t - a.t) / 1000, 0.016);
++  return { vx: (b.x - a.x) / dt, vy: (b.y - a.y) / dt };
++}
++
++export function velocityFromGesture(gesture: FlickGesture): { vx: number; vy: number } | null {
++  const dx = gesture.curX - gesture.startX;
++  const dy = gesture.curY - gesture.startY;
++  const dist = Math.hypot(dx, dy);
++  if (dist < MIN_DRAG) return null;
++
++  if (gesture.pointerType === "touch" || gesture.pointerType === "pen") {
++    const snap = snapVelocity(gesture.samples);
++    return { vx: snap.vx * TOUCH_GAIN, vy: snap.vy * TOUCH_GAIN };
++  }
++
++  let vx = gesture.peakVx;
++  let vy = gesture.peakVy;
++  if (gesture.peakSpeed < 80) {
++    vx = dx * 10;
++    vy = dy * 10;
++  }
++  return { vx, vy };
++}
++
++export function shouldCommitCancel(gesture: FlickGesture): boolean {
++  const velocity = velocityFromGesture(gesture);
++  if (!velocity) return false;
++  return -velocity.vy >= CANCEL_MIN_UP;
++}
+diff --git a/src/minigames/imported/parrot-flip/parrot-flip.ts b/src/minigames/imported/parrot-flip/parrot-flip.ts
+new file mode 100644
+index 0000000..44eba21
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/parrot-flip.ts
+@@ -0,0 +1,212 @@
++import { GAME_HEIGHT, GAME_WIDTH, type MinigameContext, type MinigameDefinition, type MinigameInstance } from "../../../core/types";
++import { ParrotPhysics } from "./physics";
++import { FlickPointer } from "./pointer";
++import { ParrotScene, preloadParrots } from "./renderer";
++import {
++  TOSSES_EACH,
++  allDone,
++  botFlick,
++  dealSeats,
++  nextTurnIndex,
++  recordToss,
++  scoresFromSeats,
++  type FlipSeat,
++} from "./rules";
++
++type Phase = "ready" | "flight" | "result";
++
++const RESULT_MS = 1200;
++const HUD_INSET = 8;
++
++class ParrotFlipGame implements MinigameInstance {
++  private readonly physics: ParrotPhysics;
++  private readonly scene = new ParrotScene();
++  private readonly pointer: FlickPointer;
++  private seats: FlipSeat[];
++  private turn = 0;
++  private phase: Phase = "ready";
++  private result: "MAKE" | "MISS" | null = null;
++  private resultTimer = 0;
++  private resultAlpha = 0;
++  private showGlow = false;
++  private botWait = 0;
++  private streak = 0;
++  private done = false;
++
++  constructor(private readonly ctx: MinigameContext) {
++    this.physics = new ParrotPhysics(() => this.ctx.rng.next());
++    this.seats = dealSeats(this.ctx.players.map((player) => player.id));
++    preloadParrots(this.ctx.players.map((player) => player.color));
++    this.physics.init(GAME_WIDTH, GAME_HEIGHT, HUD_INSET);
++    this.physics.setSideWalls(true);
++    this.pointer = new FlickPointer(this.ctx.canvas, { w: GAME_WIDTH, h: GAME_HEIGHT }, (vx, vy) => {
++      this.tryFlick(vx, vy);
++    });
++    this.beginTurn();
++  }
++
++  update(dt: number): void {
++    if (this.done) return;
++
++    const botShot = this.phase === "flight" && this.current()?.kind === "bot";
++    this.physics.step(dt);
++    if (botShot) this.physics.step(dt);
++
++    if (this.phase === "flight") {
++      const landing = this.physics.checkLanding();
++      if (landing) this.resolve(landing);
++      return;
++    }
++
++    if (this.phase === "result") {
++      const speed = this.current()?.kind === "bot" ? 2 : 1;
++      this.resultTimer -= dt * 1000 * speed;
++      if (this.resultTimer > RESULT_MS - 280) this.resultAlpha = (RESULT_MS - this.resultTimer) / 280;
++      else if (this.resultTimer < 320) this.resultAlpha = this.resultTimer / 320;
++      else this.resultAlpha = 1;
++      if (this.resultTimer <= 0) this.advance();
++      return;
++    }
++
++    const player = this.current();
++    if (!player) return;
++    if (player.kind === "bot") {
++      this.botWait -= dt;
++      if (this.botWait <= 0) {
++        const flick = botFlick(this.ctx.rng);
++        this.tryFlick(flick.vx, flick.vy);
++      }
++    }
++  }
++
++  render(g: CanvasRenderingContext2D): void {
++    const player = this.current();
++    this.scene.frame(g, 1 / 60, GAME_WIDTH, GAME_HEIGHT, {
++      bottle: this.physics.getBottle(),
++      liquid: this.physics.liquid,
++      groundY: this.physics.getGroundY(),
++      drag: this.phase === "ready" ? this.pointer.getDrag() : null,
++      result: this.phase === "result" ? this.result : null,
++      resultAlpha: this.resultAlpha,
++      showGlow: this.showGlow,
++      isOnFire: this.streak >= 3,
++      liquidColor: player?.color ?? "#d62828",
++    });
++    this.drawHud(g);
++  }
++
++  isFinished(): boolean {
++    return this.done;
++  }
++
++  getScores(): { playerId: string; score: number }[] {
++    return scoresFromSeats(this.seats);
++  }
++
++  destroy(): void {
++    this.pointer.destroy();
++    this.physics.destroy();
++  }
++
++  private current() {
++    return this.ctx.players[this.turn];
++  }
++
++  private beginTurn(): void {
++    this.phase = "ready";
++    this.result = null;
++    this.resultAlpha = 0;
++    this.showGlow = false;
++    this.physics.resetBottle();
++    const player = this.current();
++    if (player?.kind === "bot") {
++      this.pointer.disable();
++      this.botWait = 0.45 + this.ctx.rng.float(0, 0.25);
++    } else {
++      this.pointer.enable();
++      this.botWait = 0.55;
++    }
++  }
++
++  private tryFlick(vx: number, vy: number): void {
++    if (this.phase !== "ready" || this.done) return;
++    this.pointer.disable();
++    this.physics.applyFlick(vx, vy);
++    this.phase = "flight";
++    this.ctx.sfx.hit();
++  }
++
++  private resolve(landing: "MAKE" | "MISS"): void {
++    const made = landing === "MAKE";
++    this.seats[this.turn] = recordToss(this.seats[this.turn]!, made);
++    this.result = landing;
++    this.showGlow = made;
++    this.streak = made ? this.streak + 1 : 0;
++    this.phase = "result";
++    this.resultTimer = RESULT_MS;
++    this.resultAlpha = 0;
++    const bottle = this.physics.getBottle();
++    if (bottle) {
++      this.scene.kick(
++        landing,
++        bottle.position.x,
++        bottle.position.y,
++        this.current()?.color ?? "#69f0ae",
++        made && !!this.physics.getLastLandingInfo()?.perfect,
++      );
++    }
++    if (made) this.ctx.sfx.collect();
++    else this.ctx.sfx.miss();
++  }
++
++  private advance(): void {
++    this.showGlow = false;
++    this.resultAlpha = 0;
++    if (allDone(this.seats)) {
++      this.done = true;
++      this.pointer.disable();
++      return;
++    }
++    const next = nextTurnIndex(this.seats, this.turn);
++    if (next < 0) {
++      this.done = true;
++      this.pointer.disable();
++      return;
++    }
++    if (next !== this.turn) this.streak = 0;
++    this.turn = next;
++    this.beginTurn();
++  }
++
++  private drawHud(g: CanvasRenderingContext2D): void {
++    const player = this.current();
++    const seat = this.seats[this.turn];
++    g.font = "600 16px Outfit, sans-serif";
++    g.textAlign = "left";
++    g.fillStyle = "#94a3b8";
++    g.fillText(`Parrot Flip  ·  ${TOSSES_EACH} tosses each`, 40, 28);
++    g.font = "700 26px Bebas Neue, sans-serif";
++    g.fillStyle = player?.color ?? "#F4F7FB";
++    const remain = seat ? Math.max(0, TOSSES_EACH - seat.tosses) : 0;
++    const hint = this.phase === "ready" && player?.kind === "human" ? "  ·  Flick UP" : "";
++    g.fillText(`${player?.name ?? "Player"}'s toss (${remain} left)${hint}`, 40, 54);
++
++    this.ctx.players.forEach((seatPlayer, index) => {
++      const row = this.seats[index];
++      const x = 40 + index * 200;
++      g.fillStyle = index === this.turn ? seatPlayer.color : "#64748b";
++      g.font = "600 16px Outfit, sans-serif";
++      g.fillText(`${seatPlayer.name}  ${row?.makes ?? 0}`, x, 82);
++    });
++  }
++}
++
++export const parrotFlip: MinigameDefinition = {
++  id: "parrot-flip",
++  name: "Parrot Flip",
++  tagline: "Flick the pirate parrot upright.",
++  description: "Take turns flicking a pirate macaw. Land it standing for a make. Four tosses each — most makes wins.",
++  durationMs: 0,
++  controls: "Flick up on the parrot. Harder snap = more spin.",
++  create: (ctx) => new ParrotFlipGame(ctx),
++};
+diff --git a/src/minigames/imported/parrot-flip/physics.test.ts b/src/minigames/imported/parrot-flip/physics.test.ts
+new file mode 100644
+index 0000000..fa31776
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/physics.test.ts
+@@ -0,0 +1,77 @@
++import { describe, expect, it } from "vitest";
++import { ParrotPhysics } from "./physics";
++
++function median(xs: number[]): number {
++  const a = xs.filter((x) => Number.isFinite(x)).sort((p, q) => p - q);
++  return a[Math.floor(a.length / 2)]!;
++}
++
++function flight(physics: ParrotPhysics, w: number, h: number, inset: number, vx: number, vy: number) {
++  physics.init(w, h, inset);
++  const startY = physics.getBottle()!.position.y;
++  const startA = physics.getBottle()!.angle;
++  const groundY = physics.getGroundY();
++  physics.applyFlick(vx, vy);
++  let minY = startY;
++  let landTurns: number | null = null;
++  for (let i = 0; i < 240; i += 1) {
++    physics.step(1 / 60);
++    const b = physics.getBottle()!;
++    minY = Math.min(minY, b.position.y);
++    if (landTurns == null && i > 8 && b.position.y >= groundY - 88 && b.velocity.y > 0) {
++      landTurns = Math.abs(b.angle - startA) / (2 * Math.PI);
++    }
++  }
++  return { peak: startY - minY, minY, landTurns };
++}
++
++function verdict(physics: ParrotPhysics, vy: number): string {
++  physics.init(390, 844, 170);
++  physics.applyFlick(0, vy);
++  for (let i = 0; i < 360; i += 1) {
++    physics.step(1 / 60);
++    const result = physics.checkLanding();
++    if (result) return result;
++  }
++  return "NONE";
++}
++
++describe("parrot physics", () => {
++  it("sends a mid flick high enough for about one turn on a phone", () => {
++    const physics = new ParrotPhysics(() => 0.5);
++    const mid = [];
++    for (let i = 0; i < 7; i += 1) {
++      mid.push(flight(new ParrotPhysics(() => 0.5 + i * 0.01), 390, 844, 170, 0, -2100));
++    }
++    const peak = median(mid.map((f) => f.peak));
++    const minY = median(mid.map((f) => f.minY));
++    const turns = median(mid.map((f) => f.landTurns ?? NaN));
++    expect(peak).toBeGreaterThanOrEqual(330);
++    expect(minY).toBeGreaterThan(120);
++    expect(turns).toBeGreaterThanOrEqual(0.88);
++    expect(turns).toBeLessThanOrEqual(1.28);
++    physics.destroy();
++  });
++
++  it("keeps a soft flick under-rotated", () => {
++    const flights = [];
++    for (let i = 0; i < 7; i += 1) {
++      flights.push(flight(new ParrotPhysics(() => 0.45 + i * 0.02), 390, 844, 170, 0, -900));
++    }
++    const turns = median(flights.map((f) => f.landTurns ?? NaN));
++    expect(turns).toBeLessThan(0.98);
++  });
++
++  it("makes a sweet-spot flick usually, not always", () => {
++    const physics = new ParrotPhysics();
++    let makes = 0;
++    const n = 40;
++    for (let i = 0; i < n; i += 1) {
++      if (verdict(physics, -2100) === "MAKE") makes += 1;
++    }
++    const rate = makes / n;
++    expect(rate).toBeGreaterThanOrEqual(0.4);
++    expect(rate).toBeLessThanOrEqual(0.75);
++    physics.destroy();
++  });
++});
+diff --git a/src/minigames/imported/parrot-flip/physics.ts b/src/minigames/imported/parrot-flip/physics.ts
+new file mode 100644
+index 0000000..2edb675
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/physics.ts
+@@ -0,0 +1,314 @@
++import Matter from "matter-js";
++
++export type LandingResult = "MAKE" | "MISS";
++
++export interface LandingInfo {
++  result: LandingResult;
++  tilt: number | null;
++  perfect: boolean;
++  reason: string;
++}
++
++export interface LiquidState {
++  slosh: number;
++  vel: number;
++  settleTimer: number;
++  renderOffset(): number;
++  isSettled(): boolean;
++  reset(): void;
++  update(bottleAngVel: number, dt: number): void;
++}
++
++const { Engine, Bodies, Body, World } = Matter;
++
++const SPIN_BASE = 0.14;
++const SPIN_RANGE = 0.1;
++const POWER_SPEED = 4000;
++const WALL_INSET = 14;
++
++const SETTLE_FRAMES = 22;
++const SETTLE_RANGE = 0.03;
++const PERFECT_ANGLE = 0.16;
++const MISS_CAP_FRAMES = 300;
++
++const FEEL = { makeAngle: 0.62, fallenAngle: 1.16, spinJitter: 0.28, launchJitter: 0.14, kickScale: 1.15 };
++
++/**
++ * Matter.js bottle-flip world from Whydah-Unit parrot-flip.
++ * Same body, spin, landing, and liquid kick — painted as a parrot in the renderer.
++ */
++export class ParrotPhysics {
++  private engine: Matter.Engine | null = null;
++  private world: Matter.World | null = null;
++  private bottle: Matter.Body | null = null;
++  private ground: Matter.Body | null = null;
++  private leftWall: Matter.Body | null = null;
++  private rightWall: Matter.Body | null = null;
++  private canvasW = 0;
++  private canvasH = 0;
++  private groundY = 0;
++  private wallsOn = true;
++  private groundedFrames = 0;
++  private angleWin: number[] = [];
++  private totalRotation = 0;
++  private hasFlipped = false;
++  private launchAngle = 0;
++  private hasLanded = false;
++  private lastLandingInfo: LandingInfo | null = null;
++  private lastFlickInfo: { upSpeed: number; power: number; vx: number; vy: number } | null = null;
++
++  readonly liquid: LiquidState = {
++    slosh: 0,
++    vel: 0,
++    settleTimer: 0,
++    renderOffset() {
++      return this.slosh * 13;
++    },
++    isSettled() {
++      return this.settleTimer > 0.25;
++    },
++    reset() {
++      this.slosh = 0;
++      this.vel = 0;
++      this.settleTimer = 0;
++    },
++    update(bottleAngVel: number, dt: number) {
++      const spring = -0.1 * this.slosh;
++      const drive = 0.4 * bottleAngVel;
++      const damping = -0.08 * this.vel;
++      this.vel += (spring + drive + damping) * dt;
++      this.slosh += this.vel * dt;
++      this.slosh = Math.max(-1, Math.min(1, this.slosh));
++      this.settleTimer = Math.abs(this.vel) < 0.1 ? this.settleTimer + dt : 0;
++    },
++  };
++
++  constructor(private readonly rand: () => number = Math.random) {}
++
++  init(w: number, h: number, bottomInset = 0): void {
++    this.canvasW = w;
++    this.canvasH = h;
++    this.groundY = h - 30 - bottomInset;
++    this.rebuildEngine(1.5);
++
++    this.ground = Bodies.rectangle(w / 2, this.groundY + 25, w * 6, 50, {
++      isStatic: true,
++      label: "ground",
++      friction: 0.9,
++      restitution: 0.01,
++    });
++
++    const wallOpts = { isStatic: true, label: "wall", friction: 0, restitution: 0 };
++    this.leftWall = Bodies.rectangle(WALL_INSET - 20, h / 2, 40, h * 3, wallOpts);
++    this.rightWall = Bodies.rectangle(w - WALL_INSET + 20, h / 2, 40, h * 3, wallOpts);
++
++    World.add(this.world!, [this.ground, this.leftWall, this.rightWall]);
++    this.placeWalls(w, h);
++    this.resetBottle();
++  }
++
++  reflow(w: number, h: number, bottomInset = 0): void {
++    if (!this.engine) return;
++    this.canvasW = w;
++    this.canvasH = h;
++    this.groundY = h - 30 - bottomInset;
++    if (!this.ground) return;
++    Body.setPosition(this.ground, { x: w / 2, y: this.groundY + 25 });
++    this.placeWalls(w, h);
++    if (this.bottle && this.bottle.position.y > this.groundY - 20) {
++      const pad = this.wallsOn ? WALL_INSET + 40 : 40;
++      Body.setPosition(this.bottle, {
++        x: Math.max(pad, Math.min(w - pad, this.bottle.position.x)),
++        y: this.groundY - 76,
++      });
++      Body.setVelocity(this.bottle, { x: 0, y: 0 });
++      Body.setAngularVelocity(this.bottle, 0);
++    }
++  }
++
++  setSideWalls(on: boolean): void {
++    this.wallsOn = !!on;
++    if (this.engine) this.placeWalls(this.canvasW, this.canvasH);
++  }
++
++  resetBottle(): void {
++    if (this.bottle && this.world) World.remove(this.world, this.bottle);
++    this.groundedFrames = 0;
++    this.angleWin = [];
++    this.totalRotation = 0;
++    this.hasFlipped = false;
++    this.launchAngle = 0;
++    this.hasLanded = false;
++    this.lastLandingInfo = null;
++    this.lastFlickInfo = null;
++    this.liquid.reset();
++    this.bottle = this.createBottle();
++    World.add(this.world!, this.bottle);
++  }
++
++  applyFlick(vx: number, vy: number): void {
++    if (!this.bottle) return;
++    const upSpeed = Math.max(0, -vy);
++    const power = Math.min(upSpeed / POWER_SPEED, 1);
++    this.lastFlickInfo = { upSpeed, power, vx, vy };
++
++    const jSpin = 1 + (this.rand() - 0.5) * FEEL.spinJitter;
++    const jLaunch = 1 + (this.rand() - 0.5) * FEEL.launchJitter;
++    const jDrift = (this.rand() - 0.5) * 3.8;
++
++    const launchY = this.launchImpulse(power) * jLaunch;
++    const launchX = Math.max(-6, Math.min(6, vx / 280)) + jDrift;
++    const dir = vx >= 0 ? 1 : -1;
++    const spin = dir * (SPIN_BASE + power * SPIN_RANGE) * jSpin;
++
++    this.launchAngle = this.bottle.angle;
++    Body.setVelocity(this.bottle, { x: launchX, y: launchY });
++    Body.setAngularVelocity(this.bottle, spin);
++  }
++
++  step(dt: number): void {
++    if (!this.engine || !this.bottle) return;
++    Engine.update(this.engine, dt * 1000);
++    if (!this.hasFlipped) {
++      this.totalRotation = Math.abs(this.bottle.angle - this.launchAngle);
++      if (this.totalRotation >= 5.6) this.hasFlipped = true;
++    }
++    if (
++      this.hasFlipped &&
++      !this.hasLanded &&
++      this.bottle.velocity.y > 0 &&
++      this.bottle.position.y >= this.groundY - 55
++    ) {
++      this.hasLanded = true;
++      const kick = (this.liquid.vel * 0.06 + (this.rand() - 0.5) * 0.16) * FEEL.kickScale;
++      Body.setAngularVelocity(this.bottle, this.bottle.angularVelocity + kick);
++    }
++    this.liquid.update(this.bottle.angularVelocity, dt);
++  }
++
++  checkLanding(): LandingResult | null {
++    if (!this.bottle) return null;
++    const angVel = Math.abs(this.bottle.angularVelocity);
++    const linSpeed = Math.hypot(this.bottle.velocity.x, this.bottle.velocity.y);
++    const restY = this.groundY - 76;
++    const grounded = this.bottle.position.y >= restY - 12;
++
++    if (!grounded) {
++      this.groundedFrames = 0;
++      this.angleWin = [];
++      return null;
++    }
++
++    this.groundedFrames += 1;
++    if (this.groundedFrames > MISS_CAP_FRAMES) return this.recordLanding("MISS", null, "timeout");
++
++    if (angVel < 0.01 && linSpeed < 7) {
++      this.angleWin.push(this.bottle.angle);
++      if (this.angleWin.length > SETTLE_FRAMES) this.angleWin.shift();
++      let lo = Infinity;
++      let hi = -Infinity;
++      for (const a of this.angleWin) {
++        if (a < lo) lo = a;
++        if (a > hi) hi = a;
++      }
++      if (this.angleWin.length >= SETTLE_FRAMES && hi - lo < SETTLE_RANGE) {
++        if (!this.hasFlipped) return this.recordLanding("MISS", null, "underrotated");
++        let angle = ((this.bottle.angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
++        if (angle > Math.PI) angle -= 2 * Math.PI;
++        const tilt = Math.abs(angle);
++        if (tilt < FEEL.makeAngle) return this.recordLanding("MAKE", tilt, "upright");
++        if (tilt >= FEEL.fallenAngle) return this.recordLanding("MISS", tilt, "fallen");
++      }
++    } else {
++      this.angleWin = [];
++    }
++    return null;
++  }
++
++  getBottle(): Matter.Body | null {
++    return this.bottle;
++  }
++
++  getGroundY(): number {
++    return this.groundY;
++  }
++
++  getLastLandingInfo(): LandingInfo | null {
++    return this.lastLandingInfo;
++  }
++
++  getLastFlickInfo(): { upSpeed: number; power: number; vx: number; vy: number } | null {
++    return this.lastFlickInfo;
++  }
++
++  destroy(): void {
++    if (this.engine) {
++      try {
++        World.clear(this.engine.world, false);
++        Engine.clear(this.engine);
++      } catch {
++        /* already torn down */
++      }
++    }
++    this.engine = this.world = this.bottle = this.ground = this.leftWall = this.rightWall = null;
++  }
++
++  private placeWalls(w: number, h: number): void {
++    if (!this.leftWall || !this.rightWall) return;
++    if (this.wallsOn) {
++      Body.setPosition(this.leftWall, { x: WALL_INSET - 20, y: h / 2 });
++      Body.setPosition(this.rightWall, { x: w - WALL_INSET + 20, y: h / 2 });
++    } else {
++      Body.setPosition(this.leftWall, { x: -50000, y: h / 2 });
++      Body.setPosition(this.rightWall, { x: 50000, y: h / 2 });
++    }
++  }
++
++  private createBottle(): Matter.Body {
++    const cx = this.canvasW / 2;
++    const cy = this.groundY - 76;
++    const liq = Bodies.rectangle(cx, cy + 38, 74, 70, { density: 0.018 });
++    const body = Bodies.rectangle(cx, cy - 18, 70, 50, { density: 0.0015 });
++    const neck = Bodies.rectangle(cx, cy - 62, 44, 36, { density: 0.0004 });
++    return Body.create({
++      parts: [liq, body, neck],
++      frictionAir: 0.025,
++      friction: 0.85,
++      restitution: 0.02,
++      label: "bottle",
++    });
++  }
++
++  private launchImpulse(power: number): number {
++    const startY = this.bottle ? this.bottle.position.y : 400;
++    const sky = Math.max(180, startY - 56);
++    const peak = sky * (0.62 + power * 0.18);
++    return -(8.8 + 0.043 * peak);
++  }
++
++  private recordLanding(result: LandingResult, tilt: number | null, reason: string): LandingResult {
++    this.lastLandingInfo = {
++      result,
++      tilt,
++      perfect: result === "MAKE" && tilt != null && tilt <= PERFECT_ANGLE,
++      reason,
++    };
++    return result;
++  }
++
++  private rebuildEngine(gravityY: number): void {
++    if (this.engine) {
++      try {
++        World.clear(this.engine.world, false);
++        Engine.clear(this.engine);
++      } catch {
++        /* first init */
++      }
++    }
++    this.bottle = this.ground = this.leftWall = this.rightWall = null;
++    this.engine = Engine.create({ gravity: { x: 0, y: gravityY, scale: 0.001 } });
++    this.world = this.engine.world;
++    this.engine.gravity.y = gravityY;
++    this.engine.gravity.scale = 0.001;
++  }
++}
+diff --git a/src/minigames/imported/parrot-flip/pointer.ts b/src/minigames/imported/parrot-flip/pointer.ts
+new file mode 100644
+index 0000000..8a4d448
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/pointer.ts
+@@ -0,0 +1,167 @@
++import {
++  shouldCommitCancel,
++  velocityFromGesture,
++  type FlickGesture,
++  type FlickSample,
++} from "./flick";
++
++/** Phone-height the original flick was tuned against (parrot-flip on a tall handset). */
++export const FEEL_HEIGHT = 844;
++
++export interface DragState {
++  startX: number;
++  startY: number;
++  curX: number;
++  curY: number;
++}
++
++/**
++ * Pointer flick on the game canvas.
++ * Velocity is measured in CSS pixels then scaled to the original phone feel.
++ */
++export class FlickPointer {
++  private dragging = false;
++  private enabled = false;
++  private activePointerId: number | null = null;
++  private pointerType = "mouse";
++  private startX = 0;
++  private startY = 0;
++  private curX = 0;
++  private curY = 0;
++  private lastX = 0;
++  private lastY = 0;
++  private lastT = 0;
++  private peakSpeed = 0;
++  private peakVx = 0;
++  private peakVy = 0;
++  private samples: FlickSample[] = [];
++  private rect: DOMRect | null = null;
++  private cssH = FEEL_HEIGHT;
++
++  constructor(
++    private readonly canvas: HTMLCanvasElement,
++    private readonly logical: { w: number; h: number },
++    private readonly onFlick: (vx: number, vy: number) => void,
++  ) {
++    canvas.addEventListener("pointerdown", this.onDown);
++    canvas.addEventListener("pointermove", this.onMove);
++    canvas.addEventListener("pointerup", this.onUp);
++    canvas.addEventListener("pointercancel", this.onCancel);
++    canvas.style.touchAction = "none";
++  }
++
++  enable(): void {
++    this.enabled = true;
++  }
++
++  disable(): void {
++    this.enabled = false;
++    this.dragging = false;
++    this.activePointerId = null;
++  }
++
++  getDrag(): DragState | null {
++    if (!this.dragging || !this.rect || this.rect.width === 0 || this.rect.height === 0) return null;
++    return {
++      startX: this.toLogicalX(this.startX),
++      startY: this.toLogicalY(this.startY),
++      curX: this.toLogicalX(this.curX),
++      curY: this.toLogicalY(this.curY),
++    };
++  }
++
++  destroy(): void {
++    this.disable();
++    this.canvas.removeEventListener("pointerdown", this.onDown);
++    this.canvas.removeEventListener("pointermove", this.onMove);
++    this.canvas.removeEventListener("pointerup", this.onUp);
++    this.canvas.removeEventListener("pointercancel", this.onCancel);
++  }
++
++  private readonly onDown = (event: PointerEvent): void => {
++    if (!this.enabled || this.dragging) return;
++    event.preventDefault();
++    this.activePointerId = event.pointerId;
++    this.pointerType = event.pointerType || "mouse";
++    try {
++      this.canvas.setPointerCapture(event.pointerId);
++    } catch {
++      /* capture is optional */
++    }
++    this.dragging = true;
++    this.rect = this.canvas.getBoundingClientRect();
++    this.cssH = this.rect.height || FEEL_HEIGHT;
++    this.startX = this.curX = this.lastX = event.clientX - this.rect.left;
++    this.startY = this.curY = this.lastY = event.clientY - this.rect.top;
++    this.lastT = performance.now();
++    this.peakSpeed = this.peakVx = this.peakVy = 0;
++    this.samples = [{ t: this.lastT, x: this.startX, y: this.startY }];
++  };
++
++  private readonly onMove = (event: PointerEvent): void => {
++    if (!this.dragging || !this.rect || event.pointerId !== this.activePointerId) return;
++    event.preventDefault();
++    this.curX = event.clientX - this.rect.left;
++    this.curY = event.clientY - this.rect.top;
++    const now = performance.now();
++    const dt = Math.max((now - this.lastT) / 1000, 0.001);
++    const ivx = (this.curX - this.lastX) / dt;
++    const ivy = (this.curY - this.lastY) / dt;
++    const spd = Math.hypot(ivx, ivy);
++    if (spd > this.peakSpeed) {
++      this.peakSpeed = spd;
++      this.peakVx = ivx;
++      this.peakVy = ivy;
++    }
++    this.lastX = this.curX;
++    this.lastY = this.curY;
++    this.lastT = now;
++    this.samples.push({ t: now, x: this.curX, y: this.curY });
++  };
++
++  private readonly onUp = (event: PointerEvent): void => {
++    if (!this.dragging || !this.enabled || event.pointerId !== this.activePointerId) return;
++    this.dragging = false;
++    this.activePointerId = null;
++    this.fireIfFlick();
++  };
++
++  private readonly onCancel = (event: PointerEvent): void => {
++    if (event.pointerId !== this.activePointerId) return;
++    const commit = this.dragging && this.enabled && shouldCommitCancel(this.gesture());
++    this.dragging = false;
++    this.activePointerId = null;
++    if (commit) this.fireIfFlick();
++  };
++
++  private gesture(): FlickGesture {
++    return {
++      samples: this.samples,
++      pointerType: this.pointerType,
++      peakVx: this.peakVx,
++      peakVy: this.peakVy,
++      peakSpeed: this.peakSpeed,
++      startX: this.startX,
++      startY: this.startY,
++      curX: this.curX,
++      curY: this.curY,
++    };
++  }
++
++  private fireIfFlick(): void {
++    const velocity = velocityFromGesture(this.gesture());
++    if (!velocity) return;
++    const scale = FEEL_HEIGHT / Math.max(this.cssH, 1);
++    this.onFlick(velocity.vx * scale, velocity.vy * scale);
++  }
++
++  private toLogicalX(cssX: number): number {
++    const width = this.rect?.width || this.logical.w;
++    return (cssX / width) * this.logical.w;
++  }
++
++  private toLogicalY(cssY: number): number {
++    const height = this.rect?.height || this.logical.h;
++    return (cssY / height) * this.logical.h;
++  }
++}
+diff --git a/src/minigames/imported/parrot-flip/renderer.ts b/src/minigames/imported/parrot-flip/renderer.ts
+new file mode 100644
+index 0000000..6b0acb4
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/renderer.ts
+@@ -0,0 +1,581 @@
++import type { LiquidState } from "./physics";
++
++export interface Pose {
++  position: { x: number; y: number };
++  angle: number;
++}
++
++interface Particle {
++  x: number;
++  y: number;
++  vx: number;
++  vy: number;
++  life: number;
++  maxLife: number;
++  r: number;
++  color: string;
++  fire?: boolean;
++  coin?: boolean;
++}
++
++interface SpriteEntry {
++  body: HTMLImageElement;
++  wing: HTMLImageElement;
++  loaded: number;
++  ready: boolean;
++}
++
++const VIEW_W = 300;
++const VIEW_H = 420;
++const GROUND_SVG = 376;
++const GROUND_LOCAL = 32;
++const SCALE = 0.93;
++const DEST_W = VIEW_W * SCALE;
++const DEST_H = VIEW_H * SCALE;
++const DEST_X = -DEST_W / 2;
++const DEST_Y = GROUND_LOCAL - GROUND_SVG * SCALE;
++const PIV_X = (132 - VIEW_W / 2) * SCALE;
++const PIV_Y = (150 - GROUND_SVG) * SCALE + GROUND_LOCAL;
++const GROUND_SHADOW_REST = 39;
++
++const ANAT = {
++  beakHi: "#f7efdf",
++  beakLo: "#d9c7a3",
++  beakEdge: "#8f7d5c",
++  mandible: "#3c3733",
++  nostril: "#77664c",
++  face: "#f4efe3",
++  iris: "#e3c584",
++  pupil: "#17110c",
++  eyeRing: "#9c8a6a",
++  legNear: "#8d8577",
++  legFar: "#6e6759",
++  claw: "#4a443c",
++  patch: "#1b1b1b",
++  strap: "#141414",
++};
++
++const spriteCache = new Map<string, SpriteEntry>();
++
++function hexToRgb(hex: string): [number, number, number] {
++  const n = parseInt(hex.slice(1), 16);
++  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
++}
++
++function rgbToHex(r: number, g: number, b: number): string {
++  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
++}
++
++function mixHex(a: string, b: string, t: number): string {
++  const A = hexToRgb(a);
++  const B = hexToRgb(b);
++  return rgbToHex(
++    Math.round(A[0] + (B[0] - A[0]) * t),
++    Math.round(A[1] + (B[1] - A[1]) * t),
++    Math.round(A[2] + (B[2] - A[2]) * t),
++  );
++}
++
++function shadeHex(hex: string, t: number): string {
++  return t >= 0 ? mixHex(hex, "#ffffff", t) : mixHex(hex, "#000000", -t);
++}
++
++function hexToRgba(hex: string, a: number): string {
++  const [r, g, b] = hexToRgb(hex);
++  return `rgba(${r}, ${g}, ${b}, ${a})`;
++}
++
++function parrotPalette(base: string) {
++  return {
++    base,
++    crown: shadeHex(base, 0.1),
++    chest: shadeHex(base, 0.18),
++    deep: shadeHex(base, -0.3),
++    wing: shadeHex(base, -0.1),
++    wingLn: shadeHex(base, -0.26),
++    covert: mixHex(base, "#e9c46a", 0.55),
++    covertEdge: shadeHex(mixHex(base, "#e9c46a", 0.55), -0.25),
++    prim: mixHex(base, "#1f3a5f", 0.6),
++    primHi: shadeHex(mixHex(base, "#1f3a5f", 0.6), 0.25),
++    tail: mixHex(base, "#1f3a5f", 0.38),
++    line: shadeHex(base, -0.52),
++  };
++}
++
++function parrotBodySVG(p: ReturnType<typeof parrotPalette>): string {
++  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420">
++<defs>
++<linearGradient id="gB" x1="0" y1="60" x2="0" y2="345" gradientUnits="userSpaceOnUse">
++<stop offset="0" stop-color="${p.crown}"/><stop offset="0.45" stop-color="${p.base}"/><stop offset="1" stop-color="${p.deep}"/>
++</linearGradient>
++<linearGradient id="gK" x1="222" y1="56" x2="266" y2="140" gradientUnits="userSpaceOnUse">
++<stop offset="0" stop-color="${ANAT.beakHi}"/><stop offset="1" stop-color="${ANAT.beakLo}"/>
++</linearGradient>
++</defs>
++<g stroke-linecap="round" stroke-linejoin="round">
++<path d="M 118 312 C 92 350 66 378 50 404 C 62 407 78 396 91 372 C 103 350 113 331 121 317 Z" fill="${p.tail}"/>
++<path d="M 118 312 C 95 346 72 374 56 398" fill="none" stroke="${p.primHi}" stroke-width="2" opacity="0.55"/>
++<path d="M 127 316 C 109 348 93 372 82 391 C 94 391 107 374 117 352 C 123 340 127 328 129 318 Z" fill="${p.prim}"/>
++<path d="M 134 318 C 124 340 113 357 106 367 C 117 365 127 350 135 331 Z" fill="${p.deep}"/>
++<path d="M 148 336 L 146 365" fill="none" stroke="${ANAT.legFar}" stroke-width="9"/>
++<path d="M 146 365 L 127 375 M 146 365 L 145 377 M 146 365 L 161 375" fill="none" stroke="${ANAT.legFar}" stroke-width="6"/>
++<path d="M 168 106 C 136 118 116 140 112 168 C 106 208 96 252 100 292 C 102 318 118 334 142 340 C 168 346 190 338 202 318 C 218 292 228 250 230 210 C 232 178 224 148 208 128 C 196 114 182 106 168 106 Z" fill="url(#gB)" stroke="${p.line}" stroke-width="1.5" opacity="0.98"/>
++<ellipse cx="214" cy="212" rx="24" ry="66" fill="${p.chest}" opacity="0.32" transform="rotate(-7 214 212)"/>
++<circle cx="195" cy="88" r="44" fill="${p.crown}"/>
++<path d="M 153 66 A 44 44 0 0 1 233 72" fill="none" stroke="${p.line}" stroke-width="1.5"/>
++<path d="M 224 58 C 200 52 178 58 170 74 C 164 88 166 104 176 114 C 188 124 206 126 218 120 L 220 118 C 214 98 216 76 224 58 Z" fill="${ANAT.face}" stroke="${p.line}" stroke-width="1" opacity="0.96"/>
++<path d="M 176 72 C 190 66 204 64 216 64 M 172 86 C 188 82 204 82 218 84 M 174 100 C 188 100 202 102 214 106" fill="none" stroke="${p.base}" stroke-width="1.6" opacity="0.8"/>
++<path d="M 222 54 C 244 52 262 62 268 80 C 274 100 268 126 252 146 C 248 130 240 122 228 116 L 224 112 C 230 94 228 72 222 54 Z" fill="url(#gK)" stroke="${ANAT.beakEdge}" stroke-width="1.2"/>
++<path d="M 226 58 C 244 58 258 68 263 82" fill="none" stroke="#fbf6ea" stroke-width="2" opacity="0.7"/>
++<path d="M 224 112 C 236 116 246 128 252 144" fill="none" stroke="${ANAT.beakEdge}" stroke-width="1.5" opacity="0.8"/>
++<path d="M 220 116 C 228 120 238 128 244 138 C 236 142 224 142 214 136 C 210 130 212 122 220 116 Z" fill="${ANAT.mandible}"/>
++<ellipse cx="233" cy="64" rx="3" ry="2.4" fill="${ANAT.nostril}" transform="rotate(15 233 64)"/>
++<circle cx="190" cy="84" r="8" fill="${ANAT.iris}" stroke="${ANAT.eyeRing}" stroke-width="1"/>
++<circle cx="190" cy="84" r="4.4" fill="${ANAT.pupil}"/>
++<circle cx="192" cy="81" r="1.8" fill="#ffffff"/>
++<path d="M 214 56 C 196 60 178 64 162 72 C 152 78 146 86 142 96" fill="none" stroke="${ANAT.strap}" stroke-width="3.5"/>
++<g transform="rotate(-16 173 67)">
++<rect x="159" y="57" width="28" height="20" rx="6" fill="${ANAT.patch}"/>
++<path d="M 164 62 C 169 59 177 58 182 60" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
++</g>
++<path d="M 176 332 L 174 363" fill="none" stroke="${ANAT.legNear}" stroke-width="10"/>
++<path d="M 174 363 L 152 375 M 174 363 L 172 377 M 174 363 L 192 373" fill="none" stroke="${ANAT.legNear}" stroke-width="7"/>
++<path d="M 152 375 L 147 378 M 172 377 L 171 381 M 192 373 L 196 377" fill="none" stroke="${ANAT.claw}" stroke-width="3"/>
++</g>
++</svg>`;
++}
++
++function parrotWingSVG(p: ReturnType<typeof parrotPalette>): string {
++  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420">
++<defs>
++<linearGradient id="gW" x1="0" y1="150" x2="0" y2="350" gradientUnits="userSpaceOnUse">
++<stop offset="0" stop-color="${p.wing}"/><stop offset="1" stop-color="${p.deep}"/>
++</linearGradient>
++</defs>
++<g stroke-linecap="round" stroke-linejoin="round">
++<path d="M 130 148 C 104 162 90 192 92 226 C 94 262 104 300 126 330 C 138 344 154 350 166 340 C 176 330 178 310 172 280 C 165 242 158 200 148 172 C 144 158 138 150 130 148 Z" fill="url(#gW)" stroke="${p.line}" stroke-width="1.5" opacity="0.98"/>
++<path d="M 106 192 C 116 200 128 204 138 202 M 116 172 C 126 180 138 184 148 182 M 100 216 C 112 226 128 230 142 228" fill="none" stroke="${p.wingLn}" stroke-width="1.8" opacity="0.7"/>
++<path d="M 100 242 C 116 256 138 262 158 256" fill="none" stroke="${p.covert}" stroke-width="12" opacity="0.95"/>
++<path d="M 101 248 C 117 262 139 268 157 262" fill="none" stroke="${p.covertEdge}" stroke-width="2.5" opacity="0.8"/>
++<path d="M 104 260 C 114 292 130 318 152 338 L 162 341 C 142 318 126 288 116 258 Z" fill="${p.prim}"/>
++<path d="M 118 258 C 128 288 144 314 164 332 L 169 326 C 152 306 138 280 130 254 Z" fill="${p.prim}" opacity="0.85"/>
++<path d="M 104 260 C 116 294 134 322 158 340 M 118 256 C 130 288 146 314 166 330" fill="none" stroke="${p.primHi}" stroke-width="1.6" opacity="0.6"/>
++</g>
++</svg>`;
++}
++
++function getParrotSprite(color: string): SpriteEntry {
++  let entry = spriteCache.get(color);
++  if (entry) return entry;
++  const p = parrotPalette(color);
++  entry = { body: new Image(), wing: new Image(), loaded: 0, ready: false };
++  const arm = (img: HTMLImageElement, svg: string) => {
++    img.onload = () => {
++      entry!.loaded += 1;
++      if (entry!.loaded === 2) entry!.ready = true;
++    };
++    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
++  };
++  arm(entry.body, parrotBodySVG(p));
++  arm(entry.wing, parrotWingSVG(p));
++  spriteCache.set(color, entry);
++  return entry;
++}
++
++export function preloadParrots(colors: readonly string[]): void {
++  for (const color of colors) getParrotSprite(color);
++}
++
++function fillEllipse(g: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number): void {
++  if (!(rx > 0) || !(ry > 0)) return;
++  g.beginPath();
++  g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
++  g.fill();
++}
++
++export class ParrotScene {
++  private readonly particles: Particle[] = [];
++  private shakeAmp = 0;
++  private shakeDecay = 0;
++  private fireFrame = 0;
++  private shooting: { x: number; y: number; vx: number; vy: number; life: number } | null = null;
++  private bgKey = "";
++  private sky: CanvasGradient | null = null;
++  private haze: CanvasGradient | null = null;
++  private wallL: CanvasGradient | null = null;
++  private wallR: CanvasGradient | null = null;
++
++  kick(type: "MAKE" | "MISS", x: number, y: number, color: string, coins: boolean): void {
++    if (type === "MAKE") {
++      this.spawnSplash(x, y - 30, 26, color || "#69f0ae");
++      if (coins) this.spawnCoins(x, y - 40, 14);
++    } else {
++      this.shakeAmp = 12;
++      this.shakeDecay = 12 / 0.22;
++    }
++  }
++
++  frame(
++    g: CanvasRenderingContext2D,
++    dt: number,
++    width: number,
++    height: number,
++    state: {
++      bottle: Pose | null;
++      liquid: LiquidState;
++      groundY: number;
++      drag: { startX: number; startY: number; curX: number; curY: number } | null;
++      result: "MAKE" | "MISS" | null;
++      resultAlpha: number;
++      showGlow: boolean;
++      isOnFire: boolean;
++      liquidColor: string;
++    },
++  ): void {
++    this.updateParticles(dt);
++    if (!state.isOnFire) {
++      if (!this.shooting && Math.random() < dt * 0.07) {
++        this.shooting = {
++          x: Math.random() * width * 0.6,
++          y: 18 + Math.random() * 70,
++          vx: 220 + Math.random() * 140,
++          vy: 50 + Math.random() * 40,
++          life: 0.55,
++        };
++      }
++      if (this.shooting) {
++        this.shooting.x += this.shooting.vx * dt;
++        this.shooting.y += this.shooting.vy * dt;
++        this.shooting.life -= dt;
++        if (this.shooting.life <= 0 || this.shooting.y > state.groundY - 80) this.shooting = null;
++      }
++    } else {
++      this.shooting = null;
++    }
++
++    let sx = 0;
++    let sy = 0;
++    if (this.shakeAmp > 0.2) {
++      sx = (Math.random() - 0.5) * 2 * this.shakeAmp;
++      sy = (Math.random() - 0.5) * 2 * this.shakeAmp;
++      this.shakeAmp = Math.max(0, this.shakeAmp - this.shakeDecay * dt);
++    }
++
++    g.save();
++    g.translate(sx, sy);
++    this.drawBackground(g, width, height, state.groundY, state.isOnFire);
++    this.drawWalls(g, width, state.groundY, state.isOnFire);
++    if (this.shooting) {
++      g.strokeStyle = `rgba(244,239,227,${Math.max(0, this.shooting.life * 1.4)})`;
++      g.lineWidth = 2;
++      g.beginPath();
++      g.moveTo(this.shooting.x, this.shooting.y);
++      g.lineTo(this.shooting.x - this.shooting.vx * 0.12, this.shooting.y - this.shooting.vy * 0.12);
++      g.stroke();
++    }
++    this.drawFlickIndicator(g, state.drag, state.bottle);
++    if (state.showGlow && state.bottle) this.drawLandingGlow(g, state.bottle, state.groundY);
++    this.drawBottle(g, state.bottle, state.liquid, state.isOnFire, state.liquidColor, state.groundY);
++    this.drawParticles(g);
++    if (state.result) {
++      const color = state.result === "MAKE" ? "#7dcea0" : "#c23b22";
++      this.drawResult(g, width, height, state.result === "MAKE" ? "MAKE!" : "MISS", color, state.resultAlpha);
++    }
++    g.restore();
++  }
++
++  private ensureBg(g: CanvasRenderingContext2D, w: number, h: number, groundY: number, isOnFire: boolean): void {
++    const key = `${w}|${h}|${groundY}|${isOnFire ? 1 : 0}`;
++    if (this.bgKey === key && this.sky) return;
++    const sky = g.createLinearGradient(0, 0, 0, groundY);
++    if (isOnFire) {
++      sky.addColorStop(0, "#1a0a04");
++      sky.addColorStop(0.55, "#3a1408");
++      sky.addColorStop(1, "#5a220c");
++    } else {
++      sky.addColorStop(0, "#071018");
++      sky.addColorStop(0.45, "#0f2438");
++      sky.addColorStop(1, "#16324a");
++    }
++    const haze = g.createLinearGradient(0, groundY - 90, 0, groundY);
++    haze.addColorStop(0, "rgba(40, 90, 120, 0)");
++    haze.addColorStop(1, isOnFire ? "rgba(120, 50, 20, 0.35)" : "rgba(50, 110, 140, 0.28)");
++    const WALL = 14;
++    const wallL = g.createLinearGradient(0, 0, WALL, 0);
++    wallL.addColorStop(0, "rgba(42,28,18,0.95)");
++    wallL.addColorStop(1, "rgba(90,60,36,0.75)");
++    const wallR = g.createLinearGradient(w - WALL, 0, w, 0);
++    wallR.addColorStop(0, "rgba(90,60,36,0.75)");
++    wallR.addColorStop(1, "rgba(42,28,18,0.95)");
++    this.bgKey = key;
++    this.sky = sky;
++    this.haze = haze;
++    this.wallL = wallL;
++    this.wallR = wallR;
++  }
++
++  private drawBackground(g: CanvasRenderingContext2D, w: number, h: number, groundY: number, isOnFire: boolean): void {
++    this.ensureBg(g, w, h, groundY, isOnFire);
++    g.fillStyle = this.sky!;
++    g.fillRect(0, 0, w, groundY);
++    g.fillStyle = this.haze!;
++    g.fillRect(0, groundY - 90, w, 90);
++
++    if (!isOnFire) {
++      g.fillStyle = "rgba(244, 239, 227, 0.55)";
++      for (let i = 0; i < 28; i += 1) {
++        const sx = (i * 97) % w;
++        const sy = 18 + ((i * 53) % Math.max(40, groundY - 120));
++        g.beginPath();
++        g.arc(sx, sy, i % 3 === 0 ? 1.4 : 0.9, 0, Math.PI * 2);
++        g.fill();
++      }
++      const moonR = 14;
++      const mx = w * 0.82;
++      const my = Math.max(36, groundY * 0.18);
++      g.fillStyle = "rgba(244,239,227,0.45)";
++      g.beginPath();
++      g.arc(mx, my, moonR, 0, Math.PI * 2);
++      g.fill();
++      g.fillStyle = "rgba(7,16,24,0.35)";
++      g.beginPath();
++      g.arc(mx + moonR * 0.35, my - moonR * 0.1, moonR * 0.85, 0, Math.PI * 2);
++      g.fill();
++    }
++
++    g.fillStyle = "#3a2418";
++    g.fillRect(0, groundY, w, h - groundY);
++    g.strokeStyle = "rgba(0,0,0,0.28)";
++    g.lineWidth = 1;
++    for (let y = groundY + 18; y < h; y += 22) {
++      g.beginPath();
++      g.moveTo(0, y);
++      g.lineTo(w, y);
++      g.stroke();
++    }
++    g.fillStyle = "rgba(197,154,74,0.18)";
++    for (let x = 24; x < w; x += 64) {
++      for (let y = groundY + 10; y < h; y += 22) {
++        g.fillRect(x, y, 2, 2);
++      }
++    }
++    g.fillStyle = "#5a3a24";
++    g.fillRect(0, groundY - 4, w, 5);
++    g.fillStyle = "rgba(197,154,74,0.35)";
++    g.fillRect(0, groundY - 4, w, 1);
++  }
++
++  private drawWalls(g: CanvasRenderingContext2D, w: number, groundY: number, isOnFire: boolean): void {
++    const WALL = 14;
++    this.ensureBg(g, w, groundY + 40, groundY, isOnFire);
++    g.fillStyle = this.wallL!;
++    g.fillRect(0, 0, WALL, groundY);
++    g.fillStyle = this.wallR!;
++    g.fillRect(w - WALL, 0, WALL, groundY);
++    g.fillStyle = "rgba(197,154,74,0.28)";
++    g.fillRect(WALL - 2, 0, 2, groundY);
++    g.fillRect(w - WALL, 0, 2, groundY);
++  }
++
++  private drawBottle(
++    g: CanvasRenderingContext2D,
++    bottle: Pose | null,
++    liquid: LiquidState,
++    isOnFire: boolean,
++    liquidColor: string,
++    groundY: number,
++  ): void {
++    if (!bottle) return;
++    const { x, y } = bottle.position;
++    const angle = bottle.angle;
++    const flap = Math.max(-0.45, Math.min(0.45, (liquid.slosh || 0) * 0.55));
++    const spr = getParrotSprite(liquidColor);
++
++    if (isOnFire) {
++      const glow = g.createRadialGradient(x, y, 10, x, y, 95);
++      glow.addColorStop(0, "rgba(255,100,0,0.30)");
++      glow.addColorStop(1, "rgba(255,60,0,0)");
++      g.fillStyle = glow;
++      g.beginPath();
++      g.arc(x, y, 95, 0, Math.PI * 2);
++      g.fill();
++      if (++this.fireFrame % 3 === 0) this.spawnFire(x, y - 100);
++    }
++
++    const d = groundY - y;
++    const a = Math.max(0, Math.min(1, 1 - (d - GROUND_SHADOW_REST) / 190));
++    const rx = 44 + d * 0.08;
++    const ry = 10 + d * 0.015;
++    if (a > 0.02 && rx > 0 && ry > 0) {
++      g.fillStyle = `rgba(0,0,0,${(0.34 * a).toFixed(3)})`;
++      fillEllipse(g, x, groundY + 5, rx, ry);
++    }
++
++    g.save();
++    g.translate(x, y);
++    g.rotate(angle);
++    if (spr.ready) {
++      g.drawImage(spr.body, DEST_X, DEST_Y, DEST_W, DEST_H);
++      g.save();
++      g.translate(PIV_X, PIV_Y);
++      g.rotate(flap * 0.5);
++      g.translate(-PIV_X, -PIV_Y);
++      g.drawImage(spr.wing, DEST_X, DEST_Y, DEST_W, DEST_H);
++      g.restore();
++    } else {
++      g.fillStyle = liquidColor;
++      fillEllipse(g, 0, -12, 30, 52);
++      g.beginPath();
++      g.arc(14, -72, 22, 0, Math.PI * 2);
++      g.fill();
++    }
++    g.restore();
++
++    if (Math.abs(liquid.vel) > 1.6) {
++      this.spawnSplash(x, y - 30, 2, hexToRgba(liquidColor, 0.85));
++    }
++  }
++
++  private drawLandingGlow(g: CanvasRenderingContext2D, bottle: Pose, groundY: number): void {
++    const cx = bottle.position.x;
++    const glow = g.createRadialGradient(cx, groundY, 0, cx, groundY, 55);
++    glow.addColorStop(0, "rgba(90, 255, 110, 0.50)");
++    glow.addColorStop(1, "rgba(90, 255, 110, 0)");
++    g.fillStyle = glow;
++    fillEllipse(g, cx, groundY, 55, 16);
++  }
++
++  private drawFlickIndicator(
++    g: CanvasRenderingContext2D,
++    drag: { startX: number; startY: number; curX: number; curY: number } | null,
++    bottle: Pose | null,
++  ): void {
++    if (!drag || !bottle) return;
++    const dx = drag.curX - drag.startX;
++    const dy = drag.curY - drag.startY;
++    const len = Math.hypot(dx, dy);
++    if (len < 18) return;
++    const strength = Math.min(len / 220, 1);
++    const ux = dx / len;
++    const uy = dy / len;
++    const reach = 28 + strength * 64;
++    const ox = bottle.position.x;
++    const oy = bottle.position.y - 40;
++    const ex = ox + ux * reach;
++    const ey = oy + uy * reach;
++    const color = `hsl(${190 - strength * 150}, 95%, 62%)`;
++    g.save();
++    g.strokeStyle = color;
++    g.lineWidth = 4;
++    g.lineCap = "round";
++    g.globalAlpha = 0.88;
++    g.beginPath();
++    g.moveTo(ox, oy);
++    g.lineTo(ex, ey);
++    g.stroke();
++    const a = Math.atan2(uy, ux);
++    g.beginPath();
++    g.moveTo(ex, ey);
++    g.lineTo(ex - 14 * Math.cos(a - 0.45), ey - 14 * Math.sin(a - 0.45));
++    g.moveTo(ex, ey);
++    g.lineTo(ex - 14 * Math.cos(a + 0.45), ey - 14 * Math.sin(a + 0.45));
++    g.stroke();
++    g.restore();
++  }
++
++  private drawResult(
++    g: CanvasRenderingContext2D,
++    w: number,
++    h: number,
++    text: string,
++    color: string,
++    alpha: number,
++  ): void {
++    const pop = 1 + 0.18 * Math.sin(Math.min(alpha, 1) * Math.PI);
++    g.save();
++    g.globalAlpha = alpha;
++    g.fillStyle = color;
++    g.textAlign = "center";
++    g.textBaseline = "middle";
++    g.shadowColor = color;
++    g.shadowBlur = 36;
++    g.translate(w / 2, h / 2 - 60);
++    g.scale(pop, pop);
++    g.font = `bold ${text.length > 10 ? 48 : 76}px Georgia, "Times New Roman", serif`;
++    g.fillText(text, 0, 0);
++    g.restore();
++  }
++
++  private spawnSplash(x: number, y: number, count: number, color: string): void {
++    for (let i = 0; i < count; i += 1) {
++      this.particles.push({
++        x,
++        y,
++        vx: (Math.random() - 0.5) * 180,
++        vy: -Math.random() * 160 - 30,
++        life: 0.4 + Math.random() * 0.3,
++        maxLife: 0.7,
++        r: 2.5 + Math.random() * 2.5,
++        color,
++      });
++    }
++  }
++
++  private spawnFire(x: number, y: number): void {
++    for (let i = 0; i < 2; i += 1) {
++      this.particles.push({
++        x: x + (Math.random() - 0.5) * 28,
++        y,
++        vx: (Math.random() - 0.5) * 50,
++        vy: -70 - Math.random() * 100,
++        life: 0.35 + Math.random() * 0.25,
++        maxLife: 0.6,
++        r: 5 + Math.random() * 5,
++        color: Math.random() > 0.45 ? "#ff6600" : "#ffcc00",
++        fire: true,
++      });
++    }
++  }
++
++  private spawnCoins(x: number, y: number, count: number): void {
++    for (let i = 0; i < count; i += 1) {
++      this.particles.push({
++        x,
++        y,
++        vx: (Math.random() - 0.5) * 220,
++        vy: -Math.random() * 200 - 40,
++        life: 0.55 + Math.random() * 0.35,
++        maxLife: 0.9,
++        r: 3 + Math.random() * 2,
++        color: Math.random() > 0.4 ? "#ffd54a" : "#c59a4a",
++        coin: true,
++      });
++    }
++  }
++
++  private updateParticles(dt: number): void {
++    for (let i = this.particles.length - 1; i >= 0; i -= 1) {
++      const p = this.particles[i]!;
++      p.x += p.vx * dt;
++      p.y += p.vy * dt;
++      p.vy += 300 * dt;
++      p.life -= dt;
++      if (p.life <= 0) this.particles.splice(i, 1);
++    }
++  }
++
++  private drawParticles(g: CanvasRenderingContext2D): void {
++    for (const p of this.particles) {
++      const a = Math.max(0, p.life / p.maxLife);
++      g.globalAlpha = a * 0.9;
++      g.fillStyle = p.color;
++      if (p.coin) fillEllipse(g, p.x, p.y, p.r, p.r * 0.7);
++      else {
++        g.beginPath();
++        g.arc(p.x, p.y, p.r * (0.4 + 0.6 * a), 0, Math.PI * 2);
++        g.fill();
++      }
++    }
++    g.globalAlpha = 1;
++  }
++}
+diff --git a/src/minigames/imported/parrot-flip/rules.test.ts b/src/minigames/imported/parrot-flip/rules.test.ts
+new file mode 100644
+index 0000000..36e3daa
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/rules.test.ts
+@@ -0,0 +1,61 @@
++import { describe, expect, it } from "vitest";
++import { Rng } from "../../../core/rng";
++import {
++  TOSSES_EACH,
++  allDone,
++  botFlick,
++  dealSeats,
++  nextTurnIndex,
++  recordToss,
++  scoresFromSeats,
++  seatDone,
++} from "./rules";
++
++describe("parrot flip party rules", () => {
++  it("deals a seat per player with empty scores", () => {
++    const seats = dealSeats(["p1", "p2"]);
++    expect(seats).toEqual([
++      { playerId: "p1", makes: 0, tosses: 0 },
++      { playerId: "p2", makes: 0, tosses: 0 },
++    ]);
++  });
++
++  it("counts makes and tosses", () => {
++    const afterMake = recordToss(dealSeats(["p1"])[0]!, true);
++    expect(afterMake).toEqual({ playerId: "p1", makes: 1, tosses: 1 });
++    const afterMiss = recordToss(afterMake, false);
++    expect(afterMiss).toEqual({ playerId: "p1", makes: 1, tosses: 2 });
++  });
++
++  it("rotates to the next player who still has tosses", () => {
++    let seats = dealSeats(["a", "b"]);
++    expect(nextTurnIndex(seats, 0)).toBe(1);
++    seats = [recordToss(seats[0]!, true), seats[1]!];
++    expect(nextTurnIndex(seats, 0)).toBe(1);
++  });
++
++  it("skips a finished seat and ends the round", () => {
++    let seats = dealSeats(["a", "b"]);
++    for (let i = 0; i < TOSSES_EACH; i += 1) seats[0] = recordToss(seats[0]!, true);
++    expect(seatDone(seats[0]!)).toBe(true);
++    expect(allDone(seats)).toBe(false);
++    expect(nextTurnIndex(seats, 0)).toBe(1);
++    for (let i = 0; i < TOSSES_EACH; i += 1) seats[1] = recordToss(seats[1]!, false);
++    expect(allDone(seats)).toBe(true);
++    expect(nextTurnIndex(seats, 1)).toBe(-1);
++    expect(scoresFromSeats(seats)).toEqual([
++      { playerId: "a", score: TOSSES_EACH },
++      { playerId: "b", score: 0 },
++    ]);
++  });
++
++  it("aims the bot near the sweet-spot flick", () => {
++    const rng = new Rng(7);
++    const sample = Array.from({ length: 40 }, () => botFlick(rng));
++    const ups = sample.map((flick) => -flick.vy);
++    const mean = ups.reduce((sum, n) => sum + n, 0) / ups.length;
++    expect(mean).toBeGreaterThan(1500);
++    expect(mean).toBeLessThan(2700);
++    expect(sample.every((flick) => flick.vy < 0)).toBe(true);
++  });
++});
+diff --git a/src/minigames/imported/parrot-flip/rules.ts b/src/minigames/imported/parrot-flip/rules.ts
+new file mode 100644
+index 0000000..ff53175
+--- /dev/null
++++ b/src/minigames/imported/parrot-flip/rules.ts
+@@ -0,0 +1,56 @@
++import type { Rng } from "../../../core/rng";
++
++/** Tosses each seat gets in a party round. Short enough for a minigame, long enough to miss. */
++export const TOSSES_EACH = 4;
++
++export interface FlipSeat {
++  playerId: string;
++  makes: number;
++  tosses: number;
++}
++
++export function dealSeats(playerIds: readonly string[]): FlipSeat[] {
++  return playerIds.map((playerId) => ({ playerId, makes: 0, tosses: 0 }));
++}
++
++export function recordToss(seat: FlipSeat, made: boolean): FlipSeat {
++  return {
++    playerId: seat.playerId,
++    makes: seat.makes + (made ? 1 : 0),
++    tosses: seat.tosses + 1,
++  };
++}
++
++export function seatDone(seat: FlipSeat): boolean {
++  return seat.tosses >= TOSSES_EACH;
++}
++
++export function allDone(seats: readonly FlipSeat[]): boolean {
++  return seats.length > 0 && seats.every(seatDone);
++}
++
++/** Next player who still has a toss. Wraps. Returns -1 when the round is over. */
++export function nextTurnIndex(seats: readonly FlipSeat[], current: number): number {
++  if (allDone(seats)) return -1;
++  const n = seats.length;
++  for (let step = 1; step <= n; step += 1) {
++    const index = (current + step) % n;
++    if (!seatDone(seats[index]!)) return index;
++  }
++  return -1;
++}
++
++/** CPU aims at the ~2100 px/s sweet spot with classroom miss chance. */
++export function botFlick(rng: Rng): { vx: number; vy: number } {
++  const sigma = 540;
++  const u1 = Math.max(rng.next(), 1e-6);
++  const u2 = rng.next();
++  const gauss = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
++  const up = Math.max(500, 2100 + gauss * sigma);
++  const vx = (rng.next() - 0.5) * 520;
++  return { vx, vy: -up };
++}
++
++export function scoresFromSeats(seats: readonly FlipSeat[]): { playerId: string; score: number }[] {
++  return seats.map((seat) => ({ playerId: seat.playerId, score: seat.makes }));
++}
+diff --git a/src/minigames/index.test.ts b/src/minigames/index.test.ts
+index ae9eed7..19f65a8 100644
+--- a/src/minigames/index.test.ts
++++ b/src/minigames/index.test.ts
+@@ -5,7 +5,9 @@ describe("minigame catalog", () => {
+   it("lists registered games for the main menu", () => {
+     const ids = allMinigames.map((game) => game.id);
+     expect(ids).toContain("pairs");
++    expect(ids).toContain("parrot-flip");
+     expect(new Set(ids).size).toBe(ids.length);
+     expect(createRegistry().get("pairs").name).toBe("Pairs");
++    expect(createRegistry().get("parrot-flip").name).toBe("Parrot Flip");
+   });
+ });
+diff --git a/src/minigames/index.ts b/src/minigames/index.ts
+index daeeeae..5935e8d 100644
+--- a/src/minigames/index.ts
++++ b/src/minigames/index.ts
+@@ -1,9 +1,10 @@
+ import { MinigameRegistry } from "../core/registry";
+ import type { MinigameDefinition } from "../core/types";
+ import { pairs } from "./pairs";
++import { parrotFlip } from "./imported/parrot-flip/parrot-flip";
+ 
+ /** Playable games. Add an export here and a card appears on the main menu. */
+-export const allMinigames: MinigameDefinition[] = [pairs];
++export const allMinigames: MinigameDefinition[] = [pairs, parrotFlip];
+ 
+ export function createRegistry(): MinigameRegistry {
+   const registry = new MinigameRegistry();
+diff --git a/src/styles.css b/src/styles.css
+index 478fdd3..45e17dc 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -234,6 +234,7 @@ input {
+   border-radius: 16px;
+   box-shadow: 0 20px 80px rgba(0, 0, 0, 0.45);
+   cursor: pointer;
++  touch-action: none;
+ }
+ 
+ .hud-bar {
+-- 
+2.43.0
+
+
+From 15973cd2600004293016532b070178e6fce6e90e Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Wed, 16 Sep 2026 21:39:21 +0000
+Subject: [PATCH 2/2] Show toss counts on the Parrot Flip HUD.
+
+Makes and tosses used are visible per seat so a fast bot turn is not mistaken for the same player going twice.
+---
+ src/minigames/imported/parrot-flip/parrot-flip.ts | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/minigames/imported/parrot-flip/parrot-flip.ts b/src/minigames/imported/parrot-flip/parrot-flip.ts
+index 44eba21..b65fe42 100644
+--- a/src/minigames/imported/parrot-flip/parrot-flip.ts
++++ b/src/minigames/imported/parrot-flip/parrot-flip.ts
+@@ -188,15 +188,17 @@ class ParrotFlipGame implements MinigameInstance {
+     g.font = "700 26px Bebas Neue, sans-serif";
+     g.fillStyle = player?.color ?? "#F4F7FB";
+     const remain = seat ? Math.max(0, TOSSES_EACH - seat.tosses) : 0;
+-    const hint = this.phase === "ready" && player?.kind === "human" ? "  ·  Flick UP" : "";
++    let hint = "";
++    if (this.phase === "ready" && player?.kind === "human") hint = "  ·  Flick UP";
++    if (this.phase === "ready" && player?.kind === "bot") hint = "  ·  lining up…";
+     g.fillText(`${player?.name ?? "Player"}'s toss (${remain} left)${hint}`, 40, 54);
+ 
+     this.ctx.players.forEach((seatPlayer, index) => {
+       const row = this.seats[index];
+-      const x = 40 + index * 200;
++      const x = 40 + index * 220;
+       g.fillStyle = index === this.turn ? seatPlayer.color : "#64748b";
+       g.font = "600 16px Outfit, sans-serif";
+-      g.fillText(`${seatPlayer.name}  ${row?.makes ?? 0}`, x, 82);
++      g.fillText(`${seatPlayer.name}  ${row?.makes ?? 0} make · ${row?.tosses ?? 0}/${TOSSES_EACH}`, x, 82);
+     });
+   }
+ }
+-- 
+2.43.0
+
