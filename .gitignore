@@ -107,3 +107,7 @@
 !404.html
 !robots.txt
 !sitemap.xml
+
+# LEAP escape-room enrichment: Dr. Vex's Lab (unlinked, noindex, added 2026-11-09)
+!vexlab/
+!vexlab/**
