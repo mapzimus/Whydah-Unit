@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Dr. Vex's Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a lit lab "stage" (SVG scene) framed by a dark control console — header readout on top, inventory tray below, puzzles in modal panels. Single deliberate look (dark console, mint-tiled lab). */
+:root{
+  color-scheme: dark;
+  --console:#121b20;      /* page / console */
+  --panel:#1b2930;        /* modal + trays */
+  --panel-2:#24363f;
+  --fg:#e6f0ec;
+  --muted:#9fb3ad;
+  --wall:#cfe0d8;         /* mint lab tile */
+  --hazard:#f2b632;       /* hazard amber accent */
+  --uv:#a77bff;           /* UV violet */
+  --ok:#5fd39b;
+  --bad:#ef6a52;
+  --f-display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--console);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding-block:12px 28px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.6rem;letter-spacing:.04em;margin:0;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--hazard)}
+.readouts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font-family:var(--f-mono);font-size:.85rem;background:var(--panel);border:1px solid var(--panel-2);border-radius:6px;padding:5px 10px;color:var(--fg);font-variant-numeric:tabular-nums}
+.chip b{color:var(--hazard);font-weight:700}
+button{font:inherit;cursor:pointer}
+.btn{font-family:var(--f-display);font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:.85rem;background:var(--panel-2);color:var(--fg);border:1px solid #37505c;border-radius:6px;padding:7px 12px}
+.btn:hover{background:#2e4550}
+.btn.primary{background:var(--hazard);color:#1a1405;border-color:var(--hazard)}
+.btn.primary:hover{background:#ffc94f}
+.btn:focus-visible,.hs:focus-visible,.key:focus-visible{outline:3px solid var(--hazard);outline-offset:2px}
+
+.stage{position:relative;border-radius:10px;overflow:hidden;border:2px solid #2b3f48;background:var(--wall)}
+#scene{display:block;width:100%;height:auto}
+.hs{cursor:pointer}
+.hs:hover > *:first-child,.hs:focus-visible > *:first-child{filter:drop-shadow(0 0 6px #fff7) brightness(1.08)}
+.hs .lamp{transition:fill .3s}
+.uv-only{opacity:0;transition:opacity .6s;pointer-events:none}
+.uv-on .uv-only{opacity:1}
+#uvTint{opacity:0;transition:opacity .6s;pointer-events:none;mix-blend-mode:multiply}
+.uv-on #uvTint{opacity:1}
+.tagline{font-size:.9rem;color:var(--muted);margin:0}
+
+.tray{display:grid;grid-template-columns:1fr auto;gap:12px;background:var(--panel);border:1px solid var(--panel-2);border-radius:10px;padding:12px}
+@media (max-width:700px){.tray{grid-template-columns:1fr}}
+.tray h2{font-family:var(--f-display);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.items{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.item{display:flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid #37505c;color:var(--fg);border-radius:6px;padding:6px 10px;font-size:.9rem}
+.item.active{border-color:var(--uv);box-shadow:0 0 0 2px #a77bff55;color:#e9ddff}
+.empty{color:var(--muted);font-size:.9rem;align-self:center}
+.slots{display:flex;gap:6px}
+.slot{width:40px;height:46px;border-radius:6px;border:2px dashed #3d5763;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:1.5rem}
+.slot.got{border:2px solid var(--ok);color:#0f2a1d;background:var(--ok);box-shadow:0 0 12px #5fd39b88}
+
+/* modal */
+.backdrop{position:fixed;inset:0;background:#05090bcc;display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:var(--panel);border:1px solid #37505c;border-radius:12px;width:min(640px,100%);max-height:calc(100% - 8px);overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px #000a}
+.modal h3{font-family:var(--f-display);font-size:1.3rem;margin:0;letter-spacing:.03em;text-wrap:balance}
+.modal p{margin:0}
+.mhead{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.x{background:none;border:none;color:var(--muted);font-size:1.6rem;line-height:1;padding:0 4px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.note{background:#fff3a8;color:#2b2510;border-radius:4px;padding:12px 14px;font-family:"Comic Sans MS","Segoe Print",var(--f-body);transform:rotate(-1deg);box-shadow:2px 3px 0 #0004}
+.paper{background:#f4f1e6;color:#26231b;border-radius:4px;padding:16px 18px;line-height:1.7;box-shadow:2px 3px 0 #0004}
+.paper .red{color:#b3261e}
+.terminal{background:#06120d;color:#8ff0c0;font-family:var(--f-mono);border-radius:8px;padding:14px;font-size:.92rem;white-space:pre-wrap;border:1px solid #1d4a37}
+.chalk{background:#2f4a3a;border:10px solid #7a5a3a;border-radius:6px;color:#f1f1e8;font-family:var(--f-mono);font-size:clamp(1.3rem,5vw,2rem);letter-spacing:.18em;text-align:center;padding:22px 10px;line-height:1.6}
+.msg{min-height:1.4em;font-weight:700}
+.msg.bad{color:var(--bad)} .msg.ok{color:var(--ok)}
+.hint{border-left:3px solid var(--hazard);padding:6px 10px;background:#2a2a1a;color:#f7e7b7;border-radius:0 6px 6px 0}
+input.code{font-family:var(--f-mono);font-size:1.5rem;letter-spacing:.3em;text-transform:uppercase;width:min(320px,100%);padding:8px 12px;border-radius:6px;border:2px solid #37505c;background:#0c1418;color:var(--fg)}
+input.code:focus{outline:none;border-color:var(--hazard)}
+.display{display:flex;gap:6px;flex-wrap:wrap}
+.dslot{width:42px;height:42px;border-radius:6px;border:2px solid #37505c;background:#0c1418;display:grid;place-items:center;font-family:var(--f-mono);font-size:1.4rem;font-weight:700}
+.keys{display:grid;grid-template-columns:repeat(3,64px);gap:8px}
+.key{height:52px;border-radius:8px;border:1px solid #47626f;background:var(--panel-2);color:var(--fg);font-family:var(--f-mono);font-size:1.3rem;font-weight:700}
+.key:hover{background:#30495a}
+.colors{display:flex;flex-wrap:wrap;gap:10px}
+.cbtn{width:54px;height:54px;border-radius:50%;border:3px solid #ffffff55}
+.dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,58px);gap:6px}
+.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}*{transition:none!important}}
+
+/* periodic table */
+.ptwrap{overflow-x:auto;background:#fff;border-radius:6px;padding:10px}
+.pt{display:grid;grid-template-columns:repeat(18,30px);grid-auto-rows:34px;gap:2px;width:max-content}
+.el{background:#e3eef5;border:1px solid #b9cdd9;border-radius:2px;color:#1d2a30;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--f-body);line-height:1;position:relative}
+.el small{font-size:8px;color:#55707d}
+.el b{font-size:12px}
+.el.circ{outline:3px solid #d0312d;outline-offset:1px;border-radius:50%;background:#ffe9e7}
+.el .num{position:absolute;top:-10px;right:-9px;background:#d0312d;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:15px;height:15px;display:grid;place-items:center}
+.el.gap{visibility:hidden}
+
+/* floor map */
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,64px));gap:4px;background:#170d2c;padding:10px;border-radius:8px;width:max-content;max-width:100%}
+.cell{aspect-ratio:1;background:#241640;border-radius:4px;display:grid;place-items:center;font-size:1.6rem}
+.cell.paw{background:#3a2366;box-shadow:inset 0 0 12px #c9a6ff;}
+
+/* jars */
+.jars{display:flex;align-items:flex-end;gap:14px;justify-content:center;background:#e8eee9;border-radius:8px;padding:16px 10px 0;border-bottom:10px solid #8b6b48;flex-wrap:wrap}
+.jar{display:flex;flex-direction:column;align-items:center;gap:4px;color:#1d2a30}
+.jar .glass{background:#d9f3ecaa;border:2px solid #8fb5ab;border-radius:6px 6px 10px 10px;display:grid;place-items:center;position:relative}
+.jar .lid{height:8px;background:#5b6a72;border-radius:3px}
+.jar .label{font-family:var(--f-mono);font-size:.75rem;background:#fff;border:1px solid #bbb;padding:1px 4px;border-radius:2px;margin-bottom:6px}
+
+.reveal{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;background:var(--panel-2);border-radius:8px;padding:12px}
+.bigtile{width:60px;height:70px;border-radius:8px;background:var(--ok);color:#0f2a1d;font-family:var(--f-display);font-size:2.4rem;font-weight:700;display:grid;place-items:center;box-shadow:0 0 22px #5fd39b99}
+.debrief ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:10px}
+.debrief li b{color:var(--hazard)}
+.intro-art{font-family:var(--f-display);font-size:.85rem;letter-spacing:.2em;color:var(--hazard);text-transform:uppercase}
+.atbash{font-family:var(--f-mono);display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;text-align:center;background:#f4f1e6;color:#26231b;padding:10px;border-radius:6px;font-size:.95rem}
+.atbash div{padding:2px 0;border-bottom:1px solid #d9d2bd}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Dr. Vex's <span>Lab</span></h1>
+    <div class="readouts">
+      <span class="chip">LOCKDOWN <b id="clock">00:00</b></span>
+      <span class="chip">LOCKS <b id="lockCount">0/6</b></span>
+      <span class="chip">HINTS <b id="hintCount">0</b></span>
+      <button class="btn" id="soundBtn" type="button">Sound: on</button>
+      <button class="btn" id="resetBtn" type="button">Restart</button>
+    </div>
+  </header>
+  <p class="tagline">Click anything in the lab to look closer. Open all six locks to escape.</p>
+
+  <div class="stage" id="stage">
+    <svg id="scene" viewBox="0 0 1000 600" role="img" aria-label="Dr. Vex's laboratory">
+      <defs>
+        <pattern id="tiles" width="40" height="40" patternUnits="userSpaceOnUse">
+          <rect width="40" height="40" fill="#cfe0d8"/><path d="M40 0H0V40" fill="none" stroke="#b6cbc2" stroke-width="2"/>
+        </pattern>
+        <pattern id="floorp" width="60" height="60" patternUnits="userSpaceOnUse">
+          <rect width="60" height="60" fill="#46565e"/><path d="M60 0H0V60" fill="none" stroke="#3a484f" stroke-width="2"/>
+        </pattern>
+        <pattern id="hazard" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="28" height="28" fill="#f2b632"/><rect width="14" height="28" fill="#222"/>
+        </pattern>
+        <linearGradient id="glass" x1="0" x2="1">
+          <stop offset="0" stop-color="#bfe9f2"/><stop offset=".5" stop-color="#eefbff"/><stop offset="1" stop-color="#a9d8e3"/>
+        </linearGradient>
+        <g id="paw" fill="#f0e4ff"><ellipse cx="0" cy="4" rx="7" ry="6"/><circle cx="-8" cy="-5" r="3"/><circle cx="-3" cy="-9" r="3"/><circle cx="3" cy="-9" r="3"/><circle cx="8" cy="-5" r="3"/></g>
+        <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- room -->
+      <rect width="1000" height="440" fill="url(#tiles)"/>
+      <rect y="428" width="1000" height="12" fill="url(#hazard)"/>
+
+      <!-- floor (hotspot first so objects sit above it) -->
+      <g class="hs" id="hs-floor" data-obj="floor" tabindex="0" role="button" aria-label="Floor">
+        <rect y="440" width="1000" height="160" fill="url(#floorp)"/>
+      </g>
+
+      <!-- exit door -->
+      <g class="hs" id="hs-door" data-obj="door" tabindex="0" role="button" aria-label="Exit door">
+        <g>
+          <rect x="30" y="130" width="140" height="310" fill="#7f9099" stroke="#4d5c64" stroke-width="4"/>
+          <rect x="62" y="160" width="76" height="70" fill="#9cc6d3" stroke="#4d5c64" stroke-width="3"/>
+          <rect x="44" y="300" width="112" height="18" fill="url(#hazard)"/>
+          <rect x="140" y="250" width="18" height="10" rx="3" fill="#4d5c64"/>
+          <rect x="178" y="250" width="30" height="46" rx="4" fill="#2b3a41"/>
+          <circle class="lamp" cx="193" cy="263" r="6" fill="#ef6a52"/>
+          <rect x="185" y="273" width="16" height="16" fill="#47626f"/>
+        </g>
+        <rect x="58" y="92" width="84" height="30" rx="4" fill="#c4372b"/>
+        <text x="100" y="114" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-weight="700" font-size="20" fill="#fff">EXIT</text>
+      </g>
+
+      <!-- rat cage -->
+      <g class="hs" id="hs-cage" data-obj="cage" tabindex="0" role="button" aria-label="Empty rat cage">
+        <g>
+          <rect x="190" y="470" width="120" height="70" fill="#e9f0f2" fill-opacity=".35" stroke="#8a9aa3" stroke-width="3"/>
+          <path d="M205 470v70M220 470v70M235 470v70M250 470v70M265 470v70M280 470v70M295 470v70" stroke="#8a9aa3" stroke-width="2"/>
+          <rect x="186" y="536" width="128" height="10" fill="#5b6a72"/>
+          <rect x="300" y="482" width="26" height="44" fill="#e9f0f2" fill-opacity=".35" stroke="#8a9aa3" stroke-width="2" transform="rotate(-25 300 482)"/>
+          <rect x="210" y="452" width="80" height="18" fill="#fff3a8"/>
+          <text x="250" y="466" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" fill="#2b2510">SQUEAKS</text>
+        </g>
+      </g>
+
+      <!-- periodic table poster -->
+      <g class="hs" id="hs-poster" data-obj="poster" tabindex="0" role="button" aria-label="Periodic table poster">
+        <g>
+          <rect x="200" y="46" width="128" height="100" fill="#fbfbf6" stroke="#9aa" stroke-width="2"/>
+          <text x="264" y="62" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-weight="700" font-size="10" fill="#1d2a30">PERIODIC TABLE</text>
+          <g fill="#9ec6dc">
+            <rect x="208" y="68" width="6" height="6"/><rect x="314" y="68" width="6" height="6"/>
+            <rect x="208" y="76" width="13" height="6"/><rect x="278" y="76" width="42" height="6"/>
+            <rect x="208" y="84" width="13" height="6"/><rect x="278" y="84" width="42" height="6"/>
+            <rect x="208" y="92" width="112" height="6"/><rect x="208" y="100" width="112" height="6"/>
+            <rect x="208" y="108" width="112" height="6"/><rect x="208" y="116" width="112" height="6"/>
+            <rect x="228" y="126" width="84" height="5"/><rect x="228" y="133" width="84" height="5"/>
+          </g>
+          <circle cx="294" cy="95" r="6" fill="none" stroke="#d0312d" stroke-width="2"/>
+          <circle cx="294" cy="79" r="6" fill="none" stroke="#d0312d" stroke-width="2"/>
+          <circle cx="306" cy="103" r="6" fill="none" stroke="#d0312d" stroke-width="2"/>
+          <circle cx="250" cy="135" r="5" fill="none" stroke="#d0312d" stroke-width="2"/>
+          <circle cx="300" cy="87" r="6" fill="none" stroke="#d0312d" stroke-width="2"/>
+        </g>
+      </g>
+
+      <!-- chalkboard -->
+      <g class="hs" id="hs-board" data-obj="board" tabindex="0" role="button" aria-label="Chalkboard">
+        <g>
+          <rect x="345" y="40" width="275" height="165" rx="4" fill="#7a5a3a"/>
+          <rect x="355" y="50" width="255" height="145" fill="#2f4a3a"/>
+          <text x="482" y="98" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="24" fill="#f1f1e8" letter-spacing="4">GSV HZUV</text>
+          <text x="482" y="134" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="24" fill="#f1f1e8" letter-spacing="4">DLIW RH</text>
+          <text x="482" y="170" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="24" fill="#f1f1e8" letter-spacing="4">UILAVM</text>
+          <rect x="560" y="196" width="40" height="8" fill="#eee"/>
+        </g>
+      </g>
+
+      <!-- specimen shelf -->
+      <g class="hs" id="hs-shelf" data-obj="shelf" tabindex="0" role="button" aria-label="Specimen shelf">
+        <g>
+          <rect x="645" y="160" width="190" height="9" fill="#8b6b48"/>
+          <path d="M660 169l-8 22M820 169l8 22" stroke="#8b6b48" stroke-width="5"/>
+          <!-- frog: biggest -->
+          <rect x="655" y="88" width="46" height="72" rx="6" fill="#d9f3ec" fill-opacity=".8" stroke="#8fb5ab" stroke-width="2"/><rect x="657" y="82" width="42" height="7" fill="#5b6a72"/>
+          <text x="678" y="133" text-anchor="middle" font-size="26">🐸</text>
+          <!-- eyeball: smallest -->
+          <rect x="716" y="132" width="22" height="28" rx="4" fill="#d9f3ec" fill-opacity=".8" stroke="#8fb5ab" stroke-width="2"/><rect x="717" y="127" width="20" height="5" fill="#5b6a72"/>
+          <text x="727" y="152" text-anchor="middle" font-size="13">👁️</text>
+          <!-- tentacle: third -->
+          <rect x="752" y="106" width="36" height="54" rx="5" fill="#d9f3ec" fill-opacity=".8" stroke="#8fb5ab" stroke-width="2"/><rect x="754" y="100" width="32" height="6" fill="#5b6a72"/>
+          <text x="770" y="141" text-anchor="middle" font-size="20">🐙</text>
+          <!-- worm: second -->
+          <rect x="800" y="120" width="28" height="40" rx="4" fill="#d9f3ec" fill-opacity=".8" stroke="#8fb5ab" stroke-width="2"/><rect x="801" y="115" width="26" height="5" fill="#5b6a72"/>
+          <text x="814" y="146" text-anchor="middle" font-size="16">🪱</text>
+        </g>
+      </g>
+
+      <!-- biohazard sign -->
+      <g transform="translate(895 46)">
+        <path d="M0 0l32 56h-64z" fill="#f2b632" stroke="#222" stroke-width="3" stroke-linejoin="round"/>
+        <text x="0" y="46" text-anchor="middle" font-size="26" fill="#222">☣</text>
+      </g>
+
+      <!-- cryo chamber -->
+      <g class="hs" id="hs-cryo" data-obj="cryo" tabindex="0" role="button" aria-label="Cryo-chamber">
+        <g>
+          <rect x="858" y="118" width="124" height="322" rx="20" fill="#5b6a72"/>
+          <rect x="872" y="134" width="96" height="220" rx="46" fill="url(#glass)" stroke="#3f4c53" stroke-width="3"/>
+          <g id="cryoFrost"><rect x="872" y="134" width="96" height="220" rx="46" fill="#ffffff" fill-opacity=".55"/>
+            <text x="920" y="250" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-weight="700" font-size="14" fill="#4d6a75">FROZEN</text></g>
+          <text id="cryoBrain" x="920" y="262" text-anchor="middle" font-size="46" opacity="0">🧠</text>
+          <rect x="890" y="368" width="60" height="50" rx="4" fill="#2b3a41"/>
+          <circle class="lamp" cx="920" cy="380" r="6" fill="#ef6a52"/>
+          <rect x="902" y="392" width="36" height="18" fill="#47626f"/>
+        </g>
+      </g>
+
+      <!-- bench top -->
+      <rect x="330" y="328" width="505" height="16" fill="#5b6a72"/>
+      <rect x="338" y="344" width="489" height="96" fill="#8a9aa3"/>
+
+      <!-- safe -->
+      <g class="hs" id="hs-safe" data-obj="safe" tabindex="0" role="button" aria-label="Safe">
+        <g>
+          <rect x="350" y="352" width="112" height="84" rx="4" fill="#3b474d" stroke="#222" stroke-width="2"/>
+          <circle cx="406" cy="394" r="20" fill="#5b6a72" stroke="#222" stroke-width="2"/>
+          <path d="M406 378v8M406 402v8M390 394h8M414 394h8" stroke="#ddd" stroke-width="2"/>
+          <circle class="lamp" cx="448" cy="364" r="5" fill="#ef6a52"/>
+        </g>
+      </g>
+
+      <!-- mini fridge -->
+      <g class="hs" id="hs-fridge" data-obj="fridge" tabindex="0" role="button" aria-label="Specimen fridge">
+        <g>
+          <rect x="478" y="352" width="124" height="84" rx="6" fill="#f1f5f4" stroke="#7f9099" stroke-width="2"/>
+          <rect x="584" y="366" width="8" height="40" rx="3" fill="#8a9aa3"/>
+          <text x="530" y="380" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-weight="700" font-size="11" fill="#4d5c64">SPECIMENS</text>
+          <g><circle cx="500" cy="414" r="5" fill="#3a7bd5"/><circle cx="514" cy="414" r="5" fill="#3aa856"/><circle cx="528" cy="414" r="5" fill="#f2c230"/><circle cx="542" cy="414" r="5" fill="#d8402f"/><circle cx="556" cy="414" r="5" fill="#8a4fd0"/><circle cx="570" cy="414" r="5" fill="#ef8a2b"/></g>
+          <circle class="lamp" cx="592" cy="360" r="5" fill="#ef6a52"/>
+        </g>
+      </g>
+
+      <!-- supply cabinet -->
+      <g class="hs" id="hs-cabinet" data-obj="cabinet" tabindex="0" role="button" aria-label="Supply cabinet">
+        <g>
+          <rect x="618" y="352" width="200" height="84" rx="4" fill="#6f8089" stroke="#4d5c64" stroke-width="2"/>
+          <path d="M718 352v84" stroke="#4d5c64" stroke-width="2"/>
+          <rect x="704" y="380" width="6" height="22" rx="2" fill="#d6dde0"/><rect x="726" y="380" width="6" height="22" rx="2" fill="#d6dde0"/>
+          <text x="668" y="400" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-weight="700" font-size="11" fill="#e6f0ec">SUPPLIES</text>
+          <rect x="752" y="378" width="40" height="34" rx="4" fill="#2b3a41"/>
+          <text x="772" y="401" text-anchor="middle" font-size="14" fill="#cfe0d8">✥</text>
+          <circle class="lamp" cx="806" cy="364" r="5" fill="#ef6a52"/>
+        </g>
+      </g>
+
+      <!-- notebook -->
+      <g class="hs" id="hs-notebook" data-obj="notebook" tabindex="0" role="button" aria-label="Lab notebook">
+        <g>
+          <path d="M342 326l8-24 68 6-6 22z" fill="#f4f1e6" stroke="#7a6a4a" stroke-width="2"/>
+          <path d="M356 312l46 4M354 318l46 4" stroke="#9aa" stroke-width="1.5"/>
+        </g>
+      </g>
+
+      <!-- beaker rack -->
+      <g class="hs" id="hs-beakers" data-obj="beakers" tabindex="0" role="button" aria-label="Rack of beakers">
+        <g>
+          <rect x="430" y="316" width="120" height="12" fill="#7a5a3a"/>
+          <path d="M440 316v-30h14v30z" fill="#d8402f" fill-opacity=".85" stroke="#555"/>
+          <path d="M462 316v-40h14v40z" fill="#3a7bd5" fill-opacity=".85" stroke="#555"/>
+          <path d="M484 316v-26h14v26z" fill="#8a4fd0" fill-opacity=".85" stroke="#555"/>
+          <path d="M506 316v-36h14v36z" fill="#3aa856" fill-opacity=".85" stroke="#555"/>
+          <path d="M528 316v-30h14v30z" fill="#f2c230" fill-opacity=".85" stroke="#555"/>
+        </g>
+      </g>
+
+      <!-- computer -->
+      <g class="hs" id="hs-computer" data-obj="computer" tabindex="0" role="button" aria-label="Computer">
+        <g>
+          <rect x="565" y="214" width="146" height="96" rx="6" fill="#2b3a41"/>
+          <rect x="574" y="222" width="128" height="78" fill="#06120d"/>
+          <text id="pcText" x="638" y="266" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" fill="#8ff0c0">LOCKED</text>
+          <rect x="628" y="310" width="20" height="12" fill="#2b3a41"/><rect x="600" y="320" width="76" height="8" fill="#3b474d"/>
+          <rect x="686" y="210" width="30" height="28" fill="#fff3a8" transform="rotate(8 700 224)"/>
+          <circle class="lamp" cx="580" cy="306" r="3" fill="#ef6a52"/>
+        </g>
+      </g>
+
+      <!-- microscope & plant -->
+      <g class="hs" id="hs-scope" data-obj="scope" tabindex="0" role="button" aria-label="Microscope">
+        <text x="742" y="326" text-anchor="middle" font-size="44">🔬</text>
+      </g>
+      <g class="hs" id="hs-plant" data-obj="plant" tabindex="0" role="button" aria-label="Venus flytrap">
+        <text x="800" y="326" text-anchor="middle" font-size="40">🪴</text>
+      </g>
+
+      <rect id="uvTint" width="1000" height="600" fill="#7b4fd6"/>
+      <!-- UV-only marks sit above the tint so they glow -->
+      <g class="uv-only" id="pawtrail" filter="url(#glow)" fill="#f0e4ff">
+        <use href="#paw" x="272" y="500"/><use href="#paw" x="315" y="474"/>
+        <use href="#paw" x="365" y="458"/><use href="#paw" x="425" y="466"/>
+        <use href="#paw" x="485" y="488"/><use href="#paw" x="550" y="466"/>
+        <use href="#paw" x="610" y="452"/><use href="#paw" x="665" y="458"/>
+      </g>
+      <text class="uv-only" x="830" y="560" font-family="Comic Sans MS, cursive" font-size="20" fill="#f0e4ff" filter="url(#glow)">squeaks was here</text>
+    </svg>
+  </div>
+
+  <section class="tray" aria-label="Inventory">
+    <div>
+      <h2>Inventory</h2>
+      <div class="items" id="items"></div>
+    </div>
+    <div>
+      <h2>Glowing letters</h2>
+      <div class="slots" id="slots"></div>
+    </div>
+  </section>
+</div>
+
+<div class="backdrop" id="backdrop" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <div class="mhead"><h3 id="mtitle"></h3><button class="x" id="mclose" type="button" aria-label="Close">×</button></div>
+    <div id="mbody" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+// ---------- answers are stored hashed so students can't read them from the page source ----------
+const h = s => { let x = 5381; for (const c of s) x = ((x << 5) + x + c.charCodeAt(0)) >>> 0; return x.toString(36); };
+const LOCKS = {
+  computer: { hash: '1diu5fd', letter: 'N', items: [],
+    hint: 'Look at the poster on the wall. Five element squares are circled and numbered. Read their SYMBOLS in number order.' },
+  fridge:   { hash: 'qeiy8k',  letter: 'I', items: ['uv'],
+    hint: "Dr. Vex's notebook on the bench has a rhyme. Each line names something with a color. What color is the sky? The grass?" },
+  cabinet:  { hash: 'wr9b95',  letter: 'B', items: ['decoder'],
+    hint: 'Squeaks the rat ran to this cabinet. His footprints are invisible... unless you have a special light. Turn it on and click the floor.' },
+  safe:     { hash: '5zg8uq',  letter: 'A', items: ['magnifier', 'journal'],
+    hint: 'The chalkboard message is in code. Use the decoder card: every letter swaps with its partner (A↔Z, B↔Y, C↔X...).' },
+  cryo:     { hash: '17jyc9e', letter: 'R', items: ['memo'],
+    hint: 'Read the journal page from the safe. Use the magnifying glass on the specimen shelf, then line the jars up from smallest to biggest.' },
+  door:     { hash: '13x6pzz', letter: '', items: [],
+    hint: 'You have five glowing letters. Listen to the voice memo from the cryo-chamber: it tells you what word they spell.' },
+};
+const ORDER = ['computer', 'fridge', 'cabinet', 'safe', 'cryo', 'door'];
+const ITEMS = {
+  uv:        { icon: '🔦', name: 'UV flashlight' },
+  decoder:   { icon: '🗝️', name: 'Decoder card' },
+  magnifier: { icon: '🔍', name: 'Magnifying glass' },
+  journal:   { icon: '📄', name: 'Journal page' },
+  memo:      { icon: '📼', name: 'Voice memo' },
+};
+
+// ---------- state ----------
+const KEY = 'drvex-lab-v1';
+const fresh = () => ({ started: false, start: 0, end: 0, solved: [], items: [], letters: [], uv: false, hints: [], sound: true });
+let S = fresh();
+try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && typeof saved === 'object') S = Object.assign(fresh(), saved); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+try { window.claude?.hot?.snapshot?.(() => S); } catch (e) {}
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const has = i => S.items.includes(i);
+const solved = l => S.solved.includes(l);
+
+// ---------- sound ----------
+let AC = null;
+function tone(freq, dur = .12, type = 'square', when = 0, vol = .06) {
+  if (!S.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + when;
+    o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02);
+  } catch (e) {}
+}
+const sClick = () => tone(660, .05);
+const sBad = () => { tone(180, .25, 'sawtooth'); tone(140, .3, 'sawtooth', .12); };
+const sGood = () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, .16, 'triangle', i * .09, .08)); };
+
+// ---------- render ----------
+function fmt(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+function tick() {
+  const t = !S.started ? 0 : (S.end || Date.now()) - S.start;
+  $('#clock').textContent = fmt(t);
+}
+function render() {
+  $('#lockCount').textContent = S.solved.length + '/6';
+  $('#hintCount').textContent = S.hints.length;
+  $('#soundBtn').textContent = 'Sound: ' + (S.sound ? 'on' : 'off');
+  $('#stage').classList.toggle('uv-on', S.uv);
+  const items = $('#items'); items.innerHTML = '';
+  if (!S.items.length) items.innerHTML = '<span class="empty">Nothing yet. Search the lab.</span>';
+  S.items.forEach(k => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'item' + (k === 'uv' && S.uv ? ' active' : '');
+    b.innerHTML = `<span aria-hidden="true">${ITEMS[k].icon}</span>${ITEMS[k].name}${k === 'uv' ? (S.uv ? ' (ON)' : ' (off)') : ''}`;
+    b.onclick = () => useItem(k); items.appendChild(b);
+  });
+  const slots = $('#slots'); slots.innerHTML = '';
+  for (let i = 0; i < 5; i++) { const d = document.createElement('div'); const L = S.letters[i]; d.className = 'slot' + (L ? ' got' : ''); d.textContent = L || ''; slots.appendChild(d); }
+  ORDER.forEach(l => { const lamp = document.querySelector(`#hs-${l} .lamp`); if (lamp) lamp.setAttribute('fill', solved(l) ? '#5fd39b' : '#ef6a52'); });
+  $('#pcText').textContent = solved('computer') ? 'INBOX (1)' : 'LOCKED';
+  $('#cryoFrost').style.opacity = solved('cryo') ? 0 : 1;
+  $('#cryoBrain').setAttribute('opacity', solved('cryo') ? 1 : 0);
+  tick();
+}
+
+// ---------- modal ----------
+let onClose = null;
+function modal(title, html, mount, closeCb) {
+  $('#mtitle').textContent = title; $('#mbody').innerHTML = html; $('#backdrop').hidden = false; onClose = closeCb || null;
+  if (mount) mount($('#mbody'));
+  const f = $('#mbody').querySelector('input,button.key,.cbtn,button.btn') || $('#mclose'); setTimeout(() => f.focus(), 30);
+}
+function closeModal() { $('#backdrop').hidden = true; const cb = onClose; onClose = null; if (cb) cb(); }
+$('#mclose').onclick = closeModal;
+$('#backdrop').addEventListener('mousedown', e => { if (e.target.id === 'backdrop') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#backdrop').hidden && S.started) closeModal(); });
+
+// ---------- lock UIs ----------
+function hintBlock(lock) {
+  return `<div class="row"><button class="btn" type="button" data-hint>Need a hint?</button><span class="empty">Hints are counted.</span></div><div data-hintbox></div>`;
+}
+function wireHint(root, lock) {
+  const box = root.querySelector('[data-hintbox]'), btn = root.querySelector('[data-hint]');
+  const show = () => { box.innerHTML = `<div class="hint">${esc(LOCKS[lock].hint)}</div>`; btn.hidden = true; btn.nextElementSibling.hidden = true; };
+  if (S.hints.includes(lock)) show();
+  btn.onclick = () => { if (!S.hints.includes(lock)) { S.hints.push(lock); save(); render(); } show(); };
+}
+function attempt(lock, value, root) {
+  const msg = root.querySelector('.msg');
+  if (h(lock + ':' + value) === LOCKS[lock].hash) { sGood(); unlock(lock); return true; }
+  sBad(); msg.className = 'msg bad'; msg.textContent = value ? 'Wrong code. The lock buzzes angrily.' : 'Enter a code first.';
+  const tgt = root.querySelector('[data-shake]'); if (tgt) { tgt.classList.remove('shake'); void tgt.offsetWidth; tgt.classList.add('shake'); }
+  return false;
+}
+
+function textLock(lock, title, intro, len, placeholder) {
+  modal(title, `${intro}
+    <form class="row" data-form autocomplete="off"><input class="code" id="in-${lock}" data-shake maxlength="${len}" placeholder="${placeholder}" aria-label="Code"><button class="btn primary" type="submit">Try it</button></form>
+    <p class="msg"></p>${hintBlock(lock)}`, root => {
+    root.querySelector('[data-form]').onsubmit = e => { e.preventDefault(); attempt(lock, root.querySelector('input').value.toUpperCase().replace(/[^A-Z]/g, ''), root); };
+    wireHint(root, lock);
+  });
+}
+function seqLock(lock, title, intro, len, keysHtml, mapFn) {
+  let seq = [];
+  modal(title, `${intro}<div class="display" data-shake>${Array.from({ length: len }, () => '<div class="dslot"></div>').join('')}</div>
+    ${keysHtml}
+    <div class="row"><button class="btn" type="button" data-clear>Clear</button><button class="btn primary" type="button" data-try>Try it</button></div>
+    <p class="msg"></p>${hintBlock(lock)}`, root => {
+    const slots = [...root.querySelectorAll('.dslot')];
+    const draw = () => slots.forEach((s, i) => { const v = seq[i]; s.innerHTML = v ? mapFn(v) : ''; });
+    root.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { if (seq.length < len) { seq.push(b.dataset.k); sClick(); draw(); } });
+    root.querySelector('[data-clear]').onclick = () => { seq = []; draw(); root.querySelector('.msg').textContent = ''; };
+    root.querySelector('[data-try]').onclick = () => { if (!attempt(lock, seq.join(''), root)) { seq = []; draw(); } };
+    wireHint(root, lock);
+  });
+}
+const COLORS = { B: ['#3a7bd5', 'Blue'], G: ['#3aa856', 'Green'], Y: ['#f2c230', 'Yellow'], R: ['#d8402f', 'Red'], P: ['#8a4fd0', 'Purple'], O: ['#ef8a2b', 'Orange'] };
+const ARROWS = { U: '↑', D: '↓', L: '←', R: '→' };
+
+// ---------- unlock & rewards ----------
+const REWARD_TEXT = {
+  computer: 'The screen flashes green: <b>ACCESS GRANTED</b>. A glowing tile slides out of the disk drive.',
+  fridge: 'The fridge pops open with a puff of cold fog. Inside, next to a jar of something wiggly, is a <b>UV flashlight</b>.',
+  cabinet: 'The cabinet doors swing open. Among the goggles and gloves you find a <b>decoder card</b>.',
+  safe: 'The safe door groans open. Inside: a <b>magnifying glass</b> and a torn <b>journal page</b>.',
+  cryo: 'The frost melts away. Floating inside the chamber is... a brain. A tiny speaker crackles. You grab the <b>voice memo</b>.',
+};
+function unlock(lock) {
+  if (solved(lock)) return;
+  S.solved.push(lock);
+  LOCKS[lock].items.forEach(i => { if (!has(i)) S.items.push(i); });
+  if (LOCKS[lock].letter) S.letters.push(LOCKS[lock].letter);
+  if (lock === 'door') S.end = Date.now();
+  save(); render();
+  if (lock === 'door') return win();
+  const L = LOCKS[lock].letter;
+  modal('Unlocked!', `<div class="reveal"><div class="bigtile">${L}</div><div><p>${REWARD_TEXT[lock]}</p><p class="empty" style="margin-top:6px">You found a glowing letter: <b>${L}</b>. Keep it, the exit needs all five.</p></div></div>
+    <div class="row"><button class="btn primary" type="button" data-go>${lock === 'computer' ? 'Read the screen' : 'Keep exploring'}</button></div>`,
+    root => root.querySelector('[data-go]').onclick = () => { closeModal(); if (lock === 'computer') openObj('computer'); if (lock === 'cryo') useItem('memo'); });
+}
+
+// ---------- items ----------
+function useItem(k) {
+  if (k === 'uv') { S.uv = !S.uv; tone(S.uv ? 880 : 440, .08, 'sine'); save(); render(); if (S.uv && !S.seenUV) { S.seenUV = true; save(); modal('UV light: ON', '<p>The room turns purple. Anything written in invisible ink, or tracked across the floor, now glows. Look around!</p><p class="empty">Click the flashlight in your inventory to turn it off.</p>'); } return; }
+  if (k === 'decoder') return modal('Decoder card', `<p>A laminated card. "VEX CODE: swap each letter with the one directly below or above it."</p>
+     <div class="atbash">${'ABCDEFGHIJKLM'.split('').map(c => `<div>${c}</div>`).join('')}${'ZYXWVUTSRQPON'.split('').map(c => `<div><b>${c}</b></div>`).join('')}</div>
+     <p class="empty">Example: A becomes Z, and Z becomes A. G becomes T.</p>`);
+  if (k === 'magnifier') return modal('Magnifying glass', '<p>Perfect for reading tiny things. You keep it in your hand, so it works on anything you look at now.</p>');
+  if (k === 'journal') return modal('Journal page', `<div class="paper"><p><b>Day 212.</b></p><p>Changed the cryo-chamber code again. To remember it, I read my specimen jars from <b>SMALLEST</b> to <b>BIGGEST</b>.</p><p>Never left to right. <span class="red">Left to right is for amateurs.</span></p><p>The labels are tiny. Good thing I keep a magnifying glass in the safe.</p></div>`);
+  if (k === 'memo') return modal('Voice memo', `<div class="terminal">▶ PLAYING... (crackle)
+
+"Interns! If you're hearing this, you got through my locks. Impressive.
+
+The exit door answers to the name of my GREATEST CREATION. You're looking at it right now.
+
+Unscramble the five glowing letters you collected and type them into the door. Hurry, before it wakes up."
+
+■ END OF MEMO</div>`);
+}
+
+// ---------- objects ----------
+function periodicTable() {
+  const cells = []; let z = 0;
+  const add = (sym, r, c) => cells.push({ sym, z: ++z, r, c });
+  const run = (str, r, c0) => str.split(' ').forEach((s, i) => add(s, r, c0 + i));
+  add('H', 1, 1); add('He', 1, 18);
+  run('Li Be', 2, 1); run('B C N O F Ne', 2, 13);
+  run('Na Mg', 3, 1); run('Al Si P S Cl Ar', 3, 13);
+  run('K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr', 4, 1);
+  run('Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe', 5, 1);
+  run('Cs Ba La', 6, 1); run('Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu', 9, 4); run('Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn', 6, 4);
+  run('Fr Ra Ac', 7, 1); run('Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr', 10, 4); run('Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og', 7, 4);
+  const circ = { Ge: 1, N: 2, I: 3, U: 4, S: 5 };
+  return `<div class="ptwrap"><div class="pt">${cells.map(e => `<div class="el${circ[e.sym] ? ' circ' : ''}" style="grid-row:${e.r};grid-column:${e.c}"><small>${e.z}</small><b>${e.sym}</b>${circ[e.sym] ? `<span class="num">${circ[e.sym]}</span>` : ''}</div>`).join('')}<div class="el gap" style="grid-row:8;grid-column:1"></div></div></div>`;
+}
+
+const STICKY = `<div class="note">PASSWORD = what I am! 😎<br>Read the circled elements on my poster, in order.<br>— Dr. V</div>`;
+
+function openObj(o) {
+  sClick();
+  switch (o) {
+    case 'poster':
+      return modal('Periodic table poster', `<p>A poster of the periodic table. Someone circled five elements in red marker and numbered them.</p>${periodicTable()}`);
+    case 'computer':
+      if (!solved('computer')) return textLock('computer', 'VexOS 3.1: Login', `${STICKY}<p>The screen says: <b>ENTER PASSWORD</b>.</p>`, 12, 'PASSWORD');
+      return modal('VexOS 3.1: Inbox (1)', `<div class="terminal">FROM: Dr. Vex
+SUBJECT: IF THE LAB LOCKS DOWN
+
+Interns,
+
+If the containment alarm goes off, every door in the lab seals itself. Don't panic. Here's what to do:
+
+1) The UV flashlight is in the SPECIMEN FRIDGE. The fridge code is my MIXING ORDER. It's in my notebook.
+
+2) Squeaks knows the way to the SUPPLY CABINET. He always does.
+
+3) Every lock I built hides a GLOWING LETTER. Collect all five. You'll need them for the exit.
+
+— Dr. V
+
+P.S. Please feed Squeaks.</div>`);
+    case 'notebook':
+      return modal('Lab notebook', `<div class="paper"><p><b>Experiment #47:</b> glow-in-the-dark hamster. Result: angry hamster.</p>
+        <p><b>Experiment #48:</b> self-stirring soup. Result: soup on ceiling.</p>
+        <p style="margin-top:10px"><b>MIXING ORDER</b> (never forget!!)</p>
+        <p><i>First the sky, then the grass,<br>then the sun, then fire fast,<br>and last the grape. The perfect blend!</i></p></div>`);
+    case 'beakers':
+      return modal('Beaker rack', '<p>Five beakers of bubbling liquid: red, blue, purple, green, and yellow. They smell like burnt popcorn. Better not drink them.</p>');
+    case 'fridge':
+      if (!solved('fridge')) return seqLock('fridge', 'Specimen fridge', '<p>The fridge has a row of colored buttons and a screen that reads: <b>ENTER 5 COLORS</b>.</p>', 5,
+        `<div class="colors">${Object.entries(COLORS).map(([k, [c, n]]) => `<button class="cbtn" type="button" data-k="${k}" style="background:${c}" aria-label="${n}" title="${n}"></button>`).join('')}</div>`,
+        v => `<span style="display:block;width:26px;height:26px;border-radius:50%;background:${COLORS[v][0]}"></span>`);
+      return modal('Specimen fridge', '<p>The fridge is open. Just a jar of something wiggly left. You already took the UV flashlight.</p>');
+    case 'cage':
+      return modal('Rat cage', `<p>The cage door hangs wide open. The nameplate says <b>SQUEAKS</b>. A note is taped to the bars:</p>
+        <div class="note">Squeaks escaped AGAIN!! He always runs straight to the supply cabinet, looking for snacks.<br>If only I could SEE where he went... — V</div>`);
+    case 'floor':
+      if (!S.uv) return modal('Floor', '<p>A dusty lab floor. Nothing special... at least, nothing you can see with your eyes.</p>');
+      {
+        const path = { '3,0': '🐀', '2,0': '🐾', '1,0': '🐾', '1,1': '🐾', '1,2': '🐾', '2,2': '🐾', '2,3': '🗄️' };
+        let cells = ''; for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) { const k = r + ',' + c; cells += `<div class="cell${path[k] === '🐾' ? ' paw' : ''}">${path[k] || ''}</div>`; }
+        return modal('Floor (under UV light)', `<p>Glowing paw prints! Squeaks's path goes from his cage (🐀) to the supply cabinet (🗄️). Each square is one step.</p><div class="grid">${cells}</div>`);
+      }
+    case 'cabinet':
+      if (!solved('cabinet')) return seqLock('cabinet', 'Supply cabinet', '<p>The lock is a joystick with arrows. A label says: <b>ENTER THE PATH, 6 MOVES</b>.</p>', 6,
+        `<div class="dpad"><span></span><button class="key" type="button" data-k="U" aria-label="Up">↑</button><span></span><button class="key" type="button" data-k="L" aria-label="Left">←</button><span></span><button class="key" type="button" data-k="R" aria-label="Right">→</button><span></span><button class="key" type="button" data-k="D" aria-label="Down">↓</button><span></span></div>`,
+        v => ARROWS[v]);
+      return modal('Supply cabinet', '<p>Goggles, gloves, and a box of rat treats. Squeaks would love this. You already took the decoder card.</p>');
+    case 'board':
+      return modal('Chalkboard', `<div class="chalk">GSV HZUV<br>DLIW RH<br>UILAVM</div><p>It looks like a secret message, but it's in some kind of code.</p>`);
+    case 'safe':
+      if (!solved('safe')) return textLock('safe', 'Safe', '<p>A heavy safe with a letter dial. A sticker says: <b>SAFE WORD: 6 LETTERS</b>.</p>', 10, 'WORD');
+      return modal('Safe', '<p>Empty now. You already took the magnifying glass and the journal page.</p>');
+    case 'shelf': {
+      const jars = [
+        { e: '🐸', name: 'Frog', w: 78, hgt: 112, d: 4 },
+        { e: '👁️', name: 'Eyeball', w: 34, hgt: 44, d: 7 },
+        { e: '🐙', name: 'Tentacle', w: 60, hgt: 86, d: 9 },
+        { e: '🪱', name: 'Worm', w: 46, hgt: 62, d: 2 },
+      ];
+      const mag = has('magnifier');
+      return modal('Specimen shelf', `<p>${mag ? 'You hold up the magnifying glass. Each label has a tiny number on it!' : 'Four jars of creepy specimens. Each has a label, but the writing is way too tiny to read.'}</p>
+        <div class="jars">${jars.map(j => `<div class="jar"><div class="lid" style="width:${j.w - 6}px"></div><div class="glass" style="width:${j.w}px;height:${j.hgt}px;font-size:${Math.round(j.w / 2)}px">${j.e}</div><span class="label">${mag ? j.name + ' #' + j.d : '· · ·'}</span></div>`).join('')}</div>`);
+    }
+    case 'cryo':
+      if (!solved('cryo')) return seqLock('cryo', 'Cryo-chamber', '<p>The chamber is frosted over. A keypad glows: <b>ENTER 4-DIGIT CODE</b>.</p>', 4,
+        `<div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, ''].map(k => k === '' ? '<span></span>' : `<button class="key" type="button" data-k="${k}">${k}</button>`).join('')}</div>`,
+        v => v);
+      return modal('Cryo-chamber', '<p>A brain floats in blue liquid. It is definitely looking at you. (It has no eyes. Still.)</p><div class="row"><button class="btn" type="button" id="replay">Play voice memo</button></div>', r => r.querySelector('#replay').onclick = () => useItem('memo'));
+    case 'door':
+      if (!solved('door')) return textLock('door', 'Exit door', `<p>The keypad says: <b>EXIT CODE: 5 LETTERS</b>.</p><p class="empty">Your glowing letters: <b style="color:var(--ok);letter-spacing:.2em">${S.letters.join(' ') || 'none yet'}</b></p>`, 10, 'CODE');
+      return win();
+    case 'scope':
+      return modal('Microscope', '<p>You look through the microscope and see... a tiny drawing of a smiley face. Dr. Vex thinks this is hilarious.</p>');
+    case 'plant':
+      return modal('Venus flytrap', '<p>The flytrap snaps at your finger. Rude. There is nothing hidden here, it just wanted to bite you.</p>');
+  }
+}
+document.querySelectorAll('.hs').forEach(g => {
+  g.addEventListener('click', e => { e.stopPropagation(); if (S.started) openObj(g.dataset.obj); });
+  g.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && S.started) { e.preventDefault(); openObj(g.dataset.obj); } });
+});
+
+// ---------- intro / win / debrief ----------
+function intro() {
+  modal('Containment breach!', `<p class="intro-art">Dr. Vex's Laboratory · Intern orientation</p>
+    <p>It's your first day as an intern in Dr. Vex's lab. Dr. Vex stepped out for lunch, and that's when the alarm went off. <b>CONTAINMENT BREACH.</b> Every door slammed shut and locked.</p>
+    <p>The only way out is through Dr. Vex's own locks. There are <b>six</b> of them, and each one hides a clue to the next.</p>
+    <p><b>How to play:</b> click anything in the lab to look closer. Pick up tools. Crack codes. Work as a team and talk it out. The timer starts when you begin.</p>
+    <div class="row"><button class="btn primary" type="button" data-go>Start the escape</button></div>`,
+    root => root.querySelector('[data-go]').onclick = () => { S.started = true; S.start = Date.now(); save(); tone(440, .1, 'sine'); closeModal(); render(); },
+    () => { if (!S.started) setTimeout(intro, 0); });
+}
+function win() {
+  sGood(); setTimeout(sGood, 450);
+  modal('You escaped!', `<p class="intro-art">Door unlocked · Containment avoided</p>
+    <p>The door hisses open and you stumble into the hallway. Behind you, the brain in the cryo-chamber looks a little disappointed.</p>
+    <div class="row"><span class="chip">TIME <b>${fmt(S.end - S.start)}</b></span><span class="chip">HINTS <b>${S.hints.length}</b></span></div>
+    <p>Show this screen to your teacher.</p>
+    <div class="row"><button class="btn primary" type="button" data-deb>How this room was built</button></div>`,
+    root => root.querySelector('[data-deb]').onclick = debrief);
+}
+function debrief() {
+  modal('How this room was built', `<div class="debrief"><p>Every escape room is made from the same few building blocks. Here's what Dr. Vex used. Steal these ideas for your own room!</p>
+  <ol style="margin-top:12px">
+    <li><b>Word lock, clue in plain sight.</b> The password was on the poster the whole time. You just had to notice the circles.</li>
+    <li><b>Sequence lock, clue in a rhyme.</b> The rhyme never says "blue." You had to figure out that sky = blue.</li>
+    <li><b>Directional lock, clue needs a tool.</b> The paw prints were invisible until you found the UV flashlight.</li>
+    <li><b>Cipher.</b> The chalkboard message was visible from the start, but useless until you found the decoder card.</li>
+    <li><b>Number lock with a trap.</b> Reading the jars left to right gives the wrong code. The journal told you to sort by size.</li>
+    <li><b>Meta puzzle.</b> Every lock gave you one letter. The final lock needed all of them.</li>
+  </ol>
+  <p style="margin-top:12px"><b>Designer rules:</b> every lock needs a clue. Every clue should point somewhere. One lock's prize opens the next lock. Red herrings (the microscope, the plant) should be funny, not frustrating.</p></div>`);
+}
+
+$('#soundBtn').onclick = () => { S.sound = !S.sound; save(); render(); };
+$('#resetBtn').onclick = () => modal('Restart the escape?', '<p>This clears your locks, items, letters, and timer on this computer.</p><div class="row"><button class="btn" type="button" data-no>Keep playing</button><button class="btn primary" type="button" data-yes>Restart</button></div>',
+  root => { root.querySelector('[data-no]').onclick = closeModal; root.querySelector('[data-yes]').onclick = () => { S = fresh(); save(); render(); onClose = null; $('#backdrop').hidden = true; intro(); }; });
+
+render(); setInterval(tick, 1000);
+if (!S.started) intro(); else if (S.end) win();
+})();
+</script>
+</html>
